@@ -191,7 +191,7 @@
         fair_name: f.name
       }));
 
-      const { error: fairError } = await supabase.from('performer_application_fairs').insert(fairRows);
+      const { error: fairError } = await supabase.from('vendor_application_fairs').insert(fairRows);
 
       if (fairError) {
         msg.textContent = '⚠️ Saved performer, but failed to add fair info: ' + fairError.message;

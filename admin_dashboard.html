@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FairQuest Admin Panel</title>
+  <title>FairQuest | Admin Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
@@ -61,7 +61,7 @@
   <script>
     const supabase = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'your-public-anon-key-here'
+      'your-anon-key-here'
     );
 
     async function checkAdmin() {
@@ -89,25 +89,22 @@
         .select('*')
         .order('created_at', { ascending: false });
 
-      const { data: performerApps } = await supabase
-        .from('performer_applications')
-        .select('*')
-        .order('created_at', { ascending: false });
-
       const container = document.getElementById('applicationList');
       container.innerHTML = '';
 
-      [...vendorApps, ...performerApps].forEach(app => {
+      vendorApps.forEach(app => {
         const box = document.createElement('div');
         box.className = 'app-box';
+        const isPerformer = app.application_type === 'entertainer';
+        const typeLabel = isPerformer ? 'Performer' : 'Vendor';
         box.innerHTML = `
-          <p><strong>${app.name}</strong> (${app.application_type || app.performer_type || app.vendor_type})</p>
+          <p><strong>${app.name}</strong> (${typeLabel})</p>
           <p><strong>Status:</strong> ${app.approval_status}</p>
           <p><strong>Email:</strong> ${app.contact_email}</p>
           <p>${app.description}</p>
           <div class="buttons">
-            <button class="approve" onclick="updateStatus('${app.id}', '${app.application_type ? 'vendor_applications' : 'performer_applications'}', 'approved')">Approve</button>
-            <button class="decline" onclick="updateStatus('${app.id}', '${app.application_type ? 'vendor_applications' : 'performer_applications'}', 'declined')">Decline</button>
+            <button class="approve" onclick="updateStatus('${app.id}', 'vendor_applications', 'approved')">Approve</button>
+            <button class="decline" onclick="updateStatus('${app.id}', 'vendor_applications', 'declined')">Decline</button>
           </div>
         `;
         container.appendChild(box);

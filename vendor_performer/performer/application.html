@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <title>Performer Application | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    window.supabase = supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+  </script>
   <style>
     body {
       font-family: 'Domine', serif;
@@ -12,29 +19,20 @@
       text-align: center;
       color: #f0e6d2;
     }
-    h1, h2 {
-      font-family: 'Cinzel', serif;
-    }
+    h1, h2 { font-family: 'Cinzel', serif; }
     .top-banner {
       width: 100%;
       max-width: 600px;
-      height: auto;
-      object-fit: contain;
+      margin: 0 auto 20px;
       display: block;
-      margin: 0 auto 20px auto;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
     .logo {
       max-width: 100px;
-      height: auto;
-      margin: 0 auto 20px auto;
+      margin: 0 auto 20px;
       display: block;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
-      transition: transform 0.3s ease;
-    }
-    .logo:hover {
-      transform: scale(1.05);
     }
     form {
       max-width: 700px;
@@ -92,9 +90,7 @@
       margin-top: 10px;
       text-align: left;
     }
-    .fair-results div {
-      margin-bottom: 5px;
-    }
+    .fair-results div { margin-bottom: 5px; }
     #reviewButton {
       background-color: #4CAF50;
       color: white;
@@ -119,9 +115,7 @@
       text-decoration: none;
       margin: 0 8px;
     }
-    footer a:hover {
-      text-decoration: underline;
-    }
+    footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -167,9 +161,7 @@
     let fairSearchCount = 0;
 
     async function loadFairs() {
-      const { data, error } = await window.supabase
-        .from('renaissance_fairs')
-        .select('*');
+      const { data, error } = await window.supabase.from('renaissance_fairs').select('*');
       if (!error) allFairs = data;
     }
 
@@ -179,21 +171,17 @@
       const container = document.getElementById('fairsList');
       const div = document.createElement('div');
       div.className = 'fair-block';
-
       const input = document.createElement('input');
       input.type = 'text';
       input.placeholder = 'Search fair name or state...';
       const results = document.createElement('div');
       results.className = 'fair-results';
-
       input.addEventListener('input', () => searchFairs(input, results, div));
-
       div.innerHTML = `<span class="close-btn" onclick="this.parentElement.remove(); fairSearchCount--; checkFormValidity();">&times;</span>`;
       div.appendChild(input);
       div.appendChild(results);
       div.appendChild(document.createElement('div')).className = 'selected-fair';
       container.appendChild(div);
-
       if (prefill) {
         div.dataset.fairId = prefill.id;
         div.dataset.fairName = prefill.name;
@@ -209,11 +197,10 @@
       const query = inputElem.value.toLowerCase();
       const norm = stateMap[query];
       const results = allFairs.filter(f =>
-        (f.name?.toLowerCase().includes(query)) ||
-        (f.state?.toLowerCase() === query) ||
+        f.name?.toLowerCase().includes(query) ||
+        f.state?.toLowerCase() === query ||
         (norm && f.state?.toLowerCase() === norm)
       );
-
       resultContainer.innerHTML = '';
       results.forEach(fair => {
         if (!fair.start_date || !fair.end_date) return;
@@ -246,25 +233,21 @@
       const reviewBtn = document.getElementById('reviewButton');
       const messageEl = document.getElementById('validationMessage');
       const termsChecked = document.getElementById('termsCheckbox').checked;
-
       let missingFields = [];
       if (!form.name.value) missingFields.push('Performer Name');
       if (!form.description.value) missingFields.push('Quick Bio');
       if (!form.vendorType.value) missingFields.push('Performer Type');
       if (!form.contactName.value) missingFields.push('Contact Person');
       if (!form.contactEmail.value) missingFields.push('Contact Email');
-
       const fairBlocks = document.querySelectorAll('.fair-block');
       const hasSelectedFair = Array.from(fairBlocks).some(b => b.dataset.fairId && b.dataset.start && b.dataset.end);
       if (!hasSelectedFair) missingFields.push('At least one fair');
       if (!termsChecked) missingFields.push('Agreement to Terms & Conditions');
-
       if (missingFields.length > 0) {
-        messageEl.textContent = `⚠️ Missing required: \n- ${missingFields.join('\n- ')}`;
+        messageEl.textContent = `⚠️ Missing required:\n- ${missingFields.join('\n- ')}`;
         reviewBtn.disabled = true;
         return;
       }
-
       messageEl.textContent = '';
       reviewBtn.disabled = false;
     }
@@ -276,7 +259,6 @@
         start: block.dataset.start,
         end: block.dataset.end
       }));
-
       const formData = {
         name: document.getElementById('name').value,
         description: document.getElementById('description').value,
@@ -287,7 +269,6 @@
         website: document.getElementById('website').value,
         fairs
       };
-
       localStorage.setItem('performerAppDraft', JSON.stringify(formData));
       window.location.href = 'review.html';
     }

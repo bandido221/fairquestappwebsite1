@@ -321,11 +321,37 @@
       checkFormValidity();
     });
 
-    async function goToReview() {
-      if (!document.getElementById('termsCheckbox').checked) {
-        alert("❌ Please agree to the Terms & Conditions before continuing.");
-        return;
-      }
+   async function goToReview() {
+  if (!document.getElementById('termsCheckbox').checked) {
+    alert("❌ Please agree to the Terms & Conditions before continuing.");
+    return;
+  }
+
+  const fairBlocks = document.querySelectorAll('.fair-block');
+  const selectedFairs = Array.from(fairBlocks)
+    .filter(block => block.dataset.fairId && block.dataset.start && block.dataset.end)
+    .map(block => ({
+      id: block.dataset.fairId,
+      name: block.dataset.fairName,
+      start: block.dataset.start,
+      end: block.dataset.end
+    }));
+
+  const formData = {
+    name: document.getElementById('name').value,
+    description: document.getElementById('description').value,
+    photoUrl: document.getElementById('photoUrl').value,
+    vendorType: document.getElementById('vendorType').value,
+    contactName: document.getElementById('contactName').value,
+    contactEmail: document.getElementById('contactEmail').value,
+    website: document.getElementById('website').value,
+    fairs: selectedFairs
+  };
+
+  localStorage.setItem('vendorAppDraft', JSON.stringify(formData));
+  window.location.href = 'review.html'; // make sure this file exists!
+}
+
       // Continue with storing local draft and redirect...
     }
   </script>

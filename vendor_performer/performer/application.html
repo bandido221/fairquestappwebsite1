@@ -108,6 +108,7 @@
       color: red;
       font-weight: bold;
       margin-top: 12px;
+      white-space: pre-line;
     }
     footer {
       margin-top: 40px;
@@ -155,13 +156,7 @@
     <p id="validationMessage"></p>
   </form>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
-
     const stateMap = {
       'iowa': 'ia', 'texas': 'tx', 'california': 'ca', 'florida': 'fl',
       'new york': 'ny', 'illinois': 'il', 'georgia': 'ga', 'ohio': 'oh',
@@ -172,9 +167,10 @@
     let fairSearchCount = 0;
 
     async function loadFairs() {
-      const { data, error } = await supabase.from('renaissance_fairs').select('*');
-      if (error) alert("Failed to load fairs: " + error.message);
-      else allFairs = data;
+      const { data, error } = await window.supabase
+        .from('renaissance_fairs')
+        .select('*');
+      if (!error) allFairs = data;
     }
 
     function addFairSearch(prefill = null) {
@@ -190,9 +186,7 @@
       const results = document.createElement('div');
       results.className = 'fair-results';
 
-      input.addEventListener('input', () => {
-        searchFairs(input, results, div);
-      });
+      input.addEventListener('input', () => searchFairs(input, results, div));
 
       div.innerHTML = `<span class="close-btn" onclick="this.parentElement.remove(); fairSearchCount--; checkFormValidity();">&times;</span>`;
       div.appendChild(input);
@@ -206,6 +200,8 @@
         div.dataset.start = prefill.start;
         div.dataset.end = prefill.end;
         div.querySelector('.selected-fair').textContent = `${prefill.name} — ${prefill.start} to ${prefill.end}`;
+        input.style.display = 'none';
+        results.innerHTML = '';
       }
     }
 
@@ -239,6 +235,9 @@
       fairBlock.dataset.fairName = fairName;
       fairBlock.dataset.start = start;
       fairBlock.dataset.end = end;
+      fairBlock.querySelector('input[type="text"]').style.display = 'none';
+      fairBlock.querySelector('.fair-results').innerHTML = '';
+      if (fairSearchCount < 5) addFairSearch();
       checkFormValidity();
     }
 
@@ -248,38 +247,29 @@
       const messageEl = document.getElementById('validationMessage');
       const termsChecked = document.getElementById('termsCheckbox').checked;
 
-      const requiredFieldsFilled = form.name.value && form.description.value && form.vendorType.value && form.contactName.value && form.contactEmail.value;
+      let missingFields = [];
+      if (!form.name.value) missingFields.push('Performer Name');
+      if (!form.description.value) missingFields.push('Quick Bio');
+      if (!form.vendorType.value) missingFields.push('Performer Type');
+      if (!form.contactName.value) missingFields.push('Contact Person');
+      if (!form.contactEmail.value) missingFields.push('Contact Email');
+
       const fairBlocks = document.querySelectorAll('.fair-block');
       const hasSelectedFair = Array.from(fairBlocks).some(b => b.dataset.fairId && b.dataset.start && b.dataset.end);
+      if (!hasSelectedFair) missingFields.push('At least one fair');
+      if (!termsChecked) missingFields.push('Agreement to Terms & Conditions');
 
-      if (!requiredFieldsFilled) {
-        messageEl.textContent = "⚠️ Please fill in all required fields.";
+      if (missingFields.length > 0) {
+        messageEl.textContent = `⚠️ Missing required: \n- ${missingFields.join('\n- ')}`;
         reviewBtn.disabled = true;
         return;
       }
 
-      if (!hasSelectedFair) {
-        messageEl.textContent = "⚠️ Please select at least one fair.";
-        reviewBtn.disabled = true;
-        return;
-      }
-
-      if (!termsChecked) {
-        messageEl.textContent = "⚠️ You must agree to the Terms & Conditions.";
-        reviewBtn.disabled = true;
-        return;
-      }
-
-      messageEl.textContent = "";
+      messageEl.textContent = '';
       reviewBtn.disabled = false;
     }
 
     async function goToReview() {
-      if (!document.getElementById('termsCheckbox').checked) {
-        alert("❌ Please agree to the Terms & Conditions before continuing.");
-        return;
-      }
-
       const fairs = Array.from(document.querySelectorAll('.fair-block')).map(block => ({
         id: block.dataset.fairId,
         name: block.dataset.fairName,
@@ -295,7 +285,7 @@
         contactName: document.getElementById('contactName').value,
         contactEmail: document.getElementById('contactEmail').value,
         website: document.getElementById('website').value,
-        fairs: fairs
+        fairs
       };
 
       localStorage.setItem('performerAppDraft', JSON.stringify(formData));
@@ -305,6 +295,20 @@
     document.getElementById('applicationForm').addEventListener('input', checkFormValidity);
     window.addEventListener('DOMContentLoaded', async () => {
       await loadFairs();
+      const saved = localStorage.getItem('performerAppDraft');
+      if (saved) {
+        const data = JSON.parse(saved);
+        document.getElementById('name').value = data.name || '';
+        document.getElementById('description').value = data.description || '';
+        document.getElementById('photoUrl').value = data.photoUrl || '';
+        document.getElementById('vendorType').value = data.vendorType || '';
+        document.getElementById('contactName').value = data.contactName || '';
+        document.getElementById('contactEmail').value = data.contactEmail || '';
+        document.getElementById('website').value = data.website || '';
+        document.getElementById('fairsList').innerHTML = '';
+        fairSearchCount = 0;
+        if (data.fairs) data.fairs.forEach(f => addFairSearch(f));
+      }
       addFairSearch();
       checkFormValidity();
     });

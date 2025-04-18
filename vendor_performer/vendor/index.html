@@ -38,7 +38,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
-
     .logo {
       max-width: 100px;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
@@ -100,7 +99,35 @@
     footer a:hover {
       text-decoration: underline;
     }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #fdf7e1;
+      padding: 30px;
+      border-radius: 10px;
+      color: #3b1f1f;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+    }
+
+    .modal-content button {
+      margin-top: 20px;
+      background-color: #5b2a86;
+      color: white;
+    }
   </style>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
@@ -125,15 +152,22 @@
     <p id="authMessage" class="msg"></p>
   </div>
 
-  <footer style="margin-top: 40px; font-size: 14px;">
-    <a href="/index.html" style="color: #aa8452;">Home</a> |
-    <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
-    <a href="/terms.html" style="color: #aa8452;">Terms</a> |
-    <a href="/privacy.html" style="color: #aa8452;">Privacy</a> |
-    <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
-    <a href="/contact.html" style="color: #aa8452;">Contact</a>
+  <!-- Modal -->
+  <div id="emailPopup" class="modal-backdrop">
+    <div class="modal-content">
+      <p>✅ Please check your email to confirm your account or complete login.</p>
+      <button onclick="document.getElementById('emailPopup').style.display='none'">Close</button>
+    </div>
+  </div>
+
+  <footer>
+    <a href="/index.html">Home</a> |
+    <a href="/vendor_performer/performer/info.html">Info</a> |
+    <a href="/terms.html">Terms</a> |
+    <a href="/privacy.html">Privacy</a> |
+    <a href="/faq.html">FAQ</a> |
+    <a href="/contact.html">Contact</a>
   </footer>
-  
 
   <script>
     const supabase = window.supabase.createClient(
@@ -157,8 +191,11 @@
       if (error) {
         msg.textContent = `❌ ${error.message}`;
       } else {
-        msg.textContent = "✅ Signing in...";
-        setTimeout(() => window.location.href = 'dashboard.html', 1000);
+        msg.textContent = "";
+        document.getElementById('emailPopup').style.display = 'flex';
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 2000);
       }
     }
 
@@ -168,9 +205,12 @@
       const { error } = await supabase.auth.signUp({ email, password });
 
       const msg = document.getElementById('authMessage');
-      msg.textContent = error
-        ? `❌ ${error.message}`
-        : "✅ Check your email to confirm your account.";
+      if (error) {
+        msg.textContent = `❌ ${error.message}`;
+      } else {
+        msg.textContent = "";
+        document.getElementById('emailPopup').style.display = 'flex';
+      }
     }
   </script>
 </body>

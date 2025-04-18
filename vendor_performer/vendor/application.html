@@ -256,15 +256,29 @@
       });
     }
 
-    function selectFair(checkbox, fairId, fairName, start, end, fairBlock) {
-      if (!checkbox.checked) return;
-      fairBlock.querySelector('.selected-fair').textContent = `${fairName} — ${start} to ${end}`;
-      fairBlock.dataset.fairId = fairId;
-      fairBlock.dataset.fairName = fairName;
-      fairBlock.dataset.start = start;
-      fairBlock.dataset.end = end;
-      checkFormValidity();
-    }
+   function selectFair(checkbox, fairId, fairName, start, end, fairBlock) {
+  if (!checkbox.checked) return;
+
+  // Store fair info
+  fairBlock.querySelector('.selected-fair').textContent = `${fairName} — ${start} to ${end}`;
+  fairBlock.dataset.fairId = fairId;
+  fairBlock.dataset.fairName = fairName;
+  fairBlock.dataset.start = start;
+  fairBlock.dataset.end = end;
+
+  // Collapse the search bar and results
+  const input = fairBlock.querySelector('input[type="text"]');
+  const results = fairBlock.querySelector('.fair-results');
+  if (input && results) {
+    input.style.display = 'none';        // Hide the search bar
+    input.value = '';                    // Clear its value
+    results.innerHTML = '';              // Clear results
+  }
+
+  checkFormValidity();
+}
+if (fairSearchCount < 5) addFairSearch();
+
 
     function checkFormValidity() {
       const form = document.getElementById('applicationForm');

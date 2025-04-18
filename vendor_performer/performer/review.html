@@ -187,8 +187,10 @@
       }
 
       const fairRows = data.fairs.map(f => ({
-        application_id: appData.id,
-        fair_name: f.name
+       application_id: appData.id,
+      fair_id: f.id, // 👈 Must include fair ID, not name
+      start_date: f.start,
+      end_date: f.end
       }));
 
       const { error: fairError } = await supabase.from('vendor_application_fairs').insert(fairRows);

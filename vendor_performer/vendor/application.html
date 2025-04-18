@@ -1,13 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><!-- Triggering Git tracking -->
-
-  <title>Vendor Application | FairQuest</title><!-- Trigger commit -->
-
+  <meta charset="UTF-8" />
+  <title>Vendor Application | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <style>
-    
     body {
       font-family: 'Domine', serif;
       background-color: #000;
@@ -15,151 +12,77 @@
       text-align: center;
       color: #f0e6d2;
     }
-
-    h1, h2 {
-      font-family: 'Cinzel', serif;
-    }
-
+    h1, h2 { font-family: 'Cinzel', serif; }
     .top-banner {
-      width: 100%;
-      max-width: 600px;
-      height: auto;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto 20px auto;
-      border-radius: 12px;
+      width: 100%; max-width: 600px; height: auto; object-fit: contain;
+      display: block; margin: 0 auto 20px auto; border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
-
     .logo {
-      max-width: 100px;
-      height: auto;
-      margin: 0 auto 20px auto;
-      display: block;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
-      transition: transform 0.3s ease;
+      max-width: 100px; height: auto; margin: 0 auto 20px auto; display: block;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)); transition: transform 0.3s ease;
     }
-
-    .logo:hover {
-      transform: scale(1.05);
-    }
-
+    .logo:hover { transform: scale(1.05); }
     form {
-      max-width: 700px;
-      margin: auto;
-      background: rgba(251, 241, 200, 0.88);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      max-width: 700px; margin: auto; background: rgba(251, 241, 200, 0.88);
+      padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
       color: #3b1f1f;
     }
-
-    label {
-      margin-top: 12px;
-      display: block;
-      text-align: left;
-    }
-
+    label { margin-top: 12px; display: block; text-align: left; }
     input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      margin-bottom: 12px;
-      border: 1px solid #aa8452;
-      border-radius: 6px;
-      background-color: #fdf7e1;
-      color: #3b1f1f;
+      width: 100%; padding: 10px; margin-top: 6px; margin-bottom: 12px;
+      border: 1px solid #aa8452; border-radius: 6px;
+      background-color: #fdf7e1; color: #3b1f1f;
     }
-
     .fair-block {
-      border: 1px solid #999;
-      padding: 10px;
-      margin-bottom: 10px;
-      background: #f9f9f9;
-      position: relative;
+      border: 1px solid #999; padding: 10px; margin-bottom: 10px;
+      background: #f9f9f9; position: relative;
     }
-
     .close-btn {
-      position: absolute;
-      top: 5px;
-      right: 10px;
-      cursor: pointer;
-      font-size: 18px;
+      position: absolute; top: 5px; right: 10px;
+      cursor: pointer; font-size: 18px;
     }
-
     .add-fair-btn {
-      background-color: #e0e0e0;
-      border: 1px dashed #999;
-      text-align: center;
-      padding: 10px;
-      cursor: pointer;
-      margin-top: 10px;
-      border-radius: 6px;
+      background-color: #e0e0e0; border: 1px dashed #999;
+      text-align: center; padding: 10px; cursor: pointer;
+      margin-top: 10px; border-radius: 6px;
     }
-
-    .selected-fair {
-      font-size: 14px;
-      color: green;
-      margin-top: 6px;
-    }
-
+    .selected-fair { font-size: 14px; color: green; margin-top: 6px; }
     #reviewButton {
-      background-color: #4CAF50;
-      color: white;
-      font-size: 16px;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 6px;
-      cursor: pointer;
+      background-color: #4CAF50; color: white; font-size: 16px;
+      border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer;
     }
-
     #validationMessage {
-      color: red;
-      font-weight: bold;
-      margin-top: 12px;
+      color: red; font-weight: bold; margin-top: 12px;
+      white-space: pre-line;
     }
-
     footer {
-      margin-top: 40px;
-      font-size: 14px;
+      margin-top: 40px; font-size: 14px;
     }
-
     footer a {
-      color: #aa8452;
-      text-decoration: none;
-      margin: 0 8px;
+      color: #aa8452; text-decoration: none; margin: 0 8px;
     }
-
-    footer a:hover {
-      text-decoration: underline;
-    }
+    footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
   <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
-
   <h1>Vendor Application Form</h1>
 
   <form id="applicationForm">
     <label for="name">Vendor Name:</label>
     <input type="text" id="name" required />
-
     <label for="description">Quick Bio:</label>
     <textarea id="description" required></textarea>
-
     <label for="photoUrl">Photo URL (optional):</label>
     <input type="url" id="photoUrl" />
-
     <label for="vendorType">Vendor Type:</label>
     <input type="text" id="vendorType" required />
-
     <label for="contactName">Contact Person:</label>
     <input type="text" id="contactName" required />
-
     <label for="contactEmail">Contact Email:</label>
     <input type="email" id="contactEmail" required />
-    
     <label for="website">Website or Social Link (optional):</label>
     <input type="url" id="website" />
 
@@ -178,22 +101,11 @@
     <p id="validationMessage"></p>
   </form>
 
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
-
-    const stateMap = {
-      'iowa': 'ia', 'texas': 'tx', 'california': 'ca', 'florida': 'fl',
-      'new york': 'ny', 'illinois': 'il', 'georgia': 'ga', 'ohio': 'oh',
-      'michigan': 'mi', 'pennsylvania': 'pa', 'wisconsin': 'wi', 'minnesota': 'mn'
-    };
-
-    let allFairs = [];
-    let fairSearchCount = 0;
+    const supabase = window.supabase.createClient('https://awtbjuiqgtdydsqzimul.supabase.co', 'YOUR_PUBLIC_ANON_KEY');
+    const stateMap = { 'iowa': 'ia', 'texas': 'tx', 'california': 'ca', 'florida': 'fl', 'new york': 'ny', 'illinois': 'il', 'georgia': 'ga', 'ohio': 'oh', 'michigan': 'mi', 'pennsylvania': 'pa', 'wisconsin': 'wi', 'minnesota': 'mn' };
+    let allFairs = [], fairSearchCount = 0;
 
     async function loadFairs() {
       const { data, error } = await supabase.from('renaissance_fairs').select('*');
@@ -207,29 +119,24 @@
       const container = document.getElementById('fairsList');
       const div = document.createElement('div');
       div.className = 'fair-block';
-
       const input = document.createElement('input');
       input.type = 'text';
       input.placeholder = 'Search fair name or state...';
       const results = document.createElement('div');
       results.className = 'fair-results';
-
-      input.addEventListener('input', () => {
-        searchFairs(input, results, div);
-      });
-
+      input.addEventListener('input', () => searchFairs(input, results, div));
       div.innerHTML = `<span class="close-btn" onclick="this.parentElement.remove(); fairSearchCount--; checkFormValidity();">&times;</span>`;
       div.appendChild(input);
       div.appendChild(results);
       div.appendChild(document.createElement('div')).className = 'selected-fair';
       container.appendChild(div);
-
       if (prefill) {
         div.dataset.fairId = prefill.id;
         div.dataset.fairName = prefill.name;
         div.dataset.start = prefill.start;
         div.dataset.end = prefill.end;
         div.querySelector('.selected-fair').textContent = `${prefill.name} — ${prefill.start} to ${prefill.end}`;
+        input.style.display = 'none';
       }
     }
 
@@ -241,82 +148,60 @@
         (f.state?.toLowerCase() === query) ||
         (norm && f.state?.toLowerCase() === norm)
       );
-
       resultContainer.innerHTML = '';
       results.forEach(fair => {
         if (!fair.start_date || !fair.end_date) return;
         const fairDiv = document.createElement('div');
-        fairDiv.innerHTML = `
-          <strong>${fair.name}</strong> (${fair.state})<br>
-          <label>
-            <input type="checkbox" onclick="selectFair(this, '${fair.id}', '${fair.name}', '${fair.start_date}', '${fair.end_date}', this.closest('.fair-block'))">
-            ${fair.start_date} to ${fair.end_date}
-          </label>`;
+        fairDiv.innerHTML = `<strong>${fair.name}</strong> (${fair.state})<br><label><input type="checkbox" onclick="selectFair(this, '${fair.id}', '${fair.name}', '${fair.start_date}', '${fair.end_date}', this.closest('.fair-block'))"> ${fair.start_date} to ${fair.end_date}</label>`;
         resultContainer.appendChild(fairDiv);
       });
     }
 
-   function selectFair(checkbox, fairId, fairName, start, end, fairBlock) {
-  if (!checkbox.checked) return;
-
-  // Store fair info
-  fairBlock.querySelector('.selected-fair').textContent = `${fairName} — ${start} to ${end}`;
-  fairBlock.dataset.fairId = fairId;
-  fairBlock.dataset.fairName = fairName;
-  fairBlock.dataset.start = start;
-  fairBlock.dataset.end = end;
-
-  // Collapse the search bar and results
-  const input = fairBlock.querySelector('input[type="text"]');
-  const results = fairBlock.querySelector('.fair-results');
-  if (input && results) {
-    input.style.display = 'none';        // Hide the search bar
-    input.value = '';                    // Clear its value
-    results.innerHTML = '';              // Clear results
-  }
-
-  checkFormValidity();
-}
-if (fairSearchCount < 5) addFairSearch();
-
+    function selectFair(checkbox, fairId, fairName, start, end, fairBlock) {
+      if (!checkbox.checked) return;
+      fairBlock.querySelector('.selected-fair').textContent = `${fairName} — ${start} to ${end}`;
+      fairBlock.dataset.fairId = fairId;
+      fairBlock.dataset.fairName = fairName;
+      fairBlock.dataset.start = start;
+      fairBlock.dataset.end = end;
+      const input = fairBlock.querySelector('input[type="text"]');
+      const results = fairBlock.querySelector('.fair-results');
+      if (input && results) {
+        input.style.display = 'none';
+        input.value = '';
+        results.innerHTML = '';
+      }
+      if (fairSearchCount < 5) addFairSearch();
+      checkFormValidity();
+    }
 
     function checkFormValidity() {
       const form = document.getElementById('applicationForm');
       const reviewBtn = document.getElementById('reviewButton');
       const messageEl = document.getElementById('validationMessage');
-      const termsChecked = document.getElementById('termsCheckbox').checked;
-
-      const requiredFieldsFilled = form.name.value && form.description.value && form.vendorType.value && form.contactName.value && form.contactEmail.value;
+      const errors = [];
+      if (!form.name.value) errors.push("Vendor Name is required.");
+      if (!form.description.value) errors.push("Quick Bio is required.");
+      if (!form.vendorType.value) errors.push("Vendor Type is required.");
+      if (!form.contactName.value) errors.push("Contact Person is required.");
+      if (!form.contactEmail.value) errors.push("Contact Email is required.");
       const fairBlocks = document.querySelectorAll('.fair-block');
       const hasSelectedFair = Array.from(fairBlocks).some(b => b.dataset.fairId && b.dataset.start && b.dataset.end);
-
-      if (!requiredFieldsFilled) {
-        messageEl.textContent = "⚠️ Please fill in all required fields.";
+      if (!hasSelectedFair) errors.push("Select at least one fair.");
+      if (!document.getElementById('termsCheckbox').checked) errors.push("You must agree to the Terms & Conditions.");
+      if (errors.length > 0) {
+        messageEl.textContent = '⚠️ ' + errors.join('\n');
         reviewBtn.disabled = true;
-        return;
+      } else {
+        messageEl.textContent = '';
+        reviewBtn.disabled = false;
       }
-
-      if (!hasSelectedFair) {
-        messageEl.textContent = "⚠️ Please select at least one fair.";
-        reviewBtn.disabled = true;
-        return;
-      }
-
-      if (!termsChecked) {
-        messageEl.textContent = "⚠️ You must agree to the Terms & Conditions.";
-        reviewBtn.disabled = true;
-        return;
-      }
-
-      messageEl.textContent = "";
-      reviewBtn.disabled = false;
     }
 
     document.getElementById('applicationForm').addEventListener('input', checkFormValidity);
 
     window.addEventListener('DOMContentLoaded', async () => {
       await loadFairs();
-      addFairSearch();
       const saved = localStorage.getItem('vendorAppDraft');
       if (saved) {
         const data = JSON.parse(saved);
@@ -326,50 +211,44 @@ if (fairSearchCount < 5) addFairSearch();
         document.getElementById('vendorType').value = data.vendorType || '';
         document.getElementById('contactName').value = data.contactName || '';
         document.getElementById('contactEmail').value = data.contactEmail || '';
+        document.getElementById('website').value = data.website || '';
         if (data.fairs && Array.isArray(data.fairs)) {
           document.getElementById('fairsList').innerHTML = '';
           fairSearchCount = 0;
           data.fairs.forEach(f => addFairSearch(f));
         }
+      } else {
+        addFairSearch();
       }
       checkFormValidity();
     });
 
-   async function goToReview() {
-  if (!document.getElementById('termsCheckbox').checked) {
-    alert("❌ Please agree to the Terms & Conditions before continuing.");
-    return;
-  }
-
-  const fairBlocks = document.querySelectorAll('.fair-block');
-  const selectedFairs = Array.from(fairBlocks)
-    .filter(block => block.dataset.fairId && block.dataset.start && block.dataset.end)
-    .map(block => ({
-      id: block.dataset.fairId,
-      name: block.dataset.fairName,
-      start: block.dataset.start,
-      end: block.dataset.end
-    }));
-
-  const formData = {
-    name: document.getElementById('name').value,
-    description: document.getElementById('description').value,
-    photoUrl: document.getElementById('photoUrl').value,
-    vendorType: document.getElementById('vendorType').value,
-    contactName: document.getElementById('contactName').value,
-    contactEmail: document.getElementById('contactEmail').value,
-    website: document.getElementById('website').value,
-    fairs: selectedFairs
-  };
-
-  localStorage.setItem('vendorAppDraft', JSON.stringify(formData));
-  window.location.href = 'review.html'; // make sure this file exists!
-}
-
-      // Continue with storing local draft and redirect...
+    async function goToReview() {
+      checkFormValidity();
+      if (document.getElementById('reviewButton').disabled) return;
+      const fairBlocks = document.querySelectorAll('.fair-block');
+      const selectedFairs = Array.from(fairBlocks).filter(block => block.dataset.fairId && block.dataset.start && block.dataset.end).map(block => ({
+        id: block.dataset.fairId,
+        name: block.dataset.fairName,
+        start: block.dataset.start,
+        end: block.dataset.end
+      }));
+      const formData = {
+        name: document.getElementById('name').value,
+        description: document.getElementById('description').value,
+        photoUrl: document.getElementById('photoUrl').value,
+        vendorType: document.getElementById('vendorType').value,
+        contactName: document.getElementById('contactName').value,
+        contactEmail: document.getElementById('contactEmail').value,
+        website: document.getElementById('website').value,
+        fairs: selectedFairs
+      };
+      localStorage.setItem('vendorAppDraft', JSON.stringify(formData));
+      window.location.href = 'review.html';
     }
   </script>
-<footer style="margin-top: 40px; font-size: 14px;">
+
+  <footer style="margin-top: 40px; font-size: 14px;">
     <a href="/index.html" style="color: #aa8452;">Home</a> |
     <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
     <a href="/terms.html" style="color: #aa8452;">Terms</a> |
@@ -377,6 +256,5 @@ if (fairSearchCount < 5) addFairSearch();
     <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
     <a href="/contact.html" style="color: #aa8452;">Contact</a>
   </footer>
-  
 </body>
 </html>

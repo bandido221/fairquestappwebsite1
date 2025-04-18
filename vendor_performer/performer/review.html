@@ -24,7 +24,6 @@
       color: #f0e6d2;
       margin: 0;
     }
-
     h1, h2 { font-family: 'Cinzel', serif; }
 
     .top-banner {
@@ -37,7 +36,6 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
-
     .logo {
       max-width: 100px;
       height: auto;
@@ -45,7 +43,6 @@
       display: block;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
     }
-
     .summary-box {
       background: white;
       padding: 30px;
@@ -55,12 +52,10 @@
       margin: 0 auto 20px auto;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-
     ul {
       padding-left: 20px;
       text-align: left;
     }
-
     button {
       padding: 12px 20px;
       margin: 10px;
@@ -69,15 +64,12 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
     .back-button { background-color: #888; color: white; }
     .submit-button { background-color: #4CAF50; color: white; }
-
     .message {
       margin-top: 20px;
       font-size: 16px;
     }
-
     .success { color: green; }
     .error { color: red; }
 
@@ -85,17 +77,14 @@
       margin-top: 40px;
       font-size: 14px;
     }
-
     footer a {
       color: #aa8452;
       text-decoration: none;
       margin: 0 8px;
     }
-
     footer a:hover {
       text-decoration: underline;
     }
-
     @media (max-width: 768px) {
       body { padding: 20px; }
       .summary-box { padding: 20px; }
@@ -146,7 +135,14 @@
         ${data.website ? `<p><strong>Website:</strong> <a href="${data.website}" target="_blank">${data.website}</a></p>` : ''}
         ${data.photoUrl ? `<p><strong>Photo:</strong><br><img src="${data.photoUrl}" width="150"/></p>` : ''}
         <h2>Fairs Selected</h2>
-        <ul>${data.fairs.map(f => `<li>${f.name}</li>`).join('')}</ul>
+        <ul>
+          ${data.fairs.map(f => `
+            <li>
+              <strong>${f.name}</strong><br>
+              <small>${f.start} to ${f.end}</small>
+            </li>
+          `).join('')}
+        </ul>
       `;
     }
 
@@ -159,7 +155,13 @@
       msg.textContent = 'Submitting...';
       msg.className = '';
 
-      const { data: user } = await supabase.auth.getUser();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData?.user?.id) {
+        msg.textContent = '❌ You must be signed in to submit this application.';
+        msg.className = 'error';
+        return;
+      }
+      const userId = userData.user.id;
 
       const { data: appData, error: insertError } = await supabase
         .from('performer_applications')
@@ -173,7 +175,7 @@
           website: data.website,
           approval_status: 'pending',
           application_type: 'entertainer',
-          user_id: user?.user?.id
+          user_id: userId
         }])
         .select()
         .single();
@@ -209,15 +211,14 @@
     renderReview();
   </script>
 
-<footer style="margin-top: 40px; font-size: 14px;">
-  <a href="/index.html" style="color: #aa8452;">Home</a> |
-  <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
-  <a href="/terms.html" style="color: #aa8452;">Terms</a> |
-  <a href="/privacy.html" style="color: #aa8452;">Privacy</a> |
-  <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
-  <a href="/contact.html" style="color: #aa8452;">Contact</a>
-</footer>
-
+  <footer style="margin-top: 40px; font-size: 14px;">
+    <a href="/index.html" style="color: #aa8452;">Home</a> |
+    <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
+    <a href="/terms.html" style="color: #aa8452;">Terms</a> |
+    <a href="/privacy.html" style="color: #aa8452;">Privacy</a> |
+    <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
+    <a href="/contact.html" style="color: #aa8452;">Contact</a>
+  </footer>
 
 </body>
 </html>

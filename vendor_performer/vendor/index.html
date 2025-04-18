@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome Vendors | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background-color: #000;
+      padding: 40px;
+      text-align: center;
+      color: #f0e6d2;
+      margin: 0;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 32px;
+    }
+    .top-banner {
+      width: 100%;
+      max-width: 600px;
+      display: block;
+      margin: 0 auto 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+
+    .logo {
+      max-width: 100px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: rgba(251,241,200,0.88);
+      padding: 30px;
+      border-radius: 12px;
+      color: #3b1f1f;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+      border: 1px solid #aa8452;
+      border-radius: 6px;
+      background-color: #fdf7e1;
+    }
+
+    .button-row {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      margin: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+    }
+
+    .signin { background-color: #b73239; }
+    .signup { background-color: #5b2a86; }
+
+    .msg {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #aa8452;
+      text-decoration: none;
+      margin: 0 8px;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+
+  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+  <div class="container">
+    <h1>Welcome to the FairQuest Vendor Portal</h1>
+    <p>Create an account to feature your booth, select your fairs, and reach more fairgoers!</p>
+
+    <label>Email</label>
+    <input type="email" id="email" placeholder="Enter your email" />
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter your password" />
+
+    <div class="button-row">
+      <button class="signin" onclick="signIn()">Sign In</button>
+      <button class="signup" onclick="signUp()">Sign Up</button>
+    </div>
+
+    <p id="authMessage" class="msg"></p>
+  </div>
+
+  <footer style="margin-top: 40px; font-size: 14px;">
+    <a href="/index.html" style="color: #aa8452;">Home</a> |
+    <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
+    <a href="/terms.html" style="color: #aa8452;">Terms</a> |
+    <a href="/privacy.html" style="color: #aa8452;">Privacy</a> |
+    <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
+    <a href="/contact.html" style="color: #aa8452;">Contact</a>
+  </footer>
+  
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        window.location.href = 'dashboard.html';
+      }
+    });
+
+    async function signIn() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      const msg = document.getElementById('authMessage');
+      if (error) {
+        msg.textContent = `❌ ${error.message}`;
+      } else {
+        msg.textContent = "✅ Signing in...";
+        setTimeout(() => window.location.href = 'dashboard.html', 1000);
+      }
+    }
+
+    async function signUp() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { error } = await supabase.auth.signUp({ email, password });
+
+      const msg = document.getElementById('authMessage');
+      msg.textContent = error
+        ? `❌ ${error.message}`
+        : "✅ Check your email to confirm your account.";
+    }
+  </script>
+</body>
+</html>

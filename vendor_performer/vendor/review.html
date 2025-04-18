@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <title>Review Application | FairQuest</title>
+  
+  
+  <!-- Google Analytics (FairQuest Website) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-HP222J86X0');
+</script>
+  
+  
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background-color: #000;
+      padding: 40px;
+      text-align: center;
+      color: #f0e6d2;
+      margin: 0;
+    }
+
+    h1, h2 {
+      font-family: 'Cinzel', serif;
+    }
+
+    .top-banner {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 20px auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .logo {
+      max-width: 100px;
+      height: auto;
+      margin: 0 auto 20px auto;
+      display: block;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
+    .summary-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      color: #333;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .summary-box p {
+      margin-bottom: 12px;
+    }
+
+    ul {
+      padding-left: 20px;
+      text-align: left;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      margin-right: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .back-button {
+      background-color: #aaa;
+      color: white;
+    }
+
+    .submit-button {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .message {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+
+    .success { color: green; }
+    .error { color: red; }
+
+    footer {
+      margin-top: 40px;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #aa8452;
+      text-decoration: none;
+      margin: 0 8px;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 20px;
+      }
+
+      .summary-box {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      p, ul {
+        font-size: 15px;
+      }
+
+      button {
+        font-size: 15px;
+        padding: 10px 16px;
+      }
+
+      .message {
+        font-size: 15px;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+
+  <h1>Review Your Application</h1>
+  <div class="summary-box" id="reviewBox"></div>
+
+  <div>
+    <button class="back-button" onclick="goBack()">Back</button>
+    <button class="submit-button" onclick="submitApplication()">Submit</button>
+  </div>
+
+  <div class="message" id="message"></div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    const data = JSON.parse(localStorage.getItem('vendorAppDraft')) || {};
+
+    function renderReview() {
+      const box = document.getElementById('reviewBox');
+      if (!data.name || !data.fairs || data.fairs.length === 0) {
+        box.innerHTML = "<p>❗ Missing required info. Please go back and complete the form.</p>";
+        return;
+      }
+
+      box.innerHTML = `
+        <h2>Vendor Info</h2>
+        <p><strong>Name:</strong> ${data.name}</p>
+        <p><strong>Type:</strong> ${data.vendorType}</p>
+        <p><strong>Bio:</strong> ${data.description}</p>
+        <p><strong>Contact:</strong> ${data.contactName} (${data.contactEmail})</p>
+        ${data.website ? `<p><strong>Website:</strong> <a href="${data.website}" target="_blank">${data.website}</a></p>` : ''}
+        ${data.photoUrl ? `<p><strong>Photo:</strong><br><img src="${data.photoUrl}" width="150"/></p>` : ''}
+        <h2>Fairs Selected</h2>
+        <ul>
+          ${data.fairs.map(f => `<li><strong>${f.name}</strong>: ${f.start} to ${f.end}</li>`).join('')}
+        </ul>
+      `;
+    }
+
+    function goBack() {
+      window.location.href = 'application.html';
+    }
+
+    async function submitApplication() {
+      const msg = document.getElementById('message');
+      msg.textContent = 'Submitting...';
+      msg.className = '';
+
+      const { data: user } = await supabase.auth.getUser();
+      console.log("user ID going into insert:", user?.user?.id);
+
+      const { data: appData, error: insertError } = await supabase
+        .from('vendor_applications')
+        .insert([{
+          name: data.name,
+          description: data.description,
+          photo_url: data.photoUrl,
+          vendor_type: data.vendorType,
+          contact_name: data.contactName,
+          contact_email: data.contactEmail,
+          website: data.website,
+          approval_status: 'pending',
+          user_id: user?.user?.id
+        }])
+        .select()
+        .single();
+
+      if (insertError) {
+        msg.textContent = '❌ Error submitting application: ' + insertError.message;
+        msg.className = 'error';
+        return;
+      }
+
+      const fairRows = data.fairs.map(f => ({
+        application_id: appData.id,
+        fair_id: parseInt(f.id),
+        start_date: f.start,
+        end_date: f.end
+      }));
+
+      const { error: fairError } = await supabase.from('vendor_application_fairs').insert(fairRows);
+
+      if (fairError) {
+        msg.textContent = '⚠️ Application saved but fair selection failed: ' + fairError.message;
+        msg.className = 'error';
+        return;
+      }
+
+      msg.textContent = '✅ Your application has been submitted successfully!';
+      msg.className = 'success';
+      localStorage.removeItem('vendorAppDraft');
+
+      setTimeout(() => {
+        window.location.href = 'thankyou.html';
+      }, 1500);
+    }
+
+    renderReview();
+  </script>
+
+<footer style="margin-top: 40px; font-size: 14px;">
+  <a href="/index.html" style="color: #aa8452;">Home</a> |
+  <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
+  <a href="/terms.html" style="color: #aa8452;">Terms</a> |
+  <a href="/privacy.html" style="color: #aa8452;">Privacy</a> |
+  <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
+  <a href="/contact.html" style="color: #aa8452;">Contact</a>
+</footer>
+
+</body>
+</html>

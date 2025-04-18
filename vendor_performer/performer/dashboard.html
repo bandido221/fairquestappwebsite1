@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performer Dashboard | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+
+
+  <!-- Google Analytics (FairQuest Website) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-HP222J86X0');
+</script>
+ 
+ <style>
+    body {
+      font-family: 'Domine', serif;
+      background-color: #000;
+      padding: 40px;
+      text-align: center;
+      color: #f0e6d2;
+      margin: 0;
+    }
+
+    h1, h2 {
+      font-family: 'Cinzel', serif;
+    }
+
+    .top-banner {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 20px auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .logo {
+      max-width: 100px;
+      height: auto;
+      margin: 0 auto 20px auto;
+      display: block;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: rgba(251, 241, 200, 0.88);
+      padding: 30px 40px;
+      border-radius: 12px;
+      border: 2px solid #aa8425;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      color: #3b1f1f;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1f2e3d;
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .start-app {
+      background-color: #27ae60;
+      color: white;
+    }
+
+    .update-app {
+      background-color: #f39c12;
+      color: white;
+    }
+
+    .logout {
+      background-color: #c0392b;
+      color: white;
+    }
+
+    .info {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      background: rgba(225, 209, 145, 0.88);
+      border-radius: 8px;
+    }
+
+    .loading {
+      text-align: center;
+      font-size: 18px;
+      color: #090606;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #aa8452;
+      text-decoration: none;
+      margin: 0 8px;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 20px;
+      }
+
+      .container {
+        padding: 20px;
+      }
+
+      .top-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      button {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .logo {
+        max-width: 80px;
+      }
+
+      .top-banner {
+        max-width: 100%;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+
+  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+  <div class="container">
+    <h1>Performer Dashboard</h1>
+    <div class="top-actions">
+      <button class="logout" onclick="logout()">Log Out</button>
+      <button id="applyButton" class="start-app" onclick="window.location.href='application.html'">Apply Now</button>
+    </div>
+    <div id="dashboardContent" class="loading">Loading your information...</div>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    async function initDashboard() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        loadDashboard(session.user.id);
+      } else {
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (session?.user?.id) {
+            loadDashboard(session.user.id);
+          } else {
+            document.getElementById('dashboardContent').innerHTML =
+              '<p>Please sign in to continue.</p>';
+          }
+        });
+      }
+    }
+
+    async function loadDashboard(userId) {
+      const { data, error } = await supabase
+        .from('performer_applications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('id', { ascending: false });
+
+      const container = document.getElementById('dashboardContent');
+      const applyButton = document.getElementById('applyButton');
+
+      if (error) {
+        console.error('Error loading performer info:', error.message);
+        container.innerHTML = '<p>Error loading dashboard. Please try again.</p>';
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        container.innerHTML = `<div class="info"><p>You haven’t submitted any performer applications yet.</p></div>`;
+        applyButton.style.display = 'inline-block';
+        return;
+      }
+
+      applyButton.style.display = 'inline-block';
+      container.innerHTML = '';
+
+      data.forEach((performer, index) => {
+        const box = document.createElement('div');
+        box.className = 'info';
+        box.innerHTML = `
+          <p><strong>Application #${index + 1}</strong></p>
+          <p><strong>Name:</strong> ${performer.name}</p>
+          <p><strong>Type:</strong> ${performer.performer_type}</p>
+          <p><strong>Description:</strong> ${performer.description}</p>
+          <p><strong>Contact:</strong> ${performer.contact_name} (${performer.contact_email})</p>
+          <p><strong>Status:</strong> ${performer.approval_status}</p>
+          ${performer.website ? `<p><a href="${performer.website}" target="_blank">${performer.website}</a></p>` : ''}
+          ${performer.photo_url ? `<p><img src="${performer.photo_url}" width="150" /></p>` : ''}
+          <button class="update-app" onclick='startUpdate(${JSON.stringify(performer)})'>Update Application</button>
+        `;
+        container.appendChild(box);
+      });
+    }
+
+    function startUpdate(performerData) {
+      localStorage.setItem('performerProfile', JSON.stringify(performerData));
+      window.location.href = 'update_application.html';
+    }
+
+    async function logout() {
+      await supabase.auth.signOut();
+      window.location.href = 'index.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', initDashboard);
+  </script>
+
+<footer style="margin-top: 40px; font-size: 14px;">
+    <a href="/index.html" style="color: #aa8452;">Home</a> |
+    <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
+    <a href="/terms.html" style="color: #aa8452;">Terms</a> |
+    <a href="/privacy.html" style="color: #aa8452;">Privacy</a> |
+    <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
+    <a href="/contact.html" style="color: #aa8452;">Contact</a>
+  </footer>
+  
+  
+</body>
+</html>

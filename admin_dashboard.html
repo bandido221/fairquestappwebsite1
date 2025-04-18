@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FairQuest Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      font-family: 'Domine', serif;
+      color: #f0e6d2;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 20px;
+    }
+    .app-box {
+      background: #fdf7e1;
+      color: #333;
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 12px;
+      max-width: 700px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      text-align: left;
+    }
+    .buttons {
+      margin-top: 10px;
+    }
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      margin-right: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .approve { background-color: #2ecc71; color: white; }
+    .decline { background-color: #e74c3c; color: white; }
+    .logout {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: #bb9457;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🛡️ Gatekeeper's Dashboard</h1>
+  <p>Review vendor and performer applications below.</p>
+
+  <div id="applicationList">Loading applications...</div>
+  <button class="logout" onclick="logout()">Logout</button>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'your-public-anon-key-here'
+    );
+
+    async function checkAdmin() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (!userId) return (window.location.href = '/');
+
+      const { data: adminRow } = await supabase
+        .from('admins')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (!adminRow) {
+        alert("You do not have permission to access this page.");
+        window.location.href = '/';
+      } else {
+        loadApplications();
+      }
+    }
+
+    async function loadApplications() {
+      const { data: vendorApps } = await supabase
+        .from('vendor_applications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const { data: performerApps } = await supabase
+        .from('performer_applications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const container = document.getElementById('applicationList');
+      container.innerHTML = '';
+
+      [...vendorApps, ...performerApps].forEach(app => {
+        const box = document.createElement('div');
+        box.className = 'app-box';
+        box.innerHTML = `
+          <p><strong>${app.name}</strong> (${app.application_type || app.performer_type || app.vendor_type})</p>
+          <p><strong>Status:</strong> ${app.approval_status}</p>
+          <p><strong>Email:</strong> ${app.contact_email}</p>
+          <p>${app.description}</p>
+          <div class="buttons">
+            <button class="approve" onclick="updateStatus('${app.id}', '${app.application_type ? 'vendor_applications' : 'performer_applications'}', 'approved')">Approve</button>
+            <button class="decline" onclick="updateStatus('${app.id}', '${app.application_type ? 'vendor_applications' : 'performer_applications'}', 'declined')">Decline</button>
+          </div>
+        `;
+        container.appendChild(box);
+      });
+    }
+
+    async function updateStatus(id, table, status) {
+      await supabase.from(table).update({ approval_status: status }).eq('id', id);
+      loadApplications();
+    }
+
+    async function logout() {
+      await supabase.auth.signOut();
+      window.location.href = '/';
+    }
+
+    checkAdmin();
+  </script>
+</body>
+</html>

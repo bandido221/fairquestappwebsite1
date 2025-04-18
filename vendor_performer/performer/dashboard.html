@@ -202,7 +202,7 @@
 
     async function loadDashboard(userId) {
       const { data, error } = await supabase
-        .from('performer_applications')
+        .from('vendor_applications')
         .select('*')
         .eq('user_id', userId)
         .order('id', { ascending: false });
@@ -231,7 +231,7 @@
         box.innerHTML = `
           <p><strong>Application #${index + 1}</strong></p>
           <p><strong>Name:</strong> ${performer.name}</p>
-          <p><strong>Type:</strong> ${performer.performer_type}</p>
+          <p><strong>Type:</strong> ${performer.vendor_type}</p>
           <p><strong>Description:</strong> ${performer.description}</p>
           <p><strong>Contact:</strong> ${performer.contact_name} (${performer.contact_email})</p>
           <p><strong>Status:</strong> ${performer.approval_status}</p>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendor List | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      font-family: 'Domine', serif;
+      color: #f0e6d2;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+    }
+    .nav-bar {
+      margin-bottom: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+    .nav-bar a {
+      background-color: #bb9457;
+      color: black;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .vendor-box {
+      background: #fdf7e1;
+      color: #333;
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 12px;
+      max-width: 700px;
+      text-align: left;
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 20px;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      .vendor-box {
+        padding: 16px;
+      }
+      .nav-bar a {
+        font-size: 15px;
+        padding: 10px 12px;
+        margin: 4px 0;
+        display: block;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>📋 All Vendors</h1>
+
+  <div class="nav-bar">
+    <a href="admin_dashboard.html">🏠 Home</a>
+    <a href="approve_vendors.html">📦 Approve Vendors</a>
+    <a href="approve_performers.html">🎤 Approve Performers</a>
+    <a href="vendor_list.html">📋 Vendor List</a>
+    <a href="performer_list.html">🗂 Performer List</a>
+    <a href="all_fairs.html">🎪 All Fairs</a>
+    <a href="reports.html">📊 Reports</a>
+    <a href="settings.html">⚙️ Settings</a>
+  </div>
+
+  <div id="vendorList">Loading vendors...</div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    async function loadVendors() {
+      const { data: vendors, error } = await supabase.from('vendors').select('*');
+      const container = document.getElementById('vendorList');
+
+      if (error || !vendors || vendors.length === 0) {
+        container.innerHTML = '<p>No vendors found.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+
+      for (const vendor of vendors) {
+        const { data: fairs } = await supabase
+          .from('vendor_application_fairs')
+          .select('start_date, end_date, renaissance_fairs(name)')
+          .eq('application_id', vendor.id);
+
+        let fairDetails = '<p><strong>🎪 Fairs & Dates:</strong></p>';
+
+        if (fairs && fairs.length > 0) {
+          const grouped = {};
+          fairs.forEach(f => {
+            const name = f.renaissance_fairs.name;
+            if (!grouped[name]) grouped[name] = [];
+            grouped[name].push(`${f.start_date} to ${f.end_date}`);
+          });
+
+          fairDetails += '<ul>';
+          for (const fair in grouped) {
+            fairDetails += `<li><strong>${fair}</strong><ul>`;
+            grouped[fair].forEach(date => {
+              fairDetails += `<li>${date}</li>`;
+            });
+            fairDetails += '</ul></li>';
+          }
+          fairDetails += '</ul>';
+        } else {
+          fairDetails += '<p>None listed</p>';
+        }
+
+        container.innerHTML += `
+          <div class="vendor-box">
+            <p><strong>Name:</strong> ${vendor.name}</p>
+            <p><strong>Type:</strong> ${vendor.vendor_type || '—'}</p>
+            <p><strong>Description:</strong> ${vendor.description || '—'}</p>
+            ${vendor.website ? `<p><strong>Website:</strong> <a href="${vendor.website}" target="_blank">${vendor.website}</a></p>` : ''}
+            ${vendor.photo_url ? `<p><strong>Photo:</strong><br><img src="${vendor.photo_url}" width="100"></p>` : ''}
+            ${fairDetails}
+          </div>
+        `;
+      }
+    }
+
+    loadVendors();
+  </script>
+</body>
+</html>

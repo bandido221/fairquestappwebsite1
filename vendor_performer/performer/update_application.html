@@ -280,7 +280,7 @@
       };
   
       const { error } = await supabase
-        .from('vendor_applications')
+        .from('vendor_performer_applications')
         .update(updated)
         .eq('id', app.id);
   

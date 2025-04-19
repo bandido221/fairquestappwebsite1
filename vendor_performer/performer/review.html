@@ -164,7 +164,7 @@
       const userId = userData.user.id;
 
       const { data: appData, error: insertError } = await supabase
-        .from('vendor_applications')
+        .from('vendor_performer_applications')
         .insert([{
           name: data.name,
           description: data.description,

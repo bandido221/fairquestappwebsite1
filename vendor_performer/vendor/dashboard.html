@@ -202,7 +202,7 @@
 
     async function loadDashboard(userId) {
       const { data, error } = await supabase
-        .from('vendor_applications')
+        .from('vendor_performer_applications')
         .select('*')
         .eq('user_id', userId)
         .order('id', { ascending: false });

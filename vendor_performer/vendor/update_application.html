@@ -224,7 +224,7 @@
         }
   
         const { data, error } = await supabase
-          .from('vendor_applications')
+          .from('vendor_performer_applications')
           .select('*')
           .eq('user_id', session.user.id)
           .order('id', { ascending: false })
@@ -301,7 +301,7 @@
   };
 
   const { error } = await supabase
-    .from('vendor_applications')
+    .from('vendor_performer_applications')
     .update(updated)
     .eq('id', app.id);
 

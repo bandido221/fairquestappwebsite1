@@ -206,15 +206,42 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     const saved = JSON.parse(localStorage.getItem('applicationProfile'));
-    if (saved) {
-      document.getElementById('name').value = saved.name || '';
-      document.getElementById('description').value = saved.description || '';
-      document.getElementById('photoUrl').value = saved.photo_url || '';
-      document.getElementById('vendorType').value = saved.vendor_type || '';
-      document.getElementById('website').value = saved.website || '';
-      document.getElementById('contactName').value = saved.contact_name || '';
-      document.getElementById('contactEmail').value = saved.contact_email || '';
-    }
+    if (!saved) return;
+
+    // Fill the fields
+    document.getElementById('name').value = saved.name || '';
+    document.getElementById('description').value = saved.description || '';
+    document.getElementById('photoUrl').value = saved.photo_url || '';
+    document.getElementById('vendorType').value = saved.vendor_type || '';
+    document.getElementById('website').value = saved.website || '';
+    document.getElementById('contactName').value = saved.contact_name || '';
+    document.getElementById('contactEmail').value = saved.contact_email || '';
+
+    // Disable inputs by default
+    document.querySelectorAll('#updateForm input, #updateForm textarea').forEach(input => {
+      input.setAttribute('readonly', 'true');
+    });
+
+    // Add edit buttons
+    const fields = ['name', 'description', 'photoUrl', 'vendorType', 'website', 'contactName', 'contactEmail'];
+    fields.forEach(fieldId => {
+      const input = document.getElementById(fieldId);
+      const editBtn = document.createElement('button');
+      editBtn.textContent = '✏️ Edit';
+      editBtn.type = 'button';
+      editBtn.style.marginLeft = '10px';
+      editBtn.style.padding = '4px 10px';
+      editBtn.style.fontSize = '14px';
+      editBtn.style.borderRadius = '4px';
+      editBtn.style.cursor = 'pointer';
+      editBtn.style.backgroundColor = '#5b2a86';
+      editBtn.style.color = 'white';
+      editBtn.onclick = () => {
+        input.removeAttribute('readonly');
+        input.focus();
+      };
+      input.parentElement.insertBefore(editBtn, input.nextSibling);
+    });
   });
 
   async function submitUpdate() {
@@ -246,6 +273,7 @@
     }
   }
 </script>
+
 
 </body>
 </html>

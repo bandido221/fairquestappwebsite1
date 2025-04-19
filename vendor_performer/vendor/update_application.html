@@ -229,10 +229,15 @@
         contact_email: document.getElementById('contactEmail').value
       };
 
+     
       const { error } = await supabase
-        .from('vendor_applications')
-        .update(updated)
-        .eq('id', vendor.id);
+  .from('vendor_applications')
+  .update({
+    ...updated,
+    update_pending: true
+  })
+  .eq('id', vendor.id);
+
 
       document.getElementById('updateMessage').textContent = error
         ? `❌ ${error.message}`

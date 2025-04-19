@@ -56,7 +56,6 @@
   </style>
 </head>
 <body>
-
   <h1>🛡️ Gatekeeper's Dashboard</h1>
   <p>Review all vendor and performer applications submitted through FairQuest.</p>
 
@@ -92,12 +91,10 @@
     }
 
     async function loadApplications() {
-      const { data, error } = await supabase
-        .from('vendor_applications')
+      const { data: apps, error } = await supabase
+        .from('vendor_performer_applications')
         .select('*')
-        .eq('approval_status', 'pending')
-        .or('update_pending.eq.true,approval_status.eq.pending')
-
+        .or('approval_status.eq.pending,update_pending.eq.true')
         .order('id', { ascending: false });
 
       const container = document.getElementById('applicationList');
@@ -110,151 +107,177 @@
       }
 
       container.innerHTML = '';
-      if (!data || data.length === 0) {
+      if (!apps || apps.length === 0) {
         container.innerHTML = "<p>No applications found.</p>";
         return;
       }
 
-      data.forEach(app => {
-  const box = document.createElement('div');
-  box.className = 'app-box';
-  box.setAttribute('data-app-id', app.id); // For quick removal
+      for (const app of apps) {
+        const box = document.createElement('div');
+        box.className = 'app-box';
+        box.setAttribute('data-app-id', app.id);
 
-  if (app.update_pending && app.last_approved) {
-    box.innerHTML = `
-      <p><strong>${app.name}</strong> (${app.application_type || app.vendor_type})</p>
-      <p><strong>🔄 Pending Update Review</strong></p>
-      <p><strong>Email:</strong> ${app.contact_email}</p>
-      <p><strong>Changes:</strong></p>
-      <ul>
-        <li><strong>Description:</strong><br>
-          <em>Old:</em> ${app.last_approved.description || '—'}<br>
-          <em>New:</em> ${app.description}
-        </li>
-        <li><strong>Photo:</strong><br>
-          <em>Old:</em> ${app.last_approved.photo_url ? `<img src="${app.last_approved.photo_url}" width="100">` : 'None'}<br>
-          <em>New:</em> ${app.photo_url ? `<img src="${app.photo_url}" width="100">` : 'None'}
-        </li>
-        <li><strong>Type:</strong> ${app.last_approved.vendor_type || '—'} → ${app.vendor_type}</li>
-      </ul>
-      <div class="buttons">
-        <button class="approve" onclick='approveUpdate(${JSON.stringify(app)})'>✅ Approve Update</button>
-        <button class="decline" onclick='rejectUpdate(${app.id})'>❌ Reject Update</button>
-      </div>
-    `;
+        const { data: fairLinks } = await supabase
+          .from('vendor_application_fairs')
+          .select('start_date, end_date, renaissance_fairs(name)')
+          .eq('application_id', app.id);
+
+        let fairHtml = '';
+        if (fairLinks && fairLinks.length > 0) {
+          fairHtml += `<p><strong>🎪 Applied Fairs:</strong></p><ul>`;
+          for (const fair of fairLinks) {
+            fairHtml += `<li>${fair.renaissance_fairs.name} — ${fair.start_date} to ${fair.end_date}</li>`;
+          }
+          fairHtml += `</ul>`;
+        } else {
+          fairHtml = `<p><strong>🎪 Applied Fairs:</strong> None</p>`;
+        }
+
+        if (app.update_pending && app.vendor_id) {
+          const table = app.application_type === 'performer' ? 'performers' : 'vendors';
+          const { data: live } = await supabase
+            .from(table)
+            .select('*')
+            .eq('id', app.vendor_id)
+            .single();
+
+            if (live) {
+  // Get fairs for the live version
+  const { data: liveFairs } = await supabase
+    .from('vendor_application_fairs')
+    .select('start_date, end_date, renaissance_fairs(name)')
+    .eq('application_id', live.id); // Might require linking vendor_id to old application_id
+
+  let liveFairHtml = '';
+  if (liveFairs && liveFairs.length > 0) {
+    liveFairHtml += `<ul>`;
+    for (const fair of liveFairs) {
+      liveFairHtml += `<li>${fair.renaissance_fairs.name} — ${fair.start_date} to ${fair.end_date}</li>`;
+    }
+    liveFairHtml += `</ul>`;
   } else {
-    box.innerHTML = `
-      <p><strong>${app.name}</strong> (${app.application_type || app.vendor_type})</p>
-      <p><strong>Status:</strong> ${app.approval_status}</p>
-      <p><strong>Email:</strong> ${app.contact_email}</p>
-      <p>${app.description}</p>
-      <div class="buttons">
-        <button class="approve" onclick="updateStatus(${app.id}, 'approved')">Approve</button>
-        <button class="decline" onclick="updateStatus(${app.id}, 'declined')">Decline</button>
-      </div>
-    `;
+    liveFairHtml = '<p>None</p>';
   }
 
-  container.appendChild(box);
-});
+  // Get fairs for the updated version
+  const { data: updatedFairs } = await supabase
+    .from('vendor_application_fairs')
+    .select('start_date, end_date, renaissance_fairs(name)')
+    .eq('application_id', app.id);
 
+  let updatedFairHtml = '';
+  if (updatedFairs && updatedFairs.length > 0) {
+    updatedFairHtml += `<ul>`;
+    for (const fair of updatedFairs) {
+      updatedFairHtml += `<li>${fair.renaissance_fairs.name} — ${fair.start_date} to ${fair.end_date}</li>`;
     }
+    updatedFairHtml += `</ul>`;
+  } else {
+    updatedFairHtml = '<p>None</p>';
+  }
+
+  box.innerHTML = `
+    <p><strong>${app.name}</strong> (${app.application_type || app.vendor_type})</p>
+    <p><strong>🔄 Pending Update Review</strong></p>
+    <p><strong>Email:</strong> ${app.contact_email}</p>
+
+    <h4>✅ Live Info (Approved)</h4>
+    <ul>
+      <li><strong>Description:</strong> ${live.description || '—'}</li>
+      <li><strong>Type:</strong> ${live.vendor_type || '—'}</li>
+      <li><strong>Website:</strong> ${live.website || '—'}</li>
+      <li><strong>Photo:</strong><br>
+        ${live.photo_url ? `<img src="${live.photo_url}" width="100">` : 'None'}
+      </li>
+    </ul>
+    <p><strong>🎪 Fairs (Live):</strong></p>
+    ${liveFairHtml}
+
+    <hr>
+
+    <h4>✏️ Updated Info (Submitted)</h4>
+    <ul>
+      <li><strong>Description:</strong> ${app.description}</li>
+      <li><strong>Type:</strong> ${app.vendor_type}</li>
+      <li><strong>Website:</strong> ${app.website || '—'}</li>
+      <li><strong>Photo:</strong><br>
+        ${app.photo_url ? `<img src="${app.photo_url}" width="100">` : 'None'}
+      </li>
+    </ul>
+    <p><strong>🎪 Fairs (Updated):</strong></p>
+    ${updatedFairHtml}
+
+    <div class="buttons">
+      <button class="approve" onclick='approveUpdate(${JSON.stringify(app)})'>✅ Approve Update</button>
+      <button class="decline" onclick='rejectUpdate(${app.id})'>❌ Reject Update</button>
+    </div>
+  `;
+}
+ else {
+            box.innerHTML = `
+              <p><strong>${app.name}</strong> (${app.application_type || app.vendor_type})</p>
+              <p>⚠️ Error loading live data for comparison.</p>
+            `;
+          }
+        } else {
+          box.innerHTML = `
+            <p><strong>${app.name}</strong> (${app.application_type || app.vendor_type})</p>
+            <p><strong>Status:</strong> ${app.approval_status}</p>
+            <p><strong>Email:</strong> ${app.contact_email}</p>
+            <p>${app.description}</p>
+            ${fairHtml}
+            <div class="buttons">
+              <button class="approve" onclick="updateStatus(${app.id}, 'approved')">Approve</button>
+              <button class="decline" onclick="updateStatus(${app.id}, 'declined')">Decline</button>
+            </div>
+          `;
+        }
+
+        container.appendChild(box);
+      }
+    }
+
     async function updateStatus(id, status) {
-  if (status === 'approved') {
-   const { data, error } = await supabase
-  .from('vendor_applications')
-  .select('*')
-  .or('approval_status.eq.pending,update_pending.eq.true')
-  .order('id', { ascending: false });
-console.log("🔍 Fetched applications:", data);
+      const { error } = await supabase
+        .from('vendor_performer_applications')
+        .update({ approval_status: status })
+        .eq('id', id);
 
-    if (fetchError) {
-      alert("⚠️ Error fetching application details: " + fetchError.message);
-      return;
-    }
-
-    const { data, error } = await supabase.rpc('approve_and_publish_vendor', { app_id: id });
-
-    if (error) {
-      alert("⚠️ Error approving vendor: " + error.message);
-    } else {
-      alert("✅ Vendor approved and published!");
-
-      try {
-        await fetch("https://awtbjuiqgtdydsqzimul.functions.supabase.co/send-approval-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: appData.contact_email,
-            name: appData.name,
-            type: appData.application_type || 'Vendor'
-          }),
-        });
-        console.log("✅ Email sent to:", appData.contact_email);
-      } catch (err) {
-        console.error("⚠️ Failed to send approval email:", err);
-      }
-
-      await loadApplications();
-    }
-  } else {
-    const { error } = await supabase
-      .from('vendor_applications')
-      .update({ approval_status: status })
-      .eq('id', id);
-
-    if (error) {
-      alert("⚠️ Error updating status: " + error.message);
-    } else {
-      alert("❌ Application declined.");
-      const box = document.querySelector(`[data-app-id="${id}"]`);
-      if (box) {
-        box.remove();
+      if (error) {
+        alert("⚠️ Error updating status: " + error.message);
       } else {
-        await loadApplications();
+        alert(status === 'approved' ? "✅ Approved!" : "❌ Declined.");
+        loadApplications();
       }
     }
-  }
-}
-async function approveUpdate(app) {
-  const { error } = await supabase
-    .from('vendor_applications')
-    .update({
-      last_approved: {
-        name: app.name,
-        description: app.description,
-        photo_url: app.photo_url,
-        vendor_type: app.vendor_type,
-        website: app.website,
-        contact_name: app.contact_name,
-        contact_email: app.contact_email
-      },
-      update_pending: false
-    })
-    .eq('id', app.id);
 
-  if (error) {
-    alert("❌ Failed to approve update: " + error.message);
-  } else {
-    alert("✅ Update approved!");
-    loadApplications();
-  }
-}
+    async function approveUpdate(app) {
+      const { error } = await supabase
+        .from('vendor_performer_applications')
+        .update({ update_pending: false })
+        .eq('id', app.id);
 
-async function rejectUpdate(id) {
-  const { error } = await supabase
-    .from('vendor_applications')
-    .update({ update_pending: false })
-    .eq('id', id);
+      if (error) {
+        alert("❌ Failed to approve update: " + error.message);
+      } else {
+        alert("✅ Update approved!");
+        loadApplications();
+      }
+    }
 
-  if (error) {
-    alert("⚠️ Error rejecting update: " + error.message);
-  } else {
-    alert("❌ Update rejected.");
-    loadApplications();
-  }
-}
+    async function rejectUpdate(id) {
+      const { error } = await supabase
+        .from('vendor_performer_applications')
+        .update({ update_pending: false })
+        .eq('id', id);
 
+      if (error) {
+        alert("⚠️ Error rejecting update: " + error.message);
+      } else {
+        alert("❌ Update rejected.");
+        loadApplications();
+      }
+    }
 
     async function logout() {
       await supabase.auth.signOut();

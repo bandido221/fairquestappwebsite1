@@ -133,6 +133,14 @@
     footer a:hover {
       text-decoration: underline;
     }
+/* Plain text styling for locked fields */
+.readonly-text {
+  all: unset;
+  font-size: 16px;
+  margin-top: 4px;
+  display: block;
+  color: #3b1f1f;
+}
 
     @media (max-width: 768px) {
       body {
@@ -175,10 +183,10 @@
       <input type="text" id="vendorType" />
 
       <label for="contactName">Contact Name</label>
-      <input type="text" id="contactName" />
+<input type="text" id="contactName" class="readonly-text" readonly autocomplete="off" inputmode="none" />
 
-      <label for="contactEmail">Contact Email</label>
-      <input type="email" id="contactEmail" />
+<label for="contactEmail">Contact Email</label>
+<input type="email" id="contactEmail" class="readonly-text" readonly autocomplete="off" inputmode="none" />
 
       <div class="button-row">
         <button type="button" class="update" onclick="submitUpdate()">Save Changes</button>
@@ -199,81 +207,117 @@
   
 
   <script>
-  const supabase = window.supabase.createClient(
-    'https://awtbjuiqgtdydsqzimul.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-  );
-
-  window.addEventListener('DOMContentLoaded', () => {
-    const saved = JSON.parse(localStorage.getItem('applicationProfile'));
-    if (!saved) return;
-
-    // Fill the fields
-    document.getElementById('name').value = saved.name || '';
-    document.getElementById('description').value = saved.description || '';
-    document.getElementById('photoUrl').value = saved.photo_url || '';
-    document.getElementById('vendorType').value = saved.vendor_type || '';
-    document.getElementById('website').value = saved.website || '';
-    document.getElementById('contactName').value = saved.contact_name || '';
-    document.getElementById('contactEmail').value = saved.contact_email || '';
-
-    // Disable inputs by default
-    document.querySelectorAll('#updateForm input, #updateForm textarea').forEach(input => {
-      input.setAttribute('readonly', 'true');
-    });
-
-    // Add edit buttons
-    const fields = ['name', 'description', 'photoUrl', 'vendorType', 'website', 'contactName', 'contactEmail'];
-    fields.forEach(fieldId => {
-      const input = document.getElementById(fieldId);
-      const editBtn = document.createElement('button');
-      editBtn.textContent = '✏️ Edit';
-      editBtn.type = 'button';
-      editBtn.style.marginLeft = '10px';
-      editBtn.style.padding = '4px 10px';
-      editBtn.style.fontSize = '14px';
-      editBtn.style.borderRadius = '4px';
-      editBtn.style.cursor = 'pointer';
-      editBtn.style.backgroundColor = '#5b2a86';
-      editBtn.style.color = 'white';
-      editBtn.onclick = () => {
-        input.removeAttribute('readonly');
-        input.focus();
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+  
+    window.addEventListener('DOMContentLoaded', async () => {
+      let app = JSON.parse(localStorage.getItem('applicationProfile'));
+  
+      if (!app) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          alert('Please sign in to continue.');
+          window.location.href = '/vendor/login.html';
+          return;
+        }
+  
+        const { data, error } = await supabase
+          .from('vendor_applications')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('id', { ascending: false })
+          .limit(1)
+          .single();
+  
+        if (error || !data) {
+          document.getElementById('updateMessage').textContent = '❌ Could not load your application.';
+          return;
+        }
+  
+        app = data;
+        localStorage.setItem('applicationProfile', JSON.stringify(app));
+      }
+  
+      const allFields = {
+        name: app.name,
+        description: app.description,
+        photoUrl: app.photo_url,
+        vendorType: app.vendor_type,
+        contactName: app.contact_name,
+        contactEmail: app.contact_email
       };
-      input.parentElement.insertBefore(editBtn, input.nextSibling);
+  
+      const lockedFields = ['contactName', 'contactEmail'];
+  
+      for (const [id, value] of Object.entries(allFields)) {
+        const input = document.getElementById(id);
+        input.value = value || '';
+        input.readOnly = true;
+  
+        // Do not add edit button to locked fields
+        if (lockedFields.includes(id)) {
+          continue;
+        }
+  
+        // Add edit button next to editable fields
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.textContent = '✏️ Edit';
+        editBtn.style.marginLeft = '10px';
+        editBtn.style.fontSize = '14px';
+        editBtn.style.padding = '6px 12px';
+        editBtn.style.backgroundColor = '#5b2a86';
+        editBtn.style.color = '#fff';
+        editBtn.style.border = 'none';
+        editBtn.style.borderRadius = '6px';
+        editBtn.style.cursor = 'pointer';
+  
+        editBtn.onclick = () => {
+          input.readOnly = false;
+          input.focus();
+          editBtn.disabled = true;
+          editBtn.textContent = '✔️ Editable';
+          editBtn.style.backgroundColor = '#3a874f';
+        };
+  
+        input.insertAdjacentElement('afterend', editBtn);
+      }
     });
-  });
+  
+    async function submitUpdate() {
+  const app = JSON.parse(localStorage.getItem('applicationProfile'));
+  if (!app) return;
 
-  async function submitUpdate() {
-    const application = JSON.parse(localStorage.getItem('applicationProfile'));
-    if (!application) return;
+  const updated = {
+    name: document.getElementById('name').value,
+    description: document.getElementById('description').value,
+    photo_url: document.getElementById('photoUrl').value,
+    vendor_type: document.getElementById('vendorType').value,
+    contact_name: app.contact_name,
+    contact_email: app.contact_email,
+    update_pending: true
+  };
 
-    const updated = {
-      name: document.getElementById('name').value,
-      description: document.getElementById('description').value,
-      photo_url: document.getElementById('photoUrl').value,
-      vendor_type: document.getElementById('vendorType').value,
-      website: document.getElementById('website').value,
-      contact_name: document.getElementById('contactName').value,
-      contact_email: document.getElementById('contactEmail').value,
-      update_pending: true
-    };
+  const { error } = await supabase
+    .from('vendor_applications')
+    .update(updated)
+    .eq('id', app.id);
 
-    const { error } = await supabase
-      .from('vendor_applications')
-      .update(updated)
-      .eq('id', application.id);
+  document.getElementById('updateMessage').textContent = error
+    ? `❌ ${error.message}`
+    : '✅ Update submitted for review. Redirecting...';
 
-    document.getElementById('updateMessage').textContent = error
-      ? `❌ ${error.message}`
-      : '✅ Update submitted for review. Admins will review your changes.';
-
-    if (!error) {
-      localStorage.setItem('applicationProfile', JSON.stringify({ ...application, ...updated }));
-    }
+  if (!error) {
+    localStorage.setItem('applicationProfile', JSON.stringify({ ...app, ...updated }));
+    setTimeout(() => {
+      window.location.href = 'dashboard.html';
+    }, 1500); // short delay so they see the success message
   }
-</script>
+}
 
-
+  </script>
+  
 </body>
 </html>

@@ -91,6 +91,12 @@
       text-align: left;
     }
     .fair-results div { margin-bottom: 5px; }
+
+    input[type="checkbox"] {
+      transform: scale(1.3);
+      cursor: pointer;
+    }
+
     #reviewButton {
       background-color: #4CAF50;
       color: white;
@@ -162,7 +168,10 @@
 
     async function loadFairs() {
       const { data, error } = await window.supabase.from('renaissance_fairs').select('*');
-      if (!error) allFairs = data;
+      if (!error) {
+        allFairs = data;
+        console.log("Loaded fairs:", allFairs);
+      }
     }
 
     function addFairSearch(prefill = null) {
@@ -201,16 +210,61 @@
         f.state?.toLowerCase() === query ||
         (norm && f.state?.toLowerCase() === norm)
       );
+
       resultContainer.innerHTML = '';
       results.forEach(fair => {
-        if (!fair.start_date || !fair.end_date) return;
+        const dateRanges = [];
+        for (let i = 0; i <= 10; i++) {
+          const startKey = i === 0 ? 'start_date' : `week${i}_start_date`;
+          const endKey = i === 0 ? 'end_date' : `week${i}_end_date`;
+          if (fair[startKey] && fair[endKey]) {
+            dateRanges.push({
+              start: fair[startKey],
+              end: fair[endKey],
+              fairId: fair.id,
+              fairName: fair.name,
+              state: fair.state
+            });
+          }
+        }
+
+        const selectedDates = new Set(Array.from(document.querySelectorAll('.fair-block'))
+          .map(block => `${block.dataset.fairId}_${block.dataset.start}_${block.dataset.end}`));
+        const availableDates = dateRanges.filter(r => !selectedDates.has(`${r.fairId}_${r.start}_${r.end}`));
+        if (availableDates.length === 0) return;
+
         const fairDiv = document.createElement('div');
-        fairDiv.innerHTML = `
-          <strong>${fair.name}</strong> (${fair.state})<br>
-          <label>
-            <input type="checkbox" onclick="selectFair(this, '${fair.id}', '${fair.name}', '${fair.start_date}', '${fair.end_date}', this.closest('.fair-block'))">
-            ${fair.start_date} to ${fair.end_date}
-          </label>`;
+        fairDiv.innerHTML = `<strong>${fair.name}</strong> (${fair.state})`;
+
+        availableDates.forEach(({ start, end, fairId, fairName }) => {
+          const wrapper = document.createElement('div');
+          wrapper.style.display = 'flex';
+          wrapper.style.justifyContent = 'space-between';
+          wrapper.style.alignItems = 'center';
+          wrapper.style.margin = '6px 0';
+          wrapper.style.padding = '6px 8px';
+          wrapper.style.background = '#fdf7e1';
+          wrapper.style.borderRadius = '6px';
+          wrapper.style.border = '1px solid #ccc';
+
+          const dateText = document.createElement('span');
+          dateText.textContent = `${start} to ${end}`;
+          dateText.style.fontSize = '15px';
+          dateText.style.color = '#3b1f1f';
+
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.id = `${fairId}_${start}_${end}`;
+          checkbox.addEventListener('click', function () {
+            if (!this.checked) return;
+            selectFair(this, fairId, fairName, start, end, fairBlock);
+          });
+
+          wrapper.appendChild(dateText);
+          wrapper.appendChild(checkbox);
+          fairDiv.appendChild(wrapper);
+        });
+
         resultContainer.appendChild(fairDiv);
       });
     }
@@ -224,7 +278,6 @@
       fairBlock.dataset.end = end;
       fairBlock.querySelector('input[type="text"]').style.display = 'none';
       fairBlock.querySelector('.fair-results').innerHTML = '';
-      if (fairSearchCount < 5) addFairSearch();
       checkFormValidity();
     }
 
@@ -275,28 +328,31 @@
 
     document.getElementById('applicationForm').addEventListener('input', checkFormValidity);
     window.addEventListener('DOMContentLoaded', async () => {
-      await loadFairs();
-      const saved = localStorage.getItem('performerAppDraft');
-      if (saved) {
-        const data = JSON.parse(saved);
-        document.getElementById('name').value = data.name || '';
-        document.getElementById('description').value = data.description || '';
-        document.getElementById('photoUrl').value = data.photoUrl || '';
-        document.getElementById('vendorType').value = data.vendorType || '';
-        document.getElementById('contactName').value = data.contactName || '';
-        document.getElementById('contactEmail').value = data.contactEmail || '';
-        document.getElementById('website').value = data.website || '';
-        document.getElementById('fairsList').innerHTML = '';
-        fairSearchCount = 0;
-        if (data.fairs) data.fairs.forEach(f => addFairSearch(f));
-      }
-      addFairSearch();
-      checkFormValidity();
-    });
+  await loadFairs();
+  const saved = localStorage.getItem('performerAppDraft');
+  if (saved) {
+    const data = JSON.parse(saved);
+    document.getElementById('name').value = data.name || '';
+    document.getElementById('description').value = data.description || '';
+    document.getElementById('photoUrl').value = data.photoUrl || '';
+    document.getElementById('vendorType').value = data.vendorType || '';
+    document.getElementById('contactName').value = data.contactName || '';
+    document.getElementById('contactEmail').value = data.contactEmail || '';
+    document.getElementById('website').value = data.website || '';
+    document.getElementById('fairsList').innerHTML = '';
+    fairSearchCount = 0;
+    if (data.fairs) data.fairs.forEach(f => addFairSearch(f));
+  } else {
+    addFairSearch(); // ✅ Only if no draft exists
+  }
+
+  checkFormValidity();
+});
+
   </script>
 
   <footer>
-    <a href="/index.html" style="color: #aa8452;">Home</a> |
+    <a href="../index.html" style="color: #aa8452;">Home</a> |
     <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
     <a href="/terms.html" style="color: #aa8452;">Terms</a> |
     <a href="/privacy.html" style="color: #aa8452;">Privacy</a> |

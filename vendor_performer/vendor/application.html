@@ -56,6 +56,11 @@
       color: red; font-weight: bold; margin-top: 12px;
       white-space: pre-line;
     }
+    input[type="checkbox"] {
+  transform: scale(1.3);
+  cursor: pointer;
+}
+
     footer {
       margin-top: 40px; font-size: 14px;
     }
@@ -141,21 +146,74 @@
     }
 
     function searchFairs(inputElem, resultContainer, fairBlock) {
-      const query = inputElem.value.toLowerCase();
-      const norm = stateMap[query];
-      const results = allFairs.filter(f =>
-        (f.name?.toLowerCase().includes(query)) ||
-        (f.state?.toLowerCase() === query) ||
-        (norm && f.state?.toLowerCase() === norm)
-      );
-      resultContainer.innerHTML = '';
-      results.forEach(fair => {
-        if (!fair.start_date || !fair.end_date) return;
-        const fairDiv = document.createElement('div');
-        fairDiv.innerHTML = `<strong>${fair.name}</strong> (${fair.state})<br><label><input type="checkbox" onclick="selectFair(this, '${fair.id}', '${fair.name}', '${fair.start_date}', '${fair.end_date}', this.closest('.fair-block'))"> ${fair.start_date} to ${fair.end_date}</label>`;
-        resultContainer.appendChild(fairDiv);
-      });
+  const query = inputElem.value.toLowerCase();
+  const norm = stateMap[query];
+  const results = allFairs.filter(f =>
+    (f.name?.toLowerCase().includes(query)) ||
+    (f.state?.toLowerCase() === query) ||
+    (norm && f.state?.toLowerCase() === norm)
+  );
+
+  resultContainer.innerHTML = '';
+
+  results.forEach(fair => {
+    const dateRanges = [];
+    for (let i = 0; i <= 10; i++) {
+      const startKey = i === 0 ? 'start_date' : `week${i}_start_date`;
+      const endKey = i === 0 ? 'end_date' : `week${i}_end_date`;
+      if (fair[startKey] && fair[endKey]) {
+        dateRanges.push({
+          start: fair[startKey],
+          end: fair[endKey],
+          fairId: fair.id,
+          fairName: fair.name
+        });
+      }
     }
+
+    // Skip if all dates are taken
+    const selectedDates = new Set(Array.from(document.querySelectorAll('.fair-block')).map(block => `${block.dataset.fairId}_${block.dataset.start}_${block.dataset.end}`));
+    const availableDates = dateRanges.filter(r => !selectedDates.has(`${r.fairId}_${r.start}_${r.end}`));
+    if (availableDates.length === 0) return;
+
+    const fairDiv = document.createElement('div');
+    fairDiv.innerHTML = `<strong>${fair.name}</strong> (${fair.state})`;
+
+    availableDates.forEach(({ start, end, fairId, fairName }) => {
+      const checkboxId = `${fairId}_${start}_${end}`;
+      const wrapper = document.createElement('div');
+wrapper.style.display = 'flex';
+wrapper.style.justifyContent = 'space-between';
+wrapper.style.alignItems = 'center';
+wrapper.style.margin = '6px 0';
+wrapper.style.padding = '6px 8px';
+wrapper.style.background = '#fdf7e1';
+wrapper.style.borderRadius = '6px';
+wrapper.style.border = '1px solid #ccc';
+
+const dateText = document.createElement('span');
+dateText.textContent = `${start} to ${end}`;
+dateText.style.fontSize = '15px';
+dateText.style.color = '#3b1f1f';
+
+const checkbox = document.createElement('input');
+checkbox.type = 'checkbox';
+checkbox.id = `${fairId}_${start}_${end}`;
+checkbox.addEventListener('click', function () {
+  if (!this.checked) return;
+  selectFair(this, fairId, fairName, start, end, fairBlock);
+});
+
+wrapper.appendChild(dateText);
+wrapper.appendChild(checkbox);
+fairDiv.appendChild(wrapper);
+
+    });
+
+    resultContainer.appendChild(fairDiv);
+  });
+}
+
 
     function selectFair(checkbox, fairId, fairName, start, end, fairBlock) {
       if (!checkbox.checked) return;

@@ -116,45 +116,40 @@
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
-
+    
     const data = JSON.parse(localStorage.getItem('performerAppDraft')) || {};
-
+    
     function renderReview() {
       const box = document.getElementById('reviewBox');
       if (!data.name || !data.fairs || data.fairs.length === 0) {
         box.innerHTML = '<p>❗ Missing required info. Please go back and complete the form.</p>';
         return;
       }
-
+    
       box.innerHTML = `
         <h2>Performer Info</h2>
         <p><strong>Name:</strong> ${data.name}</p>
-        <p><strong>Type:</strong> ${data.performerType}</p>
+        <p><strong>Type:</strong> ${data.vendorType}</p>
         <p><strong>Bio:</strong> ${data.description}</p>
         <p><strong>Contact:</strong> ${data.contactName} (${data.contactEmail})</p>
         ${data.website ? `<p><strong>Website:</strong> <a href="${data.website}" target="_blank">${data.website}</a></p>` : ''}
         ${data.photoUrl ? `<p><strong>Photo:</strong><br><img src="${data.photoUrl}" width="150"/></p>` : ''}
         <h2>Fairs Selected</h2>
         <ul>
-          ${data.fairs.map(f => `
-            <li>
-              <strong>${f.name}</strong><br>
-              <small>${f.start} to ${f.end}</small>
-            </li>
-          `).join('')}
+          ${data.fairs.map(f => `<li><strong>${f.name}</strong>: ${f.start} to ${f.end}</li>`).join('')}
         </ul>
       `;
     }
-
+    
     function goBack() {
       window.location.href = 'application.html';
     }
-
+    
     async function submitApplication() {
       const msg = document.getElementById('message');
       msg.textContent = 'Submitting...';
       msg.className = '';
-
+    
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData?.user?.id) {
         msg.textContent = '❌ You must be signed in to submit this application.';
@@ -162,7 +157,7 @@
         return;
       }
       const userId = userData.user.id;
-
+    
       const { data: appData, error: insertError } = await supabase
         .from('vendor_performer_applications')
         .insert([{
@@ -179,39 +174,40 @@
         }])
         .select()
         .single();
-
+    
       if (insertError) {
         msg.textContent = '❌ Error submitting application: ' + insertError.message;
         msg.className = 'error';
         return;
       }
-
+    
       const fairRows = data.fairs.map(f => ({
-       application_id: appData.id,
-      fair_id: f.id, // 👈 Must include fair ID, not name
-      start_date: f.start,
-      end_date: f.end
+        application_id: appData.id,
+        fair_id: parseInt(f.id),
+        start_date: f.start,
+        end_date: f.end
       }));
-
+    
       const { error: fairError } = await supabase.from('vendor_application_fairs').insert(fairRows);
-
+    
       if (fairError) {
         msg.textContent = '⚠️ Saved performer, but failed to add fair info: ' + fairError.message;
         msg.className = 'error';
         return;
       }
-
+    
       msg.textContent = '✅ Performer application submitted!';
       msg.className = 'success';
       localStorage.removeItem('performerAppDraft');
-
+    
       setTimeout(() => {
         window.location.href = 'thankyou.html';
       }, 1500);
     }
-
+    
     renderReview();
-  </script>
+    </script>
+    
 
   <footer style="margin-top: 40px; font-size: 14px;">
     <a href="/index.html" style="color: #aa8452;">Home</a> |

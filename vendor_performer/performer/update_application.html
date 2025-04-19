@@ -234,9 +234,13 @@
       };
 
       const { error } = await supabase
-        .from('performer_applications')
-        .update(updated)
-        .eq('id', performer.id);
+  .from('performer_applications')
+  .update({
+    ...updated,
+    update_pending: true
+  })
+  .eq('id', performer.id);
+
 
       document.getElementById('updateMessage').textContent = error
         ? `❌ ${error.message}`

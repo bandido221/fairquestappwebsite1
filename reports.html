@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      font-family: 'Domine', serif;
+      color: #f0e6d2;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+    }
+    .nav-bar {
+      margin-bottom: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+    .nav-bar a {
+      background-color: #bb9457;
+      color: black;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .report-box {
+      background: #fdf7e1;
+      color: #333;
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 12px;
+      max-width: 500px;
+      text-align: left;
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 20px;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      .report-box {
+        padding: 16px;
+      }
+      .nav-bar a {
+        font-size: 15px;
+        padding: 10px 12px;
+        margin: 4px 0;
+        display: block;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 Reports Dashboard</h1>
+
+  <div class="nav-bar">
+    <a href="admin_dashboard.html">🏠 Home</a>
+    <a href="approve_vendors.html">📦 Approve Vendors</a>
+    <a href="approve_performers.html">🎤 Approve Performers</a>
+    <a href="vendor_list.html">📋 Vendor List</a>
+    <a href="performer_list.html">🗂 Performer List</a>
+    <a href="all_fairs.html">🎪 All Fairs</a>
+    <a href="reports.html">📊 Reports</a>
+    <a href="settings.html">⚙️ Settings</a>
+  </div>
+
+  <div id="reportSection">Loading report...</div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    async function loadReport() {
+      const container = document.getElementById('reportSection');
+      let html = '';
+
+      const { data: vendors } = await supabase.from('vendors').select('*');
+      const { data: performers } = await supabase.from('performers').select('*');
+      const { data: fairs } = await supabase.from('renaissance_fairs').select('*');
+      const { data: applications } = await supabase.from('vendor_performer_applications').select('*');
+
+      html += `<div class="report-box">
+        <p><strong>Total Vendors:</strong> ${vendors.length}</p>
+        <p><strong>Total Performers:</strong> ${performers.length}</p>
+        <p><strong>Total Fairs:</strong> ${fairs.length}</p>
+        <p><strong>Total Applications:</strong> ${applications.length}</p>
+      </div>`;
+
+      const pending = applications.filter(app => app.approval_status === 'pending');
+      const approved = applications.filter(app => app.approval_status === 'approved');
+      const declined = applications.filter(app => app.approval_status === 'declined');
+
+      html += `<div class="report-box">
+        <p><strong>Pending Applications:</strong> ${pending.length}</p>
+        <p><strong>Approved Applications:</strong> ${approved.length}</p>
+        <p><strong>Declined Applications:</strong> ${declined.length}</p>
+      </div>`;
+
+      container.innerHTML = html;
+    }
+
+    loadReport();
+  </script>
+</body>
+</html>

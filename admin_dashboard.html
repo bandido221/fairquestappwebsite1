@@ -161,11 +161,12 @@
     }
     async function updateStatus(id, status) {
   if (status === 'approved') {
-    const { data: appData, error: fetchError } = await supabase
-      .from('vendor_applications')
-      .select('contact_email, name, application_type')
-      .eq('id', id)
-      .single();
+   const { data, error } = await supabase
+  .from('vendor_applications')
+  .select('*')
+  .or('approval_status.eq.pending,update_pending.eq.true')
+  .order('id', { ascending: false });
+console.log("🔍 Fetched applications:", data);
 
     if (fetchError) {
       alert("⚠️ Error fetching application details: " + fetchError.message);

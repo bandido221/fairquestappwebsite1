@@ -234,7 +234,16 @@
           <p><strong>Type:</strong> ${performer.vendor_type}</p>
           <p><strong>Description:</strong> ${performer.description}</p>
           <p><strong>Contact:</strong> ${performer.contact_name} (${performer.contact_email})</p>
-          <p><strong>Status:</strong> ${performer.approval_status}</p>
+<p><strong>Status:</strong> ${
+  performer.update_pending
+    ? '🕒 Pending Update Review'
+    : performer.approval_status === 'approved'
+      ? '✅ Approved'
+      : performer.approval_status === 'rejected'
+        ? '❌ Rejected'
+        : '⏳ Pending Review'
+}</p>
+
           ${performer.website ? `<p><a href="${performer.website}" target="_blank">${performer.website}</a></p>` : ''}
           ${performer.photo_url ? `<p><img src="${performer.photo_url}" width="150" /></p>` : ''}
           <button class="update-app" onclick='startUpdate(${JSON.stringify(performer)})'>Update Application</button>

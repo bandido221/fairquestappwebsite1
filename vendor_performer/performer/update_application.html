@@ -6,11 +6,11 @@
   <title>Update Your Application | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
 
-  <!-- Google Analytics -->
+  <!-- Google Analytics (FairQuest Website) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
+    function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-HP222J86X0');
   </script>
@@ -32,15 +32,18 @@
     .top-banner {
       width: 100%;
       max-width: 600px;
+      height: auto;
+      object-fit: contain;
       display: block;
-      margin: 0 auto 20px;
+      margin: 0 auto 20px auto;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .logo {
       max-width: 100px;
-      margin: 0 auto 20px;
+      height: auto;
+      margin: 0 auto 20px auto;
       display: block;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
       transition: transform 0.3s ease;
@@ -129,6 +132,13 @@
     footer a:hover {
       text-decoration: underline;
     }
+    .readonly-text {
+  all: unset;
+  font-size: 16px;
+  margin-top: 4px;
+  display: block;
+  color: #3b1f1f;
+}
 
     @media (max-width: 768px) {
       body {
@@ -149,37 +159,35 @@
       }
     }
   </style>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
-
-  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
-  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
-
+    <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+    <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+  
   <div class="container">
-    <h1>Update Your Application</h1>
+    <h1>Update Your Performer Application</h1>
     <form id="updateForm">
-      <label for="name">Name</label>
+      <label for="name">Performer Name</label>
       <input type="text" id="name" />
 
-      <label for="description">Description</label>
+      <label for="description">Bio</label>
       <textarea id="description"></textarea>
 
       <label for="photoUrl">Photo URL</label>
       <input type="url" id="photoUrl" />
 
-      <label for="vendorType">Type (Vendor or Performer)</label>
-      <input type="text" id="vendorType" />
+      <label for="performerType">Performance Type</label>
+      <input type="text" id="performerType" />
 
       <label for="website">Website</label>
       <input type="url" id="website" />
 
       <label for="contactName">Contact Name</label>
-      <input type="text" id="contactName" />
+<input type="text" id="contactName" autocomplete="off" inputmode="none" readonly />
 
-      <label for="contactEmail">Contact Email</label>
-      <input type="email" id="contactEmail" />
+<label for="contactEmail">Contact Email</label>
+<input type="email" id="contactEmail" autocomplete="off" inputmode="none" readonly />
 
       <div class="button-row">
         <button type="button" class="update" onclick="submitUpdate()">Save Changes</button>
@@ -189,63 +197,105 @@
     </form>
   </div>
 
-  <footer>
-    <a href="/index.html">Home</a> |
-    <a href="/vendor_performer/performer/info.html">Info</a> |
-    <a href="/terms.html">Terms</a> |
-    <a href="/privacy.html">Privacy</a> |
-    <a href="/faq.html">FAQ</a> |
-    <a href="/contact.html">Contact</a>
+  <footer style="margin-top: 40px; font-size: 14px;">
+    <a href="/index.html" style="color: #aa8452;">Home</a> |
+    <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
+    <a href="/terms.html" style="color: #aa8452;">Terms</a> |
+    <a href="/privacy.html" style="color: #aa8452;">Privacy</a> |
+    <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
+    <a href="/contact.html" style="color: #aa8452;">Contact</a>
   </footer>
+  
 
   <script>
     const supabase = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
-
-    window.addEventListener('DOMContentLoaded', async () => {
-      const saved = JSON.parse(localStorage.getItem('applicationProfile'));
-      if (saved) {
-        document.getElementById('name').value = saved.name || '';
-        document.getElementById('description').value = saved.description || '';
-        document.getElementById('photoUrl').value = saved.photo_url || '';
-        document.getElementById('vendorType').value = saved.vendor_type || '';
-        document.getElementById('website').value = saved.website || '';
-        document.getElementById('contactName').value = saved.contact_name || '';
-        document.getElementById('contactEmail').value = saved.contact_email || '';
+  
+    window.addEventListener('DOMContentLoaded', () => {
+      const app = JSON.parse(localStorage.getItem('performerProfile'));
+      if (!app) return;
+  
+      const fields = {
+        name: app.name,
+        description: app.description,
+        photoUrl: app.photo_url,
+        performerType: app.performer_type,
+        website: app.website,
+        contactName: app.contact_name,
+        contactEmail: app.contact_email
+      };
+  
+      const lockedFields = ['contactName', 'contactEmail'];
+  
+      for (const [id, value] of Object.entries(fields)) {
+        const input = document.getElementById(id);
+        input.value = value || '';
+        input.readOnly = true;
+  
+        if (lockedFields.includes(id)) {
+          input.setAttribute('readonly', 'true');
+          input.classList.add('readonly-text');
+          continue;
+        }
+  
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.textContent = '✏️ Edit';
+        editBtn.style.marginLeft = '10px';
+        editBtn.style.fontSize = '14px';
+        editBtn.style.padding = '6px 12px';
+        editBtn.style.backgroundColor = '#5b2a86';
+        editBtn.style.color = '#fff';
+        editBtn.style.border = 'none';
+        editBtn.style.borderRadius = '6px';
+        editBtn.style.cursor = 'pointer';
+  
+        editBtn.onclick = () => {
+          input.readOnly = false;
+          input.focus();
+          editBtn.disabled = true;
+          editBtn.textContent = '✔️ Editable';
+          editBtn.style.backgroundColor = '#3a874f';
+        };
+  
+        input.insertAdjacentElement('afterend', editBtn);
       }
     });
-
+  
     async function submitUpdate() {
-      const application = JSON.parse(localStorage.getItem('applicationProfile'));
-      if (!application) return;
-
+      const app = JSON.parse(localStorage.getItem('performerProfile'));
+      if (!app) return;
+  
       const updated = {
         name: document.getElementById('name').value,
         description: document.getElementById('description').value,
         photo_url: document.getElementById('photoUrl').value,
-        vendor_type: document.getElementById('vendorType').value,
+        performer_type: document.getElementById('performerType').value,
         website: document.getElementById('website').value,
-        contact_name: document.getElementById('contactName').value,
-        contact_email: document.getElementById('contactEmail').value,
+        contact_name: app.contact_name, // locked
+        contact_email: app.contact_email, // locked
         update_pending: true
       };
-
+  
       const { error } = await supabase
         .from('vendor_applications')
         .update(updated)
-        .eq('id', application.id);
-
+        .eq('id', app.id);
+  
       document.getElementById('updateMessage').textContent = error
         ? `❌ ${error.message}`
-        : '✅ Update submitted for review. Admins will review your changes.';
-
+        : '✅ Update submitted for review. Redirecting...';
+  
       if (!error) {
-        localStorage.setItem('applicationProfile', JSON.stringify({ ...application, ...updated }));
+        localStorage.setItem('performerProfile', JSON.stringify({ ...app, ...updated }));
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1500);
       }
     }
   </script>
-
+  
 </body>
 </html>

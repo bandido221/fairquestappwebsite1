@@ -96,6 +96,8 @@
         .from('vendor_applications')
         .select('*')
         .eq('approval_status', 'pending')
+        .or('update_pending.eq.true,approval_status.eq.pending')
+
         .order('id', { ascending: false });
 
       const container = document.getElementById('applicationList');
@@ -114,21 +116,48 @@
       }
 
       data.forEach(app => {
-        const box = document.createElement('div');
-        box.className = 'app-box';
-        box.setAttribute('data-app-id', app.id); // 👈 allow quick removal
-        box.innerHTML = `
-          <p><strong>${app.name}</strong> (${app.application_type || app.vendor_type})</p>
-          <p><strong>Status:</strong> ${app.approval_status}</p>
-          <p><strong>Email:</strong> ${app.contact_email}</p>
-          <p>${app.description}</p>
-          <div class="buttons">
-            <button class="approve" onclick="updateStatus(${app.id}, 'approved')">Approve</button>
-            <button class="decline" onclick="updateStatus(${app.id}, 'declined')">Decline</button>
-          </div>
-        `;
-        container.appendChild(box);
-      });
+  const box = document.createElement('div');
+  box.className = 'app-box';
+  box.setAttribute('data-app-id', app.id); // For quick removal
+
+  if (app.update_pending && app.last_approved) {
+    box.innerHTML = `
+      <p><strong>${app.name}</strong> (${app.application_type || app.vendor_type})</p>
+      <p><strong>🔄 Pending Update Review</strong></p>
+      <p><strong>Email:</strong> ${app.contact_email}</p>
+      <p><strong>Changes:</strong></p>
+      <ul>
+        <li><strong>Description:</strong><br>
+          <em>Old:</em> ${app.last_approved.description || '—'}<br>
+          <em>New:</em> ${app.description}
+        </li>
+        <li><strong>Photo:</strong><br>
+          <em>Old:</em> ${app.last_approved.photo_url ? `<img src="${app.last_approved.photo_url}" width="100">` : 'None'}<br>
+          <em>New:</em> ${app.photo_url ? `<img src="${app.photo_url}" width="100">` : 'None'}
+        </li>
+        <li><strong>Type:</strong> ${app.last_approved.vendor_type || '—'} → ${app.vendor_type}</li>
+      </ul>
+      <div class="buttons">
+        <button class="approve" onclick='approveUpdate(${JSON.stringify(app)})'>✅ Approve Update</button>
+        <button class="decline" onclick='rejectUpdate(${app.id})'>❌ Reject Update</button>
+      </div>
+    `;
+  } else {
+    box.innerHTML = `
+      <p><strong>${app.name}</strong> (${app.application_type || app.vendor_type})</p>
+      <p><strong>Status:</strong> ${app.approval_status}</p>
+      <p><strong>Email:</strong> ${app.contact_email}</p>
+      <p>${app.description}</p>
+      <div class="buttons">
+        <button class="approve" onclick="updateStatus(${app.id}, 'approved')">Approve</button>
+        <button class="decline" onclick="updateStatus(${app.id}, 'declined')">Decline</button>
+      </div>
+    `;
+  }
+
+  container.appendChild(box);
+});
+
     }
     async function updateStatus(id, status) {
   if (status === 'approved') {
@@ -184,6 +213,44 @@
         await loadApplications();
       }
     }
+  }
+}
+async function approveUpdate(app) {
+  const { error } = await supabase
+    .from('vendor_applications')
+    .update({
+      last_approved: {
+        name: app.name,
+        description: app.description,
+        photo_url: app.photo_url,
+        vendor_type: app.vendor_type,
+        website: app.website,
+        contact_name: app.contact_name,
+        contact_email: app.contact_email
+      },
+      update_pending: false
+    })
+    .eq('id', app.id);
+
+  if (error) {
+    alert("❌ Failed to approve update: " + error.message);
+  } else {
+    alert("✅ Update approved!");
+    loadApplications();
+  }
+}
+
+async function rejectUpdate(id) {
+  const { error } = await supabase
+    .from('vendor_applications')
+    .update({ update_pending: false })
+    .eq('id', id);
+
+  if (error) {
+    alert("⚠️ Error rejecting update: " + error.message);
+  } else {
+    alert("❌ Update rejected.");
+    loadApplications();
   }
 }
 

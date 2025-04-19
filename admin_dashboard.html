@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FairQuest | Admin Dashboard</title>
+  <title>FairQuest Admin Panel</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
@@ -48,73 +48,145 @@
       background-color: #bb9457;
       color: black;
     }
+    .error-msg {
+      color: red;
+      font-weight: bold;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
 
   <h1>🛡️ Gatekeeper's Dashboard</h1>
-  <p>Review vendor and performer applications below.</p>
+  <p>Review all vendor and performer applications submitted through FairQuest.</p>
 
   <div id="applicationList">Loading applications...</div>
+  <p id="errorMessage" class="error-msg"></p>
+
   <button class="logout" onclick="logout()">Logout</button>
 
   <script>
     const supabase = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'your-anon-key-here'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
     async function checkAdmin() {
       const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-      if (!userId) return (window.location.href = '/');
+      const user = sessionData?.session?.user;
+      if (!user) return (window.location.href = '/');
 
-      const { data: adminRow } = await supabase
+      const { data: adminRow, error: adminError } = await supabase
         .from('admins')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', user.id)
         .single();
 
-      if (!adminRow) {
-        alert("You do not have permission to access this page.");
-        window.location.href = '/';
-      } else {
-        loadApplications();
+      if (adminError || !adminRow) {
+        document.getElementById('errorMessage').textContent = "🚫 Access denied. You're not listed as an admin.";
+        document.getElementById('applicationList').textContent = '';
+        return;
       }
+
+      loadApplications();
     }
 
     async function loadApplications() {
-      const { data: vendorApps } = await supabase
+      const { data, error } = await supabase
         .from('vendor_applications')
         .select('*')
-        .order('created_at', { ascending: false });
+        .eq('approval_status', 'pending')
+        .order('id', { ascending: false });
 
       const container = document.getElementById('applicationList');
-      container.innerHTML = '';
+      const errorMsg = document.getElementById('errorMessage');
 
-      vendorApps.forEach(app => {
+      if (error) {
+        errorMsg.textContent = "❌ Failed to load applications: " + error.message;
+        container.textContent = '';
+        return;
+      }
+
+      container.innerHTML = '';
+      if (!data || data.length === 0) {
+        container.innerHTML = "<p>No applications found.</p>";
+        return;
+      }
+
+      data.forEach(app => {
         const box = document.createElement('div');
         box.className = 'app-box';
-        const isPerformer = app.application_type === 'entertainer';
-        const typeLabel = isPerformer ? 'Performer' : 'Vendor';
+        box.setAttribute('data-app-id', app.id); // 👈 allow quick removal
         box.innerHTML = `
-          <p><strong>${app.name}</strong> (${typeLabel})</p>
+          <p><strong>${app.name}</strong> (${app.application_type || app.vendor_type})</p>
           <p><strong>Status:</strong> ${app.approval_status}</p>
           <p><strong>Email:</strong> ${app.contact_email}</p>
           <p>${app.description}</p>
           <div class="buttons">
-            <button class="approve" onclick="updateStatus('${app.id}', 'vendor_applications', 'approved')">Approve</button>
-            <button class="decline" onclick="updateStatus('${app.id}', 'vendor_applications', 'declined')">Decline</button>
+            <button class="approve" onclick="updateStatus(${app.id}, 'approved')">Approve</button>
+            <button class="decline" onclick="updateStatus(${app.id}, 'declined')">Decline</button>
           </div>
         `;
         container.appendChild(box);
       });
     }
+    async function updateStatus(id, status) {
+  if (status === 'approved') {
+    const { data: appData, error: fetchError } = await supabase
+      .from('vendor_applications')
+      .select('contact_email, name, application_type')
+      .eq('id', id)
+      .single();
 
-    async function updateStatus(id, table, status) {
-      await supabase.from(table).update({ approval_status: status }).eq('id', id);
-      loadApplications();
+    if (fetchError) {
+      alert("⚠️ Error fetching application details: " + fetchError.message);
+      return;
     }
+
+    const { data, error } = await supabase.rpc('approve_and_publish_vendor', { app_id: id });
+
+    if (error) {
+      alert("⚠️ Error approving vendor: " + error.message);
+    } else {
+      alert("✅ Vendor approved and published!");
+
+      try {
+        await fetch("https://awtbjuiqgtdydsqzimul.functions.supabase.co/send-approval-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: appData.contact_email,
+            name: appData.name,
+            type: appData.application_type || 'Vendor'
+          }),
+        });
+        console.log("✅ Email sent to:", appData.contact_email);
+      } catch (err) {
+        console.error("⚠️ Failed to send approval email:", err);
+      }
+
+      await loadApplications();
+    }
+  } else {
+    const { error } = await supabase
+      .from('vendor_applications')
+      .update({ approval_status: status })
+      .eq('id', id);
+
+    if (error) {
+      alert("⚠️ Error updating status: " + error.message);
+    } else {
+      alert("❌ Application declined.");
+      const box = document.querySelector(`[data-app-id="${id}"]`);
+      if (box) {
+        box.remove();
+      } else {
+        await loadApplications();
+      }
+    }
+  }
+}
+
 
     async function logout() {
       await supabase.auth.signOut();

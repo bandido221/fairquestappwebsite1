@@ -199,54 +199,53 @@
   
 
   <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+  const supabase = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
 
-    window.addEventListener('DOMContentLoaded', async () => {
-      const saved = JSON.parse(localStorage.getItem('vendorProfile'));
-      if (saved) {
-        document.getElementById('name').value = saved.name || '';
-        document.getElementById('description').value = saved.description || '';
-        document.getElementById('photoUrl').value = saved.photo_url || '';
-        document.getElementById('vendorType').value = saved.vendor_type || '';
-        document.getElementById('contactName').value = saved.contact_name || '';
-        document.getElementById('contactEmail').value = saved.contact_email || '';
-      }
-    });
-
-    async function submitUpdate() {
-      const vendor = JSON.parse(localStorage.getItem('vendorProfile'));
-      if (!vendor) return;
-
-      const updated = {
-        name: document.getElementById('name').value,
-        description: document.getElementById('description').value,
-        photo_url: document.getElementById('photoUrl').value,
-        vendor_type: document.getElementById('vendorType').value,
-        contact_name: document.getElementById('contactName').value,
-        contact_email: document.getElementById('contactEmail').value
-      };
-
-     
-      const { error } = await supabase
-  .from('vendor_applications')
-  .update({
-    ...updated,
-    update_pending: true
-  })
-  .eq('id', vendor.id);
-
-
-      document.getElementById('updateMessage').textContent = error
-        ? `❌ ${error.message}`
-        : '✅ Application updated!';
-
-      if (!error) {
-        localStorage.setItem('vendorProfile', JSON.stringify({ ...vendor, ...updated }));
-      }
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = JSON.parse(localStorage.getItem('applicationProfile'));
+    if (saved) {
+      document.getElementById('name').value = saved.name || '';
+      document.getElementById('description').value = saved.description || '';
+      document.getElementById('photoUrl').value = saved.photo_url || '';
+      document.getElementById('vendorType').value = saved.vendor_type || '';
+      document.getElementById('website').value = saved.website || '';
+      document.getElementById('contactName').value = saved.contact_name || '';
+      document.getElementById('contactEmail').value = saved.contact_email || '';
     }
-  </script>
+  });
+
+  async function submitUpdate() {
+    const application = JSON.parse(localStorage.getItem('applicationProfile'));
+    if (!application) return;
+
+    const updated = {
+      name: document.getElementById('name').value,
+      description: document.getElementById('description').value,
+      photo_url: document.getElementById('photoUrl').value,
+      vendor_type: document.getElementById('vendorType').value,
+      website: document.getElementById('website').value,
+      contact_name: document.getElementById('contactName').value,
+      contact_email: document.getElementById('contactEmail').value,
+      update_pending: true
+    };
+
+    const { error } = await supabase
+      .from('vendor_applications')
+      .update(updated)
+      .eq('id', application.id);
+
+    document.getElementById('updateMessage').textContent = error
+      ? `❌ ${error.message}`
+      : '✅ Update submitted for review. Admins will review your changes.';
+
+    if (!error) {
+      localStorage.setItem('applicationProfile', JSON.stringify({ ...application, ...updated }));
+    }
+  }
+</script>
+
 </body>
 </html>

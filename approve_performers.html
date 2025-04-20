@@ -8,34 +8,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     @media (max-width: 768px) {
-  body {
-    padding: 20px;
-  }
-
-  h1 {
-    font-size: 22px;
-  }
-
-  .app-box {
-    padding: 16px;
-  }
-
-  button, .nav-bar a {
-    font-size: 15px;
-    padding: 10px 12px;
-  }
-
-  .nav-bar {
-    gap: 8px;
-  }
-
-  .nav-bar a {
-    margin: 4px 0;
-    display: block;
-    text-align: center;
-  }
-}
-
+      body { padding: 20px; }
+      h1 { font-size: 22px; }
+      .app-box { padding: 16px; }
+      button, .nav-bar a { font-size: 15px; padding: 10px 12px; }
+      .nav-bar { gap: 8px; }
+      .nav-bar a { margin: 4px 0; display: block; text-align: center; }
+    }
     body {
       background-color: #000;
       font-family: 'Domine', serif;
@@ -43,9 +22,7 @@
       padding: 40px;
       text-align: center;
     }
-    h1 {
-      font-family: 'Cinzel', serif;
-    }
+    h1 { font-family: 'Cinzel', serif; }
     .nav-bar {
       margin-bottom: 30px;
       display: flex;
@@ -70,9 +47,7 @@
       max-width: 700px;
       text-align: left;
     }
-    .buttons {
-      margin-top: 10px;
-    }
+    .buttons { margin-top: 10px; }
     button {
       padding: 10px 16px;
       margin-right: 10px;
@@ -83,6 +58,7 @@
     }
     .approve { background-color: #2ecc71; color: white; }
     .decline { background-color: #e74c3c; color: white; }
+    .delete  { background-color: #c0392b; color: white; }
   </style>
 </head>
 <body>
@@ -116,52 +92,80 @@
         .order('id', { ascending: false });
 
       const container = document.getElementById('applicationList');
-      if (error || !apps || apps.length === 0) {
+      if (error) {
+        container.innerHTML = `<p>⚠️ Error loading: ${error.message}</p>`;
+        return;
+      }
+      if (!apps || apps.length === 0) {
         container.innerHTML = '<p>No pending performer applications found.</p>';
         return;
       }
 
       container.innerHTML = '';
       for (const app of apps) {
-        let fairDetails = '<p><strong>🎪 Fairs & Dates:</strong></p>';
-        const { data: fairs } = await supabase
+        // 1) fetch linked fairs
+        const { data: fairs = [], error: fairErr } = await supabase
           .from('vendor_application_fairs')
-          .select('start_date, end_date, renaissance_fairs(name)')
+          .select('start_date, end_date, renaissance_fairs(name, state)')
           .eq('application_id', app.id);
+        if (fairErr) console.error('Error fetching fairs:', fairErr);
 
-        if (fairs && fairs.length > 0) {
-          const grouped = {};
-          fairs.forEach(f => {
-            const name = f.renaissance_fairs.name;
-            if (!grouped[name]) grouped[name] = [];
-            grouped[name].push(`${f.start_date} to ${f.end_date}`);
+        // 2) fetch manual suggestions
+        const { data: manual = [], error: manErr } = await supabase
+          .from('suggested_fairs')
+          .select('fair_name, start_date, end_date')
+          .eq('application_id', app.id);
+        if (manErr) console.error('Error fetching suggestions:', manErr);
+
+        // 3) merge
+        const allFairs = [];
+        fairs.forEach(f => {
+          allFairs.push({
+            label: `${f.renaissance_fairs.name} (${f.renaissance_fairs.state})`,
+            dates: `${f.start_date} to ${f.end_date}`
           });
+        });
+        manual.forEach(m => {
+          allFairs.push({
+            label: `${m.fair_name} (manual)`,
+            dates: `${m.start_date} to ${m.end_date}`
+          });
+        });
 
-          fairDetails += '<ul>';
-          for (const fair in grouped) {
-            fairDetails += `<li><strong>${fair}</strong><ul>`;
-            grouped[fair].forEach(date => {
-              fairDetails += `<li>${date}</li>`;
+        // 4) group
+        let fairHTML = '<p><strong>🎪 Fairs & Dates:</strong></p>';
+        if (allFairs.length) {
+          const grouped = allFairs.reduce((acc, f) => {
+            acc[f.label] = acc[f.label]||[];
+            acc[f.label].push(f.dates);
+            return acc;
+          }, {});
+          fairHTML += '<ul>';
+          for (const label in grouped) {
+            fairHTML += `<li><strong>${label}</strong><ul>`;
+            grouped[label].forEach(d => {
+              fairHTML += `<li>${d}</li>`;
             });
-            fairDetails += '</ul></li>';
+            fairHTML += '</ul></li>';
           }
-          fairDetails += '</ul>';
+          fairHTML += '</ul>';
         } else {
-          fairDetails += '<p>None listed</p>';
+          fairHTML += '<p>None listed</p>';
         }
 
+        // 5) render
         container.innerHTML += `
           <div class="app-box">
             <p><strong>Name:</strong> ${app.name}</p>
-            <p><strong>Type:</strong> ${app.vendor_type}</p>
             <p><strong>Description:</strong> ${app.description}</p>
             <p><strong>Contact:</strong> ${app.contact_name} (${app.contact_email})</p>
             ${app.website ? `<p><strong>Website:</strong> <a href="${app.website}" target="_blank">${app.website}</a></p>` : ''}
-            ${app.photo_url ? `<p><strong>Photo:</strong><br><img src="${app.photo_url}" width="100"></p>` : ''}
-            ${fairDetails}
+            ${app.photo_url ? `<p><strong>Photo:</strong><br><img src="${app.photo_url}" width="100"/></p>` : ''}
+            ${fairHTML}
             <div class="buttons">
               <button class="approve" onclick="approvePerformer(${app.id})">✅ Approve</button>
               <button class="decline" onclick="declinePerformer(${app.id})">❌ Decline</button>
+              <button class="delete" onclick="deleteApplication(${app.id})">🗑️ Delete</button>
             </div>
           </div>
         `;
@@ -170,12 +174,8 @@
 
     async function approvePerformer(id) {
       const { error } = await supabase.rpc('approve_and_publish_vendor', { app_id: id });
-      if (error) {
-        alert("❌ Failed to approve: " + error.message);
-      } else {
-        alert("✅ Performer approved!");
-        loadPerformerApplications();
-      }
+      alert(error ? `❌ Failed: ${error.message}` : '✅ Performer approved!');
+      loadPerformerApplications();
     }
 
     async function declinePerformer(id) {
@@ -183,15 +183,41 @@
         .from('vendor_performer_applications')
         .update({ approval_status: 'declined' })
         .eq('id', id);
+      alert(error ? `❌ Failed: ${error.message}` : '❌ Performer declined.');
+      loadPerformerApplications();
+    }
 
-      if (error) {
-        alert("❌ Failed to decline: " + error.message);
-      } else {
-        alert("❌ Performer declined.");
+    async function deleteApplication(id) {
+      if (!confirm('This will permanently delete the application and all related data. Proceed?')) return;
+
+      // delete suggestions
+      let { error: e1 } = await supabase
+        .from('suggested_fairs')
+        .delete()
+        .eq('application_id', id);
+      if (e1) return alert(`❌ Could not delete suggestions: ${e1.message}`);
+
+      // delete fair links
+      let { error: e2 } = await supabase
+        .from('vendor_application_fairs')
+        .delete()
+        .eq('application_id', id);
+      if (e2) return alert(`❌ Could not delete fairs: ${e2.message}`);
+
+      // delete application
+      let { error: e3 } = await supabase
+        .from('vendor_performer_applications')
+        .delete()
+        .eq('id', id);
+      if (e3) alert(`❌ Could not delete app: ${e3.message}`);
+      else {
+        alert('✅ Application deleted.');
         loadPerformerApplications();
+        if (typeof showPendingCounts === 'function') showPendingCounts();
       }
     }
 
+    // initial load
     loadPerformerApplications();
   </script>
 </body>

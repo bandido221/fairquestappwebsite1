@@ -2,300 +2,297 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Update Your Application | FairQuest</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Update Your Performer Application | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
-
-  <!-- Google Analytics (FairQuest Website) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-HP222J86X0');
-  </script>
-
   <style>
-    body {
-      font-family: 'Domine', serif;
-      background-color: #000;
-      padding: 40px;
-      text-align: center;
-      color: #f0e6d2;
-      margin: 0;
-    }
-
-    h1, h2 {
-      font-family: 'Cinzel', serif;
-    }
-
-    .top-banner {
-      width: 100%;
-      max-width: 600px;
-      height: auto;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto 20px auto;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .logo {
-      max-width: 100px;
-      height: auto;
-      margin: 0 auto 20px auto;
-      display: block;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
-      transition: transform 0.3s ease;
-    }
-
-    .logo:hover {
-      transform: scale(1.05);
-    }
-
-    .container {
-      max-width: 700px;
-      margin: auto;
-      background: rgba(251, 241, 200, 0.88);
-      padding: 30px 40px;
-      border-radius: 12px;
-      border: 2px solid #aa8452;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-      color: #3b1f1f;
-      text-align: left;
-    }
-
-    label {
-      display: block;
+    body { font-family:'Domine', serif; background:#000; color:#f0e6d2; text-align:center; padding:40px; margin:0 }
+    h1,h2 { font-family:'Cinzel', serif }
+    .container { max-width:700px; margin:auto; background:rgba(251,241,200,0.88);
+                 padding:30px 40px; border-radius:12px; border:2px solid #aa8452;
+                 box-shadow:0 4px 15px rgba(0,0,0,0.4); color:#3b1f1f; text-align:left }
+    label { display:block; margin-top:20px; font-weight:bold }
+    input,textarea { width:100%; padding:12px; margin-top:6px; font-size:16px;
+                     border:1px solid #aa8452; border-radius:6px; background:#fdf7e1; color:#3b1f1f }
+    .button-row { text-align:center; margin-top:30px }
+    button,a.button-link { padding:12px 20px; font-size:16px; margin:10px;
+                           border:none; border-radius:6px; cursor:pointer; color:white;
+                           text-decoration:none; display:inline-block }
+    .update    { background:#5b2a86 }
+    .dashboard { background:#b73239 }
+    .msg {
       margin-top: 20px;
       font-weight: bold;
+      color: #000;
     }
-
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      margin-top: 6px;
+    .fair-block { border:1px solid #999; padding:10px; margin:10px 0;
+                  background:#f9f9f9; position:relative; }
+    .close-btn  { position:absolute; top:8px; right:12px; cursor:pointer; font-size:18px }
+    .fair-results { margin-top:8px; }
+    .fair-row { display:flex; justify-content:space-between;
+                padding:6px 8px; margin:4px 0; background:#fdf7e1;
+                border:1px solid #ccc; border-radius:6px }
+    .add-fair-btn { text-align:center; padding:10px; margin:10px 0;
+                    background:#e0e0e0; border:1px dashed #999; border-radius:6px;
+                    cursor:pointer }
+    .modal-backdrop {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center;
+    }
+    .modal {
+      background:#fdf7e1;
+      padding:20px;
+      border-radius:8px;
+      max-width:400px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.4);
+      text-align:left;
+      color: #000;
+    }
+    .modal h3 { margin-top:0 }
+    .modal ul { padding-left:20px }
+    .modal button {
+      padding: 10px 16px;
       font-size: 16px;
-      border: 1px solid #aa8452;
-      border-radius: 6px;
-      background-color: #fdf7e1;
-      color: #3b1f1f;
-    }
-
-    .button-row {
-      margin-top: 30px;
-      text-align: center;
-    }
-
-    button, a.button-link {
-      padding: 12px 20px;
-      font-size: 16px;
-      margin: 10px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
-      color: white;
-      text-decoration: none;
-      display: inline-block;
-    }
-
-    .update {
+      color: #fff;
       background-color: #5b2a86;
+      transition: background 0.2s ease;
     }
-
-    .dashboard {
-      background-color: #b73239;
-    }
-
-    button:hover, a.button-link:hover {
-      filter: brightness(1.1);
-    }
-
-    .msg {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-
-    footer {
-      margin-top: 40px;
-      font-size: 14px;
-      text-align: center;
-    }
-
-    footer a {
-      color: #aa8452;
-      text-decoration: none;
-      margin: 0 8px;
-    }
-
-    footer a:hover {
-      text-decoration: underline;
-    }
-    .readonly-text {
-  all: unset;
-  font-size: 16px;
-  margin-top: 4px;
-  display: block;
-  color: #3b1f1f;
-}
-
-    @media (max-width: 768px) {
-      body {
-        padding: 20px;
-      }
-
-      .container {
-        padding: 20px;
-      }
-
-      input, textarea {
-        font-size: 15px;
-      }
-
-      button, a.button-link {
-        font-size: 15px;
-        padding: 10px 16px;
-      }
-    }
+    .modal button:hover { background-color: #472066; }
+    .modal button:nth-of-type(2) { background-color: #b73239; }
+    .modal button:nth-of-type(2):hover { background-color: #951f2a; }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
-    <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
-    <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
-  
   <div class="container">
     <h1>Update Your Performer Application</h1>
     <form id="updateForm">
-      <label for="name">Performer Name</label>
-      <input type="text" id="name" />
+      <label>Performer Name</label>
+      <input id="name" readonly>
+      <label>Bio</label>
+      <textarea id="description" readonly></textarea>
+      <label>Photo URL</label>
+      <input id="photoUrl" readonly>
+      <label>Performance Type</label>
+      <input id="vendorType" readonly>
+      <label>Website</label>
+      <input id="website" readonly>
+      <label>Contact Name</label>
+      <input id="contactName" readonly>
+      <label>Contact Email</label>
+      <input id="contactEmail" readonly>
 
-      <label for="description">Bio</label>
-      <textarea id="description"></textarea>
-
-      <label for="photoUrl">Photo URL</label>
-      <input type="url" id="photoUrl" />
-
-      <label for="performerType">Performance Type</label>
-      <input type="text" id="performerType" />
-
-      <label for="website">Website</label>
-      <input type="url" id="website" />
-
-      <label for="contactName">Contact Name</label>
-<input type="text" id="contactName" autocomplete="off" inputmode="none" readonly />
-
-<label for="contactEmail">Contact Email</label>
-<input type="email" id="contactEmail" autocomplete="off" inputmode="none" readonly />
+      <h2>Fairs Attending</h2>
+      <div id="fairsList"></div>
+      <div class="add-fair-btn" onclick="addFairSearch()">+ Add Another Fair</div>
 
       <div class="button-row">
-        <button type="button" class="update" onclick="submitUpdate()">Save Changes</button>
+        <button type="button" class="update" onclick="onSave()">Save Changes</button>
         <a href="dashboard.html" class="button-link dashboard">Back to Dashboard</a>
       </div>
       <p id="updateMessage" class="msg"></p>
     </form>
   </div>
 
-  <footer style="margin-top: 40px; font-size: 14px;">
-    <a href="/index.html" style="color: #aa8452;">Home</a> |
-    <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
-    <a href="/terms.html" style="color: #aa8452;">Terms</a> |
-    <a href="/privacy.html" style="color: #aa8452;">Privacy</a> |
-    <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
-    <a href="/contact.html" style="color: #aa8452;">Contact</a>
-  </footer>
-  
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <h3 id="modalTitle"></h3>
+      <div id="modalBody"></div>
+      <button onclick="confirmSave()">Continue</button>
+      <button onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
     const supabase = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
-  
-    window.addEventListener('DOMContentLoaded', () => {
-      const app = JSON.parse(localStorage.getItem('performerProfile'));
-      if (!app) return;
-  
-      const fields = {
-        name: app.name,
-        description: app.description,
-        photoUrl: app.photo_url,
-        performerType: app.performer_type,
-        website: app.website,
-        contactName: app.contact_name,
-        contactEmail: app.contact_email
-      };
-  
-      const lockedFields = ['contactName', 'contactEmail'];
-  
-      for (const [id, value] of Object.entries(fields)) {
-        const input = document.getElementById(id);
-        input.value = value || '';
-        input.readOnly = true;
-  
-        if (lockedFields.includes(id)) {
-          input.setAttribute('readonly', 'true');
-          input.classList.add('readonly-text');
-          continue;
-        }
-  
-        const editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.textContent = '✏️ Edit';
-        editBtn.style.marginLeft = '10px';
-        editBtn.style.fontSize = '14px';
-        editBtn.style.padding = '6px 12px';
-        editBtn.style.backgroundColor = '#5b2a86';
-        editBtn.style.color = '#fff';
-        editBtn.style.border = 'none';
-        editBtn.style.borderRadius = '6px';
-        editBtn.style.cursor = 'pointer';
-  
-        editBtn.onclick = () => {
-          input.readOnly = false;
-          input.focus();
-          editBtn.disabled = true;
-          editBtn.textContent = '✔️ Editable';
-          editBtn.style.backgroundColor = '#3a874f';
-        };
-  
-        input.insertAdjacentElement('afterend', editBtn);
+
+    let originalApp, originalFairs = [], allFairs = [], stateMap = {}, fairSearchCount = 0;
+
+    async function loadFairs() {
+      const { data } = await supabase.from('renaissance_fairs').select('*');
+      allFairs = data || [];
+      stateMap = { 'iowa':'ia','texas':'tx','california':'ca','florida':'fl','new york':'ny','illinois':'il' };
+    }
+
+    function addFairSearch(prefill = null) {
+      if (fairSearchCount >= 5) return;
+      fairSearchCount++;
+      const container = document.getElementById('fairsList');
+      const block = document.createElement('div');
+      block.className = 'fair-block';
+      block.innerHTML = `<span class="close-btn" onclick="this.parentElement.remove(); fairSearchCount--;"></span>`;
+      const input = document.createElement('input');
+      input.placeholder = 'Search fair name or state…';
+      block.appendChild(input);
+      const results = document.createElement('div');
+      results.className = 'fair-results';
+      block.appendChild(results);
+      const sel = document.createElement('div');
+      sel.className = 'selected-fair';
+      block.appendChild(sel);
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        const norm = stateMap[q];
+        results.innerHTML = '';
+        if (!q) return;
+        allFairs.forEach(fair => {
+          if (!fair.name.toLowerCase().includes(q) && norm !== fair.state.toLowerCase()) return;
+          const ranges = [];
+          for (let i = 0; i <= 10; i++) {
+            const sK = i === 0 ? 'start_date' : `week${i+1}_start_date`;
+            const eK = i === 0 ? 'end_date'   : `week${i+1}_end_date`;
+            const s = fair[sK], e = fair[eK];
+            if (!s||!e) continue;
+            const key = `${fair.id}_${s}_${e}`;
+            if (!Array.from(document.querySelectorAll('.fair-block'))
+                      .some(b=>`${b.dataset.fairId}_${b.dataset.start}_${b.dataset.end}`===key)) {
+              ranges.push({s,e});
+            }
+          }
+          if (!ranges.length) return;
+          const fairDiv = document.createElement('div');
+          fairDiv.innerHTML = `<strong>${fair.name} (${fair.state})</strong>`;
+          ranges.forEach(({s,e})=>{
+            const row = document.createElement('div');
+            row.className = 'fair-row';
+            const span = document.createElement('span');
+            span.textContent = `${s} → ${e}`;
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.onclick = () => {
+              if (!cb.checked) return;
+              sel.textContent = `${fair.name} (${fair.state}) — ${s} to ${e}`;
+              block.dataset.fairId = fair.id;
+              block.dataset.name   = fair.name;
+              block.dataset.start  = s;
+              block.dataset.end    = e;
+              input.style.display = 'none';
+              results.innerHTML    = '';
+            };
+            row.appendChild(span);
+            row.appendChild(cb);
+            fairDiv.appendChild(row);
+          });
+          results.appendChild(fairDiv);
+        });
+      });
+      if (prefill) {
+        sel.textContent = `${prefill.name} — ${prefill.start} to ${prefill.end}`;
+        block.dataset.fairId = prefill.id;
+        block.dataset.name   = prefill.name;
+        block.dataset.start  = prefill.start;
+        block.dataset.end    = prefill.end;
+        input.style.display  = 'none';
       }
+      container.appendChild(block);
+    }
+
+    window.addEventListener('DOMContentLoaded', async ()=>{
+      await loadFairs();
+      let app = JSON.parse(localStorage.getItem('performerProfile'));
+      if (!app) {
+        const { data:{ session } } = await supabase.auth.getSession();
+        const { data } = await supabase
+          .from('vendor_performer_applications')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('application_type', 'performer')
+          .order('id',{ascending:false})
+          .limit(1).single();
+        app = data;
+      }
+      originalApp = app;
+      ['name','description','photoUrl','vendorType','website']
+  .forEach(id => document.getElementById(id).value = id==='photoUrl' ? app.photo_url : id==='vendorType' ? app.vendor_type : app[id] || '');
+
+document.getElementById('contactName').value = app.contact_name || '';
+document.getElementById('contactEmail').value = app.contact_email || '';
+const { data: rawFairs = [] } = await supabase
+  .from('vendor_application_fairs')
+  .select('fair_id,start_date,end_date,renaissance_fairs(name)')
+  .eq('application_id', app.id);  // ✅ This is good
+
+  const { data: rawManual = [] } = await supabase
+  .from('suggested_fairs')
+  .select('fair_name,start_date,end_date')
+  .eq('application_id', app.id)
+  .eq('application_type', true); // 👈 MAKE SURE this is true not 'performer'
+
+
+      rawFairs.forEach(f => originalFairs.push({ id: f.fair_id, name: f.renaissance_fairs.name, start: f.start_date, end: f.end_date }));
+      rawManual.forEach(m => originalFairs.push({ id: `manual_${m.start_date}_${m.end_date}`, name: m.fair_name, start: m.start_date, end: m.end_date }));
+      originalFairs.forEach(f => addFairSearch(f));
     });
-  
-    async function submitUpdate() {
-      const app = JSON.parse(localStorage.getItem('performerProfile'));
-      if (!app) return;
-  
-      const updated = {
+
+    function getCurrentFairs(){
+      return Array.from(document.querySelectorAll('.fair-block'))
+        .map(b=>({ id: b.dataset.fairId, name: b.dataset.name, start: b.dataset.start, end: b.dataset.end }))
+        .filter(f=>f.id && f.start && f.end);
+    }
+    function diffFairs(){
+      const curr = getCurrentFairs();
+      const added = curr.filter(c=>!originalFairs.some(o=>o.id===c.id&&o.start===c.start&&o.end===c.end));
+      const removed = originalFairs.filter(o=>!curr.some(c=>c.id===o.id&&c.start===o.start&&c.end===o.end));
+      return { added, removed };
+    }
+    function onSave(){
+      const { added, removed } = diffFairs();
+      const changes = [];
+      if (added.length)   changes.push(`Added: ${added.map(f=>`${f.name} (${f.start}→${f.end})`).join(', ')}`);
+      if (removed.length) changes.push(`Removed: ${removed.map(f=>`${f.name} (${f.start}→${f.end})`).join(', ')}`);
+      const modal = document.getElementById('modalBackdrop');
+      const title = document.getElementById('modalTitle');
+      const body  = document.getElementById('modalBody');
+      if (!changes.length) {
+        title.textContent = 'No changes detected';
+        body.innerHTML   = `<p>Nothing was changed. Continue anyway?</p>`;
+      } else {
+        title.textContent = 'Confirm Changes';
+        body.innerHTML    = `<ul>${changes.map(c=>`<li>${c}</li>`).join('')}</ul><p>Submit these changes?</p>`;
+      }
+      modal.style.display = 'flex';
+    }
+    function closeModal(){ document.getElementById('modalBackdrop').style.display = 'none'; }
+    async function confirmSave(){
+      closeModal();
+      document.getElementById('updateMessage').textContent = 'Saving…';
+      await supabase.from('vendor_performer_applications').update({
         name: document.getElementById('name').value,
         description: document.getElementById('description').value,
         photo_url: document.getElementById('photoUrl').value,
-        performer_type: document.getElementById('performerType').value,
+        vendor_type: document.getElementById('vendorType').value,
         website: document.getElementById('website').value,
-        contact_name: app.contact_name, // locked
-        contact_email: app.contact_email, // locked
         update_pending: true
-      };
-  
-      const { error } = await supabase
-        .from('vendor_performer_applications')
-        .update(updated)
-        .eq('id', app.id);
-  
-      document.getElementById('updateMessage').textContent = error
-        ? `❌ ${error.message}`
-        : '✅ Update submitted for review. Redirecting...';
-  
-      if (!error) {
-        localStorage.setItem('performerProfile', JSON.stringify({ ...app, ...updated }));
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 1500);
-      }
+      }).eq('id', originalApp.id);
+      await supabase.from('vendor_application_fairs').delete().eq('application_id', originalApp.id);
+      await supabase.from('suggested_fairs').delete().eq('application_id', originalApp.id).eq('application_type','performer');
+      const curr = getCurrentFairs();
+      const known = curr.filter(c=>!c.id.startsWith('manual_')).map(c=>(
+        { application_id: originalApp.id, fair_id: Number(c.id), start_date: c.start, end_date: c.end }
+      ));
+      const manual = curr.filter(c=>c.id.startsWith('manual_')).map(c=>(
+        { application_id: originalApp.id, fair_name: c.name, start_date: c.start, end_date: c.end, notes:'Manually entered', application_type:'performer' }
+      ));
+      if (known.length) await supabase.from('vendor_application_fairs').insert(known);
+      if (manual.length) await supabase.from('suggested_fairs').insert(manual);
+      document.getElementById('updateMessage').textContent = '✅ Changes submitted — redirecting…';
+      setTimeout(()=> location.href='dashboard.html', 1500);
     }
   </script>
-  
+  <footer style="margin-top:40px;font-size:14px;text-align:center">
+    <a href="/index.html">Home</a> |
+    <a href="/vendor_performer/performer/info.html">Info</a> |
+    <a href="/terms.html">Terms</a> |
+    <a href="/privacy.html">Privacy</a> |
+    <a href="/faq.html">FAQ</a> |
+    <a href="/contact.html">Contact</a>
+  </footer>
 </body>
 </html>

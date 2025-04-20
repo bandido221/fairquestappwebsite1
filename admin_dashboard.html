@@ -28,9 +28,6 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       text-align: left;
     }
-    .buttons {
-      margin-top: 10px;
-    }
     button, .action-button {
       padding: 10px 16px;
       border: none;
@@ -40,8 +37,6 @@
       font-weight: bold;
       text-decoration: none;
     }
-    .approve { background-color: #2ecc71; color: white; }
-    .decline { background-color: #e74c3c; color: white; }
     .logout {
       position: absolute;
       top: 20px;
@@ -49,7 +44,7 @@
       background-color: #bb9457;
       color: black;
     }
-    .nav-bar {
+    .nav-bar, .page-nav {
       margin-bottom: 20px;
     }
     .nav-bar button, .page-nav a {
@@ -127,22 +122,64 @@
     }
 
     async function showLiveVendors() {
-      const { data, error } = await supabase.from('vendors').select('*');
+      const { data, error } = await supabase
+      .from('vendor_performer_applications')
+.select(`
+  id,
+  name,
+  vendor_type,
+  description,
+  approval_status,
+  vendor_application_fairs (
+    start_date,
+    end_date,
+    renaissance_fairs (
+      name,
+      state
+    )
+  )
+`)
+
+        .eq('approval_status', 'pending')
+        .or('application_type.is.false,application_type.is.null');
+
       const container = document.getElementById('applicationList');
       if (error || !data) {
         container.innerHTML = '<p>⚠️ Failed to load vendors.</p>';
         return;
       }
-      container.innerHTML = '<h2>📦 Live Vendors</h2>';
+
+      container.innerHTML = '<h2>📦 Pending Vendors with Fair Selections</h2>';
       data.forEach(v => {
-        container.innerHTML += `
-          <div class="app-box">
-            <p><strong>Name:</strong> ${v.name}</p>
-            <p><strong>Type:</strong> ${v.vendor_type}</p>
-            <p><strong>Description:</strong> ${v.description}</p>
-            <p><strong>Photo:</strong><br>${v.photo_url ? `<img src="${v.photo_url}" width="100">` : 'None'}</p>
-          </div>
-        `;
+        const fairList = (v.vendor_application_fairs || [])
+          .map(fair => {
+            const fairName = fair.renaissance_fairs?.name || 'Unknown Fair';
+            const fairState = fair.renaissance_fairs?.state || '';
+            return `<li>${fairName} (${fairState}) – ${fair.start_date} to ${fair.end_date}</li>`;
+          })
+          .join('');
+          container.innerHTML += `
+  <div class="app-box">
+    <p><strong>Name:</strong> ${v.name}</p>
+    <p><strong>Type:</strong> ${v.vendor_type}</p>
+    <p><strong>Description:</strong> ${v.description}</p>
+    <p><strong>Status:</strong> <span style="font-weight:bold; color: ${
+      v.approval_status === 'approved' ? 'green' : v.approval_status === 'rejected' ? 'red' : 'orange'
+    };">${v.approval_status.toUpperCase()}</span></p>
+    <h4>Fairs</h4>
+    <ul>
+      ${
+        (v.vendor_application_fairs || []).map(fair => {
+          const fairName = fair.renaissance_fairs?.name || 'Unknown';
+          const fairState = fair.renaissance_fairs?.state || '';
+          return `<li>${fairName} (${fairState}) — ${fair.start_date} to ${fair.end_date}</li>`;
+        }).join('')
+        || '<li>No fairs listed</li>'
+      }
+    </ul>
+  </div>
+`;
+
       });
     }
 

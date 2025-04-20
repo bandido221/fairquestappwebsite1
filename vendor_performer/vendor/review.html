@@ -190,9 +190,15 @@
         ${data.website ? `<p><strong>Website:</strong> <a href="${data.website}" target="_blank">${data.website}</a></p>` : ''}
         ${data.photoUrl ? `<p><strong>Photo:</strong><br><img src="${data.photoUrl}" width="150"/></p>` : ''}
         <h2>Fairs Selected</h2>
-        <ul>
-          ${data.fairs.map(f => `<li><strong>${f.name}</strong>: ${f.start} to ${f.end}</li>`).join('')}
-        </ul>
+       <ul>
+  ${data.fairs.map(f => `
+    <li>
+      <strong>${f.name}</strong>: ${f.start} to ${f.end}
+      ${(f.id && typeof f.id === 'string' && f.id.startsWith('manual_')) ? `<em style="color: darkred;">(Manually entered)</em>` : ''}
+    </li>
+  `).join('')}
+</ul>
+
       `;
     }
 
@@ -230,21 +236,51 @@
         msg.className = 'error';
         return;
       }
+      const fairRows = [];
+const manualFairSuggestions = [];
 
-      const fairRows = data.fairs.map(f => ({
-        application_id: appData.id,
-        fair_id: parseInt(f.id),
-        start_date: f.start,
-        end_date: f.end
-      }));
+data.fairs.forEach(f => {
+  const isManual = f.id.startsWith('manual_');
+  if (isManual) {
+    manualFairSuggestions.push({
+  application_id: appData.id,
+  fair_name: f.name,
+  start_date: f.start,
+  end_date: f.end,
+  notes: 'Manually entered by vendor',
+  application_type: 'vendor'  // ✅ Matches the expected string format
+});
 
-      const { error: fairError } = await supabase.from('vendor_application_fairs').insert(fairRows);
+  } else {
+    fairRows.push({
+      application_id: appData.id,
+      fair_id: parseInt(f.id),
+      start_date: f.start,
+      end_date: f.end
+    });
+  }
+});
 
-      if (fairError) {
-        msg.textContent = '⚠️ Application saved but fair selection failed: ' + fairError.message;
-        msg.className = 'error';
-        return;
-      }
+// Insert known fairs
+if (fairRows.length > 0) {
+  const { error: fairError } = await supabase.from('vendor_application_fairs').insert(fairRows);
+  if (fairError) {
+    msg.textContent = '⚠️ Application saved, but failed to link fair(s): ' + fairError.message;
+    msg.className = 'error';
+    return;
+  }
+}
+
+// Insert manual fair suggestions
+if (manualFairSuggestions.length > 0) {
+  const { error: suggestionError } = await supabase.from('suggested_fairs').insert(manualFairSuggestions);
+  if (suggestionError) {
+    msg.textContent = '⚠️ Application saved, but failed to suggest manual fair(s): ' + suggestionError.message;
+    msg.className = 'error';
+    return;
+  }
+}
+
 
       msg.textContent = '✅ Your application has been submitted successfully!';
       msg.className = 'success';

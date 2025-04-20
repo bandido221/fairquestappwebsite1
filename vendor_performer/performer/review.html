@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Review Performer Application | FairQuest</title>
 
-  <!-- Google Analytics (FairQuest Website) -->
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -14,90 +17,142 @@
     gtag('config', 'G-HP222J86X0');
   </script>
 
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
-  <style>
+<style>
+  body {
+    font-family: 'Domine', serif;
+    background-color: #000;
+    padding: 40px;
+    text-align: center;
+    color: #f0e6d2;
+    margin: 0;
+  }
+
+  h1, h2 {
+    font-family: 'Cinzel', serif;
+  }
+
+  .top-banner {
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 20px auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .logo {
+    max-width: 100px;
+    height: auto;
+    margin: 0 auto 20px auto;
+    display: block;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+    transition: transform 0.3s ease;
+  }
+
+  .logo:hover {
+    transform: scale(1.05);
+  }
+
+  .summary-box {
+    background: rgba(251, 241, 200, 0.88);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    color: #333;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .summary-box p {
+    margin-bottom: 12px;
+  }
+
+  ul {
+    padding-left: 20px;
+    text-align: left;
+  }
+
+  button {
+    padding: 12px 20px;
+    font-size: 16px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .back-button {
+    background-color: #aaa;
+    color: white;
+  }
+
+  .submit-button {
+    background-color: #4CAF50;
+    color: white;
+  }
+
+  .message {
+    margin-top: 20px;
+    font-size: 16px;
+  }
+
+  .success { color: green; }
+  .error { color: red; }
+
+  footer {
+    margin-top: 40px;
+    font-size: 14px;
+  }
+
+  footer a {
+    color: #aa8452;
+    text-decoration: none;
+    margin: 0 8px;
+  }
+
+  footer a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
     body {
-      font-family: 'Domine', serif;
-      background-color: #000;
-      padding: 40px;
-      text-align: center;
-      color: #f0e6d2;
-      margin: 0;
+      padding: 20px;
     }
-    h1, h2 { font-family: 'Cinzel', serif; }
 
-    .top-banner {
-      width: 100%;
-      max-width: 600px;
-      height: auto;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto 20px auto;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-    .logo {
-      max-width: 100px;
-      height: auto;
-      margin: 0 auto 20px auto;
-      display: block;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
-    }
     .summary-box {
-      background: rgba(251, 241, 200, 0.88);
-      padding: 30px;
-      border-radius: 12px;
-      color: #333;
-      max-width: 800px;
-      margin: 0 auto 20px auto;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 20px;
     }
-    ul {
-      padding-left: 20px;
-      text-align: left;
-    }
-    button {
-      padding: 12px 20px;
-      margin: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .back-button { background-color: #888; color: white; }
-    .submit-button { background-color: #4CAF50; color: white; }
-    .message {
-      margin-top: 20px;
-      font-size: 16px;
-    }
-    .success { color: green; }
-    .error { color: red; }
 
-    footer {
-      margin-top: 40px;
-      font-size: 14px;
+    h1 {
+      font-size: 28px;
     }
-    footer a {
-      color: #aa8452;
-      text-decoration: none;
-      margin: 0 8px;
+
+    h2 {
+      font-size: 20px;
     }
-    footer a:hover {
-      text-decoration: underline;
+
+    p, ul {
+      font-size: 15px;
     }
-    @media (max-width: 768px) {
-      body { padding: 20px; }
-      .summary-box { padding: 20px; }
-      h1 { font-size: 28px; }
-      h2 { font-size: 20px; }
-      p, ul { font-size: 15px; }
-      button { font-size: 15px; padding: 10px 16px; }
+
+    button {
+      font-size: 15px;
+      padding: 10px 16px;
     }
-  </style>
+
+    .message {
+      font-size: 15px;
+    }
+  }
+</style>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
-
   <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
   <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
 
@@ -116,107 +171,133 @@
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
-    
-    const data = JSON.parse(localStorage.getItem('performerAppDraft')) || {};
-    
+
+    // Pull draft
+    const data = JSON.parse(localStorage.getItem('performerAppDraft') || '{}');
+
     function renderReview() {
       const box = document.getElementById('reviewBox');
-      if (!data.name || !data.fairs || data.fairs.length === 0) {
+      if (!data.name || !data.fairs || !data.fairs.length) {
         box.innerHTML = '<p>❗ Missing required info. Please go back and complete the form.</p>';
         return;
       }
-    
+
       box.innerHTML = `
         <h2>Performer Info</h2>
         <p><strong>Name:</strong> ${data.name}</p>
-        <p><strong>Type:</strong> ${data.vendorType}</p>
+        <p><strong>Type:</strong> ${data.performerType}</p>
         <p><strong>Bio:</strong> ${data.description}</p>
         <p><strong>Contact:</strong> ${data.contactName} (${data.contactEmail})</p>
         ${data.website ? `<p><strong>Website:</strong> <a href="${data.website}" target="_blank">${data.website}</a></p>` : ''}
-        ${data.photoUrl ? `<p><strong>Photo:</strong><br><img src="${data.photoUrl}" width="150"/></p>` : ''}
+        ${data.photoUrl ? `<p><strong>Photo:</strong><br/><img src="${data.photoUrl}" alt="Performer Photo"/></p>` : ''}
         <h2>Fairs Selected</h2>
         <ul>
-          ${data.fairs.map(f => `<li><strong>${f.name}</strong>: ${f.start} to ${f.end}</li>`).join('')}
+          ${data.fairs.map(f => `
+            <li>
+              <strong>${f.name}</strong>: ${f.start} to ${f.end}
+              ${f.id.startsWith('manual_') ? `<em style="color:#c0392b;">(Manual entry)</em>` : ''}
+            </li>
+          `).join('')}
         </ul>
+        ${data.comments ? `<h2>Comments / Questions</h2><p>${data.comments}</p>` : ''}
       `;
     }
-    
+
     function goBack() {
       window.location.href = 'application.html';
     }
-    
+
     async function submitApplication() {
       const msg = document.getElementById('message');
-      msg.textContent = 'Submitting...';
-      msg.className = '';
-    
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData?.user?.id) {
-        msg.textContent = '❌ You must be signed in to submit this application.';
-        msg.className = 'error';
-        return;
-      }
-      const userId = userData.user.id;
-    
-      const { data: appData, error: insertError } = await supabase
+      msg.textContent = 'Submitting…'; msg.className = '';
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // 1) Insert application
+      const { data: appData, error: appErr } = await supabase
         .from('vendor_performer_applications')
         .insert([{
           name: data.name,
           description: data.description,
           photo_url: data.photoUrl,
-          vendor_type: data.vendorType,
+          vendor_type: data.performerType,
           contact_name: data.contactName,
           contact_email: data.contactEmail,
           website: data.website,
           approval_status: 'pending',
           application_type: true,
-          user_id: userId
+          user_id: user?.id
         }])
         .select()
         .single();
-    
-      if (insertError) {
-        msg.textContent = '❌ Error submitting application: ' + insertError.message;
+
+      if (appErr) {
+        msg.textContent = '❌ Error submitting application: ' + appErr.message;
         msg.className = 'error';
         return;
       }
-    
-      const fairRows = data.fairs.map(f => ({
-        application_id: appData.id,
-        fair_id: parseInt(f.id),
-        start_date: f.start,
-        end_date: f.end
-      }));
-    
-      const { error: fairError } = await supabase.from('vendor_application_fairs').insert(fairRows);
-    
-      if (fairError) {
-        msg.textContent = '⚠️ Saved performer, but failed to add fair info: ' + fairError.message;
-        msg.className = 'error';
-        return;
+
+      // 2) Separate fairs
+      const fairRows = [];
+      const manualSuggestions = [];
+      data.fairs.forEach(f => {
+        if (f.id.startsWith('manual_')) {
+          manualSuggestions.push({
+            application_id: appData.id,
+            fair_name:      f.name,
+            start_date:     f.start,
+            end_date:       f.end,
+            notes:          'Manually entered by performer',
+            application_type: 'performer'
+          });
+        } else {
+          fairRows.push({
+            application_id: appData.id,
+            fair_id:        parseInt(f.id,10),
+            start_date:     f.start,
+            end_date:       f.end
+          });
+        }
+      });
+
+      // 3) Link known fairs
+      if (fairRows.length) {
+        const { error: linkErr } = await supabase.from('vendor_application_fairs').insert(fairRows);
+        if (linkErr) {
+          msg.textContent = '⚠️ Application saved, but couldn’t link fairs: ' + linkErr.message;
+          msg.className = 'error';
+          return;
+        }
       }
-    
-      msg.textContent = '✅ Performer application submitted!';
+
+      // 4) Insert manual fairs
+      if (manualSuggestions.length) {
+        const { error: suggErr } = await supabase.from('suggested_fairs').insert(manualSuggestions);
+        if (suggErr) {
+          msg.textContent = '⚠️ Saved, but couldn’t save manual fairs: ' + suggErr.message;
+          msg.className = 'error';
+          return;
+        }
+      }
+
+      // 5) Success
+      msg.textContent = '✅ Performer application submitted successfully!';
       msg.className = 'success';
       localStorage.removeItem('performerAppDraft');
-    
-      setTimeout(() => {
-        window.location.href = 'thankyou.html';
-      }, 1500);
+      setTimeout(()=> window.location.href='thankyou.html', 1500);
     }
-    
+
+    // Kick off
     renderReview();
-    </script>
-    
+  </script>
 
-  <footer style="margin-top: 40px; font-size: 14px;">
-    <a href="/index.html" style="color: #aa8452;">Home</a> |
-    <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
-    <a href="/terms.html" style="color: #aa8452;">Terms</a> |
-    <a href="/privacy.html" style="color: #aa8452;">Privacy</a> |
-    <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
-    <a href="/contact.html" style="color: #aa8452;">Contact</a>
+  <footer>
+    <a href="/index.html">Home</a> |
+    <a href="/vendor_performer/performer/info.html">Info</a> |
+    <a href="/terms.html">Terms</a> |
+    <a href="/privacy.html">Privacy</a> |
+    <a href="/faq.html">FAQ</a> |
+    <a href="/contact.html">Contact</a>
   </footer>
-
 </body>
 </html>

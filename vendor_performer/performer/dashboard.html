@@ -201,61 +201,193 @@
     }
 
     async function loadDashboard(userId) {
-      const { data, error } = await supabase
-        .from('vendor_performer_applications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('id', { ascending: false });
+  const container = document.getElementById('dashboardContent');
+  container.innerHTML = '';
+  const { data: apps, error } = await supabase
+    .from('vendor_performer_applications')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('application_type', true)
+    .order('id', { ascending: false });
 
-      const container = document.getElementById('dashboardContent');
-      const applyButton = document.getElementById('applyButton');
+  if (error) {
+    container.innerHTML = `<p>Error loading dashboard. Please try again.</p>`;
+    return;
+  }
 
-      if (error) {
-        console.error('Error loading performer info:', error.message);
-        container.innerHTML = '<p>Error loading dashboard. Please try again.</p>';
-        return;
-      }
+  if (!apps.length) {
+    container.innerHTML = `<div class="info"><p>You haven’t submitted any performer applications yet.</p></div>`;
+    return;
+  }
 
-      if (!data || data.length === 0) {
-        container.innerHTML = `<div class="info"><p>You haven’t submitted any performer applications yet.</p></div>`;
-        applyButton.style.display = 'inline-block';
-        return;
-      }
+  for (let i = 0; i < apps.length; i++) {
+    const perf = apps[i];
+    // fetch known fairs
+    const { data: fairs = [] } = await supabase
+      .from('vendor_application_fairs')
+      .select('start_date,end_date,renaissance_fairs(name)')
+      .eq('application_id', perf.id);
+    // fetch manual suggestions
+    const { data: manual = [] } = await supabase
+      .from('suggested_fairs')
+      .select('fair_name,start_date,end_date')
+      .eq('application_id', perf.id)
+      .eq('application_type', 'performer');
 
-      applyButton.style.display = 'inline-block';
-      container.innerHTML = '';
-
-      data.forEach((performer, index) => {
-        const box = document.createElement('div');
-        box.className = 'info';
-        box.innerHTML = `
-          <p><strong>Application #${index + 1}</strong></p>
-          <p><strong>Name:</strong> ${performer.name}</p>
-          <p><strong>Type:</strong> ${performer.vendor_type}</p>
-          <p><strong>Description:</strong> ${performer.description}</p>
-          <p><strong>Contact:</strong> ${performer.contact_name} (${performer.contact_email})</p>
-<p><strong>Status:</strong> ${
-  performer.update_pending
-    ? '🕒 Pending Update Review'
-    : performer.approval_status === 'approved'
-      ? '✅ Approved'
-      : performer.approval_status === 'rejected'
-        ? '❌ Rejected'
-        : '⏳ Pending Review'
-}</p>
-
-          ${performer.website ? `<p><a href="${performer.website}" target="_blank">${performer.website}</a></p>` : ''}
-          ${performer.photo_url ? `<p><img src="${performer.photo_url}" width="150" /></p>` : ''}
-          <button class="update-app" onclick='startUpdate(${JSON.stringify(performer)})'>Update Application</button>
-        `;
-        container.appendChild(box);
+    // build fair list HTML
+    let fairHtml = '<p><strong>🎪 Fairs & Dates:</strong></p><ul>';
+    if (fairs.length || manual.length) {
+      fairs.forEach(f => {
+        fairHtml += `<li>${f.renaissance_fairs.name}: ${f.start_date} to ${f.end_date}</li>`;
       });
+      manual.forEach(m => {
+        fairHtml += `<li>${m.fair_name} (manual): ${m.start_date} to ${m.end_date}</li>`;
+      });
+    } else {
+      fairHtml += '<li>None listed</li>';
     }
+    fairHtml += '</ul>';
 
-    function startUpdate(performerData) {
-      localStorage.setItem('performerProfile', JSON.stringify(performerData));
-      window.location.href = 'update_application.html';
-    }
+    const box = document.createElement('div');
+    box.className = 'info';
+    const safeName = perf.name.replace(/'/g, "\\'");
+
+    box.innerHTML = `
+      <p><strong>Application #${i+1}</strong></p>
+      <p><strong>Name:</strong> ${perf.name}</p>
+      <p><strong>Type:</strong> ${perf.vendor_type}</p>
+      <p><strong>Description:</strong> ${perf.description}</p>
+      <p><strong>Contact:</strong> ${perf.contact_name} (${perf.contact_email})</p>
+      <p><strong>Status:</strong> ${
+        perf.update_pending
+          ? '🕒 Pending Update Review'
+          : perf.approval_status==='approved' ? '✅ Approved'
+          : perf.approval_status==='rejected' ? '❌ Rejected'
+          : '⏳ Pending Review'
+      }</p>
+
+      ${fairHtml}
+
+      ${perf.website ? `<p><a href="${perf.website}" target="_blank">${perf.website}</a></p>` : ''}
+      ${perf.photo_url ? `<p><img src="${perf.photo_url}" width="150"/></p>` : ''}
+
+        <button class="update-app" onclick="startUpdate(${perf.id})">
+    Update Application
+  </button>
+  <button class="delete-app"
+          onclick="deleteApplication(${perf.id}, '${safeName}')">
+    🗑️ Delete
+  </button>
+`;
+
+    container.appendChild(box);
+  }
+}
+
+// call loadDashboard once you have the user ID, as before…
+
+// now add this deleteApplication helper:
+async function deleteApplication(appId, appName) {
+  console.log('⚠️ deleteApplication called:', { appId, appName });
+
+  if (!confirm(`Are you sure you want to delete your application “${appName}”?`)) {
+    console.log('⏹️ Deletion cancelled by user');
+    return;
+  }
+
+  console.log('🗑️ User confirmed deletion, starting removal of related records');
+
+  // 1) remove known fairs
+  console.log('→ deleting vendor_application_fairs for application_id =', appId);
+  let { data: fairData, error: fairError } = await supabase
+    .from('vendor_application_fairs')
+    .delete()
+    .eq('application_id', appId);
+  console.log('   → vendor_application_fairs response:', { fairData, fairError });
+  if (fairError) {
+    alert(`❌ Failed to delete linked fairs: ${fairError.message}`);
+    return;
+  }
+
+  // 2) remove manual suggestions
+  console.log('→ deleting suggested_fairs for application_id =', appId);
+  let { data: sugData, error: sugError } = await supabase
+    .from('suggested_fairs')
+    .delete()
+    .eq('application_id', appId)
+    .eq('application_type', 'performer');
+  console.log('   → suggested_fairs response:', { sugData, sugError });
+  if (sugError) {
+    alert(`❌ Failed to delete manual suggestions: ${sugError.message}`);
+    return;
+  }
+
+  // 3) delete the application record itself
+  console.log('→ deleting vendor_performer_applications id =', appId);
+  let { data: appData, error: appError } = await supabase
+    .from('vendor_performer_applications')
+    .delete()
+    .eq('id', appId);
+  console.log('   → vendor_performer_applications response:', { appData, appError });
+  if (appError) {
+    alert(`❌ Failed to delete application: ${appError.message}`);
+    return;
+  }
+
+  // 4) notify admin
+  // 4) notify admin (safe handling)
+  console.log('→ inserting admin notification for deletion');
+  const notifRes = await supabase
+    .from('admin_notifications')
+    .insert([{
+      application_id: appId,
+      message: `Performer application "${appName}" was deleted by the user.`,
+      category: 'application_deleted'
+    }]);
+
+  console.log('   → admin_notifications response:', notifRes);
+  if (notifRes.error) {
+    console.warn('⚠️ Failed to notify admin:', notifRes.error);
+  }
+
+
+   // …
+   alert('✅ Your application has been deleted and the admin has been notified.');
+  console.log('✔️ Deletion complete, reloading dashboard');
+
+  // ✅ Fetch the current session, then reload:
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user?.id) {
+    await loadDashboard(session.user.id);
+  }
+
+}
+
+
+
+async function startUpdate(id) {
+  // Clear any old cached version first
+  localStorage.removeItem('performerProfile');
+
+  // Fetch full application record fresh
+  const { data, error } = await supabase
+    .from('vendor_performer_applications')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    alert('❌ Could not load this application.');
+    return;
+  }
+
+  // ✅ Save using the performer-specific key
+  localStorage.setItem('performerProfile', JSON.stringify(data));
+  window.location.href = 'update_application.html';
+}
+
+
+
 
     async function logout() {
       await supabase.auth.signOut();
@@ -263,6 +395,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', initDashboard);
+    
   </script>
 
 <footer style="margin-top: 40px; font-size: 14px;">

@@ -9,28 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-  <!-- Google Analytics -->
+  <!-- Google Analytics (still loading the script but buttons won’t fire real events) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-HP222J86X0');
-
-    function trackClick(label) {
-      gtag('event', 'button_click', {
-        event_category: 'Navigation',
-        event_label: label
-      });
-    }
-
-    function trackComingSoon(label) {
-      alert(label + ' is coming soon!');
-      gtag('event', 'coming_soon_click', {
-        event_category: 'Coming Soon',
-        event_label: label
-      });
-    }
   </script>
 
   <style>
@@ -152,28 +137,62 @@
   <header>
     <img src="images/logo.png" alt="FairQuest Logo" class="logo" />
     <h1>Welcome to FairQuest</h1>
-    <p>Embark on a journey through Renaissance Fairs across the realm. Discover vendors, quests, and magical experiences awaiting you.</p>
+    <p>
+    
+
+
+
+      “We’re having temporary technical difficulties and
+      will be back online by Monday. Thanks for your patience!”
+
+      
+    </p>
   </header>
 
   <div class="button-group">
-    <a class="btn" href="#" onclick="trackComingSoon('Download App'); gtag('event', 'click', { event_category: 'button', event_label: 'Download App' });">📲 Download App</a>
-    <a class="btn" href="vendor_performer/vendor/index.html" onclick="gtag('event', 'click', { event_category: 'button', event_label: 'Vendor Portal' });">🧺 Vendor Portal</a>
-    <a class="btn" href="vendor_performer/performer/index.html" onclick="gtag('event', 'click', { event_category: 'button', event_label: 'Performer Portal' });">🎭 Performer Portal</a>
-    <a class="btn" href="#" onclick="trackComingSoon('Explore Fairs'); gtag('event', 'click', { event_category: 'button', event_label: 'Explore Fairs' });">🎪 Explore Fairs</a>
+    <!-- All buttons now trigger the same maintenance popup -->
+    <a class="btn" href="#"
+       onclick="alert(
+         'We’re terribly sorry for the inconvenience — our database is currently under maintenance.‘n’ +
+         'Please check back on Monday when everything should be up and running. ‘n’ +
+         'Thank you for your patience!' );">
+      📲 Download App
+    </a>
+    <a class="btn" href="#"
+       onclick="alert(
+         'We’re terribly sorry for the inconvenience — our database is currently under maintenance.‘n’ +
+         'Please check back on Monday when everything should be up and running. ‘n’ +
+         'Thank you for your patience!' );">
+      🧺 Vendor Portal
+    </a>
+    <a class="btn" href="#"
+       onclick="alert(
+         'We’re terribly sorry for the inconvenience — our database is currently under maintenance.‘n’ +
+         'Please check back on Monday when everything should be up and running. ‘n’ +
+         'Thank you for your patience!' );">
+      🎭 Performer Portal
+    </a>
+    <a class="btn" href="#"
+       onclick="alert(
+         'We’re terribly sorry for the inconvenience — our database is currently under maintenance.‘n’ +
+         'Please check back on Monday when everything should be up and running. ‘n’ +
+         'Thank you for your patience!' );">
+      🎪 Explore Fairs
+    </a>
   </div>
 
- <footer>
-  <a href="terms.html">Terms</a> |
-  <a href="privacy.html">Privacy</a> |
-  <a href="contact.html">Contact</a> |
-  <a href="faq.html">FAQ</a> |
-  <a href="admin_login.html" style="color: #aa8452; font-style: italic;">🗝️ Backstage Pass</a>
-  
-  <div class="social-icons">
-    <a href="https://www.facebook.com/fairquestapp/" target="_blank" aria-label="Facebook"><i class="fa fa-facebook"></i></a>
-    <a href="https://www.instagram.com/YourFairQuestPage" target="_blank" aria-label="Instagram"><i class="fa fa-instagram"></i></a>
-  </div>
-</footer>
+  <footer>
+    <a href="terms.html">Terms</a> |
+    <a href="privacy.html">Privacy</a> |
+    <a href="contact.html">Contact</a> |
+    <a href="faq.html">FAQ</a> |
+    <a href="admin_login.html" style="color: #aa8452; font-style: italic;">🗝️ Backstage Pass</a>
+    
+    <div class="social-icons">
+      <a href="https://www.facebook.com/fairquestapp/" target="_blank" aria-label="Facebook"><i class="fa fa-facebook"></i></a>
+      <a href="https://www.instagram.com/YourFairQuestPage" target="_blank" aria-label="Instagram"><i class="fa fa-instagram"></i></a>
+    </div>
+  </footer>
 
 </body>
 </html>

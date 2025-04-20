@@ -188,7 +188,10 @@
         <p><strong>Type:</strong> ${data.performerType}</p>
         <p><strong>Bio:</strong> ${data.description}</p>
         <p><strong>Contact:</strong> ${data.contactName} (${data.contactEmail})</p>
-        ${data.website ? `<p><strong>Website:</strong> <a href="${data.website}" target="_blank">${data.website}</a></p>` : ''}
+${data.website ? (() => {
+  const fullLink = data.website.startsWith('http') ? data.website : 'https://' + data.website;
+  return `<p><strong>Website:</strong> <a href="${fullLink}" target="_blank">${fullLink}</a></p>`;
+})() : ''}
         ${data.photoUrl ? `<p><strong>Photo:</strong><br/><img src="${data.photoUrl}" alt="Performer Photo"/></p>` : ''}
         <h2>Fairs Selected</h2>
         <ul>

@@ -6,15 +6,8 @@
   <title>Approve Vendors | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <style>
-    @media (max-width: 768px) {
-      body { padding: 20px; }
-      h1 { font-size: 22px; }
-      .app-box { padding: 16px; }
-      button, .nav-bar a { font-size: 15px; padding: 10px 12px; }
-      .nav-bar { gap: 8px; }
-      .nav-bar a { margin: 4px 0; display: block; text-align: center; }
-    }
     body {
       background-color: #000;
       font-family: 'Domine', serif;
@@ -37,7 +30,6 @@
       border-radius: 6px;
       font-weight: bold;
       text-decoration: none;
-      display: inline-block;
     }
     .app-box {
       background: #fdf7e1;
@@ -59,25 +51,13 @@
     }
     .approve { background-color: #2ecc71; color: white; }
     .decline { background-color: #e74c3c; color: white; }
+    .delete  { background-color: #c0392b; color: white; }
   </style>
-</head>
-<body>
-  <h1>📦 Approve Vendor Applications</h1>
-
-  <div class="nav-bar">
-    <a href="admin_dashboard.html">🏠 Home</a>
-    <a href="approve_vendors.html">📦 Approve Vendors</a>
-    <a href="approve_performers.html">🎤 Approve Performers</a>
-    <a href="vendor_list.html">📋 Vendor List</a>
-    <a href="performer_list.html">🗂 Performer List</a>
-    <a href="all_fairs.html">🎪 All Fairs</a>
-    <a href="reports.html">📊 Reports</a>
-    <a href="settings.html">⚙️ Settings</a>
-  </div>
-
-  <div id="applicationList">Loading vendor applications...</div>
-
   <script>
+    window.addEventListener('load', () => {
+      emailjs.init("U-llNKdObkEnLNbo6");
+    });
+
     const supabase = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
@@ -85,12 +65,11 @@
 
     async function loadVendorApplications() {
       const { data: apps, error } = await supabase
-  .from('vendor_performer_applications')
-  .select('*')
-  .eq('approval_status', 'pending')
-  .eq('application_type', false)         // only false = vendors
-  .order('id', { ascending: false });
-
+        .from('vendor_performer_applications')
+        .select('*')
+        .eq('approval_status', 'pending')
+        .eq('application_type', false)
+        .order('id', { ascending: false });
 
       const container = document.getElementById('applicationList');
       if (error || !apps || apps.length === 0) {
@@ -100,91 +79,71 @@
 
       container.innerHTML = '';
       for (const app of apps) {
-        console.log(`🔍 Loading fairs for application ID ${app.id}`);
-
-        // 1) Fetch “known” fairs
-        const { data: fairs, error: fairError } = await supabase
+        const { data: fairs = [] } = await supabase
           .from('vendor_application_fairs')
-          .select(`
-            start_date,
-            end_date,
-            renaissance_fairs ( name, state )
-          `)
+          .select('start_date, end_date, renaissance_fairs(name, state)')
           .eq('application_id', app.id);
-        if (fairError) console.error(`❌ Error fetching known fairs:`, fairError);
 
-        // 2) Fetch manual suggestions
-        const { data: manualFairs, error: manErr } = await supabase
+        const { data: manual = [] } = await supabase
           .from('suggested_fairs')
           .select('fair_name, start_date, end_date')
           .eq('application_id', app.id);
-          
-        if (manErr) console.error(`❌ Error fetching manual fairs:`, manErr);
 
-        // 3) Merge and normalize both lists
         const allFairs = [];
-        (fairs || []).forEach(f => {
+        fairs.forEach(f => {
           allFairs.push({
             label: `${f.renaissance_fairs.name} (${f.renaissance_fairs.state})`,
-            start: f.start_date,
-            end: f.end_date,
-            manual: false
+            dates: `${f.start_date} to ${f.end_date}`
           });
         });
-        (manualFairs || []).forEach(m => {
+        manual.forEach(m => {
           allFairs.push({
             label: `${m.fair_name} (manual)`,
-            start: m.start_date,
-            end: m.end_date,
-            manual: true
+            dates: `${m.start_date} to ${m.end_date}`
           });
         });
 
-        // 4) Group by label
-        let fairDetails = '<p><strong>🎪 Fairs & Dates:</strong></p>';
+        let fairHTML = '<p><strong>🎪 Fairs & Dates:</strong></p>';
         if (allFairs.length) {
           const grouped = {};
           allFairs.forEach(f => {
             if (!grouped[f.label]) grouped[f.label] = [];
-            grouped[f.label].push(`${f.start} to ${f.end}`);
+            grouped[f.label].push(f.dates);
           });
-          fairDetails += '<ul>';
+          fairHTML += '<ul>';
           for (const label in grouped) {
-            fairDetails += `<li><strong>${label}</strong><ul>`;
+            fairHTML += `<li><strong>${label}</strong><ul>`;
             grouped[label].forEach(date => {
-              fairDetails += `<li>${date}</li>`;
+              fairHTML += `<li>${date}</li>`;
             });
-            fairDetails += '</ul></li>';
+            fairHTML += '</ul></li>';
           }
-          fairDetails += '</ul>';
+          fairHTML += '</ul>';
         } else {
-          fairDetails += '<p>None listed</p>';
+          fairHTML += '<p>None listed</p>';
         }
 
-        // 5) Render
         container.innerHTML += `
           <div class="app-box">
             <p><strong>Name:</strong> ${app.name}</p>
             <p><strong>Status:</strong>
               <span style="font-weight:bold;color:${
-                app.approval_status==='approved'?'green':
-                app.approval_status==='declined'?'red':'orange'
+                app.approval_status === 'approved' ? 'green' :
+                app.approval_status === 'declined' ? 'red' : 'orange'
               }">${app.approval_status.toUpperCase()}</span>
             </p>
             <p><strong>Type:</strong> ${app.vendor_type}</p>
             <p><strong>Description:</strong> ${app.description}</p>
             <p><strong>Contact:</strong> ${app.contact_name} (${app.contact_email})</p>
-            ${app.website?`<p><strong>Website:</strong> <a href="${app.website}" target="_blank">${app.website}</a></p>`:''}
-            ${app.photo_url?`<p><strong>Photo:</strong><br><img src="${app.photo_url}" width="100"></p>`:''}
-            ${fairDetails}
-           <!-- …inside your app-box template… -->
-<!-- NEW -->
-<div class="buttons">
-  <button class="approve"  onclick="approveVendor(${app.id})">✅ Approve</button>
-  <button class="decline" onclick="declineVendor(${app.id})">❌ Decline</button>
-  <button class="delete"   onclick="deleteApplication(${app.id})">🗑️ Delete</button>
-</div>
-
+            ${app.website ? `<p><strong>Website:</strong> <a href="${app.website}" target="_blank">${app.website}</a></p>` : ''}
+            ${app.photo_url ? `<p><strong>Photo:</strong><br><img src="${app.photo_url}" width="100"/></p>` : ''}
+            ${fairHTML}
+            <div class="buttons">
+              <button class="approve" onclick="approveVendor(${app.id})">✅ Approve</button>
+              <button class="decline" onclick="declineVendor(${app.id})">❌ Decline</button>
+              <button class="delete" onclick="deleteApplication(${app.id})">🗑️ Delete</button>
+              <button onclick="askQuestion('${app.contact_email}', '${app.name}')">✉️ Ask a Question</button>
+            </div>
           </div>
         `;
       }
@@ -205,49 +164,47 @@
       loadVendorApplications();
     }
 
+    async function deleteApplication(id) {
+      if (!confirm("Delete application and all linked fair info?")) return;
+
+      await supabase.from('suggested_fairs').delete().eq('application_id', id);
+      await supabase.from('vendor_application_fairs').delete().eq('application_id', id);
+      await supabase.from('vendor_performer_applications').delete().eq('id', id);
+      alert('✅ Application deleted.');
+      loadVendorApplications();
+    }
+
+    function askQuestion(email, name) {
+      const message = prompt(`What would you like to ask ${name}?`);
+      if (!message) return;
+      emailjs.send("service_6l6jgzh", "template_r7ytfrc", {
+        to_name: name,
+        to_email: email,
+        message: message,
+      }).then(() => {
+        alert('📬 Question sent!');
+      }).catch(err => {
+        console.error('Email error:', err);
+        alert('❌ Failed to send the email.');
+      });
+    }
+
     loadVendorApplications();
-
-
-
- // 🆕 deleteApplication helper
-async function deleteApplication(id) {
-  if (!confirm(
-    "This will permanently remove the application AND all its linked fairs (and any manual suggestions).\nProceed?"
-  )) return;
-
-  // 1) delete any manual suggestions
-  let { error: err1 } = await supabase
-    .from('suggested_fairs')
-    .delete()
-    .eq('application_id', id);
-  if (err1) {
-    return alert(`❌ Could not delete manual suggestions: ${err1.message}`);
-  }
-
-  // 2) delete all linked fair‐dates
-  let { error: err2 } = await supabase
-    .from('vendor_application_fairs')
-    .delete()
-    .eq('application_id', id);
-  if (err2) {
-    return alert(`❌ Could not delete fair links: ${err2.message}`);
-  }
-
-  // 3) finally delete the application itself
-  let { error: err3 } = await supabase
-    .from('vendor_performer_applications')
-    .delete()
-    .eq('id', id);
-  if (err3) {
-    alert(`❌ Failed to delete application: ${err3.message}`);
-  } else {
-    alert("✅ Application and related data deleted.");
-    loadVendorApplications();
-    if (typeof showPendingCounts === 'function') showPendingCounts();
-  }
-}
-
-
   </script>
+</head>
+<body>
+  <h1>📦 Approve Vendor Applications</h1>
+  <div class="nav-bar">
+    <a href="admin_dashboard.html">🏠 Home</a>
+    <a href="approve_vendors.html">📦 Approve Vendors</a>
+    <a href="approve_performers.html">🎤 Approve Performers</a>
+    <a href="vendor_list.html">📋 Vendor List</a>
+    <a href="performer_list.html">💂 Performer List</a>
+    <a href="all_fairs.html">🎪 All Fairs</a>
+    <a href="reports.html">📊 Reports</a>
+    <a href="settings.html">⚙️ Settings</a>
+  </div>
+
+  <div id="applicationList">Loading vendor applications...</div>
 </body>
 </html>

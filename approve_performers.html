@@ -6,15 +6,8 @@
   <title>Approve Performers | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <style>
-    @media (max-width: 768px) {
-      body { padding: 20px; }
-      h1 { font-size: 22px; }
-      .app-box { padding: 16px; }
-      button, .nav-bar a { font-size: 15px; padding: 10px 12px; }
-      .nav-bar { gap: 8px; }
-      .nav-bar a { margin: 4px 0; display: block; text-align: center; }
-    }
     body {
       background-color: #000;
       font-family: 'Domine', serif;
@@ -60,31 +53,11 @@
     .decline { background-color: #e74c3c; color: white; }
     .delete  { background-color: #c0392b; color: white; }
   </style>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>
     window.addEventListener('load', () => {
       emailjs.init("U-llNKdObkEnLNbo6");
     });
-  </script>
-  
-</head>
-<body>
-  <h1>🎤 Approve Performer Applications</h1>
 
-  <div class="nav-bar">
-    <a href="admin_dashboard.html">🏠 Home</a>
-    <a href="approve_vendors.html">📦 Approve Vendors</a>
-    <a href="approve_performers.html">🎤 Approve Performers</a>
-    <a href="vendor_list.html">📋 Vendor List</a>
-    <a href="performer_list.html">💂 Performer List</a>
-    <a href="all_fairs.html">🎪 All Fairs</a>
-    <a href="reports.html">📊 Reports</a>
-    <a href="settings.html">⚙️ Settings</a>
-  </div>
-
-  <div id="applicationList">Loading performer applications...</div>
-
-  <script>
     const supabase = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
@@ -99,28 +72,22 @@
         .order('id', { ascending: false });
 
       const container = document.getElementById('applicationList');
-      if (error) {
-        container.innerHTML = `<p>⚠️ Error loading: ${error.message}</p>`;
-        return;
-      }
-      if (!apps || apps.length === 0) {
+      if (error || !apps || apps.length === 0) {
         container.innerHTML = '<p>No pending performer applications found.</p>';
         return;
       }
 
       container.innerHTML = '';
       for (const app of apps) {
-        const { data: fairs = [], error: fairErr } = await supabase
+        const { data: fairs = [] } = await supabase
           .from('vendor_application_fairs')
           .select('start_date, end_date, renaissance_fairs(name, state)')
           .eq('application_id', app.id);
-        if (fairErr) console.error('Error fetching fairs:', fairErr);
 
-        const { data: manual = [], error: manErr } = await supabase
+        const { data: manual = [] } = await supabase
           .from('suggested_fairs')
           .select('fair_name, start_date, end_date')
           .eq('application_id', app.id);
-        if (manErr) console.error('Error fetching suggestions:', manErr);
 
         const allFairs = [];
         fairs.forEach(f => {
@@ -138,16 +105,16 @@
 
         let fairHTML = '<p><strong>🎪 Fairs & Dates:</strong></p>';
         if (allFairs.length) {
-          const grouped = allFairs.reduce((acc, f) => {
-            acc[f.label] = acc[f.label] || [];
-            acc[f.label].push(f.dates);
-            return acc;
-          }, {});
+          const grouped = {};
+          allFairs.forEach(f => {
+            if (!grouped[f.label]) grouped[f.label] = [];
+            grouped[f.label].push(f.dates);
+          });
           fairHTML += '<ul>';
           for (const label in grouped) {
             fairHTML += `<li><strong>${label}</strong><ul>`;
-            grouped[label].forEach(d => {
-              fairHTML += `<li>${d}</li>`;
+            grouped[label].forEach(date => {
+              fairHTML += `<li>${date}</li>`;
             });
             fairHTML += '</ul></li>';
           }
@@ -159,6 +126,12 @@
         container.innerHTML += `
           <div class="app-box">
             <p><strong>Name:</strong> ${app.name}</p>
+            <p><strong>Status:</strong>
+              <span style="font-weight:bold;color:${
+                app.approval_status === 'approved' ? 'green' :
+                app.approval_status === 'declined' ? 'red' : 'orange'
+              }">${app.approval_status.toUpperCase()}</span>
+            </p>
             <p><strong>Description:</strong> ${app.description}</p>
             <p><strong>Contact:</strong> ${app.contact_name} (${app.contact_email})</p>
             ${app.website ? `<p><strong>Website:</strong> <a href="${app.website}" target="_blank">${app.website}</a></p>` : ''}
@@ -176,7 +149,7 @@
     }
 
     async function approvePerformer(id) {
-      const { error } = await supabase.rpc('approve_and_publish_vendor', { app_id: id });
+      const { error } = await supabase.rpc('approve_and_publish_performer', { app_id: id });
       alert(error ? `❌ Failed: ${error.message}` : '✅ Performer approved!');
       loadPerformerApplications();
     }
@@ -191,54 +164,46 @@
     }
 
     async function deleteApplication(id) {
-      if (!confirm('This will permanently delete the application and all related data. Proceed?')) return;
+      if (!confirm("Delete application and all linked fair info?")) return;
 
-      let { error: e1 } = await supabase
-        .from('suggested_fairs')
-        .delete()
-        .eq('application_id', id);
-      if (e1) return alert(`❌ Could not delete suggestions: ${e1.message}`);
-
-      let { error: e2 } = await supabase
-        .from('vendor_application_fairs')
-        .delete()
-        .eq('application_id', id);
-      if (e2) return alert(`❌ Could not delete fairs: ${e2.message}`);
-
-      let { error: e3 } = await supabase
-        .from('vendor_performer_applications')
-        .delete()
-        .eq('id', id);
-      if (e3) alert(`❌ Could not delete app: ${e3.message}`);
-      else {
-        alert('✅ Application deleted.');
-        loadPerformerApplications();
-        if (typeof showPendingCounts === 'function') showPendingCounts();
-      }
+      await supabase.from('suggested_fairs').delete().eq('application_id', id);
+      await supabase.from('vendor_application_fairs').delete().eq('application_id', id);
+      await supabase.from('vendor_performer_applications').delete().eq('id', id);
+      alert('✅ Application deleted.');
+      loadPerformerApplications();
     }
 
     function askQuestion(email, name) {
-  const message = prompt(`What would you like to ask ${name}?`);
-  if (!message) return;
-
-  emailjs.send("service_6l6jgzh", "template_r7ytfrc", {
-    to_name: name,
-    to_email: email,
-    message: message,
-  })
-  .then(() => {
-    alert('📬 Question sent! The performer can reply to your Gmail.');
-  })
-  .catch(err => {
-    console.error('Email error:', err);
-    alert('❌ Failed to send the email.');
-  });
-}
-
+      const message = prompt(`What would you like to ask ${name}?`);
+      if (!message) return;
+      emailjs.send("service_6l6jgzh", "template_r7ytfrc", {
+        to_name: name,
+        to_email: email,
+        message: message,
+      }).then(() => {
+        alert('📬 Question sent!');
+      }).catch(err => {
+        console.error('Email error:', err);
+        alert('❌ Failed to send the email.');
+      });
+    }
 
     loadPerformerApplications();
   </script>
+</head>
+<body>
+  <h1>🎤 Approve Performer Applications</h1>
+  <div class="nav-bar">
+    <a href="admin_dashboard.html">🏠 Home</a>
+    <a href="approve_vendors.html">📦 Approve Vendors</a>
+    <a href="approve_performers.html">🎤 Approve Performers</a>
+    <a href="vendor_list.html">📋 Vendor List</a>
+    <a href="performer_list.html">💂 Performer List</a>
+    <a href="all_fairs.html">🎪 All Fairs</a>
+    <a href="reports.html">📊 Reports</a>
+    <a href="settings.html">⚙️ Settings</a>
+  </div>
 
- 
+  <div id="applicationList">Loading performer applications...</div>
 </body>
 </html>

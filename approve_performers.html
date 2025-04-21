@@ -60,6 +60,13 @@
     .decline { background-color: #e74c3c; color: white; }
     .delete  { background-color: #c0392b; color: white; }
   </style>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      emailjs.init("U-llNKdObkEnLNbo6");
+    });
+  </script>
+  
 </head>
 <body>
   <h1>🎤 Approve Performer Applications</h1>
@@ -69,7 +76,7 @@
     <a href="approve_vendors.html">📦 Approve Vendors</a>
     <a href="approve_performers.html">🎤 Approve Performers</a>
     <a href="vendor_list.html">📋 Vendor List</a>
-    <a href="performer_list.html">🗂 Performer List</a>
+    <a href="performer_list.html">💂 Performer List</a>
     <a href="all_fairs.html">🎪 All Fairs</a>
     <a href="reports.html">📊 Reports</a>
     <a href="settings.html">⚙️ Settings</a>
@@ -103,21 +110,18 @@
 
       container.innerHTML = '';
       for (const app of apps) {
-        // 1) fetch linked fairs
         const { data: fairs = [], error: fairErr } = await supabase
           .from('vendor_application_fairs')
           .select('start_date, end_date, renaissance_fairs(name, state)')
           .eq('application_id', app.id);
         if (fairErr) console.error('Error fetching fairs:', fairErr);
 
-        // 2) fetch manual suggestions
         const { data: manual = [], error: manErr } = await supabase
           .from('suggested_fairs')
           .select('fair_name, start_date, end_date')
           .eq('application_id', app.id);
         if (manErr) console.error('Error fetching suggestions:', manErr);
 
-        // 3) merge
         const allFairs = [];
         fairs.forEach(f => {
           allFairs.push({
@@ -132,11 +136,10 @@
           });
         });
 
-        // 4) group
         let fairHTML = '<p><strong>🎪 Fairs & Dates:</strong></p>';
         if (allFairs.length) {
           const grouped = allFairs.reduce((acc, f) => {
-            acc[f.label] = acc[f.label]||[];
+            acc[f.label] = acc[f.label] || [];
             acc[f.label].push(f.dates);
             return acc;
           }, {});
@@ -153,7 +156,6 @@
           fairHTML += '<p>None listed</p>';
         }
 
-        // 5) render
         container.innerHTML += `
           <div class="app-box">
             <p><strong>Name:</strong> ${app.name}</p>
@@ -166,6 +168,7 @@
               <button class="approve" onclick="approvePerformer(${app.id})">✅ Approve</button>
               <button class="decline" onclick="declinePerformer(${app.id})">❌ Decline</button>
               <button class="delete" onclick="deleteApplication(${app.id})">🗑️ Delete</button>
+              <button onclick="askQuestion('${app.contact_email}', '${app.name}')">✉️ Ask a Question</button>
             </div>
           </div>
         `;
@@ -190,21 +193,18 @@
     async function deleteApplication(id) {
       if (!confirm('This will permanently delete the application and all related data. Proceed?')) return;
 
-      // delete suggestions
       let { error: e1 } = await supabase
         .from('suggested_fairs')
         .delete()
         .eq('application_id', id);
       if (e1) return alert(`❌ Could not delete suggestions: ${e1.message}`);
 
-      // delete fair links
       let { error: e2 } = await supabase
         .from('vendor_application_fairs')
         .delete()
         .eq('application_id', id);
       if (e2) return alert(`❌ Could not delete fairs: ${e2.message}`);
 
-      // delete application
       let { error: e3 } = await supabase
         .from('vendor_performer_applications')
         .delete()
@@ -217,8 +217,28 @@
       }
     }
 
-    // initial load
+    function askQuestion(email, name) {
+  const message = prompt(`What would you like to ask ${name}?`);
+  if (!message) return;
+
+  emailjs.send("service_6l6jgzh", "template_r7ytfrc", {
+    to_name: name,
+    to_email: email,
+    message: message,
+  })
+  .then(() => {
+    alert('📬 Question sent! The performer can reply to your Gmail.');
+  })
+  .catch(err => {
+    console.error('Email error:', err);
+    alert('❌ Failed to send the email.');
+  });
+}
+
+
     loadPerformerApplications();
   </script>
+
+ 
 </body>
 </html>

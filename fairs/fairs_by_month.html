@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fairs by Month | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      font-family: 'Domine', serif;
+      color: #f0e6d2;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #fdf7e1;
+      color: #333;
+      border-radius: 12px;
+      max-width: 600px;
+      margin: 20px auto;
+      overflow: hidden;
+      text-align: left;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    .card img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background-color: #eee; /* optional: in case images have transparency */
+  display: block;
+}
+.top-banner {
+      width: 100%;
+      max-width: 600px;
+      display: block;
+      margin: 0 auto 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+   
+    .logo {
+      width: 120px;
+      display: block;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+    }
+    .card-content {
+      padding: 16px;
+    }
+    .badge {
+      display: inline-block;
+      background-color: #bb9457;
+      color: black;
+      font-weight: bold;
+      border-radius: 6px;
+      padding: 4px 10px;
+      margin: 2px 4px;
+    }
+  </style>
+</head>
+<body>
+
+   <!-- Banner Image -->
+   <img src="/images/banner.png" alt="FairQuest Banner" class="top-banner" />
+
+   <header>
+     <img src="/images/logo.png" alt="FairQuest Logo" class="logo" />
+     <h1>Welcome to FairQuest</h1>
+
+  <h1>🎭 Fairs in <span id="monthName"></span></h1>
+  <div id="fairResults">Loading...</div>
+
+  <script>
+    const { createClient } = supabase;
+    const supabaseClient = createClient('https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    const month = parseInt(new URLSearchParams(window.location.search).get('month'));
+    const monthName = new Date(0, month - 1).toLocaleString('default', { month: 'long' });
+    document.getElementById('monthName').textContent = monthName || 'Unknown';
+
+    async function fetchFairsByMonth() {
+      const { data, error } = await supabaseClient.from('renaissance_fairs').select('*');
+      if (error) {
+        document.getElementById('fairResults').innerHTML = `<p>Error: ${error.message}</p>`;
+        return;
+      }
+
+      const filtered = data.filter(fair => {
+  const datesToCheck = [];
+
+  if (fair.start_date) datesToCheck.push(fair.start_date);
+  for (let i = 2; i <= 10; i++) {
+    const start = fair[`week${i}_start_date`];
+    if (start) datesToCheck.push(start);
+  }
+
+  return datesToCheck.some(date => new Date(date).getMonth() + 1 === month);
+});
+
+
+      displayFairs(filtered);
+    }
+
+    function displayFairs(fairs) {
+  const container = document.getElementById('fairResults');
+  container.innerHTML = '';
+
+  if (!fairs.length) {
+    container.innerHTML = '<p>No fairs found for this month.</p>';
+    return;
+  }
+
+  fairs.forEach(fair => {
+    const weekends = [];
+
+    // Include main start_date/end_date
+    if (fair.start_date && fair.end_date) {
+      weekends.push(`${fair.start_date} to ${fair.end_date}`);
+    }
+
+    // Include all valid weekX ranges
+    for (let i = 2; i <= 10; i++) {
+      const start = fair[`week${i}_start_date`];
+      const end = fair[`week${i}_end_date`];
+      if (start && end) {
+        weekends.push(`${start} to ${end}`);
+      }
+    }
+
+    container.innerHTML += `
+      <div class="card">
+        <img src="${fair.image_url || 'https://placehold.co/600x180?text=No+Image'}" alt="${fair.name}" />
+        <div class="card-content">
+          <h3>${fair.name}</h3>
+          <p><span class="badge">${fair.state}</span></p>
+          <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
+          ${fair.website ? `<p><strong>🌐 Website:</strong> <a href="${fair.website}" target="_blank">${fair.website}</a></p>` : ''}
+          ${weekends.length > 0 ? `
+            <p><strong>📅 Weekends:</strong></p>
+            ${weekends.map(date => `<p>${date}</p>`).join('')}
+          ` : '<p><strong>📅 Weekends:</strong> None listed</p>'}
+        </div>
+      </div>
+    `;
+  });
+}
+
+    
+
+    fetchFairsByMonth();
+  </script>
+</body>
+</html>

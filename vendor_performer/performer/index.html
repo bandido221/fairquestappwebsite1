@@ -216,19 +216,25 @@
 }
 
 
-    async function signUp() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const { error } = await supabase.auth.signUp({ email, password });
+async function signUp() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const { error } = await supabase.auth.signUp({ email, password });
 
-      const msg = document.getElementById('authMessage');
-      if (error) {
-        msg.textContent = `❌ ${error.message}`;
-      } else {
-        document.getElementById('emailPopup').style.display = 'flex';
-        msg.textContent = '';
-      }
-    }
+  const msg = document.getElementById('authMessage');
+  if (error) {
+    msg.textContent = `❌ ${error.message}`;
+  } else {
+    msg.textContent = '';
+    document.getElementById('emailPopup').style.display = 'flex';
+
+    // Redirect after short delay
+    setTimeout(() => {
+      window.location.href = '/index.html';
+    }, 5000); // Wait 5 seconds before redirecting
+  }
+}
+
   </script>
 </body>
 </html>

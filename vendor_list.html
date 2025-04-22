@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vendor List | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -84,30 +84,46 @@
     );
 
     async function loadVendors() {
-      const { data: vendors, error } = await supabase.from('vendors').select('*');
+      const { data: applications, error } = await supabase
+        .from('vendor_performer_applications')
+        .select(`
+          id,
+          name,
+          description,
+          vendor_type,
+          photo_url,
+          website,
+          contact_name,
+          contact_email,
+          approval_status,
+          vendor_id,
+          vendor_application_fairs (
+            start_date,
+            end_date,
+            renaissance_fairs (name, state)
+          )
+        `)
+        .or('application_type.is.null,application_type.eq.false')
+        .not('vendor_id', 'is', null);
+
       const container = document.getElementById('vendorList');
 
-      if (error || !vendors || vendors.length === 0) {
+      if (error || !applications || applications.length === 0) {
         container.innerHTML = '<p>No vendors found.</p>';
         return;
       }
 
       container.innerHTML = '';
 
-      for (const vendor of vendors) {
-        const { data: fairs } = await supabase
-          .from('vendor_application_fairs')
-          .select('start_date, end_date, renaissance_fairs(name)')
-          .eq('application_id', vendor.id);
-
+      for (const app of applications) {
         let fairDetails = '<p><strong>🎪 Fairs & Dates:</strong></p>';
 
-        if (fairs && fairs.length > 0) {
+        if (app.vendor_application_fairs?.length) {
           const grouped = {};
-          fairs.forEach(f => {
-            const name = f.renaissance_fairs.name;
-            if (!grouped[name]) grouped[name] = [];
-            grouped[name].push(`${f.start_date} to ${f.end_date}`);
+          app.vendor_application_fairs.forEach(f => {
+            const fairName = f.renaissance_fairs?.name || 'Unnamed Fair';
+            if (!grouped[fairName]) grouped[fairName] = [];
+            grouped[fairName].push(`${f.start_date} to ${f.end_date}`);
           });
 
           fairDetails += '<ul>';
@@ -125,11 +141,16 @@
 
         container.innerHTML += `
           <div class="vendor-box">
-            <p><strong>Name:</strong> ${vendor.name}</p>
-            <p><strong>Type:</strong> ${vendor.vendor_type || '—'}</p>
-            <p><strong>Description:</strong> ${vendor.description || '—'}</p>
-            ${vendor.website ? `<p><strong>Website:</strong> <a href="${vendor.website}" target="_blank">${vendor.website}</a></p>` : ''}
-            ${vendor.photo_url ? `<p><strong>Photo:</strong><br><img src="${vendor.photo_url}" width="100"></p>` : ''}
+            <p><strong>Name:</strong> ${app.name}</p>
+            <p><strong>Status:</strong> <span style="font-weight:bold;color:${
+              app.approval_status === 'approved' ? 'green' :
+              app.approval_status === 'declined' ? 'red' : 'orange'
+            }">${app.approval_status.toUpperCase()}</span></p>
+            <p><strong>Type:</strong> ${app.vendor_type || '—'}</p>
+            <p><strong>Description:</strong> ${app.description || '—'}</p>
+            <p><strong>Contact:</strong> ${app.contact_name} (${app.contact_email})</p>
+            ${app.website ? `<p><strong>Website:</strong> <a href="${app.website}" target="_blank">${app.website}</a></p>` : ''}
+            ${app.photo_url ? `<p><strong>Photo:</strong><br><img src="${app.photo_url}" width="100"></p>` : ''}
             ${fairDetails}
           </div>
         `;

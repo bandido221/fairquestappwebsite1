@@ -84,60 +84,80 @@
     );
 
     async function loadPerformers() {
-      const { data: performers, error } = await supabase.from('performers').select('*');
-      const container = document.getElementById('performerList');
+    const { data: applications, error } = await supabase
+      .from('vendor_performer_applications')
+      .select(`
+        id,
+        name,
+        description,
+        vendor_type,
+        photo_url,
+        contact_name,
+        contact_email,
+        website,
+        approval_status,
+        performer_id,
+        vendor_application_fairs (
+          start_date,
+          end_date,
+          renaissance_fairs (name, state)
+        )
+      `)
+      .eq('application_type', true)
+      .not('performer_id', 'is', null);
 
-      if (error || !performers || performers.length === 0) {
-        container.innerHTML = '<p>No performers found.</p>';
-        return;
-      }
+    const container = document.getElementById('performerList');
 
-      container.innerHTML = '';
-
-      for (const performer of performers) {
-        const { data: fairs } = await supabase
-          .from('vendor_application_fairs')
-          .select('start_date, end_date, renaissance_fairs(name)')
-          .eq('application_id', performer.id);
-
-        let fairDetails = '<p><strong>🎪 Fairs & Dates:</strong></p>';
-
-        if (fairs && fairs.length > 0) {
-          const grouped = {};
-          fairs.forEach(f => {
-            const name = f.renaissance_fairs.name;
-            if (!grouped[name]) grouped[name] = [];
-            grouped[name].push(`${f.start_date} to ${f.end_date}`);
-          });
-
-          fairDetails += '<ul>';
-          for (const fair in grouped) {
-            fairDetails += `<li><strong>${fair}</strong><ul>`;
-            grouped[fair].forEach(date => {
-              fairDetails += `<li>${date}</li>`;
-            });
-            fairDetails += '</ul></li>';
-          }
-          fairDetails += '</ul>';
-        } else {
-          fairDetails += '<p>None listed</p>';
-        }
-
-        container.innerHTML += `
-          <div class="performer-box">
-            <p><strong>Name:</strong> ${performer.name}</p>
-            <p><strong>Type:</strong> ${performer.performer_type || '—'}</p>
-            <p><strong>Description:</strong> ${performer.description || '—'}</p>
-            <p><strong>Contact:</strong> ${performer.contact_name} (${performer.contact_email})</p>
-            ${performer.website ? `<p><strong>Website:</strong> <a href="${performer.website}" target="_blank">${performer.website}</a></p>` : ''}
-            ${performer.photo_url ? `<p><strong>Photo:</strong><br><img src="${performer.photo_url}" width="100"></p>` : ''}
-            ${fairDetails}
-          </div>
-        `;
-      }
+    if (error || !applications || applications.length === 0) {
+      container.innerHTML = '<p>No performers found.</p>';
+      return;
     }
 
-    loadPerformers();
-  </script>
+    container.innerHTML = '';
+
+    for (const app of applications) {
+      let fairDetails = '<p><strong>🎪 Fairs & Dates:</strong></p>';
+
+      if (app.vendor_application_fairs?.length) {
+        const grouped = {};
+        app.vendor_application_fairs.forEach(f => {
+          const fairName = f.renaissance_fairs?.name || 'Unnamed Fair';
+          if (!grouped[fairName]) grouped[fairName] = [];
+          grouped[fairName].push(`${f.start_date} to ${f.end_date}`);
+        });
+
+        fairDetails += '<ul>';
+        for (const fair in grouped) {
+          fairDetails += `<li><strong>${fair}</strong><ul>`;
+          grouped[fair].forEach(date => {
+            fairDetails += `<li>${date}</li>`;
+          });
+          fairDetails += '</ul></li>';
+        }
+        fairDetails += '</ul>';
+      } else {
+        fairDetails += '<p>None listed</p>';
+      }
+
+      container.innerHTML += `
+        <div class="performer-box">
+          <p><strong>Name:</strong> ${app.name}</p>
+          <p><strong>Status:</strong> <span style="font-weight:bold;color:${
+            app.approval_status === 'approved' ? 'green' :
+            app.approval_status === 'declined' ? 'red' : 'orange'
+          }">${app.approval_status.toUpperCase()}</span></p>
+          <p><strong>Type:</strong> ${app.vendor_type || '—'}</p>
+          <p><strong>Description:</strong> ${app.description || '—'}</p>
+          <p><strong>Contact:</strong> ${app.contact_name} (${app.contact_email})</p>
+          ${app.website ? `<p><strong>Website:</strong> <a href="${app.website}" target="_blank">${app.website}</a></p>` : ''}
+          ${app.photo_url ? `<p><strong>Photo:</strong><br><img src="${app.photo_url}" width="100"></p>` : ''}
+          ${fairDetails}
+        </div>
+      `;
+    }
+  }
+
+  loadPerformers();
+</script>
 </body>
 </html>

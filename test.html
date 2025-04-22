@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fetch Participants (Anon Key Only)</title>
+  <style>
+    body {
+      background: #121212;
+      color: #eee;
+      font-family: sans-serif;
+      padding: 30px;
+    }
+    input, button {
+      font-size: 16px;
+      padding: 8px;
+      margin-top: 10px;
+      width: 300px;
+    }
+    .results {
+      margin-top: 20px;
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .participant {
+      border-bottom: 1px solid #333;
+      padding: 10px 0;
+    }
+    h2 {
+      margin-top: 30px;
+      color: #ffd700;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🎭 Performers & 🛍️ Vendors (Anon Key)</h1>
+
+<input type="text" id="fairId" placeholder="Enter Fair ID (e.g. 280)" />
+<button onclick="fetchParticipants()">Fetch Participants</button>
+
+<div class="results" id="results"></div>
+
+<script>
+const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ";
+const baseUrl = "https://awtbjuiqgtdydsqzimul.supabase.co";
+
+async function fetchParticipants() {
+  const fairId = document.getElementById("fairId").value.trim();
+  const resultsDiv = document.getElementById("results");
+  resultsDiv.innerHTML = "⏳ Loading...";
+
+  const url = `${baseUrl}/rest/v1/vendor_application_fairs?fair_id=eq.${fairId}&select=application_id,vendor_performer_applications!inner(vendor_id,application_type,approval_status,performer:performer_id(id,name,description,photo_url,website),vendor:vendor_id(id,name,vendor_type,photo_url,website))&vendor_performer_applications.approval_status=eq.approved`;
+
+  try {
+    const res = await fetch(url, {
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`
+      }
+    });
+
+    const data = await res.json();
+    console.log("📦 Raw Response:", data);
+
+    const performers = data
+      .map(entry => entry["vendor_performer_applications"]?.performer)
+      .filter(p => p);
+
+    const vendors = data
+      .map(entry => entry["vendor_performer_applications"]?.vendor)
+      .filter(v => v);
+
+    if (performers.length === 0 && vendors.length === 0) {
+      resultsDiv.innerHTML = "⚠️ No participants found.";
+      return;
+    }
+
+    let output = "";
+
+    if (performers.length > 0) {
+      output += "<h2>🎭 Performers</h2>";
+      output += performers.map(p => `
+        <div class="participant">
+          <strong>${p.name}</strong><br/>
+          ${p.description || "(No description)"}<br/>
+          ${p.website ? `<a href="${p.website}" target="_blank">🌐 Website</a>` : ""}
+        </div>
+      `).join("");
+    }
+
+    if (vendors.length > 0) {
+      output += "<h2>🛍️ Vendors</h2>";
+      output += vendors.map(v => `
+        <div class="participant">
+          <strong>${v.name}</strong><br/>
+          ${v.vendor_type || "(No type)"}<br/>
+          ${v.website ? `<a href="${v.website}" target="_blank">🌐 Website</a>` : ""}
+        </div>
+      `).join("");
+    }
+
+    resultsDiv.innerHTML = output;
+
+  } catch (err) {
+    console.error("❌ Error:", err);
+    resultsDiv.innerHTML = "❌ Failed to fetch participants.";
+  }
+}
+</script>
+
+</body>
+</html>

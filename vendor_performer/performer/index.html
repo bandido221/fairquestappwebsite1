@@ -146,6 +146,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
+
   <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
   <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
 
@@ -174,8 +175,8 @@
   <!-- Modal -->
   <div id="emailPopup" class="modal-backdrop">
     <div class="modal-content">
-      <p>Please check your email to verify your address before logging in.</p>
-      <button onclick="document.getElementById('emailPopup').style.display='none'">Close</button>
+      <p>✅ Please check your email to verify your address before logging in.</p>
+      <button onclick="closePopupAndRedirect()">Close</button>
     </div>
   </div>
 
@@ -201,40 +202,38 @@
       }
     });
 
-  async function signIn() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+    async function signIn() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-  const msg = document.getElementById('authMessage');
-  if (error) {
-    msg.textContent = `❌ ${error.message}`;
-  } else {
-    msg.textContent = "";
-    window.location.href = 'dashboard.html';
-  }
-}
+      const msg = document.getElementById('authMessage');
+      if (error) {
+        msg.textContent = `❌ ${error.message}`;
+      } else {
+        msg.textContent = "";
+        window.location.href = 'dashboard.html';
+      }
+    }
 
+    async function signUp() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { error } = await supabase.auth.signUp({ email, password });
 
-async function signUp() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const { error } = await supabase.auth.signUp({ email, password });
+      const msg = document.getElementById('authMessage');
+      if (error) {
+        msg.textContent = `❌ ${error.message}`;
+      } else {
+        msg.textContent = '';
+        document.getElementById('emailPopup').style.display = 'flex';
+      }
+    }
 
-  const msg = document.getElementById('authMessage');
-  if (error) {
-    msg.textContent = `❌ ${error.message}`;
-  } else {
-    msg.textContent = '';
-    document.getElementById('emailPopup').style.display = 'flex';
-
-    // Redirect after short delay
-    setTimeout(() => {
+    function closePopupAndRedirect() {
+      document.getElementById('emailPopup').style.display = 'none';
       window.location.href = '/index.html';
-    }, 5000); // Wait 5 seconds before redirecting
-  }
-}
-
+    }
   </script>
 </body>
 </html>

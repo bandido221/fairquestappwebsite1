@@ -29,6 +29,7 @@
       font-family: 'Cinzel', serif;
       font-size: 32px;
     }
+
     .top-banner {
       width: 100%;
       max-width: 600px;
@@ -100,7 +101,6 @@
       text-decoration: underline;
     }
 
-    /* Modal */
     .modal-backdrop {
       display: none;
       position: fixed;
@@ -156,7 +156,7 @@
   <div id="emailPopup" class="modal-backdrop">
     <div class="modal-content">
       <p>✅ Please check your email to confirm your account or complete login.</p>
-      <button onclick="document.getElementById('emailPopup').style.display='none'">Close</button>
+      <button onclick="closePopupAndRedirect()">Close</button>
     </div>
   </div>
 
@@ -182,20 +182,19 @@
       }
     });
 
- async function signIn() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+    async function signIn() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-  const msg = document.getElementById('authMessage');
-  if (error) {
-    msg.textContent = `❌ ${error.message}`;
-  } else {
-    msg.textContent = "";
-    window.location.href = 'dashboard.html';
-  }
-}
-
+      const msg = document.getElementById('authMessage');
+      if (error) {
+        msg.textContent = `❌ ${error.message}`;
+      } else {
+        msg.textContent = "";
+        window.location.href = 'dashboard.html';
+      }
+    }
 
     async function signUp() {
       const email = document.getElementById('email').value;
@@ -206,9 +205,14 @@
       if (error) {
         msg.textContent = `❌ ${error.message}`;
       } else {
-        msg.textContent = "";
+        msg.textContent = '';
         document.getElementById('emailPopup').style.display = 'flex';
       }
+    }
+
+    function closePopupAndRedirect() {
+      document.getElementById('emailPopup').style.display = 'none';
+      window.location.href = '/index.html';
     }
   </script>
 </body>

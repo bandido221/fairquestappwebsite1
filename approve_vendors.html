@@ -127,10 +127,10 @@
           <div class="app-box">
             <p><strong>Name:</strong> ${app.name}</p>
             <p><strong>Status:</strong>
-              <span style="font-weight:bold;color:${
-                app.approval_status === 'approved' ? 'green' :
-                app.approval_status === 'declined' ? 'red' : 'orange'
-              }">${app.approval_status.toUpperCase()}</span>
+              <span style="font-weight:bold;color:$
+                {app.approval_status === 'approved' ? 'green' :
+                app.approval_status === 'declined' ? 'red' : 'orange'}">
+                ${app.approval_status.toUpperCase()}</span>
             </p>
             <p><strong>Type:</strong> ${app.vendor_type}</p>
             <p><strong>Description:</strong> ${app.description}</p>
@@ -150,8 +150,8 @@
     }
 
     async function approveVendor(id) {
-      const { error } = await supabase.rpc('approve_and_publish_vendor', { app_id: id });
-      alert(error ? `❌ Failed to approve: ${error.message}` : '✅ Vendor approved!');
+      const { error } = await supabase.rpc('approve_and_publish_application', { app_id: id });
+      alert(error ? `❌ Failed to approve: ${error.message}` : '✅ Application approved!');
       loadVendorApplications();
     }
 
@@ -166,7 +166,6 @@
 
     async function deleteApplication(id) {
       if (!confirm("Delete application and all linked fair info?")) return;
-
       await supabase.from('suggested_fairs').delete().eq('application_id', id);
       await supabase.from('vendor_application_fairs').delete().eq('application_id', id);
       await supabase.from('vendor_performer_applications').delete().eq('id', id);

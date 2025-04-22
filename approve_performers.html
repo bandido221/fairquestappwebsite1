@@ -127,10 +127,8 @@
           <div class="app-box">
             <p><strong>Name:</strong> ${app.name}</p>
             <p><strong>Status:</strong>
-              <span style="font-weight:bold;color:${
-                app.approval_status === 'approved' ? 'green' :
-                app.approval_status === 'declined' ? 'red' : 'orange'
-              }">${app.approval_status.toUpperCase()}</span>
+              <span style="font-weight:bold;color:${app.approval_status === 'approved' ? 'green' : app.approval_status === 'declined' ? 'red' : 'orange'}">
+                ${app.approval_status.toUpperCase()}</span>
             </p>
             <p><strong>Description:</strong> ${app.description}</p>
             <p><strong>Contact:</strong> ${app.contact_name} (${app.contact_email})</p>
@@ -150,8 +148,9 @@
 
     async function approvePerformer(id) {
       const { error } = await supabase.rpc('approve_and_publish_performer', { app_id: id });
-      alert(error ? `❌ Failed: ${error.message}` : '✅ Performer approved!');
-      loadPerformerApplications();
+
+      alert(error ? `❌ Failed: ${error.message}` : '✅ Application approved!');
+      setTimeout(loadPerformerApplications, 1000);
     }
 
     async function declinePerformer(id) {

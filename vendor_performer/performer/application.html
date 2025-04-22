@@ -202,7 +202,7 @@ function saveDraft() {
 
     // addFairSearch: leave your search logic exactly as is
     function addFairSearch(prefill = null) {
-      if (fairSearchCount >= 5) return;
+      if (fairSearchCount >= 30) return;
       fairSearchCount++;
       const container = document.getElementById('fairsList');
       const div = document.createElement('div');

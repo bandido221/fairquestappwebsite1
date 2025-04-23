@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Approve New Fairs | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      font-family: 'Domine', serif;
+      color: #f0e6d2;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+    }
+    .fair-card {
+      background: #fdf7e1;
+      color: #333;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 700px;
+      margin: 20px auto;
+      text-align: left;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .fair-card label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    .fair-card input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #aa8452;
+      border-radius: 6px;
+    }
+    .button-group {
+      text-align: center;
+      margin-top: 10px;
+    }
+    button {
+      margin: 8px 6px;
+      padding: 10px 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .approve { background: green; color: white; }
+    .reject { background: red; color: white; }
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #4caf50;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>📝 Approve New Fairs</h1>
+  <div id="fairList">Loading...</div>
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    async function loadPendingFairs() {
+      const { data, error } = await supabase
+        .from('new_fair_addition')
+        .select('*')
+        .eq('pending', true);
+
+      const list = document.getElementById('fairList');
+      if (error || !data) return list.innerHTML = '<p>Error loading fairs.</p>';
+
+      list.innerHTML = '';
+      data.forEach(fair => {
+        const card = document.createElement('div');
+        card.className = 'fair-card';
+        card.id = `fair-${fair.id}`;
+        card.innerHTML = `
+          <label>Fair Name</label>
+          <input value="${fair.name}" id="name-${fair.id}" />
+          <label>Address</label>
+          <input value="${fair.address}" id="address-${fair.id}" />
+          <label>City</label>
+          <input value="${fair.city}" id="city-${fair.id}" />
+          <label>State</label>
+          <input value="${fair.state}" id="state-${fair.id}" />
+          <label>ZIP</label>
+          <input value="${fair.zip || ''}" id="zip-${fair.id}" />
+          <label>Start Date</label>
+          <input value="${fair.start_date}" id="start-${fair.id}" type="date" />
+          <label>End Date</label>
+          <input value="${fair.end_date}" id="end-${fair.id}" type="date" />
+          <label>Website</label>
+          <input value="${fair.website || ''}" id="website-${fair.id}" />
+          <label>Image URL</label>
+          <input value="${fair.image_url || ''}" id="image-${fair.id}" />
+          <div class="button-group">
+            <button class="approve" onclick="approveFair(${fair.id})">✅ Approve</button>
+            <button class="reject" onclick="rejectFair(${fair.id})">❌ Reject</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    async function approveFair(id) {
+      const fields = ["name", "address", "city", "state", "zip", "start", "end", "website", "image"];
+      const values = {};
+      fields.forEach(f => {
+        const el = document.getElementById(`${f}-${id}`);
+        if (el) values[f.replace('start', 'start_date').replace('end', 'end_date').replace('image', 'image_url')] = el.value;
+      });
+
+      const { error: insertError } = await supabase.from('renaissance_fairs').insert([{ ...values }]);
+      if (insertError) {
+        alert('Error approving fair.');
+        return;
+      }
+
+      await supabase.from('admin_notifications').insert([{
+        application_id: id,
+        message: `Approved new fair: ${values.name || 'Unnamed Fair'}`,
+        category: 'fair_approved'
+      }]);
+
+      await supabase.from('new_fair_addition').delete().eq('id', id);
+      document.getElementById(`fair-${id}`).remove();
+      showToast('👑 Fair approved!');
+    }
+
+    async function rejectFair(id) {
+      await supabase.from('new_fair_addition').update({ pending: false }).eq('id', id);
+      await supabase.from('admin_notifications').insert([{
+        application_id: id,
+        message: `Rejected new fair submission with ID ${id}`,
+        category: 'fair_rejected'
+      }]);
+      document.getElementById(`fair-${id}`).remove();
+      showToast('❌ Fair rejected');
+    }
+
+    loadPendingFairs();
+  </script>
+</body>
+</html>

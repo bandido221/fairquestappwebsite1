@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Update Fair Info | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      font-family: 'Domine', serif;
+      color: #f0e6d2;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+    }
+    form {
+      max-width: 700px;
+      margin: auto;
+      background: rgba(251,241,200,0.88);
+      padding: 30px;
+      border-radius: 12px;
+      color: #3b1f1f;
+    }
+    .field-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .field-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .field-group .current-value {
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      color: #000;
+      padding-left: 10px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #aa8452;
+      border-radius: 6px;
+      background-color: #fdf7e1;
+      color: #3b1f1f;
+    }
+    .weekend-block {
+      border: 1px dashed #aa8452;
+      padding: 16px;
+      border-radius: 8px;
+      background-color: #fff7d6;
+      margin-top: 20px;
+      text-align: left;
+    }
+    .weekend-pair {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .weekend-pair input {
+      flex: 1;
+    }
+    .existing-weekend {
+      margin-bottom: 12px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #5b2a86;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>🛠️ Suggest an Update</h1>
+
+  <form id="updateForm">
+    <div id="fairFields"></div>
+
+    <div class="weekend-block">
+      <h3>Existing Weekends</h3>
+      <div id="existingWeekends"></div>
+    </div>
+
+    <div class="weekend-block">
+      <button type="button" onclick="addWeekendFields()">➕ Add Another Weekend</button>
+      <div id="newWeekends"></div>
+    </div>
+
+    <button type="button" onclick="submitUpdate()">📬 Submit Suggestion</button>
+  </form>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    const fairId = new URLSearchParams(window.location.search).get('id');
+    let userIP = null;
+    let newWeekendCount = 0;
+
+    fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => userIP = data.ip);
+
+    function addWeekendFields() {
+      if (newWeekendCount >= 8) return;
+      const container = document.getElementById('newWeekends');
+      const div = document.createElement('div');
+      div.className = 'weekend-pair';
+      div.innerHTML = `
+        <input type="date" placeholder="Start Date" class="start-date" />
+        <input type="date" placeholder="End Date" class="end-date" />
+      `;
+      container.appendChild(div);
+      newWeekendCount++;
+    }
+
+    async function submitUpdate() {
+      const name = document.getElementById('name').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const state = document.getElementById('state').value.trim();
+      const zip = document.getElementById('zip').value.trim();
+      const website = document.getElementById('website').value.trim();
+      const image_url = document.getElementById('image_url').value.trim();
+      const user = await supabase.auth.getUser();
+
+      let submitted = false;
+
+      // Submit main fair info
+      if (name || address || city || state || zip || website || image_url) {
+        const { error } = await supabase.rpc('insert_fair_suggestion_rate_limited', {
+          _fair_id: parseInt(fairId),
+          _name: name,
+          _address: address,
+          _city: city,
+          _state: state,
+          _zip: zip,
+          _website: website,
+          _image_url: image_url,
+          _start_date: null,
+          _end_date: null,
+          _submitted_by: user?.data?.user?.id || 'anonymous',
+          _submitted_ip: userIP
+        });
+
+        if (error) {
+          alert('❌ ' + error.message);
+          return;
+        }
+        submitted = true;
+      }
+
+      // Submit added weekends
+      const weekendFields = document.querySelectorAll('.weekend-pair');
+      for (const pair of weekendFields) {
+        const start = pair.querySelector('.start-date')?.value;
+        const end = pair.querySelector('.end-date')?.value;
+
+        if (start && end && new Date(start) <= new Date(end)) {
+          const { error } = await supabase.rpc('insert_fair_suggestion_rate_limited', {
+            _fair_id: parseInt(fairId),
+            _name: '',
+            _address: '',
+            _city: '',
+            _state: '',
+            _zip: '',
+            _website: '',
+            _image_url: '',
+            _start_date: start,
+            _end_date: end,
+            _submitted_by: user?.data?.user?.id || 'anonymous',
+            _submitted_ip: userIP
+          });
+
+          if (error) {
+            alert('❌ ' + error.message);
+            return;
+          }
+
+          submitted = true;
+        }
+      }
+
+      if (submitted) {
+        alert('✅ Your update has been submitted and is now awaiting approval!');
+        window.location.href = `fair_detail.html?id=${fairId}`;
+      } else {
+        alert("⚠️ Please update at least one field or add a valid weekend.");
+      }
+    }
+
+    async function loadLiveData() {
+      const { data, error } = await supabase
+        .from('renaissance_fairs')
+        .select('*')
+        .eq('id', fairId)
+        .single();
+
+      if (error) return;
+
+      const fields = [
+        ['name', 'Fair Name'],
+        ['address', 'Address'],
+        ['city', 'City'],
+        ['state', 'State'],
+        ['zip', 'ZIP Code'],
+        ['website', 'Website'],
+        ['image_url', 'Image URL']
+      ];
+
+      const fairFields = document.getElementById('fairFields');
+      fields.forEach(([key, label]) => {
+        fairFields.innerHTML += `
+          <div class="field-group">
+            <label for="${key}">${label}</label>
+            <div class="current-value">${data[key] || 'None'}</div>
+            <input type="text" id="${key}" placeholder="Update ${label.toLowerCase()} (optional)" />
+          </div>
+        `;
+      });
+
+      const weekendDiv = document.getElementById('existingWeekends');
+      const weekends = [];
+      if (data.start_date && data.end_date) weekends.push([data.start_date, data.end_date]);
+      for (let i = 2; i <= 10; i++) {
+        const s = data[`week${i}_start_date`];
+        const e = data[`week${i}_end_date`];
+        if (s && e) weekends.push([s, e]);
+      }
+
+      weekends.forEach(([s, e], i) => {
+        weekendDiv.innerHTML += `
+          <div class="existing-weekend">
+            <strong>${s} to ${e}</strong><br/>
+            <div class="weekend-pair">
+              <input type="date" placeholder="New Start Date (optional)" id="updateStart${i}" />
+              <input type="date" placeholder="New End Date (optional)" id="updateEnd${i}" />
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    loadLiveData();
+  </script>
+</body>
+</html>

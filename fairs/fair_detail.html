@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-HP222J86X0');
+</script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fair Details | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      font-family: 'Domine', serif;
+      color: #f0e6d2;
+      padding: 40px;
+      text-align: center;
+    }
+    h1, h2 {
+      font-family: 'Cinzel', serif;
+    }
+    .top-banner, .logo {
+      display: block;
+      margin: 0 auto 20px;
+    }
+    .top-banner {
+      max-width: 600px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .logo {
+      max-width: 100px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .card {
+      background: #d4cdb2;
+      color: #333;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 700px;
+      margin: 20px auto;
+      text-align: left;
+    }
+    .card h2 {
+      color: #3b1f1f;
+      margin-top: 0;
+    }
+    .card p {
+      margin: 8px 0;
+    }
+    .update-btn {
+      margin-top: 20px;
+      background-color: #bb9457;
+      color: black;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .update-btn:hover {
+      background-color: #f2e1c1;
+    }
+  </style>
+</head>
+<body>
+  <img src="/images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="/images/logo.png" alt="FairQuest Logo" class="logo" />
+  <h1>Fair Details</h1>
+
+  <div class="card" id="fairCard">
+       <p><strong>📷 Image:</strong><br><img id="fairImage" src="" style="width:100%; max-width:600px; border-radius:10px; margin-top:10px;" /></p>
+    <h2 id="fairName">Loading...</h2>
+    <p><strong>📍 Address:</strong> <span id="fairAddress"></span></p>
+    <p><strong>🏙️ City:</strong> <span id="fairCity"></span></p>
+    <p><strong>🗺️ State:</strong> <span id="fairState"></span></p>
+    <p><strong>🌐 Website:</strong> <span id="fairWebsite"></span></p>
+    <p><strong>📅 Weekends:</strong></p>
+    <ul id="weekendsList"></ul>
+
+    <button class="update-btn" onclick="goToUpdatePage()">🛠️ Update This Fair</button>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const fairId = urlParams.get('id');
+
+    async function loadFair() {
+      const { data, error } = await supabase
+        .from('renaissance_fairs')
+        .select('*')
+        .eq('id', fairId)
+        .single();
+
+      if (error || !data) {
+        document.getElementById('fairCard').innerHTML = '<p>❌ Failed to load fair information.</p>';
+        return;
+      }
+
+      document.getElementById('fairName').textContent = data.name;
+      document.getElementById('fairAddress').textContent = data.address;
+      document.getElementById('fairCity').textContent = data.city;
+      document.getElementById('fairState').textContent = data.state;
+      document.getElementById('fairWebsite').innerHTML = data.website
+        ? `<a href="${data.website}" target="_blank">${data.website}</a>` : 'N/A';
+      document.getElementById('fairImage').src = data.image_url || 'https://placehold.co/600x200?text=No+Image';
+
+      const weekendFields = [
+        ['start_date', 'end_date'],
+        ...Array.from({length: 9}, (_, i) => [`week${i+2}_start_date`, `week${i+2}_end_date`])
+      ];
+
+      const weekendsList = document.getElementById('weekendsList');
+      weekendsList.innerHTML = '';
+      weekendFields.forEach(([startKey, endKey]) => {
+        if (data[startKey] && data[endKey]) {
+          const li = document.createElement('li');
+          li.textContent = `${data[startKey]} → ${data[endKey]}`;
+          weekendsList.appendChild(li);
+        }
+      });
+    }
+
+    function goToUpdatePage() {
+      window.location.href = `update_fair.html?id=${fairId}`;
+    }
+
+    loadFair();
+  </script>
+</body>
+</html>

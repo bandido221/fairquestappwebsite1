@@ -29,13 +29,25 @@
       text-align: left;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
-    .card img {
+    .card-image {
   width: 100%;
-  height: auto;
-  object-fit: contain;
-  background-color: #eee; /* optional: in case images have transparency */
-  display: block;
+  height: 180px; /* fixed image container height */
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  flex-shrink: 0;
 }
+
+.card-image img {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+
 .top-banner {
       width: 100%;
       max-width: 600px;
@@ -44,6 +56,22 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
+    .fair-link {
+  display: inline-block;
+  background-color: #bb9457;
+  color: black;
+  font-weight: bold;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: background-color 0.2s ease;
+  margin-bottom: 10px;
+}
+.fair-link:hover {
+  background-color: #f2e1c1;
+  color: #000;
+}
 
    
     .logo {
@@ -139,9 +167,11 @@
 
     container.innerHTML += `
       <div class="card">
-        <img src="${fair.image_url || 'https://placehold.co/600x180?text=No+Image'}" alt="${fair.name}" />
+<div class="card-image">
+  <img src="${fair.image_url || 'https://placehold.co/600x180?text=No+Image'}" alt="${fair.name}" />
+</div>
         <div class="card-content">
-          <h3>${fair.name}</h3>
+<a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
           <p><span class="badge">${fair.state}</span></p>
           <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
           ${fair.website ? `<p><strong>🌐 Website:</strong> <a href="${fair.website}" target="_blank">${fair.website}</a></p>` : ''}

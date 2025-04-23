@@ -37,6 +37,24 @@
       font-weight: bold;
       text-decoration: none;
     }
+    .action-button {
+  display: inline-block;
+  background-color: #bb9457;
+  color: black;
+  padding: 8px 14px;
+  margin-left: 10px;
+  border: none;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.action-button:hover {
+  background-color: #e6c78c;
+  color: #000;
+}
+
     .logout {
       position: absolute;
       top: 20px;
@@ -83,9 +101,8 @@
   </div>
 
   <div id="pendingCounts" style="margin-top: 30px; font-size: 18px;"></div>
-
-  <p>Review all vendor and performer applications submitted through FairQuest.</p>
   <div id="applicationList">Loading applications...</div>
+  <div id="updateSuggestions"></div>
   <p id="errorMessage" class="error-msg"></p>
   <button class="logout" onclick="logout()">Logout</button>
 
@@ -108,38 +125,47 @@
         .eq('approval_status', 'pending')
         .eq('application_type', true);
 
-      const container = document.getElementById('pendingCounts');
-      container.innerHTML = `
-        <p>
-          🔸 Pending Vendor Applications: <strong>${vendorCount ?? 0}</strong>
-          <a class="action-button" href="approve_vendors.html">Review Vendors</a>
-        </p>
-        <p>
-          🔹 Pending Performer Applications: <strong>${performerCount ?? 0}</strong>
-          <a class="action-button" href="approve_performers.html">Review Performers</a>
-        </p>
-      `;
+      const { count: fairCount } = await supabase
+        .from('new_fair_addition')
+        .select('*', { count: 'exact', head: true })
+        .eq('pending', true);
+
+      const { count: updateCount } = await supabase
+        .from('fair_update_suggestions')
+        .select('*', { count: 'exact', head: true });
+
+        const container = document.getElementById('pendingCounts');
+container.innerHTML = `
+  <p>
+    🔸 Pending Vendor Applications: <strong>${vendorCount ?? 0}</strong>
+    <a class="action-button" href="approve_vendors.html">Review Vendors</a>
+  </p>
+  <p>
+    🔹 Pending Performer Applications: <strong>${performerCount ?? 0}</strong>
+    <a class="action-button" href="approve_performers.html">Review Performers</a>
+  </p>
+  <p>
+    🏰 New Fair Submissions: <strong>${fairCount ?? 0}</strong>
+    <a class="action-button" href="fair_approval.html">Review Fairs</a>
+  </p>
+  <p>
+    ✏️ Fair Update Suggestions: <strong>${updateCount ?? 0}</strong>
+    <a class="action-button" href="fair_update_review.html">Review Updates</a>
+  </p>
+`;
+
     }
 
     async function showLiveVendors() {
       const { data, error } = await supabase
-      .from('vendor_performer_applications')
-.select(`
-  id,
-  name,
-  vendor_type,
-  description,
-  approval_status,
-  vendor_application_fairs (
-    start_date,
-    end_date,
-    renaissance_fairs (
-      name,
-      state
-    )
-  )
-`)
-
+        .from('vendor_performer_applications')
+        .select(`
+          id, name, vendor_type, description, approval_status,
+          vendor_application_fairs (
+            start_date, end_date,
+            renaissance_fairs (name, state)
+          )
+        `)
         .eq('approval_status', 'pending')
         .or('application_type.is.false,application_type.is.null');
 
@@ -149,37 +175,22 @@
         return;
       }
 
-      container.innerHTML = '<h2>📦 Pending Vendors with Fair Selections</h2>';
+      container.innerHTML = '<h2>📦 Pending Vendors</h2>';
       data.forEach(v => {
-        const fairList = (v.vendor_application_fairs || [])
-          .map(fair => {
-            const fairName = fair.renaissance_fairs?.name || 'Unknown Fair';
-            const fairState = fair.renaissance_fairs?.state || '';
-            return `<li>${fairName} (${fairState}) – ${fair.start_date} to ${fair.end_date}</li>`;
-          })
-          .join('');
-          container.innerHTML += `
-  <div class="app-box">
-    <p><strong>Name:</strong> ${v.name}</p>
-    <p><strong>Type:</strong> ${v.vendor_type}</p>
-    <p><strong>Description:</strong> ${v.description}</p>
-    <p><strong>Status:</strong> <span style="font-weight:bold; color: ${
-      v.approval_status === 'approved' ? 'green' : v.approval_status === 'rejected' ? 'red' : 'orange'
-    };">${v.approval_status.toUpperCase()}</span></p>
-    <h4>Fairs</h4>
-    <ul>
-      ${
-        (v.vendor_application_fairs || []).map(fair => {
+        const fairList = (v.vendor_application_fairs || []).map(fair => {
           const fairName = fair.renaissance_fairs?.name || 'Unknown';
-          const fairState = fair.renaissance_fairs?.state || '';
-          return `<li>${fairName} (${fairState}) — ${fair.start_date} to ${fair.end_date}</li>`;
-        }).join('')
-        || '<li>No fairs listed</li>'
-      }
-    </ul>
-  </div>
-`;
+          return `<li>${fairName} (${fair.renaissance_fairs?.state || ''}) — ${fair.start_date} to ${fair.end_date}</li>`;
+        }).join('') || '<li>No fairs listed</li>';
 
+        container.innerHTML += `
+          <div class="app-box">
+            <p><strong>Name:</strong> ${v.name}</p>
+            <p><strong>Type:</strong> ${v.vendor_type}</p>
+            <p><strong>Description:</strong> ${v.description}</p>
+            <p><strong>Status:</strong> <span style="color: orange;">${v.approval_status.toUpperCase()}</span></p>
+            <ul>${fairList}</ul>
+          </div>
+        `;
       });
     }
 

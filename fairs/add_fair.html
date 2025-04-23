@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add a Fair | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-HP222J86X0');</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      font-family: 'Domine', serif;
+      color: #f0e6d2;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+    }
+    form {
+      max-width: 700px;
+      margin: auto;
+      background: rgba(251,241,200,0.9);
+      padding: 30px;
+      border-radius: 12px;
+      color: #3b1f1f;
+    }
+    label {
+      display: block;
+      text-align: left;
+      font-weight: bold;
+      margin-top: 16px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border: 1px solid #aa8452;
+      border-radius: 6px;
+      background-color: #fdf7e1;
+      color: #3b1f1f;
+    }
+    .side-by-side {
+      display: flex;
+      gap: 300px;
+    }
+    .side-by-side > div {
+      flex: 1;
+    }
+    .weekend-pair {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .weekend-pair input {
+      width: 100%;
+    }
+    #addWeekendBtn {
+      margin-top: 20px;
+      background-color: #bb9457;
+      border: none;
+      padding: 10px 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      color: #000;
+      cursor: pointer;
+    }
+    #addWeekendBtn:hover {
+      background-color: #f2e1c1;
+    }
+    button[type="button"].submit {
+      margin-top: 30px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #5b2a86;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎪 Add a New Renaissance Fair</h1>
+  <form id="addFairForm">
+    <label for="name">Fair Name *</label>
+    <input type="text" id="name" required />
+
+    <label for="address">Address *</label>
+    <input type="text" id="address" required />
+
+    <label for="city">City *</label>
+    <input type="text" id="city" required />
+
+    <label for="state">State (2 letters) *</label>
+    <input type="text" id="state" maxlength="2" required />
+
+    <label for="zip">ZIP Code</label>
+    <input type="text" id="zip" />
+
+    <div class="side-by-side">
+      <div>
+        <label for="start_date">Start Date *</label>
+        <input type="date" id="start_date" required />
+      </div>
+      <div>
+        <label for="end_date">End Date *</label>
+        <input type="date" id="end_date" required />
+      </div>
+    </div>
+
+    <label for="website">Website</label>
+    <input type="url" id="website" />
+
+    <label for="image_url">Image URL</label>
+    <input type="url" id="image_url" />
+
+    <div id="weekendContainer"></div>
+    <div style="text-align: center;">
+      <button id="addWeekendBtn" type="button" onclick="addWeekend()">➕ Add Weekend</button>
+    </div>
+
+    <button type="button" class="submit" onclick="submitFair()">📬 Submit Fair</button>
+  </form>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    async function submitFair() {
+      const name = document.getElementById('name').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const state = document.getElementById('state').value.trim();
+      const zip = document.getElementById('zip').value.trim();
+      const start_date = document.getElementById('start_date').value;
+      const end_date = document.getElementById('end_date').value;
+      const website = document.getElementById('website').value.trim();
+      const image_url = document.getElementById('image_url').value.trim();
+
+      const weekends = {};
+      for (let i = 2; i <= 10; i++) {
+        const start = document.getElementById(`week${i}_start_date`);
+        const end = document.getElementById(`week${i}_end_date`);
+        if (start && end) {
+          weekends[`week${i}_start_date`] = start.value || null;
+          weekends[`week${i}_end_date`] = end.value || null;
+        }
+      }
+
+      if (!name || !address || !city || !state || !start_date || !end_date) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      const { error } = await supabase.from('new_fair_addition').insert([
+        {
+          name,
+          address,
+          city,
+          state,
+          zip,
+          start_date,
+          end_date,
+          website,
+          image_url,
+          pending: true,
+          ...weekends
+        }
+      ]);
+
+      if (error) {
+        alert('❌ ' + error.message);
+      } else {
+        alert('✅ Fair submitted for review!');
+        window.location.href = 'explore.html';
+      }
+    }
+
+    let weekendCount = 2;
+
+    function addWeekend() {
+      if (weekendCount > 10) {
+        alert("You've reached the max of 10 weekends.");
+        return;
+      }
+
+      const container = document.getElementById("weekendContainer");
+      const div = document.createElement("div");
+      div.className = "weekend-pair";
+      div.innerHTML = `
+        <div>
+          <label for="week${weekendCount}_start_date">Start Date (Weekend ${weekendCount})</label>
+          <input type="date" id="week${weekendCount}_start_date" />
+        </div>
+        <div>
+          <label for="week${weekendCount}_end_date">End Date (Weekend ${weekendCount})</label>
+          <input type="date" id="week${weekendCount}_end_date" />
+        </div>
+      `;
+      container.appendChild(div);
+      weekendCount++;
+    }
+
+    addWeekend();
+  </script>
+</body>
+</html>

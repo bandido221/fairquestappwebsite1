@@ -29,30 +29,48 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
-   
+    .fair-link {
+  display: inline-block;
+  background-color: #bb9457;
+  color: black;
+  font-weight: bold;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: background-color 0.2s ease;
+  margin-bottom: 10px;
+}
+.fair-link:hover {
+  background-color: #f2e1c1;
+  color: #000;
+}
+
     .logo {
       width: 120px;
       display: block;
       margin: 0 auto 20px;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
     }
-    .card {
-      background: #fdf7e1;
-      color: #333;
-      border-radius: 12px;
-      max-width: 600px;
-      margin: 20px auto;
-      overflow: hidden;
-      text-align: left;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    }
-    .card img {
-      width: 100%;
-      height: auto;
-      object-fit: contain;
-      background-color: #eee;
-      display: block;
-    }
+    .card-image {
+  width: 100%;
+  height: 180px; /* fixed image container height */
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.card-image img {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+
     .card-content {
       padding: 16px;
     }
@@ -128,9 +146,11 @@
 
         container.innerHTML += `
           <div class="card">
-            <img src="${fair.image_url || 'https://placehold.co/600x180?text=No+Image'}" alt="${fair.name}" />
+<div class="card-image">
+  <img src="${fair.image_url || 'https://placehold.co/600x180?text=No+Image'}" alt="${fair.name}" />
+</div>
             <div class="card-content">
-              <h3>${fair.name}</h3>
+<a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
               <p><span class="badge">${fair.state}</span></p>
               <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
               ${fair.website ? `<p><strong>🌐 Website:</strong> <a href="${fair.website}" target="_blank">${fair.website}</a></p>` : ''}

@@ -1,0 +1,35 @@
+/* /css/style.css */
+
+/* Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    background-color: #000;
+    color: #222;
+    font-family: 'Domine', serif;
+    padding: 40px;
+    text-align: center;
+  }
+  
+  h1, h2, h3 {
+    font-family: 'Cinzel', serif;
+  }
+  
+  .card {
+    background: #e8dfb0;
+    color: #222;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 700px;
+    margin: 20px auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  

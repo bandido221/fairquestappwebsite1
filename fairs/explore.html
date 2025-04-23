@@ -1,12 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="/css/style.css" />
+
+  <!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Explore Fairs | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
+
+    /* Normalize & baseline consistency across browsers */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, h1, h2, p, a, span, strong, li, select, input, button {
+  font-family: 'Domine', serif;
+  font-weight: normal;
+  color: #222;
+}
+
+a {
+  color: #0047ab;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
     body {
       background-color: #000;
       font-family: 'Domine', serif;
@@ -45,18 +72,21 @@
       gap: 10px;
     }
     .card {
-      background: #eaddb0;
-      color: #333;
-      border-radius: 12px;
-      max-width: 600px;
-      margin: 20px auto;
-      overflow: hidden;
-      text-align: left;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-      height: 420px;
-      display: flex;
-      flex-direction: column;
-    }
+  background: #e8dfb0; /* slightly deeper parchment tone */
+  color: #222;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 700px;
+  margin: 20px auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+
     .top-banner {
       width: 100%;
       max-width: 600px;

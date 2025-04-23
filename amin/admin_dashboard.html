@@ -97,7 +97,7 @@
   <div class="page-nav">
     <a href="all_fairs.html">🌍 All Fairs</a>
     <a href="vendor_list.html">📋 Vendor List</a>
-    <a href="performer_list.html">🎤 Performer List</a>
+    <a href="/performer_list.html">🎤 Performer List</a>
     <a href="reports.html">📊 Reports</a>
     <a href="settings.html">⚙️ Settings</a>
   </div>
@@ -132,9 +132,11 @@
         .select('*', { count: 'exact', head: true })
         .eq('pending', true);
 
-      const { count: updateCount } = await supabase
-        .from('fair_update_suggestions')
-        .select('*', { count: 'exact', head: true });
+        const { count: updateCount } = await supabase
+  .from('fair_update_suggestions')
+  .select('*', { count: 'exact', head: true })
+  .eq('approved', false); // ✅ Only count suggestions that are not approved
+
 
         const container = document.getElementById('pendingCounts');
 container.innerHTML = `

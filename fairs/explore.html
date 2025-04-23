@@ -4,6 +4,12 @@
 
   <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-HP222J86X0');
+</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Explore Fairs | FairQuest</title>
@@ -313,5 +319,48 @@ a:hover {
     loadFairs();
     setInterval(updateFeatured, 5000);
   </script>
+  <script>
+    // Track all fair-related button clicks with GA4
+    function gtagTrack(eventName, label) {
+      gtag('event', eventName, {
+        event_category: 'fairs',
+        event_label: label
+      });
+    }
+  
+    // Add tracking to dropdowns
+    stateDropdown.addEventListener('change', () => {
+      const value = stateDropdown.value;
+      if (value) {
+        gtagTrack('fair_filter_state', value);
+        window.location.href = `fairs_by_state.html?state=${value}`;
+      }
+    });
+  
+    monthDropdown.addEventListener('change', () => {
+      const value = monthDropdown.value;
+      if (value) {
+        const monthName = new Date(0, value - 1).toLocaleString('default', { month: 'long' });
+        gtagTrack('fair_filter_month', monthName);
+        window.location.href = `fairs_by_month.html?month=${value}`;
+      }
+    });
+  
+    // Track "Add a Fair" click
+    document.querySelector('a.nav-button[href="/fairs/add_fair.html"]')?.addEventListener('click', () => {
+      gtagTrack('fair_add_clicked', 'Add a Fair');
+    });
+  
+    // Track clicks on each fair card link
+    document.addEventListener('click', function (e) {
+      const link = e.target.closest('a.fair-link');
+      if (link) {
+        const fairName = link.textContent.trim();
+        gtagTrack('fair_detail_viewed', fairName);
+      }
+    });
+  </script>
+ 
+  
 </body>
 </html>

@@ -150,8 +150,8 @@
     </a>
         <a class="btn" href="vendor_performer/vendor/index.html">🧺 Vendor Portal</a>
     <a class="btn" href="vendor_performer/performer/index.html">🎭 Performer Portal</a>
-    <a class="btn" href="/fairs/explore.html"> 🎪 Explore Fairs
-    </a>
+    <a class="btn" href="/fairs/explore.html" onclick="trackExploreFairs(event)"> 🎪 Explore Fairs</a>
+  
       </div>
 
   <footer>
@@ -166,6 +166,19 @@
       <a href="https://www.instagram.com/YourFairQuestPage" target="_blank" aria-label="Instagram"><i class="fa fa-instagram"></i></a>
     </div>
   </footer>
+  <script>
+   function trackExploreFairs(e) {
+  e.preventDefault();
+  gtag('event', 'fair_button_click', {
+    event_category: 'navigation',
+    event_label: 'Explore Fairs'
+  });
+  setTimeout(() => {
+    window.location.href = "/fairs/explore.html";
+  }, 300); // small delay to ensure event logs
+}
 
+  </script>
+  
 </body>
 </html>

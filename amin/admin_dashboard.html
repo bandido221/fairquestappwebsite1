@@ -135,7 +135,7 @@
         const { count: updateCount } = await supabase
   .from('fair_update_suggestions')
   .select('*', { count: 'exact', head: true })
-  .eq('approved', false); // ✅ Only count suggestions that are not approved
+  .neq('approval_status', 'approved'); 
 
 
         const container = document.getElementById('pendingCounts');

@@ -40,23 +40,21 @@
       text-decoration: none;
     }
     .action-button {
-  display: inline-block;
-  background-color: #bb9457;
-  color: black;
-  padding: 8px 14px;
-  margin-left: 10px;
-  border: none;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: background-color 0.2s ease;
-}
-
-.action-button:hover {
-  background-color: #e6c78c;
-  color: #000;
-}
-
+      display: inline-block;
+      background-color: #bb9457;
+      color: black;
+      padding: 8px 14px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background-color 0.2s ease;
+    }
+    .action-button:hover {
+      background-color: #e6c78c;
+      color: #000;
+    }
     .logout {
       position: absolute;
       top: 20px;
@@ -102,10 +100,27 @@
     <a href="settings.html">⚙️ Settings</a>
   </div>
 
-  <div id="pendingCounts" style="margin-top: 30px; font-size: 18px;"></div>
-  <div id="applicationList">Loading applications...</div>
-  <div id="updateSuggestions"></div>
-  <div id="pendingApprovals"></div>
+  <!-- Restored Pending Summary Section -->
+  <div id="pendingCounts" style="margin-top: 30px; font-size: 18px;">
+    <p>
+      🔸 Pending Vendor Applications: <strong id="vendorCount">...</strong>
+      <a class="action-button" href="approve_vendors.html">Review Vendors</a>
+    </p>
+    <p>
+      🔹 Pending Performer Applications: <strong id="performerCount">...</strong>
+      <a class="action-button" href="approve_performers.html">Review Performers</a>
+    </p>
+    <p>
+      🏰 New Fair Submissions: <strong id="fairCount">...</strong>
+      <a class="action-button" href="fair_approval.html">Review Fairs</a>
+    </p>
+    <p>
+      ✏️ Fair Update Suggestions: <strong id="updateCount">...</strong>
+      <a class="action-button" href="fair_update_review.html">Review Updates</a>
+    </p>
+  </div>
+
+  <div id="applicationList"></div>
 
   <p id="errorMessage" class="error-msg"></p>
   <button class="logout" onclick="logout()">Logout</button>
@@ -134,32 +149,15 @@
         .select('*', { count: 'exact', head: true })
         .eq('pending', true);
 
-        const { count: updateCount } = await supabase
-  .from('fair_update_suggestions')
-  .select('*', { count: 'exact', head: true })
-  .neq('approval_status', 'approved'); 
+      const { count: updateCount } = await supabase
+        .from('fair_update_suggestions')
+        .select('*', { count: 'exact', head: true })
+        .neq('approval_status', 'approved');
 
-
-        const container = document.getElementById('pendingCounts');
-container.innerHTML = `
-  <p>
-    🔸 Pending Vendor Applications: <strong>${vendorCount ?? 0}</strong>
-    <a class="action-button" href="approve_vendors.html">Review Vendors</a>
-  </p>
-  <p>
-    🔹 Pending Performer Applications: <strong>${performerCount ?? 0}</strong>
-    <a class="action-button" href="approve_performers.html">Review Performers</a>
-  </p>
-  <p>
-    🏰 New Fair Submissions: <strong>${fairCount ?? 0}</strong>
-    <a class="action-button" href="fair_approval.html">Review Fairs</a>
-  </p>
-  <p>
-    ✏️ Fair Update Suggestions: <strong>${updateCount ?? 0}</strong>
-    <a class="action-button" href="fair_update_review.html">Review Updates</a>
-  </p>
-`;
-
+      document.getElementById('vendorCount').innerText = vendorCount ?? 0;
+      document.getElementById('performerCount').innerText = performerCount ?? 0;
+      document.getElementById('fairCount').innerText = fairCount ?? 0;
+      document.getElementById('updateCount').innerText = updateCount ?? 0;
     }
 
     async function showLiveVendors() {
@@ -225,43 +223,9 @@ container.innerHTML = `
       await supabase.auth.signOut();
       window.location.href = '/';
     }
-    async function loadPendingApprovals() {
-  const container = document.getElementById('pendingApprovals');
-  container.innerHTML = '<h2 style="margin-top: 40px;">🔍 Pending Approvals Overview</h2>';
 
-  const results = [];
-
-  const [vendors, performers, fairs, updates] = await Promise.all([
-    supabase.from('vendor_performer_applications').select('*').eq('approval_status', 'pending').or('application_type.is.false,application_type.is.null'),
-    supabase.from('vendor_performer_applications').select('*').eq('approval_status', 'pending').eq('application_type', true),
-    supabase.from('new_fair_addition').select('*').eq('pending', true),
-    supabase.from('fair_update_suggestions').select('*').neq('approval_status', 'approved')
-  ]);
-
-  results.push({ title: "📦 Vendors", data: vendors.data });
-  results.push({ title: "🎭 Performers", data: performers.data });
-  results.push({ title: "🏰 New Fairs", data: fairs.data });
-  results.push({ title: "✏️ Fair Updates", data: updates.data });
-
-  results.forEach(group => {
-    container.innerHTML += `<h3>${group.title}</h3>`;
-    if (!group.data || group.data.length === 0) {
-      container.innerHTML += `<p>No pending ${group.title.toLowerCase()}</p>`;
-    } else {
-      group.data.forEach(item => {
-        container.innerHTML += `
-          <div class="app-box">
-            <p><strong>Name:</strong> ${item.name || "—"}</p>
-            <p><strong>Description:</strong> ${item.description || "No description provided"}</p>
-          </div>
-        `;
-      });
-    }
-  });
-}
-
-    loadPendingApprovals();
-
+    // Load summary when page starts
+    showPendingCounts();
   </script>
 </body>
 </html>

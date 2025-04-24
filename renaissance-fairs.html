@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Renaissance Fairs, Renfairs & Festivals 2025 | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background-color: #000;
+      color: #f0e6d2;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      padding: 20px;
+    }
+    .top-banner {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .logo {
+      width: 120px;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 2.5rem;
+      margin: 20px 0;
+    }
+    p {
+      font-size: 1.1rem;
+      max-width: 700px;
+      margin: 0 auto 30px auto;
+      padding: 0 10px;
+    }
+    .button-group {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 40px;
+    }
+    .btn {
+      background-color: #bb9457;
+      color: black;
+      font-weight: bold;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background-color: #f2e1c1;
+    }
+    footer {
+      font-size: 0.8rem;
+      padding: 20px;
+      color: #aaa;
+    }
+    footer a {
+      color: #aa8452;
+      text-decoration: none;
+      margin: 0 8px;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+    .social-icons {
+      margin-top: 20px;
+    }
+    .social-icons a {
+      margin: 0 10px;
+      color: #f0e6d2;
+      font-size: 24px;
+      transition: color 0.3s;
+    }
+    .social-icons a:hover {
+      color: #bb9457;
+    }
+    @media (max-width: 768px) {
+      header { padding: 40px 10px; }
+      h1 { font-size: 2rem; }
+      .btn { width: 100%; margin-top: 10px; }
+      .button-group {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <img src="images/banner.png" alt="FairQuest Banner" class="top-banner" />
+
+  <header>
+    <img src="images/logo.png" alt="FairQuest Logo" class="logo" />
+    <h1>Welcome to FairQuest</h1>
+    <p>
+      Explore the magic of Renaissance fairs, renfairs, and festivals across the U.S. in 2025. Whether you're a vendor, performer, or loyal fairegoer, FairQuest is your ultimate guide to discovering, applying for, and attending the most magical weekends of the year.
+    </p>
+    <p>
+      From Texas to California, explore the largest list of Renaissance festivals, apply to become a vendor, or join the entertainment as a performer. Search for <strong>renfairs near me</strong>, view <strong>Renaissance festival vendor opportunities</strong>, and track your faire adventures in one place.
+    </p>
+  </header>
+
+  <div class="button-group">
+    <a class="btn" href="#" onclick="alert('📲 The FairQuest app is coming soon to the Google Play Store!'); return false;">📲 Download App</a>
+    <a class="btn" href="vendor_performer/vendor/index.html">🧺 Vendor Portal</a>
+    <a class="btn" href="vendor_performer/performer/index.html">🎭 Performer Portal</a>
+    <a class="btn" href="/fairs/explore.html" onclick="trackExploreFairs(event)">🎪 Explore Fairs</a>
+  </div>
+
+  <footer>
+    <a href="terms.html">Terms</a> |
+    <a href="privacy.html">Privacy</a> |
+    <a href="contact.html">Contact</a> |
+    <a href="faq.html">FAQ</a>
+
+    <div class="social-icons">
+      <a href="https://www.facebook.com/fairquestapp/" target="_blank"><i class="fa fa-facebook"></i></a>
+      <a href="https://www.instagram.com/YourFairQuestPage" target="_blank"><i class="fa fa-instagram"></i></a>
+    </div>
+  </footer>
+
+  <script>
+    function trackExploreFairs(e) {
+      e.preventDefault();
+      gtag('event', 'fair_button_click', {
+        event_category: 'navigation',
+        event_label: 'Explore Fairs'
+      });
+      setTimeout(() => {
+        window.location.href = "/fairs/explore.html";
+      }, 300);
+    }
+  </script>
+</body>
+</html>

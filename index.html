@@ -229,7 +229,7 @@ async function loadEarlyTesterCard() {
 
 async function logout() {
   await supabase.auth.signOut();
-  location.reload();
+  window.location.href = '/';
 }
 
 // Call the function when the page loads

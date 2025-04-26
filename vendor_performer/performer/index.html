@@ -165,12 +165,18 @@
 
       <label for="password"><strong>Password</strong></label>
       <input type="password" id="password" placeholder="Enter your password" />
-
+      <div style="text-align: left; margin-top: 5px;">
+        <button onclick="togglePassword()" style="background:none; border:none; color:#5b2a86; font-weight:bold; cursor:pointer;">👁 Show Password</button>
+      </div>
+      
       <div class="button-row">
         <button class="signin" onclick="signIn()">Sign In</button>
         <button class="signup" onclick="signUp()">Sign Up</button>
       </div>
-
+      <div style="margin-top: 10px;">
+        <button onclick="forgotPassword()" style="background-color:#aa8452;">Forgot Password?</button>
+      </div>
+      
       <p id="authMessage" class="msg"></p>
     </div>
   </div>
@@ -237,6 +243,34 @@
       document.getElementById('emailPopup').style.display = 'none';
       window.location.href = '/index.html';
     }
+
+    async function forgotPassword() {
+  const email = document.getElementById('email').value;
+  if (!email) {
+    document.getElementById('authMessage').textContent = '❌ Please enter your email to reset password.';
+    return;
+  }
+  
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://yourwebsite.com/reset-password.html' // 🛑 Update this if you have a reset page, or remove it for now
+  });
+
+  const msg = document.getElementById('authMessage');
+  if (error) {
+    msg.textContent = `❌ ${error.message}`;
+  } else {
+    msg.textContent = '✅ Password reset email sent. Check your inbox!';
+  }
+}
+function togglePassword() {
+  const passwordField = document.getElementById('password');
+  if (passwordField.type === 'password') {
+    passwordField.type = 'text';
+  } else {
+    passwordField.type = 'password';
+  }
+}
+
   </script>
 </body>
 </html>

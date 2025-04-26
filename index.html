@@ -199,26 +199,29 @@ async function loadEarlyTesterCard() {
   const { data: sessionData } = await supabase.auth.getSession();
   const isLoggedIn = sessionData?.session?.user != null;
 
-  let userCount = 50; // 📣 TEMP FAKE COUNT (fix later with a secure way!)
+  // For now we'll pretend a fake user count — later we can use backend
+  let userCount = 50; // 📣 Change this manually later when you know the real count!
 
   if (isLoggedIn) {
+    // 🧡 User is logged in -> Show logout
     card.innerHTML = `
       <h3>🎉 Welcome to FairQuest!</h3>
-      <p>You are logged in. Thank you for joining our journey!</p>
+      <p>You're logged in! Thank you for being part of our journey!</p>
       <button onclick="logout()" style="margin-top: 15px; padding: 10px 20px; background: #b73239; color: white; border: none; border-radius: 8px;">🚪 Log Out</button>
     `;
   } else {
+    // 💬 Show message depending on user count
     if (userCount < 100) {
       card.innerHTML = `
         <h3>🚀 Become an Early App Tester!</h3>
-        <p>Sign in or sign up now to join the first 100 users and help shape the future of FairQuest!</p>
-        <button onclick="location.href='/user_login.html'" style="margin-top: 15px; padding: 10px 20px; background: #5b2a86; color: white; border: none; border-radius: 8px;">Sign In / Sign Up</button>
+        <p>Sign in or sign up now to be among the first 100 testers! Help shape the FairQuest app and get early access rewards! 🎯</p>
+        <button onclick="location.href='/user_login.html'" style="margin-top: 15px; padding: 10px 20px; background: #5b2a86; color: white; border: none; border-radius: 8px;">Log In / Sign Up</button>
       `;
     } else {
       card.innerHTML = `
         <h3>🏰 Help Grow the FairQuest Community!</h3>
-        <p>Sign in or sign up to start earning points for helping add new fairs and updates. Points are rewarded after admin approval!</p>
-        <button onclick="location.href='/user_login.html'" style="margin-top: 15px; padding: 10px 20px; background: #5b2a86; color: white; border: none; border-radius: 8px;">Sign In / Sign Up</button>
+        <p>Sign in or sign up to earn points by adding and updating fairs! 🎯 Points are rewarded after approval!</p>
+        <button onclick="location.href='/user_login.html'" style="margin-top: 15px; padding: 10px 20px; background: #5b2a86; color: white; border: none; border-radius: 8px;">Log In / Sign Up</button>
       `;
     }
   }
@@ -229,9 +232,8 @@ async function logout() {
   location.reload();
 }
 
-// 🚀 Call it when the page loads
+// Call the function when the page loads
 loadEarlyTesterCard();
-
   </script>
   
 </body>

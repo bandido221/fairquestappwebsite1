@@ -246,22 +246,24 @@
 
     async function forgotPassword() {
   const email = document.getElementById('email').value;
+  const message = document.getElementById('authMessage');
+
   if (!email) {
-    document.getElementById('authMessage').textContent = '❌ Please enter your email to reset password.';
+    message.textContent = '❌ Please enter your email.';
     return;
   }
-  
+
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://yourwebsite.com/reset-password.html' // 🛑 Update this if you have a reset page, or remove it for now
+    redirectTo: 'https://fairquestapp.com/reset-password.html'
   });
 
-  const msg = document.getElementById('authMessage');
   if (error) {
-    msg.textContent = `❌ ${error.message}`;
+    message.textContent = `❌ ${error.message}`;
   } else {
-    msg.textContent = '✅ Password reset email sent. Check your inbox!';
+    message.textContent = '✅ Password reset email sent. Check your inbox!';
   }
 }
+
 function togglePassword() {
   const passwordField = document.getElementById('password');
   if (passwordField.type === 'password') {

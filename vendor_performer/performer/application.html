@@ -315,34 +315,34 @@ function saveDraft() {
 
     // Validation
     function checkFormValidity() {
-      const f = document.getElementById('applicationForm');
-      const btn = document.getElementById('reviewButton');
-      const msg = document.getElementById('validationMessage');
-      const errs = [];
+  const f = document.getElementById('applicationForm');
+  const errs = [];
 
-      if (!f.name.value.trim()) errs.push('Performer Name is required.');
-      const bioW = f.description.value.trim().split(/\s+/).filter(w=>w).length;
-      if (!f.description.value.trim()) errs.push('Quick Bio is required.');
-      if (bioW>50) errs.push(`Quick Bio ≤50 words (you have ${bioW}).`);
-      if (!f.photoUrl.value.trim()) errs.push('Photo URL is required.');
-      if (!f.performerType.value.trim()) errs.push('Performer Type is required.');
-      if (!f.contactName.value.trim()) errs.push('Contact Person is required.');
-      if (!f.contactEmail.value.trim()) errs.push('Contact Email is required.');
-      if (!document.getElementById('termsCheckbox').checked)
-        errs.push('You must agree to the Terms & Conditions.');
+  if (!f.name.value.trim()) errs.push('Performer Name is required.');
+  const bioW = f.description.value.trim().split(/\s+/).filter(w=>w).length;
+  if (!f.description.value.trim()) errs.push('Quick Bio is required.');
+  if (bioW>50) errs.push(`Quick Bio must be 50 words or less (you have ${bioW}).`);
+  if (!f.photoUrl.value.trim()) errs.push('Photo URL is required.');
+  if (!f.performerType.value.trim()) errs.push('Performer Type is required.');
+  if (!f.contactName.value.trim()) errs.push('Contact Person is required.');
+  if (!f.contactEmail.value.trim()) errs.push('Contact Email is required.');
+  if (!document.getElementById('termsCheckbox').checked)
+    errs.push('You must agree to the Terms & Conditions.');
 
-      const hasFair = Array.from(document.querySelectorAll('.fair-block'))
-        .some(b=>b.dataset.fairId && b.dataset.start && b.dataset.end);
-      if (!hasFair) errs.push('Select at least one fair.');
+  const hasFair = Array.from(document.querySelectorAll('.fair-block'))
+    .some(b=>b.dataset.fairId && b.dataset.start && b.dataset.end);
+  if (!hasFair) errs.push('Select at least one fair.');
 
-      if (errs.length) {
-        msg.textContent = '⚠️ '+errs.join('\n');
-        btn.disabled = true;
-      } else {
-        msg.textContent = '';
-        btn.disabled = false;
-      }
-    }
+  const btn = document.getElementById('reviewButton');
+  if (errs.length) {
+    btn.disabled = true;
+  } else {
+    btn.disabled = false;
+  }
+
+  return errs; // 🆕 return the list of problems!
+}
+
     document.getElementById('applicationForm')
         .addEventListener('input', () => {
           checkFormValidity();
@@ -351,41 +351,56 @@ function saveDraft() {
 
     // Review click → duplicate‐name check
     async function goToReview() {
-      const name = document.getElementById('name').value.trim();
-      const { data: ex, error } = await supabase
-        .from('vendor_performer_applications')
-        .select('id')
-        .eq('name', name)
-        .eq('application_type', true)
-        .limit(1);
-      if (error) return alert('❌ Could not verify: '+error.message);
-      if (ex && ex.length) {
-        return alert(
-          'It looks like you already applied under this business name.\n' +
-          'Please update your existing application if you need changes, or choose a different name.'
-        );
-      }
-      // gather fields + fairs...
-      const fairs = Array.from(document.querySelectorAll('.fair-block'))
-        .filter(b=>b.dataset.fairId)
-        .map(b=>({
-          id: b.dataset.fairId,
-          start: b.dataset.start,
-          end: b.dataset.end
-        }));
-      const draft = {
-        name, description: document.getElementById('description').value.trim(),
-        photoUrl: document.getElementById('photoUrl').value.trim(),
-        performerType: document.getElementById('performerType').value.trim(),
-        contactName: document.getElementById('contactName').value.trim(),
-        contactEmail: document.getElementById('contactEmail').value.trim(),
-        website: document.getElementById('website').value.trim(),
-        fairs, comments: document.getElementById('comments').value.trim(),
-        application_type: true
-      };
-      localStorage.setItem('performerAppDraft', JSON.stringify(draft));
-      window.location.href = 'review.html';
-    }
+  const validationErrors = checkFormValidity(); // 🆕 check form again
+
+  if (validationErrors.length > 0) {
+    alert("⚠️ Please fix the following:\n\n" + validationErrors.join("\n• "));
+    return; // ⛔ Stop here, don't try to send
+  }
+
+  const name = document.getElementById('name').value.trim();
+  const { data: ex, error } = await supabase
+    .from('vendor_performer_applications')
+    .select('id')
+    .eq('name', name)
+    .eq('application_type', true)
+    .limit(1);
+  if (error) {
+    alert('❌ Could not verify name: ' + error.message);
+    return;
+  }
+  if (ex && ex.length) {
+    alert(
+      'It looks like you already applied under this name.\n' +
+      'Please update your application if needed.'
+    );
+    return;
+  }
+
+  const fairs = Array.from(document.querySelectorAll('.fair-block'))
+    .filter(b => b.dataset.fairId)
+    .map(b => ({
+      id: b.dataset.fairId,
+      start: b.dataset.start,
+      end: b.dataset.end
+    }));
+
+  const draft = {
+    name,
+    description: document.getElementById('description').value.trim(),
+    photoUrl: document.getElementById('photoUrl').value.trim(),
+    performerType: document.getElementById('performerType').value.trim(),
+    contactName: document.getElementById('contactName').value.trim(),
+    contactEmail: document.getElementById('contactEmail').value.trim(),
+    website: document.getElementById('website').value.trim(),
+    fairs,
+    comments: document.getElementById('comments').value.trim(),
+    application_type: true
+  };
+  localStorage.setItem('performerAppDraft', JSON.stringify(draft));
+  window.location.href = 'review.html';
+}
+
 
     // On load
     window.addEventListener('DOMContentLoaded', async()=>{

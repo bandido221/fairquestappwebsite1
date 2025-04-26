@@ -361,7 +361,16 @@
 
     // 10) Review click → duplicate check
     async function goToReview() {
+  const formErrors = checkFormValidity(); // 🛡️ Get current validation errors
+
+  if (formErrors.length > 0) {
+    alert("⚠️ Please fix the following:\n\n• " + formErrors.join("\n• "));
+    return; // ⛔ Don't continue
+  }
+
   const name = document.getElementById('name').value.trim();
+  // continue with duplicate check and draft saving...
+
 
   // 1) Check if they've already applied under this business name
   const { data: existing, error } = await supabase

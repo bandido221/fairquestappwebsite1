@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FairQuest - Login / Sign Up</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background-color: #000;
+      color: #f0e6d2;
+      padding: 20px;
+      margin: 0;
+      text-align: center;
+    }
+    .container {
+      background: rgba(251,241,200,0.88);
+      max-width: 500px;
+      margin: auto;
+      padding: 40px;
+      border-radius: 12px;
+      border: 2px solid #aa8452;
+      color: #3b1f1f;
+      margin-top: 50px;
+    }
+    input {
+      width: 100%;
+      padding: 16px;
+      margin-top: 14px;
+      font-size: 18px;
+      border: 1px solid #aa8452;
+      border-radius: 6px;
+      background-color: #fdf7e1;
+    }
+    .button-row {
+      margin-top: 30px;
+    }
+    button {
+      padding: 14px 22px;
+      font-size: 18px;
+      margin: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      color: white;
+    }
+    .signin { background-color: #b73239; }
+    .signup { background-color: #5b2a86; }
+    .msg {
+      color: #b73239;
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>FairQuest Login / Sign Up</h1>
+
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+
+    <div class="button-row">
+      <button class="signin" onclick="signIn()">Sign In</button>
+      <button class="signup" onclick="signUp()">Sign Up</button>
+    </div>
+
+    <p id="authMessage" class="msg"></p>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    async function signIn() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const message = document.getElementById('authMessage');
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    message.textContent = `❌ ${error.message}`;
+  } else {
+    message.textContent = '✅ Login successful! Redirecting...';
+    
+    // 🆕 Insert a log saying the user signed in
+    if (data?.user?.id) {
+      await insertUserLog(data.user.id, 'user', 'sign_in', 'User signed in.');
+    }
+
+    setTimeout(() => {
+      window.location.href = '/dashboard.html';
+    }, 1500);
+  }
+}
+
+
+    async function signUp() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const message = document.getElementById('authMessage');
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    message.textContent = `❌ ${error.message}`;
+  } else {
+    message.textContent = '✅ Sign up successful! Please check your email to confirm.';
+    
+    // 🆕 Insert a log saying the user signed up
+    if (data?.user?.id) {
+      await insertUserLog(data.user.id, 'user', 'sign_up', 'User signed up.');
+    }
+  }
+}
+
+    async function insertUserLog(userId, userType, actionType, description) {
+  const { error } = await supabase.from('user_logs').insert({
+    user_id: userId,
+    user_type: userType,
+    action_type: actionType,
+    description: description
+  });
+
+  if (error) {
+    console.error('Error inserting user log:', error.message);
+  } else {
+    console.log('✅ User action logged successfully');
+  }
+}
+
+  </script>
+</body>
+</html>

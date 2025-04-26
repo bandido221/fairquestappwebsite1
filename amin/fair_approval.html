@@ -90,8 +90,11 @@
     async function loadPendingFairs() {
       const { data, error } = await supabase
         .from('new_fair_addition')
-        .select('*')
+        .select('*, user_id')
         .eq('pending', true);
+        <div style="margin: 10px 0; font-weight: bold;">
+  Submitted by: ${fair.user_id ? 'User' : 'Guest'}
+</div>
 
       const list = document.getElementById('fairList');
       if (error || !data) return list.innerHTML = '<p>Error loading fairs.</p>';

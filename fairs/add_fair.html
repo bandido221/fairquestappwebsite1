@@ -137,54 +137,59 @@
     );
 
     async function submitFair() {
-      const name = document.getElementById('name').value.trim();
-      const address = document.getElementById('address').value.trim();
-      const city = document.getElementById('city').value.trim();
-      const state = document.getElementById('state').value.trim();
-      const zip = document.getElementById('zip').value.trim();
-      const start_date = document.getElementById('start_date').value;
-      const end_date = document.getElementById('end_date').value;
-      const website = document.getElementById('website').value.trim();
-      const image_url = document.getElementById('image_url').value.trim();
+  const name = document.getElementById('name').value.trim();
+  const address = document.getElementById('address').value.trim();
+  const city = document.getElementById('city').value.trim();
+  const state = document.getElementById('state').value.trim();
+  const zip = document.getElementById('zip').value.trim();
+  const start_date = document.getElementById('start_date').value;
+  const end_date = document.getElementById('end_date').value;
+  const website = document.getElementById('website').value.trim();
+  const image_url = document.getElementById('image_url').value.trim();
 
-      const weekends = {};
-      for (let i = 2; i <= 10; i++) {
-        const start = document.getElementById(`week${i}_start_date`);
-        const end = document.getElementById(`week${i}_end_date`);
-        if (start && end) {
-          weekends[`week${i}_start_date`] = start.value || null;
-          weekends[`week${i}_end_date`] = end.value || null;
-        }
-      }
-
-      if (!name || !address || !city || !state || !start_date || !end_date) {
-        alert('Please fill in all required fields.');
-        return;
-      }
-
-      const { error } = await supabase.from('new_fair_addition').insert([
-        {
-          name,
-          address,
-          city,
-          state,
-          zip,
-          start_date,
-          end_date,
-          website,
-          image_url,
-          pending: true,
-          ...weekends
-        }
-      ]);
-
-      if (error) {
-        alert('❌ ' + error.message);
-      } else {
-        alert('✅ Fair submitted for review!');
-        window.location.href = 'explore.html';
-      }
+  const weekends = {};
+  for (let i = 2; i <= 10; i++) {
+    const start = document.getElementById(`week${i}_start_date`);
+    const end = document.getElementById(`week${i}_end_date`);
+    if (start && end) {
+      weekends[`week${i}_start_date`] = start.value || null;
+      weekends[`week${i}_end_date`] = end.value || null;
     }
+  }
+
+  if (!name || !address || !city || !state || !start_date || !end_date) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+
+  // 🆕 Get current logged in user (if any)
+  const user = (await supabase.auth.getUser()).data.user;
+
+  const { error } = await supabase.from('new_fair_addition').insert([
+    {
+      name,
+      address,
+      city,
+      state,
+      zip,
+      start_date,
+      end_date,
+      website,
+      image_url,
+      pending: true,
+      user_id: user ? user.id : null, // 🆕 Save user_id if logged in, or null
+      ...weekends
+    }
+  ]);
+
+  if (error) {
+    alert('❌ ' + error.message);
+  } else {
+    alert('✅ Fair submitted for review!');
+    window.location.href = 'explore.html';
+  }
+}
+
 
     let weekendCount = 2;
 

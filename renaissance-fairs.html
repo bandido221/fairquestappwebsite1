@@ -141,6 +141,11 @@
       <a href="https://www.facebook.com/fairquestapp/" target="_blank"><i class="fa fa-facebook"></i></a>
       <a href="https://www.instagram.com/YourFairQuestPage" target="_blank"><i class="fa fa-instagram"></i></a>
     </div>
+<div id="earlyTesterCard" style="margin: 40px auto; padding: 30px; background: #fdf7e1; color: #3b1f1f; max-width: 700px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center;">
+  Loading rewards...
+</div>
+
+
     <p>If you're searching for the Fair Quest app — you're in the right place!</p>
 
   </footer>
@@ -156,6 +161,51 @@
         window.location.href = "/fairs/explore.html";
       }, 300);
     }
+
+    const supabase = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+async function loadEarlyTesterCard() {
+  const card = document.getElementById('earlyTesterCard');
+  
+  const { data: sessionData } = await supabase.auth.getSession();
+  const isLoggedIn = sessionData?.session?.user != null;
+
+  let userCount = 50; // 📣 TEMP FAKE COUNT (fix later with a secure way!)
+
+  if (isLoggedIn) {
+    card.innerHTML = `
+      <h3>🎉 Welcome to FairQuest!</h3>
+      <p>You are logged in. Thank you for joining our journey!</p>
+      <button onclick="logout()" style="margin-top: 15px; padding: 10px 20px; background: #b73239; color: white; border: none; border-radius: 8px;">🚪 Log Out</button>
+    `;
+  } else {
+    if (userCount < 100) {
+      card.innerHTML = `
+        <h3>🚀 Become an Early App Tester!</h3>
+        <p>Sign in or sign up now to join the first 100 users and help shape the future of FairQuest!</p>
+        <button onclick="location.href='/user_login.html'" style="margin-top: 15px; padding: 10px 20px; background: #5b2a86; color: white; border: none; border-radius: 8px;">Sign In / Sign Up</button>
+      `;
+    } else {
+      card.innerHTML = `
+        <h3>🏰 Help Grow the FairQuest Community!</h3>
+        <p>Sign in or sign up to start earning points for helping add new fairs and updates. Points are rewarded after admin approval!</p>
+        <button onclick="location.href='/user_login.html'" style="margin-top: 15px; padding: 10px 20px; background: #5b2a86; color: white; border: none; border-radius: 8px;">Sign In / Sign Up</button>
+      `;
+    }
+  }
+}
+
+async function logout() {
+  await supabase.auth.signOut();
+  location.reload();
+}
+
+// 🚀 Call it when the page loads
+loadEarlyTesterCard();
+
   </script>
 </body>
 </html>

@@ -104,11 +104,11 @@ button.reject:hover {
   );
 
   async function loadSuggestions() {
-  const { data: suggestions, error } = await supabase
-    .from('fair_update_suggestions')
-    .select('*')
-    .eq('approved', false)
-    .order('id', { ascending: false });
+    const { data: suggestions, error } = await supabase
+  .from('fair_update_suggestions')
+  .select('*, user_id')
+  .eq('approved', false)
+  .order('id', { ascending: false });
 
   if (error) {
     document.getElementById('reviewContainer').innerHTML = `<p>Error: ${error.message}</p>`;
@@ -134,6 +134,8 @@ button.reject:hover {
     card.className = 'card';
 
     card.innerHTML += `<h2>${fairData.name}</h2>`;
+    <p><strong>Submitted by:</strong> ${latest.user_id ? 'User' : 'Guest'}</p>
+
     card.innerHTML += `<p><strong>📍 Address:</strong> ${fairData.address}</p>`;
     card.innerHTML += `<p><strong>🏙️ City:</strong> ${fairData.city}</p>`;
     card.innerHTML += `<p><strong>🗺️ State:</strong> ${fairData.state}</p>`;

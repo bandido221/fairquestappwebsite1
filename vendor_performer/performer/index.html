@@ -210,34 +210,46 @@
         window.location.href = 'dashboard.html';
       }
     });
-
     async function signIn() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-      const msg = document.getElementById('authMessage');
-      if (error) {
-        msg.textContent = `❌ ${error.message}`;
-      } else {
-        msg.textContent = "";
-        window.location.href = 'dashboard.html';
-      }
+  const msg = document.getElementById('authMessage');
+  if (error) {
+    msg.textContent = `❌ ${error.message}`;
+  } else {
+    msg.textContent = "";
+
+    // 🆕 Insert performer sign-in log
+    if (data?.user?.id) {
+      await insertUserLog(data.user.id, 'performer', 'sign_in', 'Performer signed in.');
     }
 
-    async function signUp() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const { error } = await supabase.auth.signUp({ email, password });
+    window.location.href = 'dashboard.html';
+  }
+}
 
-      const msg = document.getElementById('authMessage');
-      if (error) {
-        msg.textContent = `❌ ${error.message}`;
-      } else {
-        msg.textContent = '';
-        document.getElementById('emailPopup').style.display = 'flex';
-      }
+
+   async function signUp() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const { data, error } = await supabase.auth.signUp({ email, password });
+
+  const msg = document.getElementById('authMessage');
+  if (error) {
+    msg.textContent = `❌ ${error.message}`;
+  } else {
+    msg.textContent = '';
+    document.getElementById('emailPopup').style.display = 'flex';
+
+    // 🆕 Add this: insert log that the user signed up
+    if (data?.user?.id) {
+      await insertUserLog(data.user.id, 'user', 'sign_up', 'User signed up.');
     }
+  }
+}
+
 
     function closePopupAndRedirect() {
       document.getElementById('emailPopup').style.display = 'none';

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User List | FairQuest Admin</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 20px;
+    }
+
+    .filters {
+      margin-bottom: 20px;
+    }
+
+    .filters input {
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+
+    .user-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .user-card {
+      background: #fdf7e1;
+      color: #3b1f1f;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-align: left;
+    }
+
+    .verified { color: green; }
+    .unverified { color: red; }
+
+    a.back-button {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 16px;
+      background: #bb9457;
+      color: black;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>👤 User List</h1>
+
+  <div class="filters">
+    <input type="text" id="searchInput" placeholder="🔎 Search by Email" />
+  </div>
+
+  <div class="user-grid" id="userGrid"></div>
+
+  <a href="admin.html" class="back-button">🔙 Back to Admin</a>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    let users = [];
+
+    async function loadUsers() {
+      const { data, error } = await supabase
+        .from('app_users')
+        .select('id, email, email_confirmed, checkins, tokens, points');
+
+      if (error || !data) {
+        document.getElementById('userGrid').innerHTML = '<p>⚠️ Failed to load users.</p>';
+        return;
+      }
+
+      users = data;
+      renderUsers();
+    }
+
+    function renderUsers() {
+      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      const container = document.getElementById('userGrid');
+
+      container.innerHTML = '';
+
+      users.filter(user => {
+        return user.email.toLowerCase().includes(searchQuery);
+      }).forEach(user => {
+        const verifiedClass = user.email_confirmed ? 'verified' : 'unverified';
+        const verifiedText = user.email_confirmed ? 'Verified' : 'Unverified';
+
+        container.innerHTML += `
+          <div class="user-card">
+            <h2>${user.email}</h2>
+            <p class="${verifiedClass}"><strong>Status:</strong> ${verifiedText}</p>
+            <p><strong>Check-Ins:</strong> ${user.checkins ?? 0}</p>
+            <p><strong>Tokens:</strong> ${user.tokens ?? 0}</p>
+            <p><strong>Points:</strong> ${user.points ?? 0}</p>
+          </div>
+        `;
+      });
+
+      if (container.innerHTML.trim() === '') {
+        container.innerHTML = '<p>❌ No users found.</p>';
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', renderUsers);
+
+    loadUsers();
+  </script>
+
+</body>
+</html>

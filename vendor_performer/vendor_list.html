@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vendor List | FairQuest Admin</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 20px;
+    }
+
+    .filters {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .filters input, .filters select {
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+
+    .vendor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .vendor-card {
+        background-color: #c9a364;
+        color: #3b1f1f;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-align: left;
+    }
+
+    .status {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .approved { color: green; }
+    .pending { color: orange; }
+    .declined { color: red; }
+
+    a.back-button {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 16px;
+      background: #bb9457;
+      color: black;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📦 Vendor List</h1>
+
+  <!-- Filters and Search -->
+  <div class="filters">
+    <input type="text" id="searchInput" placeholder="🔎 Search Vendor Name" />
+    <select id="stateFilter">
+      <option value="">🌎 Filter by State</option>
+    </select>
+    <select id="monthFilter">
+      <option value="">📅 Filter by Month</option>
+      <option value="1">January</option>
+      <option value="2">February</option>
+      <option value="3">March</option>
+      <option value="4">April</option>
+      <option value="5">May</option>
+      <option value="6">June</option>
+      <option value="7">July</option>
+      <option value="8">August</option>
+      <option value="9">September</option>
+      <option value="10">October</option>
+      <option value="11">November</option>
+      <option value="12">December</option>
+    </select>
+  </div>
+
+  <div class="vendor-grid" id="vendorGrid"></div>
+
+  <a href="admin.html" class="back-button">🔙 Back to Admin</a>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    let vendors = [];
+
+    async function loadVendors() {
+      const { data, error } = await supabase
+        .from('vendor_performer_applications')
+        .select(`
+          id, name, vendor_type, description, approval_status,
+          vendor_application_fairs (
+            start_date, end_date,
+            renaissance_fairs (name, state)
+          )
+        `)
+        .or('application_type.is.false,application_type.is.null');
+
+      if (error || !data) {
+        document.getElementById('vendorGrid').innerHTML = '<p>⚠️ Failed to load vendors.</p>';
+        return;
+      }
+
+      vendors = data;
+      populateStateFilter();
+      renderVendors();
+    }
+
+    function populateStateFilter() {
+      const stateSet = new Set();
+      vendors.forEach(v => {
+        v.vendor_application_fairs?.forEach(fair => {
+          if (fair.renaissance_fairs?.state) {
+            stateSet.add(fair.renaissance_fairs.state);
+          }
+        });
+      });
+
+      const stateFilter = document.getElementById('stateFilter');
+      [...stateSet].sort().forEach(state => {
+        const option = document.createElement('option');
+        option.value = state;
+        option.textContent = state;
+        stateFilter.appendChild(option);
+      });
+    }
+
+    function renderVendors() {
+      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      const stateFilter = document.getElementById('stateFilter').value;
+      const monthFilter = document.getElementById('monthFilter').value;
+      const container = document.getElementById('vendorGrid');
+
+      container.innerHTML = '';
+
+      vendors.filter(v => {
+        const matchesSearch = v.name.toLowerCase().includes(searchQuery);
+
+        let matchesState = true;
+        if (stateFilter) {
+          matchesState = v.vendor_application_fairs?.some(fair => fair.renaissance_fairs?.state === stateFilter);
+        }
+
+        let matchesMonth = true;
+        if (monthFilter) {
+          matchesMonth = v.vendor_application_fairs?.some(fair => {
+            const fairDate = new Date(fair.start_date);
+            return fairDate.getMonth() + 1 == monthFilter;
+          });
+        }
+
+        return matchesSearch && matchesState && matchesMonth;
+      }).forEach(vendor => {
+        const statusClass = vendor.approval_status === 'approved' ? 'approved'
+                           : vendor.approval_status === 'pending' ? 'pending'
+                           : 'declined';
+
+        container.innerHTML += `
+          <div class="vendor-card">
+            <h2>${vendor.name}</h2>
+            <p><strong>Type:</strong> ${vendor.vendor_type || 'N/A'}</p>
+            <p><strong>Description:</strong> ${vendor.description || 'No description'}</p>
+            <p class="status ${statusClass}">Status: ${vendor.approval_status.toUpperCase()}</p>
+          </div>
+        `;
+      });
+
+      if (container.innerHTML.trim() === '') {
+        container.innerHTML = '<p>❌ No vendors found.</p>';
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', renderVendors);
+    document.getElementById('stateFilter').addEventListener('change', renderVendors);
+    document.getElementById('monthFilter').addEventListener('change', renderVendors);
+
+    loadVendors();
+  </script>
+
+</body>
+</html>

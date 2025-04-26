@@ -226,12 +226,14 @@
       await insertUserLog(data.user.id, 'performer', 'sign_in', 'Performer signed in.');
     }
 
-    window.location.href = 'dashboard.html';
+    // 🎯 After login, send to performer dashboard
+    window.location.href = '/vendor_performer/performer/dashboard.html';
   }
 }
 
 
-   async function signUp() {
+
+async function signUp() {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   const { data, error } = await supabase.auth.signUp({ email, password });
@@ -240,15 +242,19 @@
   if (error) {
     msg.textContent = `❌ ${error.message}`;
   } else {
-    msg.textContent = '';
-    document.getElementById('emailPopup').style.display = 'flex';
+    msg.textContent = '✅ Sign up successful! Please check your email to confirm.';
 
-    // 🆕 Add this: insert log that the user signed up
     if (data?.user?.id) {
-      await insertUserLog(data.user.id, 'user', 'sign_up', 'User signed up.');
+      await insertUserLog(data.user.id, 'performer', 'sign_up', 'Performer signed up.');
     }
+
+    // 🏠 After signup, send them to home
+    setTimeout(() => {
+      window.location.href = '/index.html';
+    }, 2000); // (little delay for success message)
   }
 }
+
 
 
     function closePopupAndRedirect() {
@@ -282,6 +288,20 @@ function togglePassword() {
     passwordField.type = 'text';
   } else {
     passwordField.type = 'password';
+  }
+}
+async function insertUserLog(userId, userType, actionType, description) {
+  const { error } = await supabase.from('user_logs').insert({
+    user_id: userId,
+    user_type: userType,
+    action_type: actionType,
+    description: description
+  });
+
+  if (error) {
+    console.error('❌ Error inserting user log:', error.message);
+  } else {
+    console.log('✅ User log inserted successfully.');
   }
 }
 

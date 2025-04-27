@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Change Email | FairQuest</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<h1>Change Your Email</h1>
+
+<div>
+  <p><strong>Current Email:</strong> <span id="currentEmail"></span></p>
+  
+  <input type="email" id="newEmailInput" placeholder="Enter your new email" required />
+  
+  <button onclick="changeEmail()">Change Email</button>
+  
+  <p id="statusMessage"></p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+  const supabase = window.supabase.createClient('https://your-project.supabase.co', 'your-anon-key');
+
+  async function loadCurrentUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      document.getElementById('currentEmail').textContent = user.email;
+    } else {
+      document.getElementById('currentEmail').textContent = 'Not logged in';
+    }
+  }
+
+  async function changeEmail() {
+    const newEmail = document.getElementById('newEmailInput').value.trim();
+    const { data, error } = await supabase.auth.updateUser({ email: newEmail });
+    
+    if (error) {
+      document.getElementById('statusMessage').textContent = '❌ ' + error.message;
+    } else {
+      document.getElementById('statusMessage').textContent = '✅ Email change requested. Please check your new email to confirm!';
+      // Optional: supabase.auth.signOut(); // Force re-login if you want
+    }
+  }
+
+  loadCurrentUser();
+</script>
+
+</body>
+</html>

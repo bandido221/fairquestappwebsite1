@@ -1,0 +1,124 @@
+<!-- profile/setup.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Complete Your Profile | FairQuest</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      text-align: center;
+      padding: 40px;
+    }
+    .form-container {
+      background: rgba(251, 241, 200, 0.88);
+      color: #3b1f1f;
+      max-width: 500px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0 20px;
+      border: 1px solid #aa8452;
+      border-radius: 6px;
+      background: #fdf7e1;
+      color: #3b1f1f;
+      font-size: 16px;
+    }
+    .warning {
+      color: red;
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Complete Your Profile</h1>
+  <div class="form-container">
+    <p><strong>Choose a Username</strong></p>
+    <p class="warning">This app is family-friendly. 🚨 Inappropriate usernames will result in permanent account deletion without warning.</p>
+
+    <input type="text" id="username" placeholder="Enter a family-friendly username" />
+    <div id="errorMessage" class="warning" style="display:none;"></div>
+
+    <button onclick="submitUsername()">Save Username</button>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...your_key_here...'
+    );
+
+    const badWords = [
+      'fuck','shit','bitch','asshole','slut','nigger','fag','dick','cock','cunt','pussy','whore',
+      'bastard','rape','cum','anal','suck','motherfucker','fuk','fck','sh1t','f u c k','s h i t'
+    ];
+
+    async function submitUsername() {
+      const username = document.getElementById('username').value.trim().toLowerCase();
+      const errorBox = document.getElementById('errorMessage');
+
+      if (!username) {
+        errorBox.textContent = '❌ Please enter a username.';
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      if (badWords.some(word => username.includes(word))) {
+        errorBox.textContent = '❌ Please choose a family-appropriate username.';
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      const { data: existing, error } = await supabase
+        .from('app_users')
+        .select('id')
+        .eq('username', username)
+        .single();
+
+      if (existing) {
+        errorBox.textContent = '❌ Username already taken. Please choose another.';
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const { error: updateError } = await supabase
+        .from('app_users')
+        .update({ username: username })
+        .eq('id', user.id);
+
+      if (updateError) {
+        errorBox.textContent = '❌ Error saving username. Please try again.';
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      window.location.href = '/profile/index.html';
+    }
+  </script>
+
+</body>
+</html>

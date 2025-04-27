@@ -2,12 +2,17 @@
 <html lang="en">
 <head>
   <link rel="stylesheet" href="/css/style.css" />
-
-  <!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Performer Application | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
   <style>
     body {
       font-family: 'Domine', serif;
@@ -18,19 +23,26 @@
     }
     h1, h2 { font-family: 'Cinzel', serif; }
     .top-banner {
-      width: 100%; max-width: 600px; display: block;
-      margin: 0 auto 20px; border-radius: 12px;
+      width: 100%; max-width: 600px;
+      margin: 0 auto 20px;
+      border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      display: block;
     }
     .logo {
-      max-width: 100px; display: block;
-      margin: 0 auto 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      max-width: 100px;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
       transition: transform 0.3s ease;
+      display: block;
     }
     .logo:hover { transform: scale(1.05); }
     form {
-      max-width: 700px; margin: auto; background: rgba(251,241,200,0.88);
-      padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      max-width: 700px; margin: auto;
+      background: rgba(251,241,200,0.88);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
       color: #3b1f1f;
     }
     label { margin-top: 12px; display: block; text-align: left; }
@@ -40,31 +52,53 @@
       background-color: #fdf7e1; color: #3b1f1f;
     }
     .fair-block {
-      border: 1px solid #999; padding: 10px; margin-bottom: 10px;
-      background: #f9f9f9; position: relative;
+      border: 1px solid #999;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #f9f9f9;
+      position: relative;
     }
     .close-btn {
-      position: absolute; top: 5px; right: 10px;
-      cursor: pointer; font-size: 18px;
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 18px;
     }
     .fair-results { text-align: left; margin-top: 6px; }
     .selected-fair { font-size: 14px; color: green; margin-top: 6px; }
     .add-fair-btn {
       background-color: #e0e0e0; border: 1px dashed #999;
-      padding: 10px; cursor: pointer; margin-top: 10px;
+      padding: 10px;
+      cursor: pointer;
+      margin-top: 10px;
       border-radius: 6px;
     }
+    #validationMessage {
+  color: red;
+  font-weight: bold;
+  margin-top: 12px;
+  white-space: pre-line;
+}
+
     #dashboardButton {
-      background-color: #156918; color: white; font-size: 16px;
-      border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer;
+      background-color: #156918;
+      color: white;
+      font-size: 16px;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
       margin-left: 8px;
     }
     #reviewButton {
-      background-color: #4CAF50; color: white; font-size: 16px;
-      border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer;
-    }
-    #validationMessage {
-      color: red; font-weight: bold; margin-top: 12px; white-space: pre-line;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 16px;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
     }
     footer { margin-top: 40px; font-size: 14px; }
     footer a { color: #aa8452; text-decoration: none; margin: 0 8px; }
@@ -72,6 +106,7 @@
     input[type="checkbox"] { transform: scale(1.3); cursor: pointer; }
   </style>
 </head>
+
 <body>
   <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
   <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
@@ -87,8 +122,7 @@
     <label for="photoUrl">
       Photo URL: *
       <span style="cursor:pointer;color:#aa8452;"
-            onclick="alert('Right‑click an image on Facebook, choose “Copy image address”, then paste it here.')"
-      >❓</span>
+        onclick="alert('Right‑click an image on Facebook, choose “Copy image address”, then paste it here.')">❓</span>
     </label>
     <input type="url" id="photoUrl" required />
 
@@ -109,13 +143,7 @@
       Type a fair name or state, then click one date. For multiple weekends, click “+ Add Another Fair” again.
     </p>
     <div id="fairsList"></div>
-    <div class="add-fair-btn" onclick="addFairSearch()">+ Add Another Fair</div>
-
-    <h3 style="margin-top:30px;">Can't find the fair?</h3>
-    <p style="font-size:14px; color:#401010;">
-      We’ll be adding an option to manually enter fairs soon. Stay tuned!
-    </p>
-    
+    <button id="addFairButton" type="button" class="add-fair-btn">+ Add Another Fair</button>
 
     <h2>Comments or Questions</h2>
     <textarea id="comments" placeholder="Let us know any special requests..."></textarea>
@@ -128,9 +156,7 @@
     </div>
 
     <button type="button" id="reviewButton" onclick="goToReview()" disabled>Review</button>
-    <button type="button" id="dashboardButton"
-            onclick="window.location.href='admin_dashboard.html'"
-    >Dashboard</button>
+    <button type="button" id="dashboardButton" onclick="window.location.href='admin_dashboard.html'">Dashboard</button>
     <p id="validationMessage"></p>
   </form>
 
@@ -143,286 +169,229 @@
     <a href="/contact.html">Contact</a>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+const supabase = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
 
-function saveDraft() {
-  const f = document.getElementById('applicationForm');
-  const fairBlocks = Array.from(document.querySelectorAll('.fair-block'))
-    .filter(b=>b.dataset.fairId && b.dataset.start && b.dataset.end)
-    .map(b=>({
-      id:    b.dataset.fairId,
-      start: b.dataset.start,
-      end:   b.dataset.end
-    }));
-  const draft = {
-    name:         f.name.value.trim(),
-    description:  f.description.value.trim(),
-    photoUrl:     f.photoUrl.value.trim(),
-    performerType:f.performerType.value.trim(),
-    contactName:  f.contactName.value.trim(),
-    contactEmail: f.contactEmail.value.trim(),
-    website:      f.website.value.trim(),
-    comments:     document.getElementById('comments').value.trim(),
-    fairs:        fairBlocks
-  };
-  localStorage.setItem('performerAppDraft', JSON.stringify(draft));
+const stateMap = {
+  'iowa': 'ia', 'texas': 'tx', 'california': 'ca', 'florida': 'fl',
+  'new york': 'ny', 'illinois': 'il', 'georgia': 'ga', 'ohio': 'oh',
+  'michigan': 'mi', 'pennsylvania': 'pa', 'wisconsin': 'wi', 'minnesota': 'mn'
+};
+
+let fairSearchCount = 0;
+let allFairs = [];
+
+async function loadFairs() {
+  const { data, error } = await supabase.from('renaissance_fairs').select('*');
+  if (data) allFairs = data;
 }
 
-    // Supabase client
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+function formatDate(isoDate) {
+  const [year, month, day] = isoDate.split("-");
+  return `${month}-${day}-${year.slice(2)}`;
+}
 
-    // State map & counter
-    const stateMap = {
-      'iowa':'ia','texas':'tx','california':'ca','florida':'fl',
-      'new york':'ny','illinois':'il','georgia':'ga','ohio':'oh',
-      'michigan':'mi','pennsylvania':'pa','wisconsin':'wi','minnesota':'mn'
-    };
-    let fairSearchCount = 0;
+function addFairSearch(prefill = null) {
+  if (fairSearchCount >= 20) return;
+  fairSearchCount++;
+  const container = document.getElementById('fairsList');
+  const div = document.createElement('div');
+  div.className = 'fair-block';
 
-    // All fairs store
-    let allFairs = [];
+  div.innerHTML = `
+    <span class="close-btn" onclick="
+      this.parentElement.remove();
+      fairSearchCount--;
+      checkFormValidity();
+    ">&times;</span>
+  `;
 
-    // Load fairs once
-    async function loadFairs() {
-      const { data, error } = await supabase
-        .from('renaissance_fairs')
-        .select('*');
-      if (error) console.error('Fairs load error:', error);
-      else allFairs = data;
-    }
+  const input = document.createElement('input');
+  input.placeholder = 'Search fair name or state…';
+  div.appendChild(input);
 
-    // addFairSearch: leave your search logic exactly as is
-    function addFairSearch(prefill = null) {
-      if (fairSearchCount >= 20) return;
-      fairSearchCount++;
-      const container = document.getElementById('fairsList');
-      const div = document.createElement('div');
-      div.className = 'fair-block';
-      div.innerHTML = `<span class="close-btn" onclick="
-          this.parentElement.remove();
-          fairSearchCount--;
+  const results = document.createElement('div');
+  results.className = 'fair-results';
+  div.appendChild(results);
+
+  const sel = document.createElement('div');
+  sel.className = 'selected-fair';
+  div.appendChild(sel);
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    const norm = stateMap[q];
+    results.innerHTML = '';
+    if (!q) return;
+
+    allFairs.forEach(fair => {
+      if (!fair.name.toLowerCase().includes(q) && norm !== fair.state.toLowerCase()) return;
+
+      const dateRanges = [];
+      for (let i = 0; i <= 10; i++) {
+        const sKey = i === 0 ? 'start_date' : `week${i+1}_start_date`;
+        const eKey = i === 0 ? 'end_date'   : `week${i+1}_end_date`;
+        const s = fair[sKey], e = fair[eKey];
+        if (!s || !e) continue;
+
+        const key = `${fair.id}_${s}_${e}`;
+        const taken = Array.from(document.querySelectorAll('.fair-block'))
+          .some(b => `${b.dataset.fairId}_${b.dataset.start}_${b.dataset.end}` === key);
+        if (!taken) dateRanges.push({ s, e });
+      }
+      if (!dateRanges.length) return;
+
+      const fairDiv = document.createElement('div');
+      fairDiv.style.marginBottom = '8px';
+
+      const hdr = document.createElement('div');
+      hdr.innerHTML = `<strong>${fair.name} (${fair.state})</strong>`;
+      hdr.style.marginBottom = '4px';
+      fairDiv.appendChild(hdr);
+
+      dateRanges.forEach(({ s, e }) => {
+        const row = document.createElement('div');
+        row.style = 'display:flex;justify-content:space-between;padding:6px 8px;margin:4px 0;background:#fdf7e1;border:1px solid #ccc;border-radius:6px;';
+
+        const dateText = document.createElement('span');
+        dateText.textContent = `${formatDate(s)} → ${formatDate(e)}`;
+        row.appendChild(dateText);
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.onclick = () => {
+          if (!cb.checked) return;
+          sel.textContent = `${fair.name} (${fair.state}) — ${formatDate(s)} to ${formatDate(e)}`;
+          div.dataset.fairId = fair.id;
+          div.dataset.start = s;
+          div.dataset.end = e;
+          div.dataset.fairName = fair.name;
+          input.style.display = 'none';
+          results.innerHTML = '';
           checkFormValidity();
-        ">&times;</span>`;
+        };
+        cb.addEventListener('change', checkFormValidity);
 
-      const input = document.createElement('input');
-      input.placeholder = 'Search fair name or state…';
-      div.appendChild(input);
+        row.appendChild(cb);
 
-      const results = document.createElement('div');
-      results.className = 'fair-results';
-      div.appendChild(results);
-
-      const sel = document.createElement('div');
-      sel.className = 'selected-fair';
-      div.appendChild(sel);
-
-      input.addEventListener('input', () => {
-        const q = input.value.trim().toLowerCase();
-        const norm = stateMap[q];
-        results.innerHTML = '';
-        if (!q) return;
-        allFairs.forEach(fair => {
-          if (
-            !fair.name.toLowerCase().includes(q) &&
-            norm !== fair.state.toLowerCase()
-          ) return;
-          const ranges = [];
-          for (let i=0; i<=10; i++) {
-            const sK = i===0?'start_date':`week${i+1}_start_date`;
-            const eK = i===0?'end_date':  `week${i+1}_end_date`;
-            const s = fair[sK], e = fair[eK];
-            if (!s||!e) continue;
-            const key = `${fair.id}_${s}_${e}`;
-            const taken = Array.from(document.querySelectorAll('.fair-block'))
-              .some(b=>`${b.dataset.fairId}_${b.dataset.start}_${b.dataset.end}`===key);
-            if (!taken) ranges.push({s,e});
-          }
-          if (!ranges.length) return;
-          const fairDiv = document.createElement('div');
-          fairDiv.innerHTML = `<strong>${fair.name} (${fair.state})</strong>`;
-          ranges.forEach(({s,e})=>{
-            const row = document.createElement('div');
-            row.style = 'display:flex;justify-content:space-between;padding:6px 8px;margin:4px 0;background:#fdf7e1;border:1px solid #ccc;border-radius:6px;';
-            const span = document.createElement('span');
-            span.textContent = `${s} → ${e}`;
-            const cb = document.createElement('input');
-            cb.type = 'checkbox';
-            cb.onclick = () => {
-              if (!cb.checked) return;
-              sel.textContent = `${fair.name} (${fair.state}) — ${s} to ${e}`;
-              div.dataset.fairId = fair.id;
-              div.dataset.start  = s;
-              div.dataset.end    = e;
-              input.style.display = 'none';
-              results.innerHTML = '';
-              checkFormValidity();
-            };
-            row.appendChild(span);
-            row.appendChild(cb);
-            fairDiv.appendChild(row);
-          });
-          results.appendChild(fairDiv);
-        });
+        fairDiv.appendChild(row);
       });
 
-      if (prefill) {
-        sel.textContent = `${prefill.name} — ${prefill.start} to ${prefill.end}`;
-        div.dataset.fairId = prefill.id;
-        div.dataset.start  = prefill.start;
-        div.dataset.end    = prefill.end;
-        input.style.display = 'none';
-      }
+      results.appendChild(fairDiv);
+    });
+  });
 
-      container.appendChild(div);
-      saveDraft();
-        }
+  if (prefill) {
+    sel.textContent = `${prefill.name} — ${prefill.start} to ${prefill.end}`;
+    div.dataset.fairId = prefill.id;
+    div.dataset.start  = prefill.start;
+    div.dataset.end    = prefill.end;
+    div.dataset.fairName = prefill.name;
+    input.style.display = 'none';
+  }
 
-    // Save manual fair
-    function saveManualFair() {
-      const name  = document.getElementById('manualFairName').value.trim();
-      const start = document.getElementById('manualFairStart').value;
-      const end   = document.getElementById('manualFairEnd').value;
-      if (!name||!start||!end)
-        return alert('Please fill all manual‑fair fields.');
-      addFairSearch({ id:`manual_${Date.now()}`, name, start, end });
-      ['manualFairName','manualFairStart','manualFairEnd'].forEach(id=>document.getElementById(id).value='');
-      document.getElementById('manualEntryBox').style.display = 'none';
-  document.getElementById('showManualBtn').style.display = 'inline-block';
-
-  // ← MOVE THESE HERE
-  fairSearchCount++;
-  checkFormValidity();
-  saveDraft();
+  container.appendChild(div);
 }
 
-    document.getElementById('showManualBtn').onclick = () => {
-      document.getElementById('manualEntryBox').style.display = 'block';
-      document.getElementById('showManualBtn').style.display = 'none';
-      
-    };
 
-    // Auto‐capitalize Performer Name
-    document.getElementById('name').addEventListener('blur', e => {
-      e.target.value = e.target.value
-        .split(' ')
-        .map(w => w.charAt(0).toUpperCase()+w.slice(1).toLowerCase())
-        .join(' ');
-    });
-
-    // Validation
-    function checkFormValidity() {
-  const f = document.getElementById('applicationForm');
+function checkFormValidity() {
+  const form = document.getElementById('applicationForm');
+  const btn = document.getElementById('reviewButton');
+  const validationMessage = document.getElementById('validationMessage');
   const errs = [];
 
-  if (!f.name.value.trim()) errs.push('Performer Name is required.');
-  const bioW = f.description.value.trim().split(/\s+/).filter(w=>w).length;
-  if (!f.description.value.trim()) errs.push('Quick Bio is required.');
-  if (bioW>50) errs.push(`Quick Bio must be 50 words or less (you have ${bioW}).`);
-  if (!f.photoUrl.value.trim()) errs.push('Photo URL is required.');
-  if (!f.performerType.value.trim()) errs.push('Performer Type is required.');
-  if (!f.contactName.value.trim()) errs.push('Contact Person is required.');
-  if (!f.contactEmail.value.trim()) errs.push('Contact Email is required.');
+  if (!form.name.value.trim()) errs.push('Performer Name is required.');
+  const bioWords = form.description.value.trim().split(/\s+/).filter(w => w).length;
+  if (!form.description.value.trim()) errs.push('Quick Bio is required.');
+  if (bioWords > 50) errs.push(`Quick Bio must be 50 words or less (you have ${bioWords}).`);
+  if (!form.photoUrl.value.trim()) errs.push('Photo URL is required.');
+  if (!form.performerType.value.trim()) errs.push('Performer Type is required.');
+  if (!form.contactName.value.trim()) errs.push('Contact Person is required.');
+  if (!form.contactEmail.value.trim()) errs.push('Contact Email is required.');
   if (!document.getElementById('termsCheckbox').checked)
     errs.push('You must agree to the Terms & Conditions.');
 
   const hasFair = Array.from(document.querySelectorAll('.fair-block'))
-    .some(b=>b.dataset.fairId && b.dataset.start && b.dataset.end);
+    .some(b => b.dataset.fairId && b.dataset.start && b.dataset.end);
   if (!hasFair) errs.push('Select at least one fair.');
 
-  const btn = document.getElementById('reviewButton');
-  if (errs.length) {
+  if (errs.length > 0) {
     btn.disabled = true;
+    validationMessage.innerHTML = errs.map(e => `• ${e}`).join('<br>');
   } else {
     btn.disabled = false;
+    validationMessage.innerHTML = '';  // ✅ CLEAR the error list
   }
 
-  return errs; // 🆕 return the list of problems!
+  return errs;
 }
 
-    document.getElementById('applicationForm')
-        .addEventListener('input', () => {
-          checkFormValidity();
-          saveDraft();
-        });
 
-    // Review click → duplicate‐name check
-    async function goToReview() {
-  const validationErrors = checkFormValidity(); // 🆕 check form again
 
-  if (validationErrors.length > 0) {
-    alert("⚠️ Please fix the following:\n\n" + validationErrors.join("\n• "));
-    return; // ⛔ Stop here, don't try to send
-  }
 
-  const name = document.getElementById('name').value.trim();
-  const { data: ex, error } = await supabase
-    .from('vendor_performer_applications')
-    .select('id')
-    .eq('name', name)
-    .eq('application_type', true)
-    .limit(1);
-  if (error) {
-    alert('❌ Could not verify name: ' + error.message);
-    return;
-  }
-  if (ex && ex.length) {
-    alert(
-      'It looks like you already applied under this name.\n' +
-      'Please update your application if needed.'
-    );
-    return;
-  }
-
-  const fairs = Array.from(document.querySelectorAll('.fair-block'))
-    .filter(b => b.dataset.fairId)
+function saveDraft() {
+  const f = document.getElementById('applicationForm');
+  const fairBlocks = Array.from(document.querySelectorAll('.fair-block'))
+    .filter(b => b.dataset.fairId && b.dataset.start && b.dataset.end)
     .map(b => ({
       id: b.dataset.fairId,
+      name: b.dataset.fairName || '',
       start: b.dataset.start,
       end: b.dataset.end
     }));
 
   const draft = {
-    name,
-    description: document.getElementById('description').value.trim(),
-    photoUrl: document.getElementById('photoUrl').value.trim(),
-    performerType: document.getElementById('performerType').value.trim(),
-    contactName: document.getElementById('contactName').value.trim(),
-    contactEmail: document.getElementById('contactEmail').value.trim(),
-    website: document.getElementById('website').value.trim(),
-    fairs,
+    name: f.name.value.trim(),
+    description: f.description.value.trim(),
+    photoUrl: f.photoUrl.value.trim(),
+    performerType: f.performerType.value.trim(),
+    contactName: f.contactName.value.trim(),
+    contactEmail: f.contactEmail.value.trim(),
+    website: f.website.value.trim(),
     comments: document.getElementById('comments').value.trim(),
-    application_type: true
+    fairs: fairBlocks
   };
   localStorage.setItem('performerAppDraft', JSON.stringify(draft));
+}
+
+async function goToReview() {
+  const formErrors = checkFormValidity();  // 🛡️ check first
+
+  if (formErrors.length > 0) {
+    alert("⚠️ Please fix the following:\n\n" + formErrors.join("\n"));
+    return; // ⛔ STOP — do not continue if errors
+  }
+
+  // ✅ No errors, continue to save and move to review.html
+  saveDraft();
   window.location.href = 'review.html';
 }
 
 
-    // On load
-    window.addEventListener('DOMContentLoaded', async()=>{
-      await loadFairs();
-      // default contactEmail
-      const usr = supabase.auth.user?.();
-      if (usr?.email) document.getElementById('contactEmail').value = usr.email;
-      // restore draft
-      const saved = JSON.parse(localStorage.getItem('performerAppDraft')||'null');
-      if (saved) {
-        ['name','description','photoUrl','performerType','contactName','contactEmail','website','comments']
-          .forEach(id=>document.getElementById(id).value = saved[id]||'');
-        fairSearchCount = 0;
-        document.getElementById('fairsList').innerHTML = '';
-        saved.fairs.forEach(f=>addFairSearch({
-          id:f.id, name:'', start:f.start, end:f.end
-        }));
-      } else {
-        addFairSearch();
-      }
-      checkFormValidity();
-    });
-  </script>
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadFairs();
+  if (!allFairs.length) { alert("⚠️ Could not load fairs. Please refresh."); return; }
+  const saved = JSON.parse(localStorage.getItem('performerAppDraft') || 'null');
+  if (saved) {
+    ['name','description','photoUrl','performerType','contactName','contactEmail','website','comments']
+      .forEach(id => document.getElementById(id).value = saved[id] || '');
+    document.getElementById('fairsList').innerHTML = '';
+    fairSearchCount = 0;
+    saved.fairs.forEach(f => addFairSearch({ id: f.id, name: f.name, start: f.start, end: f.end }));
+  } else {
+    addFairSearch();
+  }
+  document.getElementById('addFairButton').addEventListener('click', () => addFairSearch());
+  checkFormValidity();
+  document.getElementById('applicationForm').addEventListener('input', checkFormValidity);
+document.getElementById('termsCheckbox').addEventListener('change', checkFormValidity);
+
+});
+</script>
+
 </body>
 </html>

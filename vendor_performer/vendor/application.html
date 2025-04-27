@@ -261,21 +261,23 @@
       row.style = 'display:flex;justify-content:space-between;padding:6px 8px;margin:4px 0;background:#fdf7e1;border:1px solid #ccc;border-radius:6px;';
 
       const dateText = document.createElement('span');
-      dateText.textContent = `${s} → ${e}`;
+      dateText.textContent = `${formatDate(s)} → ${formatDate(e)}`;
       row.appendChild(dateText);
 
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.onclick = () => {
-        if (!cb.checked) return;
-        sel.textContent = `${fair.name} (${fair.state}) — ${s} to ${e}`;
-        div.dataset.fairId = fair.id;
-        div.dataset.start  = s;
-        div.dataset.end    = e;
-        input.style.display = 'none';
-        results.innerHTML    = '';
-        checkFormValidity();
-      };
+  if (!cb.checked) return;
+  sel.textContent = `${fair.name} (${fair.state}) — ${s} to ${e}`;
+  div.dataset.fairId   = fair.id;
+  div.dataset.start    = s;
+  div.dataset.end      = e;
+  div.dataset.fairName = fair.name; // ✅ Save the name too
+  input.style.display  = 'none';
+  results.innerHTML    = '';
+  checkFormValidity();
+};
+
       row.appendChild(cb);
 
       fairDiv.appendChild(row);
@@ -314,10 +316,10 @@
     }
 
     // 7) Toggle manual-entry form
-    document.getElementById('showManualBtn').onclick = () => {
-      document.getElementById('manualEntryBox').style.display = 'block';
-      document.getElementById('showManualBtn').style.display = 'none';
-    };
+  //  document.getElementById('showManualBtn').onclick = () => {
+  //    document.getElementById('manualEntryBox').style.display = 'block';
+  //    document.getElementById('showManualBtn').style.display = 'none';
+  //  };
 
     // 8) Auto‐capitalize vendor name
     document.getElementById('name').addEventListener('blur', e => {
@@ -329,34 +331,33 @@
 
     // 9) Form validation
     function checkFormValidity() {
-      const form = document.getElementById('applicationForm');
-      const btn  = document.getElementById('reviewButton');
-      const msg  = document.getElementById('validationMessage');
-      const errs = [];
+  const form = document.getElementById('applicationForm');
+  const btn  = document.getElementById('reviewButton');
+  const errs = [];
 
-      if (!form.name.value.trim()) errs.push('Vendor Name is required.');
-      const bioWords = form.description.value.trim().split(/\s+/).filter(w=>w).length;
-      if (!form.description.value.trim()) errs.push('Quick Bio is required.');
-      if (bioWords>50) errs.push(`Quick Bio max 50 words (you have ${bioWords}).`);
-      if (!form.photoUrl.value.trim()) errs.push('Photo URL is required.');
-      if (!form.vendorType.value.trim()) errs.push('Vendor Type is required.');
-      if (!form.contactName.value.trim()) errs.push('Contact Person is required.');
-      if (!form.contactEmail.value.trim()) errs.push('Contact Email is required.');
-      if (!document.getElementById('termsCheckbox').checked)
-        errs.push('You must agree to the Terms & Conditions.');
+  if (!form.name.value.trim()) errs.push('Name is required.');
+  const bioWords = form.description.value.trim().split(/\s+/).filter(w => w).length;
+  if (!form.description.value.trim()) errs.push('Quick Bio is required.');
+  if (bioWords > 50) errs.push(`Quick Bio must be 50 words or less (you have ${bioWords}).`);
+  if (!form.photoUrl.value.trim()) errs.push('Photo URL is required.');
+  if (!form.contactName.value.trim()) errs.push('Contact Name is required.');
+  if (!form.contactEmail.value.trim()) errs.push('Contact Email is required.');
+  if (!document.getElementById('termsCheckbox').checked)
+    errs.push('You must agree to the Terms & Conditions.');
 
-      const hasFair = Array.from(document.querySelectorAll('.fair-block'))
-        .some(b=>b.dataset.fairId && b.dataset.start && b.dataset.end);
-      if (!hasFair) errs.push('Select at least one fair.');
+  const hasFair = Array.from(document.querySelectorAll('.fair-block'))
+    .some(b => b.dataset.fairId && b.dataset.start && b.dataset.end);
+  if (!hasFair) errs.push('Select at least one fair.');
 
-      if (errs.length) {
-        msg.textContent = '⚠️ ' + errs.join('\n');
-        btn.disabled = true;
-      } else {
-        msg.textContent = '';
-        btn.disabled = false;
-      }
-    }
+  if (errs.length) {
+    btn.disabled = true;
+  } else {
+    btn.disabled = false;
+  }
+
+  return errs;  // <<<<<< ✅ THIS WAS MISSING
+}
+
     document.getElementById('applicationForm').addEventListener('input', checkFormValidity);
 
     // 10) Review click → duplicate check
@@ -394,13 +395,16 @@
   // 3) No duplicate → proceed to gather fairs & other fields
   const fairBlocks = document.querySelectorAll('.fair-block');
   const selectedFairs = Array.from(fairBlocks)
-    .filter(b => b.dataset.fairId && b.dataset.start && b.dataset.end)
-    .map(b => ({
-      id:    b.dataset.fairId,
-      name:  b.dataset.fairName || "",
-      start: b.dataset.start,
-      end:   b.dataset.end
-    }));
+  .filter(b => b.dataset.fairId && b.dataset.start && b.dataset.end)
+  .map(b => ({
+    id:    b.dataset.fairId,
+    name:  b.querySelector('.selected-fair')?.textContent.split('—')[0].trim() || '',
+    start: b.dataset.start,
+    end:   b.dataset.end
+  }));
+
+
+
 
   const draft = {
     name,
@@ -422,7 +426,12 @@
 
     // 11) On load
     window.addEventListener('DOMContentLoaded', async () => {
-      await loadFairs();
+  await loadFairs();
+
+  if (!allFairs.length) {
+    alert("⚠️ Could not load fairs. Please refresh the page.");
+    return;
+  }
 
       // prefill contact email from auth, if available
       const user = supabase.auth.user?.();
@@ -444,16 +453,22 @@
         document.getElementById('fairsList').innerHTML = '';
         fairSearchCount = 0;
         saved.fairs.forEach(f => addFairSearch({
-          id:    f.id,
-          name:  '', // manual ones show label
-          start: f.start,
-          end:   f.end
-        }));
+  id:    f.id,
+  name:  f.name || '',
+  start: f.start,
+  end:   f.end
+}));
+
       } else {
         addFairSearch();
       }
       checkFormValidity();
     });
+    function formatDate(isoDate) {
+  const [year, month, day] = isoDate.split("-");
+  return `${month}-${day}-${year.slice(2)}`;
+}
+
   </script>
 </body>
 </html>

@@ -199,7 +199,7 @@ ${data.website ? (() => {
        <ul>
   ${data.fairs.map(f => `
     <li>
-      <strong>${f.name}</strong>: ${f.start} to ${f.end}
+<li><strong>${f.name}</strong>: ${formatDate(f.start)} to ${formatDate(f.end)}</li>
       ${(f.id && typeof f.id === 'string' && f.id.startsWith('manual_')) ? `<em style="color: darkred;">(Manually entered)</em>` : ''}
     </li>
   `).join('')}
@@ -298,6 +298,11 @@ if (manualFairSuggestions.length > 0) {
     }
 
     renderReview();
+    function formatDate(isoDate) {
+  const [year, month, day] = isoDate.split("-");
+  return `${month}-${day}-${year.slice(2)}`;
+}
+
   </script>
 
 <footer style="margin-top: 40px; font-size: 14px;">

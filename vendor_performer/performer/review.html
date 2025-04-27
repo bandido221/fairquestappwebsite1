@@ -195,15 +195,16 @@ ${data.website ? (() => {
   return `<p><strong>Website:</strong> <a href="${fullLink}" target="_blank">${fullLink}</a></p>`;
 })() : ''}
         ${data.photoUrl ? `<p><strong>Photo:</strong><br/><img src="${data.photoUrl}" alt="Performer Photo"/></p>` : ''}
-        <h2>Fairs Selected</h2>
-        <ul>
-          ${data.fairs.map(f => `
-            <li>
-              <strong>${f.name}</strong>: ${f.start} to ${f.end}
-              ${f.id.startsWith('manual_') ? `<em style="color:#c0392b;">(Manual entry)</em>` : ''}
-            </li>
-          `).join('')}
-        </ul>
+     <h2>Fairs Selected</h2>
+<ul>
+  ${data.fairs.map(f => `
+    <li>
+      <strong>${f.name || 'Unknown Fair'}</strong>: ${f.start} to ${f.end}
+      ${f.id && f.id.startsWith('manual_') ? `<em style="color:#c0392b;">(Manual entry)</em>` : ''}
+    </li>
+  `).join('')}
+</ul>
+
         ${data.comments ? `<h2>Comments / Questions</h2><p>${data.comments}</p>` : ''}
       `;
     }

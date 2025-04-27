@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Profile | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 20px;
+    }
+    .profile-card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 20px auto;
+      max-width: 700px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+    .profile-logo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 60px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .profile-card img.profile-img {
+      max-width: 120px;
+      border-radius: 50%;
+      margin: 0 auto 15px auto;
+      display: block;
+    }
+    .profile-card p {
+      margin: 8px 0;
+    }
+    .settings-button {
+      margin-top: 20px;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .settings-button:hover {
+      background-color: #45a049;
+    }
+    a.back-link {
+      display: inline-block;
+      margin-top: 30px;
+      color: #bb9457;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .updates-section {
+      margin-top: 40px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+    .update-item {
+      background: #fdf7e1;
+      color: #3b1f1f;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Welcome to Your Profile</h1>
+
+  <div class="profile-card" id="profileCard">
+    <a href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+    </a>
+    Loading profile...
+  </div>
+
+  <button class="settings-button" onclick="goToSettings()">⚙️ Settings</button>
+
+  <a href="/index.html" class="back-link">🏡 Back to Home</a>
+
+  <!-- 🆕 Updates Section -->
+  <div class="updates-section" id="updatesSection">
+    <h2>
+      📢 Latest FairQuest Updates 
+      <span id="newBadge" style="display:none; color: red; font-size: 16px;">● NEW</span>
+    </h2>
+    <div id="updatesList">Loading updates...</div>
+    
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    async function loadProfile() {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        document.getElementById('profileCard').innerHTML = '<p>⚠️ Failed to load user info.</p>';
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('app_users')
+        .select('username, email, profile_image_url, level, character_class, character_clan, character_alignment, created_at')
+        .eq('id', user.id)
+        .single();
+
+      if (error || !data) {
+        document.getElementById('profileCard').innerHTML = '<p>⚠️ Profile not found.</p>';
+        return;
+      }
+
+      document.getElementById('profileCard').innerHTML = `
+        <a href="/home.html">
+          <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+        </a>
+        ${data.profile_image_url ? `<img src="${data.profile_image_url}" alt="Profile Picture" class="profile-img" />` : ''}
+        <p><strong>Username:</strong> ${data.username || '(Not Set)'}</p>
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Level:</strong> ${data.level ?? 1}</p>
+        <p><strong>Character Class:</strong> ${data.character_class || '(None)'}</p>
+        <p><strong>Character Clan:</strong> ${data.character_clan || '(None)'}</p>
+        <p><strong>Alignment:</strong> ${data.character_alignment || '(None)'}</p>
+        <p><strong>Member Since:</strong> ${new Date(data.created_at).toLocaleDateString()}</p>
+      `;
+    }
+
+    async function loadUpdates() {
+  const { data, error } = await supabase
+    .from('website_updates')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(5); // show latest 5
+
+  const list = document.getElementById('updatesList');
+  const badge = document.getElementById('newBadge');
+  list.innerHTML = '';
+
+  if (error || !data.length) {
+    list.innerHTML = '<p>No updates available.</p>';
+    return;
+  }
+
+  let hasRecentUpdate = false;
+  const today = new Date();
+
+  data.forEach(update => {
+    const updateDate = new Date(update.created_at);
+    const diffDays = (today - updateDate) / (1000 * 60 * 60 * 24);
+    if (diffDays <= 7) {
+      hasRecentUpdate = true;
+    }
+
+    const div = document.createElement('div');
+    div.className = 'update-item';
+    div.innerHTML = `
+      <div class="update-date"><strong>${updateDate.toLocaleDateString()}</strong></div>
+      <div class="update-content">
+        ${formatUpdateMessage(update.message)}
+      </div>
+    `;
+    list.appendChild(div);
+  });
+
+  if (hasRecentUpdate) {
+    badge.style.display = 'inline';
+  }
+}
+
+// ➡️ Helper function to format the message into nice bullet points
+function formatUpdateMessage(message) {
+  const sections = message.split('•').map(part => part.trim()).filter(part => part !== '');
+  return `
+    <ul>
+      ${sections.map(section => `<li>${section}</li>`).join('')}
+    </ul>
+  `;
+}
+
+
+
+    // 🚀 Load everything
+    loadProfile();
+    loadUpdates();
+  </script>
+
+</body>
+</html>

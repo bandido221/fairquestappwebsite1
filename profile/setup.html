@@ -1,4 +1,3 @@
-<!-- profile/setup.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,12 +47,18 @@
       border-radius: 6px;
       font-size: 16px;
       cursor: pointer;
+      margin: 8px;
+    }
+    .logout-button {
+      background-color: #b73239;
     }
   </style>
 </head>
+
 <body>
 
   <h1>Complete Your Profile</h1>
+
   <div class="form-container">
     <p><strong>Choose a Username</strong></p>
     <p class="warning">This app is family-friendly. 🚨 Inappropriate usernames will result in permanent account deletion without warning.</p>
@@ -62,12 +67,13 @@
     <div id="errorMessage" class="warning" style="display:none;"></div>
 
     <button onclick="submitUsername()">Save Username</button>
+    <button class="logout-button" onclick="logout()">🚪 Log Out</button>
   </div>
 
   <script>
     const supabase = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...your_key_here...'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
     const badWords = [
@@ -76,8 +82,9 @@
     ];
 
     async function submitUsername() {
-      const username = document.getElementById('username').value.trim().toLowerCase();
+      const username = document.getElementById('username').value.trim();
       const errorBox = document.getElementById('errorMessage');
+      errorBox.style.display = 'none';
 
       if (!username) {
         errorBox.textContent = '❌ Please enter a username.';
@@ -85,25 +92,32 @@
         return;
       }
 
-      if (badWords.some(word => username.includes(word))) {
+      const usernameLower = username.toLowerCase();
+
+      if (badWords.some(word => usernameLower.includes(word))) {
         errorBox.textContent = '❌ Please choose a family-appropriate username.';
         errorBox.style.display = 'block';
         return;
       }
 
-      const { data: existing, error } = await supabase
+      const { data: existingUser, error: existError } = await supabase
         .from('app_users')
         .select('id')
         .eq('username', username)
         .single();
 
-      if (existing) {
+      if (existingUser) {
         errorBox.textContent = '❌ Username already taken. Please choose another.';
         errorBox.style.display = 'block';
         return;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        errorBox.textContent = '❌ Session expired. Please log in again.';
+        errorBox.style.display = 'block';
+        return;
+      }
 
       const { error: updateError } = await supabase
         .from('app_users')
@@ -117,6 +131,11 @@
       }
 
       window.location.href = '/profile/index.html';
+    }
+
+    async function logout() {
+      await supabase.auth.signOut();
+      window.location.href = '/user_login.html';
     }
   </script>
 

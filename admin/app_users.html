@@ -84,20 +84,27 @@
     let users = [];
 
     async function loadUsers() {
-      const { data, error } = await supabase
-        .from('app_users')
-        .select('id, email, username, level, created_at, last_login')
+  const { data, error } = await supabase
+    .from('app_users')
+    .select('id, email, username, level, created_at, last_login');
 
-      if (error || !data) {
-        document.getElementById('userGrid').innerHTML = '<p>⚠️ Failed to load users.</p>';
-        return;
-      }
+  if (error || !data) {
+    document.getElementById('userGrid').innerHTML = '<p>⚠️ Failed to load users.</p>';
+    return;
+  }
 
-      users = data;
-      renderUsers();
-    }
+  users = data;
+  renderUsers();
+}
 
-    function renderUsers() {
+function formatDate(dateString) {
+  if (!dateString) return 'N/A';
+  const d = new Date(dateString);
+  if (isNaN(d)) return 'N/A';
+  return d.toLocaleDateString();
+}
+
+function renderUsers() {
   const searchQuery = document.getElementById('searchInput').value.toLowerCase();
   const container = document.getElementById('userGrid');
 
@@ -111,8 +118,8 @@
         <h2>${user.email}</h2>
         <p><strong>Username:</strong> ${user.username || 'N/A'}</p>
         <p><strong>Level:</strong> ${user.level ?? 1}</p>
-        <p><strong>Created At:</strong> ${user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</p>
-        <p><strong>Last Login:</strong> ${user.last_login ? new Date(user.last_login).toLocaleDateString() : 'N/A'}</p>
+        <p><strong>Created At:</strong> ${formatDate(user.created_at)}</p>
+        <p><strong>Last Login:</strong> ${formatDate(user.last_login)}</p>
       </div>
     `;
   });
@@ -121,6 +128,7 @@
     container.innerHTML = '<p>❌ No users found.</p>';
   }
 }
+
 
 
     document.getElementById('searchInput').addEventListener('input', renderUsers);

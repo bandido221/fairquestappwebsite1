@@ -27,11 +27,7 @@
       padding: 0;
       text-align: center;
     }
-    
- header {
-      padding: 20px;
-    }
-
+    header { padding: 20px; }
     .top-banner {
       width: 100%;
       max-width: 600px;
@@ -40,28 +36,23 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
-
-   
     .logo {
       width: 120px;
       display: block;
       margin: 0 auto 20px;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
     }
-
     h1 {
       font-family: 'Cinzel', serif;
       font-size: 2.5rem;
       margin: 20px 0;
     }
-
     p {
       font-size: 1.1rem;
       max-width: 600px;
       margin: 0 auto 30px auto;
       padding: 0 10px;
     }
-
     .button-group {
       display: flex;
       justify-content: center;
@@ -69,7 +60,6 @@
       gap: 15px;
       margin-bottom: 40px;
     }
-
     .btn {
       background-color: #bb9457;
       color: black;
@@ -81,31 +71,23 @@
       cursor: pointer;
       text-decoration: none;
     }
-
     .btn:hover {
       background-color: #f2e1c1;
     }
-
     footer {
       font-size: 0.8rem;
       padding: 20px;
       color: #aaa;
     }
-
     footer a {
       color: #aa8452;
       text-decoration: none;
       margin: 0 8px;
     }
-
-    footer a:hover {
-      text-decoration: underline;
-    }
-
+    footer a:hover { text-decoration: underline; }
     .social-icons {
       margin-top: 20px;
     }
-
     .social-icons a {
       display: inline-block;
       margin: 0 10px;
@@ -113,27 +95,22 @@
       font-size: 24px;
       transition: color 0.3s;
     }
-
     .social-icons a:hover {
       color: #bb9457;
     }
-
     @media (max-width: 768px) {
       header { padding: 40px 10px; }
       h1 { font-size: 2rem; }
       .btn { width: 100%; margin-top: 10px; }
-      .button-group {
-        flex-direction: column;
-        align-items: center;
-      }
+      .button-group { flex-direction: column; align-items: center; }
     }
   </style>
 </head>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <body>
 
-  <!-- Banner Image -->
   <img src="images/banner.png" alt="FairQuest Banner" class="top-banner" />
 
   <header>
@@ -144,22 +121,22 @@
       and join our growing community of fairgoers.
     </p>
     <p>FairQuest is the ultimate Renaissance festival companion. Whether people call it “Fair Quest,” “FairQuest app,”
-       or “Fair Quest festival finder,” this is the place to discover, apply, and attend your favorite renfairs.</p>
-
+      or “Fair Quest festival finder,” this is the place to discover, apply, and attend your favorite renfairs.</p>
   </header>
 
   <div class="button-group">
     <a class="btn" href="#" onclick="alert('📲 The FairQuest app is coming soon to the Google Play Store! Check back shortly.'); return false;">
       📲 Download App
     </a>
-        <a class="btn" href="vendor_performer/vendor/index.html">🧺 Vendor Portal</a>
+    <a class="btn" href="vendor_performer/vendor/index.html">🧺 Vendor Portal</a>
     <a class="btn" href="vendor_performer/performer/index.html">🎭 Performer Portal</a>
-    <a class="btn" href="/fairs/explore.html" onclick="trackExploreFairs(event)"> 🎪 Explore Fairs</a>
-  
-      </div>
-      <div id="earlyTesterCard" style="margin: 40px auto; padding: 30px; background: #fdf7e1; color: #3b1f1f; max-width: 700px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center;">
-        Loading rewards...
-      </div>
+    <a class="btn" href="/fairs/explore.html" onclick="trackExploreFairs(event)">🎪 Explore Fairs</a>
+  </div>
+
+  <div id="earlyTesterCard" style="margin: 40px auto; padding: 30px; background: #fdf7e1; color: #3b1f1f; max-width: 700px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center;">
+    Loading rewards...
+  </div>
+
   <footer>
     <a href="terms.html">Terms</a> |
     <a href="privacy.html">Privacy</a> |
@@ -172,14 +149,12 @@
       <a href="https://www.instagram.com/YourFairQuestPage" target="_blank" aria-label="Instagram"><i class="fa fa-instagram"></i></a>
     </div>
 
-    
-    
-
     <p>If you're searching for the Fair Quest app — you're in the right place!</p>
-
   </footer>
-  <script>
-   function trackExploreFairs(e) {
+
+<script>
+
+function trackExploreFairs(e) {
   e.preventDefault();
   gtag('event', 'fair_button_click', {
     event_category: 'navigation',
@@ -187,8 +162,9 @@
   });
   setTimeout(() => {
     window.location.href = "/fairs/explore.html";
-  }, 300); // small delay to ensure event logs
+  }, 300);
 }
+
 const supabase = window.supabase.createClient(
   'https://awtbjuiqgtdydsqzimul.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
@@ -200,31 +176,49 @@ async function loadEarlyTesterCard() {
   const { data: sessionData } = await supabase.auth.getSession();
   const isLoggedIn = sessionData?.session?.user != null;
 
-  // For now we'll pretend a fake user count — later we can use backend
-  let userCount = 50; // 📣 Change this manually later when you know the real count!
+  let userCount = 50; // or dynamic later
 
   if (isLoggedIn) {
-    // 🧡 User is logged in -> Show logout
     card.innerHTML = `
       <h3>🎉 Welcome to FairQuest!</h3>
       <p>You're logged in! Thank you for being part of our journey!</p>
-      <button onclick="logout()" style="margin-top: 15px; padding: 10px 20px; background: #b73239; color: white; border: none; border-radius: 8px;">🚪 Log Out</button>
+      <div style="margin-top: 20px;">
+        <a href="/profile/index.html" class="btn" style="background: #4CAF50; color: white;">🏰 My Profile</a>
+        <button onclick="logout()" style="margin-left: 10px; padding: 10px 20px; background: #b73239; color: white; border: none; border-radius: 8px;">🚪 Log Out</button>
+      </div>
     `;
   } else {
-    // 💬 Show message depending on user count
     if (userCount < 100) {
       card.innerHTML = `
         <h3>🚀 Become an Early App Tester!</h3>
-        <p>Sign in or sign up now to be among the first 100 testers! Help shape the FairQuest app and get early access rewards! 🎯</p>
-        <button onclick="location.href='/user_login.html'" style="margin-top: 15px; padding: 10px 20px; background: #5b2a86; color: white; border: none; border-radius: 8px;">Log In / Sign Up</button>
+        <p>Sign in or sign up now to be among the first 100 testers! 🎯</p>
+        <a href="/user_login.html" class="btn" style="background: #5b2a86; color: white;">Log In / Sign Up</a>
       `;
     } else {
       card.innerHTML = `
         <h3>🏰 Help Grow the FairQuest Community!</h3>
-        <p>Sign in or sign up to earn points by adding and updating fairs! 🎯 Points are rewarded after approval!</p>
-        <button onclick="location.href='/user_login.html'" style="margin-top: 15px; padding: 10px 20px; background: #5b2a86; color: white; border: none; border-radius: 8px;">Log In / Sign Up</button>
+        <p>Sign in or sign up to earn points by adding and updating fairs! 🎯</p>
+        <a href="/user_login.html" class="btn" style="background: #5b2a86; color: white;">Log In / Sign Up</a>
       `;
     }
+  }
+}
+
+
+async function afterLogin() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: profile } = await supabase
+    .from('app_users')
+    .select('username')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.username?.toLowerCase().startsWith('user_') || !profile?.username) {
+    window.location.href = '/profile/setup.html';
+  } else {
+    window.location.href = '/profile/index.html';
   }
 }
 
@@ -233,9 +227,10 @@ async function logout() {
   window.location.href = '/';
 }
 
-// Call the function when the page loads
+// Start
 loadEarlyTesterCard();
-  </script>
-  
+
+</script>
+
 </body>
 </html>

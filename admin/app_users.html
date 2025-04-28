@@ -24,11 +24,13 @@
       margin-bottom: 20px;
     }
 
-    .filters input {
+    .filters button, .filters input {
       padding: 8px;
+      margin: 5px;
       border-radius: 6px;
       border: none;
       font-size: 16px;
+      cursor: pointer;
     }
 
     .user-grid {
@@ -48,8 +50,14 @@
       text-align: left;
     }
 
-    .verified { color: green; }
-    .unverified { color: red; }
+    .green-dot {
+      height: 12px;
+      width: 12px;
+      background-color: green;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
 
     a.back-button {
       display: inline-block;
@@ -61,19 +69,28 @@
       border-radius: 6px;
       font-weight: bold;
     }
+
+    .section-title {
+      font-family: 'Cinzel', serif;
+      margin: 30px 0 10px;
+      font-size: 22px;
+      color: #bb9457;
+    }
   </style>
 </head>
-<body>
 
+<body>
   <h1>👤 User List</h1>
 
   <div class="filters">
+    <button onclick="groupByDate()">📅 Group by Date</button>
+    <button onclick="groupByType()">👥 Group by User Type</button>
     <input type="text" id="searchInput" placeholder="🔎 Search by Email" />
   </div>
 
   <div class="user-grid" id="userGrid"></div>
 
-  <a href="admin.html" class="back-button">🔙 Back to Admin</a>
+  <a href="/admin/admin_dashboard.html" class="back-button">🔙 Back to Admin</a>
 
   <script>
     const supabase = window.supabase.createClient(
@@ -82,56 +99,126 @@
     );
 
     let users = [];
+    let seenUsers = JSON.parse(localStorage.getItem('seenUsers')) || [];
 
     async function loadUsers() {
-  const { data, error } = await supabase
-    .from('app_users')
-    .select('id, email, username, level, created_at, last_login');
-
-  if (error || !data) {
-    document.getElementById('userGrid').innerHTML = '<p>⚠️ Failed to load users.</p>';
-    return;
-  }
-
-  users = data;
-  renderUsers();
-}
-
-function formatDate(dateString) {
-  if (!dateString) return 'N/A';
-  const d = new Date(dateString);
-  if (isNaN(d)) return 'N/A';
-  return d.toLocaleDateString();
-}
-
-function renderUsers() {
-  const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-  const container = document.getElementById('userGrid');
-
-  container.innerHTML = '';
-
-  users.filter(user => {
-    return user.email.toLowerCase().includes(searchQuery);
-  }).forEach(user => {
-    container.innerHTML += `
-      <div class="user-card">
-        <h2>${user.email}</h2>
-        <p><strong>Username:</strong> ${user.username || 'N/A'}</p>
-        <p><strong>Level:</strong> ${user.level ?? 1}</p>
-        <p><strong>Created At:</strong> ${formatDate(user.created_at)}</p>
-        <p><strong>Last Login:</strong> ${formatDate(user.last_login)}</p>
-      </div>
-    `;
-  });
-
-  if (container.innerHTML.trim() === '') {
-    container.innerHTML = '<p>❌ No users found.</p>';
-  }
-}
+      const { data, error } = await supabase
+  .from('app_users')
+  .select('id, email, username, level, created_at, last_login, account_type')
+  .order('created_at', { ascending: false });  // ✅ correct way
 
 
+      if (error || !data) {
+        document.getElementById('userGrid').innerHTML = '<p>⚠️ Failed to load users.</p>';
+        return;
+      }
 
-    document.getElementById('searchInput').addEventListener('input', renderUsers);
+      users = data;
+      renderNewUsersOnly();
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const d = new Date(dateString);
+      if (isNaN(d)) return 'N/A';
+      return d.toLocaleDateString();
+    }
+
+    function renderNewUsersOnly() {
+      const container = document.getElementById('userGrid');
+      container.innerHTML = '';
+
+      users.forEach(user => {
+        if (!seenUsers.includes(user.id)) {
+          container.innerHTML += renderUserCard(user, true);
+          seenUsers.push(user.id);
+        }
+      });
+
+      if (container.innerHTML.trim() === '') {
+        container.innerHTML = '<p>✅ No new users.</p>';
+      }
+
+      localStorage.setItem('seenUsers', JSON.stringify(seenUsers));
+    }
+
+    function renderUserCard(user, isNew = false) {
+      return `
+        <div class="user-card">
+          <h2>${isNew ? '<span class="green-dot"></span>' : ''}${user.email}</h2>
+          <p><strong>Username:</strong> ${user.username || 'N/A'}</p>
+          <p><strong>Level:</strong> ${user.level ?? 1}</p>
+          <p><strong>Account Type:</strong> ${user.account_type || 'user'}</p>
+          <p><strong>Created At:</strong> ${formatDate(user.created_at)}</p>
+          <p><strong>Last Login:</strong> ${formatDate(user.last_login)}</p>
+        </div>
+      `;
+    }
+
+    function groupByDate() {
+      const container = document.getElementById('userGrid');
+      container.innerHTML = '';
+
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+
+      const todayGroup = users.filter(u => isSameDay(u.created_at, today));
+      const yesterdayGroup = users.filter(u => isSameDay(u.created_at, yesterday));
+      const others = users.filter(u => !isSameDay(u.created_at, today) && !isSameDay(u.created_at, yesterday));
+
+      if (todayGroup.length) container.innerHTML += `<h2 class="section-title">Today</h2>`;
+      todayGroup.forEach(user => container.innerHTML += renderUserCard(user));
+
+      if (yesterdayGroup.length) container.innerHTML += `<h2 class="section-title">Yesterday</h2>`;
+      yesterdayGroup.forEach(user => container.innerHTML += renderUserCard(user));
+
+      const groupedByDate = {};
+      others.forEach(user => {
+        const dateStr = formatDate(user.created_at);
+        if (!groupedByDate[dateStr]) groupedByDate[dateStr] = [];
+        groupedByDate[dateStr].push(user);
+      });
+
+      for (const date in groupedByDate) {
+        container.innerHTML += `<h2 class="section-title">${date}</h2>`;
+        groupedByDate[date].forEach(user => container.innerHTML += renderUserCard(user));
+      }
+    }
+
+    function groupByType() {
+      const container = document.getElementById('userGrid');
+      container.innerHTML = '';
+
+      const usersOnly = users.filter(u => u.account_type === 'user' || !u.account_type);
+      const vendors = users.filter(u => u.account_type === 'vendor');
+      const performers = users.filter(u => u.account_type === 'performer');
+
+      if (usersOnly.length) container.innerHTML += `<h2 class="section-title">Normal Users</h2>`;
+      usersOnly.forEach(user => container.innerHTML += renderUserCard(user));
+
+      if (vendors.length) container.innerHTML += `<h2 class="section-title">Vendors</h2>`;
+      vendors.forEach(user => container.innerHTML += renderUserCard(user));
+
+      if (performers.length) container.innerHTML += `<h2 class="section-title">Performers</h2>`;
+      performers.forEach(user => container.innerHTML += renderUserCard(user));
+    }
+
+    function isSameDay(dateStr, compareDate) {
+      const d = new Date(dateStr);
+      return d.getFullYear() === compareDate.getFullYear() &&
+             d.getMonth() === compareDate.getMonth() &&
+             d.getDate() === compareDate.getDate();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', () => {
+      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      const container = document.getElementById('userGrid');
+      container.innerHTML = '';
+
+      users.filter(user => user.email.toLowerCase().includes(searchQuery))
+        .forEach(user => container.innerHTML += renderUserCard(user));
+    });
 
     loadUsers();
   </script>

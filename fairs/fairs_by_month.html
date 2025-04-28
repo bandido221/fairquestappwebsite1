@@ -117,6 +117,13 @@
      <h1>Welcome to FairQuest</h1>
 
   <h1>🎭 Fairs in <span id="monthName"></span></h1>
+  <div style="margin-bottom: 20px;">
+    <label for="stateFilter" style="font-weight:bold;">Filter by State:</label>
+    <select id="stateFilter" onchange="applyStateFilter()" style="margin-left: 10px; padding: 8px; border-radius: 6px;">
+      <option value="">All States</option>
+    </select>
+  </div>
+  
   <div id="fairResults">Loading...</div>
 
   <script>
@@ -125,51 +132,70 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
+let allFairsThisMonth = [];
+let currentStateFilter = "";
+
     const month = parseInt(new URLSearchParams(window.location.search).get('month'));
     const monthName = new Date(0, month - 1).toLocaleString('default', { month: 'long' });
     document.getElementById('monthName').textContent = monthName || 'Unknown';
 
     async function fetchFairsByMonth() {
-      const { data, error } = await supabaseClient.from('renaissance_fairs').select('*');
-      if (error) {
-        document.getElementById('fairResults').innerHTML = `<p>Error: ${error.message}</p>`;
-        return;
-      }
-
-      const filtered = data.filter(fair => {
-  const datesToCheck = [];
-
-  if (fair.start_date) datesToCheck.push(fair.start_date);
-  for (let i = 2; i <= 10; i++) {
-    const start = fair[`week${i}_start_date`];
-    if (start) datesToCheck.push(start);
-  }
-
-  return datesToCheck.some(date => new Date(date).getMonth() + 1 === month);
-});
-
-
-      displayFairs(filtered);
-    }
-
-    function displayFairs(fairs) {
-  const container = document.getElementById('fairResults');
-  container.innerHTML = '';
-
-  if (!fairs.length) {
-    container.innerHTML = '<p>No fairs found for this month.</p>';
+  const { data, error } = await supabaseClient.from('renaissance_fairs').select('*');
+  if (error) {
+    document.getElementById('fairResults').innerHTML = `<p>Error: ${error.message}</p>`;
     return;
   }
 
-  fairs.forEach(fair => {
+  allFairsThisMonth = data.filter(fair => {
+    const datesToCheck = [];
+
+    if (fair.start_date) datesToCheck.push(fair.start_date);
+    for (let i = 2; i <= 10; i++) {
+      const start = fair[`week${i}_start_date`];
+      if (start) datesToCheck.push(start);
+    }
+
+    return datesToCheck.some(date => new Date(date).getMonth() + 1 === month);
+  });
+
+  buildStateDropdown();
+  displayFairs(allFairsThisMonth);
+}
+
+function buildStateDropdown() {
+  const dropdown = document.getElementById('stateFilter');
+  const uniqueStates = [...new Set(allFairsThisMonth.map(fair => fair.state))].sort();
+
+  uniqueStates.forEach(state => {
+    const option = document.createElement('option');
+    option.value = state;
+    option.textContent = state;
+    dropdown.appendChild(option);
+  });
+}
+
+
+function displayFairs(fairs) {
+  const container = document.getElementById('fairResults');
+  container.innerHTML = '';
+
+  const filtered = fairs.filter(fair => {
+    if (!currentStateFilter) return true;
+    return fair.state === currentStateFilter;
+  });
+
+  if (!filtered.length) {
+    container.innerHTML = '<p>No fairs found for this selection.</p>';
+    return;
+  }
+
+  filtered.forEach(fair => {
     const weekends = [];
 
-    // Include main start_date/end_date
     if (fair.start_date && fair.end_date) {
       weekends.push(`${fair.start_date} to ${fair.end_date}`);
     }
 
-    // Include all valid weekX ranges
     for (let i = 2; i <= 10; i++) {
       const start = fair[`week${i}_start_date`];
       const end = fair[`week${i}_end_date`];
@@ -180,11 +206,11 @@
 
     container.innerHTML += `
       <div class="card">
-<div class="card-image">
-  <img src="${fair.image_url || 'https://placehold.co/600x180?text=No+Image'}" alt="${fair.name}" />
-</div>
+        <div class="card-image">
+          <img src="${fair.image_url || 'https://placehold.co/600x180?text=No+Image'}" alt="${fair.name}" />
+        </div>
         <div class="card-content">
-<a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
+          <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
           <p><span class="badge">${fair.state}</span></p>
           <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
           ${fair.website ? `<p><strong>🌐 Website:</strong> <a href="${fair.website}" target="_blank">${fair.website}</a></p>` : ''}
@@ -196,6 +222,12 @@
       </div>
     `;
   });
+}
+
+function applyStateFilter() {
+  const dropdown = document.getElementById('stateFilter');
+  currentStateFilter = dropdown.value;
+  displayFairs(allFairsThisMonth);
 }
 
     

@@ -97,8 +97,10 @@
     Loading profile...
   </div>
 
-  <button class="settings-button" onclick="goToSettings()">⚙️ Settings</button>
-
+  <div id="profileButtons">
+    <button class="settings-button" onclick="goToSettings()">⚙️ Settings</button>
+  </div>
+  
   <a href="/index.html" class="back-link">🏡 Back to Home</a>
 
   <!-- 🆕 Updates Section -->
@@ -150,6 +152,41 @@
         <p><strong>Member Since:</strong> ${new Date(data.created_at).toLocaleDateString()}</p>
       `;
     }
+    async function loadDashboardButtons() {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return;
+
+  const { data, error } = await supabase
+    .from('vendor_performer_applications')
+    .select('application_type, approval_status')
+    .eq('user_id', user.id)
+    .eq('approval_status', 'approved');
+
+  if (error || !data || !data.length) return;
+
+  const profileButtons = document.getElementById('profileButtons');
+
+  data.forEach(app => {
+    if (app.application_type === false) {
+      // Vendor Application
+      const vendorBtn = document.createElement('button');
+      vendorBtn.className = 'settings-button';
+      vendorBtn.style.marginLeft = '10px';
+      vendorBtn.innerHTML = '🧺 Vendor Dashboard';
+      vendorBtn.onclick = () => window.location.href = '/vendor_performer/vendor/index.html';
+      profileButtons.appendChild(vendorBtn);
+    }
+    if (app.application_type === true) {
+      // Performer Application
+      const performerBtn = document.createElement('button');
+      performerBtn.className = 'settings-button';
+      performerBtn.style.marginLeft = '10px';
+      performerBtn.innerHTML = '🎭 Performer Dashboard';
+      performerBtn.onclick = () => window.location.href = '/vendor_performer/performer/index.html';
+      profileButtons.appendChild(performerBtn);
+    }
+  });
+}
 
     async function loadUpdates() {
   const { data, error } = await supabase
@@ -206,7 +243,7 @@ function formatUpdateMessage(message) {
 
 
 
-    // 🚀 Load everything
+loadDashboardButtons();
     loadProfile();
     loadUpdates();
   </script>

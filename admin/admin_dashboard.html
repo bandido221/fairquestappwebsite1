@@ -119,6 +119,11 @@
       ✏️ Fair Update Suggestions: <strong id="updateCount">...</strong>
       <a class="action-button" href="fair_update_review.html">Review Updates</a>
     </p>
+    <p>
+      👤 New App Users: <strong id="userCount">...</strong>
+      <a class="action-button" href="app_users.html">View Users</a>
+    </p>
+  
   </div>
 
   <div id="applicationList"></div>
@@ -155,10 +160,20 @@
         .select('*', { count: 'exact', head: true })
         .neq('approval_status', 'approved');
 
+const today = new Date();
+today.setHours(0, 0, 0, 0); // reset to start of day
+
+const { count: userCount } = await supabase
+  .from('app_users')
+  .select('*', { count: 'exact', head: true })
+  .gte('created_at', today.toISOString()); // users created today
+
       document.getElementById('vendorCount').innerText = vendorCount ?? 0;
       document.getElementById('performerCount').innerText = performerCount ?? 0;
       document.getElementById('fairCount').innerText = fairCount ?? 0;
       document.getElementById('updateCount').innerText = updateCount ?? 0;
+      document.getElementById('userCount').innerText = userCount ?? 0;
+
     }
 
    

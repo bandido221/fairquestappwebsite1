@@ -107,8 +107,6 @@
   </style>
 </head>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
 <body>
 
   <img src="images/banner.png" alt="FairQuest Banner" class="top-banner" />
@@ -128,8 +126,8 @@
     <a class="btn" href="#" onclick="alert('📲 The FairQuest app is coming soon to the Google Play Store! Check back shortly.'); return false;">
       📲 Download App
     </a>
-    <a class="btn" href="vendor_performer/vendor/index.html">🧺 Vendor Portal</a>
-    <a class="btn" href="vendor_performer/performer/index.html">🎭 Performer Portal</a>
+    <a class="btn" id="vendorButton" href="vendor_performer/vendor/apply.html">🧺 Apply as Vendor</a>
+    <a class="btn" id="performerButton" href="vendor_performer/performer/apply.html">🎭 Apply as Performer</a>
     <a class="btn" href="/fairs/explore.html" onclick="trackExploreFairs(event)">🎪 Explore Fairs</a>
   </div>
 
@@ -152,19 +150,10 @@
     <p>If you're searching for the Fair Quest app — you're in the right place!</p>
   </footer>
 
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
 <script>
-
-function trackExploreFairs(e) {
-  e.preventDefault();
-  gtag('event', 'fair_button_click', {
-    event_category: 'navigation',
-    event_label: 'Explore Fairs'
-  });
-  setTimeout(() => {
-    window.location.href = "/fairs/explore.html";
-  }, 300);
-}
-
 const supabase = window.supabase.createClient(
   'https://awtbjuiqgtdydsqzimul.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
@@ -176,7 +165,7 @@ async function loadEarlyTesterCard() {
   const { data: sessionData } = await supabase.auth.getSession();
   const isLoggedIn = sessionData?.session?.user != null;
 
-  let userCount = 50; // or dynamic later
+  let userCount = 50; // Temporary static user count
 
   if (isLoggedIn) {
     card.innerHTML = `
@@ -204,21 +193,35 @@ async function loadEarlyTesterCard() {
   }
 }
 
+async function checkIfUserApplied() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const isLoggedIn = sessionData?.session?.user != null;
+  if (!isLoggedIn) return;
 
-async function afterLogin() {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
+  const userId = sessionData.session.user.id;
 
-  const { data: profile } = await supabase
-    .from('app_users')
-    .select('username')
-    .eq('id', user.id)
-    .single();
+  const { data: applications, error } = await supabase
+    .from('vendor_performer_applications')
+    .select('application_type')
+    .eq('user_id', userId)
+    .eq('approval_status', 'approved')
+    .maybeSingle();
 
-  if (profile?.username?.toLowerCase().startsWith('user_') || !profile?.username) {
-    window.location.href = '/profile/setup.html';
-  } else {
-    window.location.href = '/profile/index.html';
+  if (error) {
+    console.error('Error checking application:', error);
+    return;
+  }
+
+  if (applications) {
+    if (applications.application_type === true) {
+      // Performer
+      document.getElementById('performerButton').innerText = '🎭 Performer Portal';
+      document.getElementById('performerButton').href = 'vendor_performer/performer/index.html';
+    } else if (applications.application_type === false) {
+      // Vendor
+      document.getElementById('vendorButton').innerText = '🧺 Vendor Portal';
+      document.getElementById('vendorButton').href = 'vendor_performer/vendor/index.html';
+    }
   }
 }
 
@@ -227,9 +230,20 @@ async function logout() {
   window.location.href = '/';
 }
 
-// Start
-loadEarlyTesterCard();
+function trackExploreFairs(e) {
+  e.preventDefault();
+  gtag('event', 'fair_button_click', {
+    event_category: 'navigation',
+    event_label: 'Explore Fairs'
+  });
+  setTimeout(() => {
+    window.location.href = "/fairs/explore.html";
+  }, 300);
+}
 
+// Start everything
+loadEarlyTesterCard();
+checkIfUserApplied();
 </script>
 
 </body>

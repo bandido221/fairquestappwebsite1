@@ -333,14 +333,16 @@
     function checkFormValidity() {
   const form = document.getElementById('applicationForm');
   const btn  = document.getElementById('reviewButton');
+  const validationMessage = document.getElementById('validationMessage');
   const errs = [];
 
-  if (!form.name.value.trim()) errs.push('Name is required.');
+  if (!form.name.value.trim()) errs.push('Vendor Name is required.');
   const bioWords = form.description.value.trim().split(/\s+/).filter(w => w).length;
   if (!form.description.value.trim()) errs.push('Quick Bio is required.');
   if (bioWords > 50) errs.push(`Quick Bio must be 50 words or less (you have ${bioWords}).`);
   if (!form.photoUrl.value.trim()) errs.push('Photo URL is required.');
-  if (!form.contactName.value.trim()) errs.push('Contact Name is required.');
+  if (!form.vendorType.value.trim()) errs.push('Vendor Type is required.');
+  if (!form.contactName.value.trim()) errs.push('Contact Person is required.');
   if (!form.contactEmail.value.trim()) errs.push('Contact Email is required.');
   if (!document.getElementById('termsCheckbox').checked)
     errs.push('You must agree to the Terms & Conditions.');
@@ -351,12 +353,15 @@
 
   if (errs.length) {
     btn.disabled = true;
+    validationMessage.innerHTML = "⚠️ Please fix the following:\n<br>• " + errs.join("<br>• ");
   } else {
     btn.disabled = false;
+    validationMessage.innerHTML = ""; // clear the message if valid
   }
 
-  return errs;  // <<<<<< ✅ THIS WAS MISSING
+  return errs;
 }
+
 
     document.getElementById('applicationForm').addEventListener('input', checkFormValidity);
 

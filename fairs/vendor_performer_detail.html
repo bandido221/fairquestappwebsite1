@@ -39,6 +39,19 @@
   margin: 20px auto;
   display: block;
 }
+.website-button {
+  background-color: #bb9457;
+  color: black;
+  font-weight: bold;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+}
+.website-button:hover {
+  background-color: #f2e1c1;
+  color: #000;
+}
 
     a.back-link {
       color: #bb9457;
@@ -85,7 +98,7 @@ ${data.photo_url && data.photo_url.trim()
         <p><strong>Type:</strong> ${data.vendor_type || 'Performer'}</p>
         <p><strong>Description:</strong> ${data.description || '—'}</p>
         <p><strong>Contact:</strong> ${data.contact_name || ''} (${data.contact_email || ''})</p>
-        ${data.website ? `<p><strong>Website:</strong> <a href="${data.website}" target="_blank">${data.website}</a></p>` : ''}
+        ${data.website ? `<p><a href="${data.website}" target="_blank" class="website-button">🌐 Website</a></p>` : ''}
       `;
     }
 

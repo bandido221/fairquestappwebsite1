@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vendor/Performer Details | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      font-family: 'Domine', serif;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 40px;
+    }
+    h1, h2 {
+      font-family: 'Cinzel', serif;
+    }
+    .card {
+      background: #fdf7e1;
+      color: #222;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 700px;
+      margin: 20px auto;
+      text-align: left;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    .card * {
+      color: #222 !important;
+    }
+    img.profile-img {
+  max-width: 300px;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin: 20px auto;
+  display: block;
+}
+
+    a.back-link {
+      color: #bb9457;
+      font-weight: bold;
+      display: inline-block;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="title">Loading...</h1>
+  <div class="card" id="detailCard">Loading profile...</div>
+  <a href="/fairs/explore.html" class="back-link">← Back to Explore</a>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    const url = new URLSearchParams(window.location.search);
+    const id = url.get("id");
+    const type = url.get("type"); // 'vendor' or 'performer'
+
+    async function loadDetails() {
+      const { data, error } = await supabase
+        .from("vendor_performer_applications")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error || !data) {
+        document.getElementById("detailCard").innerHTML = "<p>❌ Failed to load details.</p>";
+        return;
+      }
+      console.log("Returned data:", data);
+
+      document.getElementById("title").textContent = data.name;
+      document.getElementById("detailCard").innerHTML = `
+${data.photo_url && data.photo_url.trim()
+  ? `<img src="${data.photo_url}" class="profile-img" alt="${data.name}" />`
+  : `<p><em>No image available</em></p>`}
+        <p><strong>Name:</strong> ${data.name}</p>
+        <p><strong>Type:</strong> ${data.vendor_type || 'Performer'}</p>
+        <p><strong>Description:</strong> ${data.description || '—'}</p>
+        <p><strong>Contact:</strong> ${data.contact_name || ''} (${data.contact_email || ''})</p>
+        ${data.website ? `<p><strong>Website:</strong> <a href="${data.website}" target="_blank">${data.website}</a></p>` : ''}
+      `;
+    }
+
+    loadDetails();
+  </script>
+</body>
+</html>

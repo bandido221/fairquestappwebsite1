@@ -3,14 +3,14 @@
 <head>
   <link rel="stylesheet" href="/css/style.css" />
 
-    <!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
-  gtag('js', new Date());
-  gtag('config', 'G-HP222J86X0');
-</script>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -25,8 +25,6 @@
       padding: 40px;
       text-align: center;
     }
-  
-
     h1, h2 {
       font-family: 'Cinzel', serif;
     }
@@ -44,26 +42,21 @@
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
     }
     .card {
-  background: #89805a;
-  color: #222;
-  border-radius: 12px;
-  padding: 20px;
-  max-width: 700px;
-  margin: 20px auto;
-  text-align: left;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-
-.card * {
-  color: #222 !important;
-}
-
-
-.card h2, .card h3 {
-  color: #2a2a2a;
-}
-
+      background: #d6cb95;
+      color: #222;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 700px;
+      margin: 20px auto;
+      text-align: left;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    .card * {
+      color: #222 !important;
+    }
+    .card h2, .card h3 {
+      color: #2a2a2a;
+    }
     .card p {
       margin: 8px 0;
     }
@@ -81,6 +74,11 @@
     .update-btn:hover {
       background-color: #f2e1c1;
     }
+    .link {
+      color: #2a2a2a;
+      text-decoration: underline;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -89,7 +87,7 @@
   <h1>Fair Details</h1>
 
   <div class="card" id="fairCard">
-       <p><strong>📷 Image:</strong><br><img id="fairImage" src="" style="width:100%; max-width:600px; border-radius:10px; margin-top:10px;" /></p>
+    <p><strong></strong><br><img id="fairImage" src="" style="width:100%; max-width:600px; border-radius:10px; margin-top:10px;" /></p>
     <h2 id="fairName">Loading...</h2>
     <p><strong>📍 Address:</strong> <span id="fairAddress"></span></p>
     <p><strong>🏙️ City:</strong> <span id="fairCity"></span></p>
@@ -99,6 +97,16 @@
     <ul id="weekendsList"></ul>
 
     <button class="update-btn" onclick="goToUpdatePage()">🛠️ Update This Fair</button>
+  </div>
+
+  <div class="card" id="vendorsCard" style="display:none">
+    <h3>🧺  Vendors</h3>
+    <ul id="vendorList"></ul>
+  </div>
+
+  <div class="card" id="performersCard" style="display:none">
+    <h3>🎭  Performers</h3>
+    <ul id="performerList"></ul>
   </div>
 
   <script>
@@ -146,11 +154,50 @@
       });
     }
 
+    async function loadShowcase() {
+      const { data: applications, error } = await supabase
+        .from('vendor_performer_applications')
+        .select('id, name, application_type, approval_status, vendor_type')
+        .eq('approval_status', 'approved');
+
+      if (error) return;
+
+      const { data: fairLinks, err2 } = await supabase
+        .from('vendor_application_fairs')
+        .select('application_id, fair_id')
+        .eq('fair_id', fairId);
+
+      if (err2) return;
+
+      const approvedIds = fairLinks.map(link => link.application_id);
+      const vendors = applications.filter(a => a.application_type === false && approvedIds.includes(a.id));
+      const performers = applications.filter(a => a.application_type === true && approvedIds.includes(a.id));
+
+      const vlist = document.getElementById('vendorList');
+      const plist = document.getElementById('performerList');
+
+      vendors.forEach(v => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a class="link" href="/fairs/vendor_performer_detail.html?id=${v.id}&type=vendor">${v.name}</a> — ${v.vendor_type || ''}`;
+        vlist.appendChild(li);
+      });
+
+      performers.forEach(p => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a class="link" href="/fairs/vendor_performer_detail.html?id=${p.id}&type=performer">${p.name}</a>`;
+        plist.appendChild(li);
+      });
+
+      if (vendors.length) document.getElementById('vendorsCard').style.display = 'block';
+      if (performers.length) document.getElementById('performersCard').style.display = 'block';
+    }
+
     function goToUpdatePage() {
       window.location.href = `update_fair.html?id=${fairId}`;
     }
 
     loadFair();
+    loadShowcase();
   </script>
 </body>
 </html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assign Fair Admins | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      padding: 30px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 20px;
+    }
+    .fair-card {
+      background: #fdf7e1;
+      color: #3b1f1f;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 800px;
+      text-align: left;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .fair-card h3 {
+      margin-top: 0;
+    }
+    .button-group {
+      margin-top: 10px;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .approve {
+      background-color: #27ae60;
+      color: white;
+    }
+    .bronze {
+      background-color: #cd7f32;
+      color: black;
+    }
+    .silver {
+      background-color: #c0c0c0;
+      color: black;
+    }
+    .gold {
+      background-color: #ffd700;
+      color: black;
+    }
+    .clear {
+      background-color: #c0392b;
+      color: white;
+    }
+    a.back-link {
+      display: inline-block;
+      margin-top: 30px;
+      font-weight: bold;
+      color: #bb9457;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🏰 Assign Fair Admins</h1>
+  <div style="margin-bottom: 20px;">
+    <input 
+      type="text" 
+      id="searchInput" 
+      placeholder="🔍 Search by Fair Name or State..." 
+      oninput="applySearchFilter()" 
+      style="padding: 10px; width: 300px; border-radius: 8px; border: none; font-size: 16px;"
+    />
+  </div>
+  
+  <div id="fairList">Loading fairs...</div>
+
+  <a href="/admin/index.html" class="back-link">⬅️ Back to Admin Panel</a>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+    let allFairs = [];
+let currentSearchTerm = "";
+
+async function loadFairs() {
+  const { data, error } = await supabase
+    .from('renaissance_fairs')
+    .select('id, name, state, approved_for_admin, fair_admin_level')
+    .order('state', { ascending: true });
+
+  const list = document.getElementById('fairList');
+  list.innerHTML = '';
+
+  if (error || !data.length) {
+    list.innerHTML = '<p>❌ Error loading fairs.</p>';
+    return;
+  }
+
+  allFairs = data;
+  displayFairs();
+}
+
+    async function approveFair(fairId) {
+      await supabase
+        .from('renaissance_fairs')
+        .update({ approved_for_admin: true })
+        .eq('id', fairId);
+
+      await loadFairs();
+    }
+    function displayFairs() {
+  const list = document.getElementById('fairList');
+  list.innerHTML = '';
+
+  const filtered = allFairs.filter(fair => {
+    if (!currentSearchTerm) return true;
+    const search = currentSearchTerm.toLowerCase();
+    return (
+      fair.name.toLowerCase().includes(search) ||
+      fair.state.toLowerCase().includes(search)
+    );
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '<p>No fairs found.</p>';
+    return;
+  }
+
+  filtered.forEach(fair => {
+    const card = document.createElement('div');
+    card.className = 'fair-card';
+    card.innerHTML = `
+      <h3>${fair.name} (${fair.state})</h3>
+      <p><strong>Approved:</strong> ${fair.approved_for_admin ? '✅ Yes' : '❌ No'}</p>
+      <p><strong>Level:</strong> ${fair.fair_admin_level ? fair.fair_admin_level : '(free)'}</p>
+      <div class="button-group">
+        <button class="approve" onclick="approveFair(${fair.id})">Approve Fair</button>
+        <button class="bronze" onclick="setLevel(${fair.id}, 'bronze')">Bronze</button>
+        <button class="silver" onclick="setLevel(${fair.id}, 'silver')">Silver</button>
+        <button class="gold" onclick="setLevel(${fair.id}, 'gold')">Gold</button>
+        <button class="clear" onclick="clearLevel(${fair.id})">Clear Level</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+function applySearchFilter() {
+  const input = document.getElementById('searchInput');
+  currentSearchTerm = input.value.trim();
+  displayFairs();
+}
+
+    async function setLevel(fairId, level) {
+      await supabase
+        .from('renaissance_fairs')
+        .update({ fair_admin_level: level })
+        .eq('id', fairId);
+
+      await loadFairs();
+    }
+
+    async function clearLevel(fairId) {
+      await supabase
+        .from('renaissance_fairs')
+        .update({ fair_admin_level: null })
+        .eq('id', fairId);
+
+      await loadFairs();
+    }
+
+    // On page load
+    loadFairs();
+  </script>
+
+</body>
+</html>

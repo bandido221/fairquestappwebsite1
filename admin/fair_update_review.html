@@ -173,7 +173,7 @@ button.reject:hover {
     <span><strong>Live:</strong> ${liveVal || '(blank)'}</span>
     <span><strong>Suggested:</strong> ${suggestedVal}</span>
     <div style="display: flex; gap: 10px; margin-top: 8px;">
-      <button onclick="approveField(${latest.id}, '${field}', '${suggestedVal.replace(/'/g, "\\'")}')">✅ Approve</button>
+      <button onclick="approveField(${latest.id}, '${field}', \`${suggestedVal.replace(/`/g, "\\`")}\`)">✅ Approve</button>
       <button class="reject" onclick="rejectField(${latest.id})">❌ Reject</button>
     </div>
   </div>

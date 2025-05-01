@@ -133,9 +133,8 @@ button.reject:hover {
     const card = document.createElement('div');
     card.className = 'card';
 
-    card.innerHTML += `<h2>${fairData.name}</h2>`;
-    <p><strong>Submitted by:</strong> ${latest.user_id ? 'User' : 'Guest'}</p>
-
+   
+    card.innerHTML += `<p><strong>Submitted by:</strong> ${latest.user_id ? 'User' : 'Guest'}</p>`;
     card.innerHTML += `<p><strong>📍 Address:</strong> ${fairData.address}</p>`;
     card.innerHTML += `<p><strong>🏙️ City:</strong> ${fairData.city}</p>`;
     card.innerHTML += `<p><strong>🗺️ State:</strong> ${fairData.state}</p>`;

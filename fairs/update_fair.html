@@ -146,7 +146,34 @@
   const state = document.getElementById('state').value.trim();
   const zip = document.getElementById('zip').value.trim();
   const website = document.getElementById('website').value.trim();
-  const image_url = document.getElementById('image_url').value.trim();
+  let image_url = '';
+
+  const imageFile = document.getElementById('image_file').files[0];
+if (imageFile) {
+  const formData = new FormData();
+  formData.append('file', imageFile);
+  formData.append('upload_preset', 'fair_upload'); // your preset
+
+  try {
+    const response = await fetch('https://api.cloudinary.com/v1_1/dft7xclvh/image/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+    if (data.secure_url) {
+      image_url = data.secure_url;
+    } else {
+      alert('❌ Failed to upload image to Cloudinary');
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+    alert('❌ Failed to upload image to Cloudinary');
+    return;
+  }
+}
+
 
   const user = (await supabase.auth.getUser()).data.user; // 🛠️ FIXED: pull user cleanly
 
@@ -237,14 +264,18 @@
 
       const fairFields = document.getElementById('fairFields');
       fields.forEach(([key, label]) => {
-        fairFields.innerHTML += `
-          <div class="field-group">
-            <label for="${key}">${label}</label>
-            <div class="current-value">${data[key] || 'None'}</div>
-            <input type="text" id="${key}" placeholder="Update ${label.toLowerCase()} (optional)" />
-          </div>
-        `;
-      });
+  fairFields.innerHTML += `
+    <div class="field-group">
+      <label for="${key}">${label}</label>
+      <div class="current-value">${data[key] || 'None'}</div>
+      ${
+        key === 'image_url'
+          ? `<input type="file" id="image_file" accept="image/*" />`
+          : `<input type="text" id="${key}" placeholder="Update ${label.toLowerCase()} (optional)" />`
+      }
+    </div>
+  `;
+});
 
       const weekendDiv = document.getElementById('existingWeekends');
       const weekends = [];

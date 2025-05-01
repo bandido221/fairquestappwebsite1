@@ -201,17 +201,25 @@ async function rejectField(suggestionId) {
   location.reload();
 }
 
-  async function approveField(suggestionId, field, value) {
-    const { data, error } = await supabase.rpc('approve_fair_update_field', {
+async function approveField(suggestionId, field, value) {
+  const { data, error } = await supabase.rpc('approve_fair_update_field', {
+    input: {
       suggestion_id: suggestionId,
       field_name: field,
       new_value: value
-    });
+    }
+  });
 
-    if (error) return alert('❌ ' + error.message);
-    alert(`✅ ${field} approved!`);
-    location.reload();
+  if (error) {
+    alert('❌ ' + error.message);
+    console.error(error);
+    return;
   }
+  alert(`✅ ${field} approved!`);
+  location.reload();
+}
+
+
 
   loadSuggestions();
 </script>

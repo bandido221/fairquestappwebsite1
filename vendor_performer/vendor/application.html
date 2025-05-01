@@ -92,14 +92,59 @@
     <label for="description">Quick Bio (max 50 words): *</label>
     <textarea id="description" required></textarea>
 
-    <label for="photoUrl">
-      Photo URL: * 
-      <span style="cursor:pointer;color:#aa8452;" onclick="
-        alert('Right‑click an image on Facebook, choose “Copy image address”, then paste it here.');
-      ">❓</span>
+    <label for="photoUpload">
+      Upload Photo or Paste URL: *
+      <span style="cursor:pointer;color:#aa8452;"
+        onclick="alert('You can either paste a public photo URL or upload an image from your device.')">❓</span>
     </label>
-    <input type="url" id="photoUrl" required />
-
+    <input type="url" id="photoUrl" placeholder="Paste image URL or upload below" required style="display:none;" />
+    <input type="file" id="photoUpload" accept="image/*" style="margin-top: 8px;" />
+    
+    <script>
+      const uploadInput = document.getElementById('photoUpload');
+      const urlInput = document.getElementById('photoUrl');
+    
+      uploadInput.addEventListener('change', async () => {
+        const file = uploadInput.files[0];
+        if (!file) return;
+    
+        const fileExt = file.name.split('.').pop();
+        const fileName = `vendors/${crypto.randomUUID()}.${fileExt}`;
+    
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('upload_preset', 'vendor_upload');
+    
+          const response = await fetch('https://api.cloudinary.com/v1_1/dft7xclvh/image/upload', {
+            method: 'POST',
+            body: formData
+          });
+    
+          const result = await response.json();
+          if (!result.secure_url) {
+            alert('Upload failed:\n' + JSON.stringify(result, null, 2));
+            return;
+          }
+    
+          const publicUrl = result.secure_url;
+          urlInput.value = publicUrl;
+          checkFormValidity();
+    
+          let preview = document.getElementById('imagePreview');
+          if (!preview) {
+            preview = document.createElement('img');
+            preview.id = 'imagePreview';
+            preview.style = 'margin-top:10px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);';
+            urlInput.parentElement.appendChild(preview);
+          }
+          preview.src = publicUrl;
+        } catch (err) {
+          alert('Unexpected error: ' + err.message);
+        }
+      });
+    </script>
+    
     <label for="vendorType">Vendor Type: *</label>
     <input type="text" id="vendorType" required />
 

@@ -89,6 +89,12 @@
       <textarea id="description" readonly></textarea>
       <label>Photo URL</label>
       <input id="photoUrl" readonly>
+      <img id="imagePreview" style="display:none; max-height:150px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.3); margin-top:10px;" />
+      <div id="imageControls" style="display:none; margin-top:10px;">
+        <input type="file" id="photoUpload" accept="image/*" style="margin-bottom: 10px;" />
+        <button type="button" onclick="removeImage()" style="background:#b73239;">Remove Image</button>
+      </div>
+      
       <label>Vendor Type</label>
       <input id="vendorType" readonly>
       <label>Contact Name</label>
@@ -232,13 +238,33 @@
       originalApp = app;
 
       ['name','description','photoUrl','vendorType','contactName','contactEmail']
-        .forEach(id=>{
-          document.getElementById(id).value = (
-            id==='photoUrl'    ? app.photo_url :
-            id==='vendorType'  ? app.vendor_type :
-            app[id]
-          )||'';
-        });
+  .forEach(id=>{
+    const value =
+      id==='photoUrl'    ? app.photo_url :
+      id==='vendorType'  ? app.vendor_type :
+      app[id] || '';
+    document.getElementById(id).value = value;
+
+    // ✅ If photoUrl, also show preview image
+    if (id === 'photoUrl') {
+  const img = document.getElementById('imagePreview');
+  const controls = document.getElementById('imageControls');
+  const upload = document.getElementById('photoUpload');
+  if (value) {
+    img.src = value;
+    img.style.display = 'block';
+    controls.style.display = 'block';
+    upload.disabled = true;
+  } else {
+    img.src = '';
+    img.style.display = 'none';
+    controls.style.display = 'none';
+    upload.disabled = false;
+  }
+}
+
+
+  });
 
       // get known fairs
       const { data: rawFairs, error: fe } = await supabase
@@ -311,42 +337,129 @@
       document.getElementById('modalBackdrop').style.display = 'none';
     }
 
-    async function confirmSave(){
-      closeModal();
-      document.getElementById('updateMessage').textContent = 'Saving…';
+    async function confirmSave() {
+  closeModal();
+  const photo = document.getElementById('photoUrl').value.trim();
+  if (!photo) {
+    document.getElementById('updateMessage').textContent = '❌ Please upload a photo before saving.';
+    return;
+  }
 
-      await supabase
-        .from('vendor_performer_applications')
-        .update({
-          name:         document.getElementById('name').value,
-          description:  document.getElementById('description').value,
-          photo_url:    document.getElementById('photoUrl').value,
-          vendor_type:  document.getElementById('vendorType').value,
-          update_pending: true
-        })
-        .eq('id', originalApp.id);
+  document.getElementById('updateMessage').textContent = 'Saving…';
 
-      await supabase.from('vendor_application_fairs')
-        .delete().eq('application_id', originalApp.id);
-      await supabase.from('suggested_fairs')
-        .delete().eq('application_id', originalApp.id).eq('application_type','vendor');
+  await supabase
+    .from('vendor_performer_applications')
+    .update({
+      name:         document.getElementById('name').value,
+      description:  document.getElementById('description').value,
+      photo_url:    document.getElementById('photoUrl').value,
+      vendor_type:  document.getElementById('vendorType').value,
+      update_pending: true
+    })
+    .eq('id', originalApp.id);
 
-      const curr = getCurrentFairs();
-      const known = curr.filter(c=>!c.id.startsWith('manual_')).map(c=>({
-        application_id: originalApp.id, fair_id: Number(c.id),
-        start_date: c.start, end_date: c.end
-      }));
-      const manual = curr.filter(c=>c.id.startsWith('manual_')).map(c=>({
-        application_id: originalApp.id,
-        fair_name: c.name, start_date: c.start, end_date: c.end,
-        notes:'Manually entered', application_type:'vendor'
-      }));
-      if (known.length)  await supabase.from('vendor_application_fairs').insert(known);
-      if (manual.length) await supabase.from('suggested_fairs').insert(manual);
+  await supabase.from('vendor_application_fairs')
+    .delete().eq('application_id', originalApp.id);
 
-      document.getElementById('updateMessage').textContent = '✅ Changes submitted — redirecting…';
-      setTimeout(()=> location.href='dashboard.html', 1500);
+  await supabase.from('suggested_fairs')
+    .delete().eq('application_id', originalApp.id)
+    .eq('application_type','vendor');
+
+  const curr = getCurrentFairs();
+  const known = curr.filter(c => !c.id.startsWith('manual_')).map(c => ({
+    application_id: originalApp.id,
+    fair_id: Number(c.id),
+    start_date: c.start,
+    end_date: c.end
+  }));
+
+  const manual = curr.filter(c => c.id.startsWith('manual_')).map(c => ({
+    application_id: originalApp.id,
+    fair_name: c.name,
+    start_date: c.start,
+    end_date: c.end,
+    notes: 'Manually entered',
+    application_type: 'vendor'
+  }));
+
+  if (known.length) await supabase.from('vendor_application_fairs').insert(known);
+  if (manual.length) await supabase.from('suggested_fairs').insert(manual);
+
+  document.getElementById('updateMessage').textContent = '✅ Changes submitted — redirecting…';
+  setTimeout(() => location.href = 'dashboard.html', 1500);
+}
+
+
+    // Image upload logic
+document.getElementById('photoUpload').addEventListener('change', async function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', 'vendor_upload'); // ✅ must match your Cloudinary preset
+
+  try {
+    const response = await fetch('https://api.cloudinary.com/v1_1/dft7xclvh/image/upload', {
+      method: 'POST',
+      body: formData
+    });
+    const result = await response.json();
+
+    if (!result.secure_url) {
+      alert('Image upload failed.');
+      return;
     }
+
+    // Set photo URL and preview
+    document.getElementById('photoUrl').value = result.secure_url;
+    document.getElementById('imagePreview').src = result.secure_url;
+    document.getElementById('imagePreview').style.display = 'block';
+    document.getElementById('imageControls').style.display = 'block';
+    document.getElementById('photoUpload').disabled = true;
+
+  } catch (error) {
+    alert('Unexpected error: ' + error.message);
+  }
+});
+
+// Remove image logic
+function removeImage() {
+  const confirmDelete = confirm("Are you sure you want to delete the uploaded image?");
+  if (!confirmDelete) return;
+
+  document.getElementById('photoUrl').value = '';
+  document.getElementById('imagePreview').src = '';
+  document.getElementById('imagePreview').style.display = 'none';
+  document.getElementById('imageControls').style.display = 'block';
+  document.getElementById('photoUpload').disabled = false;
+}
+
+function onSave() {
+  const { added, removed } = diffFairs();
+  const changes = [];
+  if (added.length)   changes.push(`Added: ${added.map(f => `${f.name} (${f.start}→${f.end})`).join(', ')}`);
+  if (removed.length) changes.push(`Removed: ${removed.map(f => `${f.name} (${f.start}→${f.end})`).join(', ')}`);
+
+  const modal = document.getElementById('modalBackdrop');
+  const title = document.getElementById('modalTitle');
+  const body  = document.getElementById('modalBody');
+
+  if (!changes.length) {
+    title.textContent = 'No changes detected';
+    body.innerHTML = `<p>Nothing was changed. Continue anyway?</p>`;
+  } else {
+    title.textContent = 'Confirm Changes';
+    body.innerHTML = `<ul>${changes.map(c => `<li>${c}</li>`).join('')}</ul><p>Submit these changes?</p>`;
+  }
+
+  modal.style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('modalBackdrop').style.display = 'none';
+}
+
+
   </script>
   <footer style="margin-top:40px;font-size:14px;text-align:center">
     <a href="/index.html">Home</a> |

@@ -119,6 +119,13 @@
   footer a:hover {
     text-decoration: underline;
   }
+  .performer-photo {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
 
   @media (max-width: 768px) {
     body {
@@ -173,6 +180,10 @@
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
+    function formatDateShort(isoDate) {
+  const [year, month, day] = isoDate.split("-");
+  return `${month}-${day}-${year.slice(2)}`;
+}
 
     // Pull draft
     const data = JSON.parse(localStorage.getItem('performerAppDraft') || '{}');
@@ -194,15 +205,16 @@ ${data.website ? (() => {
   const fullLink = data.website.startsWith('http') ? data.website : 'https://' + data.website;
   return `<p><strong>Website:</strong> <a href="${fullLink}" target="_blank">${fullLink}</a></p>`;
 })() : ''}
-        ${data.photoUrl ? `<p><strong>Photo:</strong><br/><img src="${data.photoUrl}" alt="Performer Photo"/></p>` : ''}
+${data.photoUrl ? `<p><strong>Photo:</strong><br/><img class="performer-photo" src="${data.photoUrl}" alt="Performer Photo"/></p>` : ''}
      <h2>Fairs Selected</h2>
 <ul>
-  ${data.fairs.map(f => `
-    <li>
-      <strong>${f.name || 'Unknown Fair'}</strong>: ${f.start} to ${f.end}
-      ${f.id && f.id.startsWith('manual_') ? `<em style="color:#c0392b;">(Manual entry)</em>` : ''}
-    </li>
-  `).join('')}
+${data.fairs.map(f => `
+  <li>
+    <strong>${f.name || 'Unknown Fair'}</strong>: ${formatDateShort(f.start)} to ${formatDateShort(f.end)}
+    ${f.id && f.id.startsWith('manual_') ? `<em style="color:#c0392b;">(Manual entry)</em>` : ''}
+  </li>
+`).join('')}
+
 </ul>
 
         ${data.comments ? `<h2>Comments / Questions</h2><p>${data.comments}</p>` : ''}

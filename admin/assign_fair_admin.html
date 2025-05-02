@@ -122,14 +122,35 @@ let currentAdminId = null;
 let currentAdminEmail = null;
 
 async function loadFairs() {
-  const { data, error } = await supabase
+  const { data: fairsData, error: fairsError } = await supabase
     .from('renaissance_fairs')
     .select('id, name, state, approved_for_admin, fair_admin_level')
     .order('state', { ascending: true });
 
-  allFairs = data;
+  if (fairsError) {
+    console.error(fairsError);
+    return;
+  }
+
+  // Fetch fair admins
+  const { data: adminsData, error: adminsError } = await supabase
+    .from('fair_admins')
+    .select('fair_id, email');
+
+  if (adminsError) {
+    console.error(adminsError);
+    return;
+  }
+
+  // Attach admin emails to fairs
+  allFairs = fairsData.map(fair => {
+    const admin = adminsData.find(a => a.fair_id === fair.id);
+    return { ...fair, adminEmail: admin ? admin.email : null };
+  });
+
   displayFairs();
 }
+
 
 function applySearchFilter() {
   const input = document.getElementById('searchInput');
@@ -204,17 +225,29 @@ function displayFairs() {
     }
 
     card.appendChild(buttonsDiv);
-
     const assignDiv = document.createElement('div');
-    assignDiv.style.marginTop = '10px';
+assignDiv.style.marginTop = '10px';
 
-    const assignButton = document.createElement('button');
-    assignButton.className = 'assign';
-    assignButton.textContent = 'Assign Fair Admin';
-    assignButton.onclick = () => openAdminModal(fair.id);
-    assignDiv.appendChild(assignButton);
+// Admin Email (above the button)
+if (fair.adminEmail) {
+  const emailP = document.createElement('p');
+  emailP.innerHTML = `<strong>Admin Email:</strong> ${fair.adminEmail}`;
+  assignDiv.appendChild(emailP);
+} else {
+  const emailP = document.createElement('p');
+  emailP.innerHTML = `<strong>Admin Email:</strong> (none assigned)`;
+  assignDiv.appendChild(emailP);
+}
 
-    card.appendChild(assignDiv);
+// Assign Button
+const assignButton = document.createElement('button');
+assignButton.className = 'assign';
+assignButton.textContent = 'Assign Fair Admin';
+assignButton.onclick = () => openAdminModal(fair.id);
+assignDiv.appendChild(assignButton);
+
+card.appendChild(assignDiv);
+
 
     list.appendChild(card);
   });
@@ -268,36 +301,96 @@ async function openAdminModal(fairId) {
   currentFairId = fairId;
   document.getElementById('modal').style.display = 'flex';
   document.getElementById('adminEmailInput').value = '';
+  document.getElementById('currentAdmin').innerHTML = 'Loading...';
 
-  const { data } = await supabase.from('fair_admins').select('user_id').eq('fair_id', fairId).single();
 
-  if (data) {
-    const user = await supabase.from('auth.users').select('email').eq('id', data.user_id).single();
-    currentAdminId = data.user_id;
-    currentAdminEmail = user?.data?.email || '(unknown)';
-    document.getElementById('currentAdmin').textContent = `Current Admin: ${currentAdminEmail}`;
-    document.getElementById('modalButtons').innerHTML = `
-      <button onclick="updateAdmin()">Update Admin</button>
-      <button onclick="deleteAdmin()">Delete Admin</button>
-    `;
+  const { data: fairAdminData, error: fairAdminError } = await supabase
+  .from('fair_admins')
+  .select('user_id, email')
+  .eq('fair_id', fairId)
+  .maybeSingle();
+
+
+  const modalButtons = document.getElementById('modalButtons');
+  modalButtons.innerHTML = '';
+
+  if (fairAdminError) {
+    alert('❌ Error loading fair admin.');
+    console.error(fairAdminError);
+    return;
+  }
+
+  if (fairAdminData) {
+  
+
+    if (fairAdminData && fairAdminData.email) {
+  currentAdminId = fairAdminData.user_id;
+  currentAdminEmail = fairAdminData.email;
+  document.getElementById('currentAdmin').innerHTML = `<strong>Current Admin:</strong> ${currentAdminEmail}`;
+} else {
+  currentAdminId = fairAdminData ? fairAdminData.user_id : null;
+  currentAdminEmail = '(unknown)';
+  document.getElementById('currentAdmin').innerHTML = `<strong>Current Admin:</strong> (unknown)`;
+}
+
+
+    const updateButton = document.createElement('button');
+    updateButton.textContent = 'Update Admin';
+    updateButton.onclick = updateAdmin;
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete Admin';
+    deleteButton.onclick = deleteAdmin;
+
+    modalButtons.appendChild(updateButton);
+    modalButtons.appendChild(deleteButton);
+
   } else {
     currentAdminId = null;
-    document.getElementById('currentAdmin').textContent = '';
-    document.getElementById('modalButtons').innerHTML = `<button onclick="addAdmin()">Add Admin</button>`;
+    currentAdminEmail = null;
+    document.getElementById('currentAdmin').innerHTML = `<strong>No admin assigned yet.</strong>`;
+
+    const addButton = document.createElement('button');
+    addButton.textContent = 'Add Admin';
+    addButton.onclick = addAdmin;
+
+    modalButtons.appendChild(addButton);
   }
 }
+
 
 async function addAdmin() {
   const email = document.getElementById('adminEmailInput').value.trim();
-  const { data } = await supabase.from('users_public').select('id').eq('email', email).single();
-  if (data) {
-    await supabase.from('fair_admins').insert({ user_id: data.id, fair_id: currentFairId });
-    closeModal();
-    await loadFairs();
-  } else {
-    alert('User not found.');
+
+  const { data: userData, error: userError } = await supabase
+    .from('users_public_table')
+    .select('id')
+    .eq('email', email)
+    .single();
+
+  if (userError || !userData) {
+    alert('❌ User not found.');
+    return;
   }
+
+  const { error: insertError } = await supabase
+  .from('fair_admins')
+  .insert({
+    user_id: userData.id,
+    fair_id: currentFairId,
+    email: email
+  });
+
+
+  if (insertError) {
+    alert('❌ Failed to assign admin: ' + insertError.message);
+    return;
+  }
+  await loadFairs();
+await openAdminModal(currentFairId);
+
 }
+
 
 async function updateAdmin() {
   await deleteAdmin();

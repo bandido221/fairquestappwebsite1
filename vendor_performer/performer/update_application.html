@@ -77,9 +77,9 @@
       <label>Performer Name</label>
       <input id="name">
       <label>Bio</label>
-      <textarea id="description" readonly></textarea>
+      <textarea id="description" ></textarea>
       <label>Photo URL</label>
-      <input id="photoUrl" readonly>
+      <input id="photoUrl" >
       <img id="imagePreview" style="display:none; max-height:150px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.3); margin-top:10px;" />
       <div id="imageControls" style="margin-top:10px;">
         <input type="file" id="photoUpload" accept="image/*" style="margin-bottom: 10px;" />
@@ -88,13 +88,13 @@
       
 
       <label>Performance Type</label>
-      <input id="vendorType" readonly>
+      <input id="vendorType" >
       <label>Website</label>
-      <input id="website" readonly>
+      <input id="website" >
       <label>Contact Name</label>
-      <input id="contactName" readonly>
+      <input id="contactName" >
       <label>Contact Email</label>
-      <input id="contactEmail" readonly>
+      <input id="contactEmail" >
 
       <h2>Fairs Attending</h2>
       <div id="fairsList"></div>
@@ -125,6 +125,7 @@
     );
 
     let originalApp, originalFairs = [], allFairs = [], stateMap = {}, fairSearchCount = 0;
+    let removedFairs = [];
 
     async function loadFairs() {
       const { data } = await supabase.from('renaissance_fairs').select('*');
@@ -138,7 +139,7 @@
       const container = document.getElementById('fairsList');
       const block = document.createElement('div');
       block.className = 'fair-block';
-      block.innerHTML = `<span class="close-btn" onclick="this.parentElement.remove(); fairSearchCount--;"></span>`;
+      block.innerHTML = `<span class="close-btn" onclick="removeFair(this)">×</span>`;
       const input = document.createElement('input');
       input.placeholder = 'Search fair name or state…';
       block.appendChild(input);
@@ -338,10 +339,28 @@ const { data: rawFairs = [] } = await supabase
   contact_name: document.getElementById('contactName').value,
   contact_email: document.getElementById('contactEmail').value,
   update_pending: true
+  
 }).eq('id', originalApp.id);
+for (const fair of removedFairs) {
+  if (fair.id.startsWith('manual_')) {
+    await supabase.from('suggested_fairs')
+      .delete()
+      .eq('application_id', originalApp.id)
+      .eq('fair_name', fair.name)
+      .eq('start_date', fair.start)
+      .eq('end_date', fair.end)
+      .eq('application_type', 'performer');
+  } else {
+    await supabase.from('vendor_application_fairs')
+      .delete()
+      .eq('application_id', originalApp.id)
+      .eq('fair_id', fair.id)
+      .eq('start_date', fair.start)
+      .eq('end_date', fair.end);
+  }
+}
 
-      await supabase.from('vendor_application_fairs').delete().eq('application_id', originalApp.id);
-      await supabase.from('suggested_fairs').delete().eq('application_id', originalApp.id).eq('application_type','performer');
+    
       const curr = getCurrentFairs();
       const known = curr.filter(c=>!c.id.startsWith('manual_')).map(c=>(
         { application_id: originalApp.id, fair_id: Number(c.id), start_date: c.start, end_date: c.end }
@@ -401,6 +420,19 @@ document.getElementById('removeImageBtn').addEventListener('click', function () 
 
   document.getElementById('photoUpload').disabled = false;
 });
+function removeFair(closeBtn) {
+  const block = closeBtn.parentElement;
+  if (block.dataset.fairId) {
+    removedFairs.push({
+      id: block.dataset.fairId,
+      name: block.dataset.name,
+      start: block.dataset.start,
+      end: block.dataset.end
+    });
+  }
+  block.remove();
+  fairSearchCount--;
+}
 
 
   </script>

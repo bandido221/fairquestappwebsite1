@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Approve Updates | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body { background:#000; color:#f0e6d2; font-family:'Domine', serif; padding:40px; text-align:center; }
+    h1 { font-family:'Cinzel', serif; margin-bottom:30px; }
+    .nav-bar { margin-bottom:30px; display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
+    .nav-bar a { background-color:#bb9457; color:black; padding:10px 16px; border-radius:6px; font-weight:bold; text-decoration:none; }
+    .app-box { background:#dbc67d; color:#333; padding:20px; margin:20px auto; border-radius:12px; max-width:700px; text-align:left; }
+    .buttons { margin-top:20px; text-align:center; }
+    button { padding:10px 16px; margin:0 10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
+    .approve { background-color:#2ecc71; color:white; }
+    .decline { background-color:#e74c3c; color:white; }
+  </style>
+</head>
+<body>
+  <h1>🛠️ Approve Vendor/Performer Updates</h1>
+  <div class="nav-bar">
+    <a href="admin_dashboard.html">🏠 Home</a>
+    <a href="approve_vendors.html">📦 Approve Vendors</a>
+    <a href="approve_performers.html">🎤 Approve Performers</a>
+    <a href="vendor_list.html">📋 Vendor List</a>
+    <a href="performer_list.html">💂 Performer List</a>
+    <a href="all_fairs.html">🎪 All Fairs</a>
+    <a href="reports.html">📊 Reports</a>
+    <a href="settings.html">⚙️ Settings</a>
+  </div>
+
+  <div id="updatesList">Loading updates...</div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    async function loadUpdates() {
+      const { data: apps, error } = await supabase
+        .from('vendor_performer_applications')
+        .select('*')
+        .eq('update_pending', true);
+
+      const container = document.getElementById('updatesList');
+      if (error || !apps || apps.length === 0) {
+        container.innerHTML = '<p>No pending updates found.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      apps.forEach(app => {
+        const div = document.createElement('div');
+        div.className = 'app-box';
+        div.innerHTML = `
+          <p><strong>Name:</strong> ${app.name}</p>
+          <p><strong>Description:</strong> ${app.description}</p>
+          <p><strong>Performance/Vendor Type:</strong> ${app.vendor_type}</p>
+          <p><strong>Website:</strong> ${app.website ? `<a href="${app.website}" target="_blank">${app.website}</a>` : 'N/A'}</p>
+          <p><strong>Contact:</strong> ${app.contact_name} (${app.contact_email})</p>
+          ${app.photo_url ? `<p><strong>Photo:</strong><br><img src="${app.photo_url}" width="100"/></p>` : ''}
+          <div class="buttons">
+            <button class="approve" onclick="approveUpdate(${app.id})">✅ Approve Update</button>
+            <button class="decline" onclick="rejectUpdate(${app.id})">❌ Reject Update</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function approveUpdate(id) {
+      await supabase
+        .from('vendor_performer_applications')
+        .update({ update_pending: false })
+        .eq('id', id);
+      alert('✅ Update approved.');
+      loadUpdates();
+    }
+
+    async function rejectUpdate(id) {
+      await supabase
+        .from('vendor_performer_applications')
+        .update({ update_pending: false })
+        .eq('id', id);
+      alert('🚫 Update rejected.');
+      loadUpdates();
+    }
+
+    loadUpdates();
+  </script>
+</body>
+</html>

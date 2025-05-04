@@ -114,6 +114,12 @@
       <a class="action-button" href="approve_performers.html">Review Performers</a>
     </p>
     <p>
+      🛠️ Vendor/Performer Updates: <strong id="updateApplicationCount">...</strong>
+      <a class="action-button" href="approve_updates.html">Review Updates</a>
+    </p>
+    
+
+    <p>
       🏰 New Fair Submissions: <strong id="fairCount">...</strong>
       <a class="action-button" href="fair_approval.html">Review Fairs</a>
     </p>
@@ -168,13 +174,22 @@ today.setHours(0, 0, 0, 0); // reset to start of day
 const { count: userCount } = await supabase
   .from('app_users')
   .select('*', { count: 'exact', head: true })
-  .gte('created_at', today.toISOString()); // users created today
+  .gte('created_at', today.toISOString());
 
-      document.getElementById('vendorCount').innerText = vendorCount ?? 0;
-      document.getElementById('performerCount').innerText = performerCount ?? 0;
-      document.getElementById('fairCount').innerText = fairCount ?? 0;
-      document.getElementById('updateCount').innerText = updateCount ?? 0;
-      document.getElementById('userCount').innerText = userCount ?? 0;
+// 🔥 ADD THIS RIGHT HERE
+const { count: updateApplicationCount } = await supabase
+  .from('vendor_performer_applications')
+  .select('*', { count: 'exact', head: true })
+  .eq('update_pending', true);
+
+// Now set all the text like before
+document.getElementById('vendorCount').innerText = vendorCount ?? 0;
+document.getElementById('performerCount').innerText = performerCount ?? 0;
+document.getElementById('fairCount').innerText = fairCount ?? 0;
+document.getElementById('updateCount').innerText = updateCount ?? 0;
+document.getElementById('userCount').innerText = userCount ?? 0;
+document.getElementById('updateApplicationCount').innerText = updateApplicationCount ?? 0;
+
 
     }
 

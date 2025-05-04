@@ -75,7 +75,7 @@
     <h1>Update Your Performer Application</h1>
     <form id="updateForm">
       <label>Performer Name</label>
-      <input id="name" readonly>
+      <input id="name">
       <label>Bio</label>
       <textarea id="description" readonly></textarea>
       <label>Photo URL</label>
@@ -330,13 +330,16 @@ const { data: rawFairs = [] } = await supabase
 
       document.getElementById('updateMessage').textContent = 'Saving…';
       await supabase.from('vendor_performer_applications').update({
-        name: document.getElementById('name').value,
-        description: document.getElementById('description').value,
-        photo_url: document.getElementById('photoUrl').value,
-        vendor_type: document.getElementById('vendorType').value,
-        website: document.getElementById('website').value,
-        update_pending: true
-      }).eq('id', originalApp.id);
+  name: document.getElementById('name').value,
+  description: document.getElementById('description').value,
+  photo_url: document.getElementById('photoUrl').value,
+  vendor_type: document.getElementById('vendorType').value,
+  website: document.getElementById('website').value,
+  contact_name: document.getElementById('contactName').value,
+  contact_email: document.getElementById('contactEmail').value,
+  update_pending: true
+}).eq('id', originalApp.id);
+
       await supabase.from('vendor_application_fairs').delete().eq('application_id', originalApp.id);
       await supabase.from('suggested_fairs').delete().eq('application_id', originalApp.id).eq('application_type','performer');
       const curr = getCurrentFairs();

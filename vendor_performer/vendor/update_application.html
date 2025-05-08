@@ -142,8 +142,9 @@
     }
 
     function addFairSearch(prefill = null) {
-      if (fairSearchCount >= 5) return;
-      fairSearchCount++;
+      if (!prefill && fairSearchCount >= 20) return;
+if (!prefill) fairSearchCount++;
+
       const container = document.getElementById('fairsList');
       const block = document.createElement('div');
       block.className = 'fair-block';

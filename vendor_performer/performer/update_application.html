@@ -137,7 +137,7 @@
   // Only enforce limit when user is manually adding, not when loading saved fairs
   if (!prefill && fairSearchCount >= 20) return; // ✅ 20 maximum only when manually adding
 
-  fairSearchCount++;
+  if (!prefill) fairSearchCount++;
 
   const container = document.getElementById('fairsList');
   const block = document.createElement('div');

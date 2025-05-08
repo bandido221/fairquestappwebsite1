@@ -134,77 +134,90 @@
     }
 
     function addFairSearch(prefill = null) {
-      if (fairSearchCount >= 5) return;
-      fairSearchCount++;
-      const container = document.getElementById('fairsList');
-      const block = document.createElement('div');
-      block.className = 'fair-block';
-      block.innerHTML = `<span class="close-btn" onclick="removeFair(this)">×</span>`;
-      const input = document.createElement('input');
-      input.placeholder = 'Search fair name or state…';
-      block.appendChild(input);
-      const results = document.createElement('div');
-      results.className = 'fair-results';
-      block.appendChild(results);
-      const sel = document.createElement('div');
-      sel.className = 'selected-fair';
-      block.appendChild(sel);
-      input.addEventListener('input', () => {
-        const q = input.value.trim().toLowerCase();
-        const norm = stateMap[q];
-        results.innerHTML = '';
-        if (!q) return;
-        allFairs.forEach(fair => {
-          if (!fair.name.toLowerCase().includes(q) && norm !== fair.state.toLowerCase()) return;
-          const ranges = [];
-          for (let i = 0; i <= 10; i++) {
-            const sK = i === 0 ? 'start_date' : `week${i+1}_start_date`;
-            const eK = i === 0 ? 'end_date'   : `week${i+1}_end_date`;
-            const s = fair[sK], e = fair[eK];
-            if (!s||!e) continue;
-            const key = `${fair.id}_${s}_${e}`;
-            if (!Array.from(document.querySelectorAll('.fair-block'))
-                      .some(b=>`${b.dataset.fairId}_${b.dataset.start}_${b.dataset.end}`===key)) {
-              ranges.push({s,e});
-            }
-          }
-          if (!ranges.length) return;
-          const fairDiv = document.createElement('div');
-          fairDiv.innerHTML = `<strong>${fair.name} (${fair.state})</strong>`;
-          ranges.forEach(({s,e})=>{
-            const row = document.createElement('div');
-            row.className = 'fair-row';
-            const span = document.createElement('span');
-            span.textContent = `${s} → ${e}`;
-            const cb = document.createElement('input');
-            cb.type = 'checkbox';
-            cb.onclick = () => {
-              if (!cb.checked) return;
-              sel.textContent = `${fair.name} (${fair.state}) — ${s} to ${e}`;
-              block.dataset.fairId = fair.id;
-              block.dataset.name   = fair.name;
-              block.dataset.start  = s;
-              block.dataset.end    = e;
-              input.style.display = 'none';
-              results.innerHTML    = '';
-            };
-            row.appendChild(span);
-            row.appendChild(cb);
-            fairDiv.appendChild(row);
-          });
-          results.appendChild(fairDiv);
-        });
-      });
-      if (prefill) {
-        sel.textContent = `${prefill.name} — ${prefill.start} to ${prefill.end}`;
-        block.dataset.fairId = prefill.id;
-        block.dataset.name   = prefill.name;
-        block.dataset.start  = prefill.start;
-        block.dataset.end    = prefill.end;
-        input.style.display  = 'none';
+  // Only enforce limit when user is manually adding, not when loading saved fairs
+  if (!prefill && fairSearchCount >= 20) return; // ✅ 20 maximum only when manually adding
+
+  fairSearchCount++;
+
+  const container = document.getElementById('fairsList');
+  const block = document.createElement('div');
+  block.className = 'fair-block';
+  block.innerHTML = `<span class="close-btn" onclick="removeFair(this)">×</span>`;
+
+  const input = document.createElement('input');
+  input.placeholder = 'Search fair name or state…';
+  block.appendChild(input);
+
+  const results = document.createElement('div');
+  results.className = 'fair-results';
+  block.appendChild(results);
+
+  const sel = document.createElement('div');
+  sel.className = 'selected-fair';
+  block.appendChild(sel);
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    const norm = stateMap[q];
+    results.innerHTML = '';
+    if (!q) return;
+    allFairs.forEach(fair => {
+      if (!fair.name.toLowerCase().includes(q) && norm !== fair.state.toLowerCase()) return;
+      const ranges = [];
+      for (let i = 0; i <= 10; i++) {
+        const sK = i === 0 ? 'start_date' : `week${i+1}_start_date`;
+        const eK = i === 0 ? 'end_date'   : `week${i+1}_end_date`;
+        const s = fair[sK], e = fair[eK];
+        if (!s || !e) continue;
+        const key = `${fair.id}_${s}_${e}`;
+        if (!Array.from(document.querySelectorAll('.fair-block'))
+                  .some(b => `${b.dataset.fairId}_${b.dataset.start}_${b.dataset.end}` === key)) {
+          ranges.push({s,e});
+        }
       }
-      container.appendChild(block);
-    }
+      if (!ranges.length) return;
+      const fairDiv = document.createElement('div');
+      fairDiv.innerHTML = `<strong>${fair.name} (${fair.state})</strong>`;
+      ranges.forEach(({s,e}) => {
+        const row = document.createElement('div');
+        row.className = 'fair-row';
+        const span = document.createElement('span');
+        span.textContent = `${s} → ${e}`;
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.onclick = () => {
+          if (!cb.checked) return;
+          sel.textContent = `${fair.name} (${fair.state}) — ${s} to ${e}`;
+          block.dataset.fairId = fair.id;
+          block.dataset.name   = fair.name;
+          block.dataset.start  = s;
+          block.dataset.end    = e;
+          input.style.display  = 'none';
+          results.innerHTML    = '';
+        };
+        row.appendChild(span);
+        row.appendChild(cb);
+        fairDiv.appendChild(row);
+      });
+      results.appendChild(fairDiv);
+    });
+  });
+
+  if (prefill) {
+    sel.textContent = `${prefill.name} — ${prefill.start} to ${prefill.end}`;
+    block.dataset.fairId = prefill.id;
+    block.dataset.name   = prefill.name;
+    block.dataset.start  = prefill.start;
+    block.dataset.end    = prefill.end;
+    input.style.display  = 'none';
+  }
+
+  container.appendChild(block);
+}
+
+
+
+
     window.addEventListener('DOMContentLoaded', async ()=>{
   await loadFairs();
   let app = JSON.parse(localStorage.getItem('performerProfile'));
@@ -347,14 +360,28 @@ const { data: rawFairs = [] } = await supabase
   }).eq('id', originalApp.id);
 
   // 🛑 DELETE all previous fairs before saving new ones
-  await supabase.from('vendor_application_fairs')
-    .delete()
-    .eq('application_id', originalApp.id);
 
-  await supabase.from('suggested_fairs')
-    .delete()
-    .eq('application_id', originalApp.id)
-    .eq('application_type', 'performer');
+  const { added, removed } = diffFairs();
+
+// Delete only fairs that were REMOVED
+for (const fair of removed) {
+  if (!fair.id.startsWith('manual_')) {
+    await supabase.from('vendor_application_fairs')
+      .delete()
+      .eq('application_id', originalApp.id)
+      .eq('fair_id', fair.id)
+      .eq('start_date', fair.start)
+      .eq('end_date', fair.end);
+  } else {
+    await supabase.from('suggested_fairs')
+      .delete()
+      .eq('application_id', originalApp.id)
+      .eq('fair_name', fair.name)
+      .eq('start_date', fair.start)
+      .eq('end_date', fair.end)
+      .eq('application_type', 'performer');
+  }
+}
 
   // ➡️ Now insert the currently selected fairs
   const curr = getCurrentFairs();

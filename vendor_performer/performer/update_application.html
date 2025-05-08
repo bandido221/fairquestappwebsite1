@@ -365,7 +365,7 @@ const { data: rawFairs = [] } = await supabase
 
 // Delete only fairs that were REMOVED
 for (const fair of removed) {
-  if (!fair.id.startsWith('manual_')) {
+  if (!String(fair.id).startsWith('manual_')) {
     await supabase.from('vendor_application_fairs')
       .delete()
       .eq('application_id', originalApp.id)

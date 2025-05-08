@@ -363,7 +363,7 @@ if (!prefill) fairSearchCount++;
 
   // Delete removed fairs
   for (const fair of removedFairs) {
-    if (fair.id.startsWith('manual_')) {
+    if (String(fair.id).startsWith('manual_')) {
       await supabase.from('suggested_fairs')
         .delete()
         .eq('application_id', originalApp.id)

@@ -348,6 +348,7 @@
 
   document.getElementById('updateMessage').textContent = 'Saving…';
 
+  // Update main profile fields
   await supabase
     .from('vendor_performer_applications')
     .update({
@@ -359,25 +360,39 @@
     })
     .eq('id', originalApp.id);
 
-    for (const fair of removedFairs) {
-  if (fair.id.startsWith('manual_')) {
-    await supabase.from('suggested_fairs')
-      .delete()
-      .eq('application_id', originalApp.id)
-      .eq('fair_name', fair.name)
-      .eq('start_date', fair.start)
-      .eq('end_date', fair.end)
-      .eq('application_type', 'vendor');
-  } else {
-    await supabase.from('vendor_application_fairs')
-      .delete()
-      .eq('application_id', originalApp.id)
-      .eq('fair_id', fair.id)
-      .eq('start_date', fair.start)
-      .eq('end_date', fair.end);
+  // Delete removed fairs
+  for (const fair of removedFairs) {
+    if (fair.id.startsWith('manual_')) {
+      await supabase.from('suggested_fairs')
+        .delete()
+        .eq('application_id', originalApp.id)
+        .eq('fair_name', fair.name)
+        .eq('start_date', fair.start)
+        .eq('end_date', fair.end)
+        .eq('application_type', 'vendor');
+    } else {
+      await supabase.from('vendor_application_fairs')
+        .delete()
+        .eq('application_id', originalApp.id)
+        .eq('fair_id', fair.id)
+        .eq('start_date', fair.start)
+        .eq('end_date', fair.end);
+    }
   }
-}
 
+  // 🛑 IMPORTANT — delete ALL old fairs FIRST before inserting new ones!
+  await supabase
+    .from('vendor_application_fairs')
+    .delete()
+    .eq('application_id', originalApp.id);
+
+  await supabase
+    .from('suggested_fairs')
+    .delete()
+    .eq('application_id', originalApp.id)
+    .eq('application_type', 'vendor');
+
+  // Now insert the CURRENT fairs
   const curr = getCurrentFairs();
   const known = curr.filter(c => !c.id.startsWith('manual_')).map(c => ({
     application_id: originalApp.id,
@@ -401,6 +416,7 @@
   document.getElementById('updateMessage').textContent = '✅ Changes submitted — redirecting…';
   setTimeout(() => location.href = 'dashboard.html', 1500);
 }
+
 
 
     // Image upload logic

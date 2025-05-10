@@ -78,8 +78,8 @@
       <input id="name">
       <label>Bio</label>
       <textarea id="description" ></textarea>
-      <label>Photo URL</label>
-      <input id="photoUrl" >
+      <input id="photoUrl" type="hidden">
+
       <img id="imagePreview" style="display:none; max-height:150px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.3); margin-top:10px;" />
       <div id="imageControls" style="margin-top:10px;">
         <input type="file" id="photoUpload" accept="image/*" style="margin-bottom: 10px;" />
@@ -218,92 +218,89 @@
 
 
 
-    window.addEventListener('DOMContentLoaded', async ()=>{
+window.addEventListener('DOMContentLoaded', async () => {
   await loadFairs();
+
   let app = JSON.parse(localStorage.getItem('performerProfile'));
 
   if (!app) {
-    const { data:{ session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     const { data } = await supabase
       .from('vendor_performer_applications')
       .select('*')
       .eq('user_id', session.user.id)
       .eq('application_type', 'performer')
-      .order('id',{ascending:false})
-      .limit(1).single();
+      .order('id', { ascending: false })
+      .limit(1)
+      .single();
     app = data;
   }
 
-  console.log("Loaded photo URL: ", app.photo_url); // ✅ NOW SAFE
-
-
-      if (!app) {
-        const { data:{ session } } = await supabase.auth.getSession();
-        const { data } = await supabase
-          .from('vendor_performer_applications')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .eq('application_type', 'performer')
-          .order('id',{ascending:false})
-          .limit(1).single();
-        app = data;
-      }
-      originalApp = app;
-      ['name','description','photoUrl','vendorType','website'].forEach(id => {
-  const value = id === 'photoUrl' ? app.photo_url :
-                id === 'vendorType' ? app.vendor_type :
-                app[id] || '';
-  document.getElementById(id).value = value;
-
-  // ✅ Show performer image preview if exists
-  if (id === 'photoUrl') {
-    const img = document.getElementById('imagePreview');
-    const controls = document.getElementById('imageControls');
-    if (value) {
-      img.src = value;
-      img.style.display = 'block';
-      document.getElementById('photoUpload').disabled = true;
-
-      controls.style.display = 'block';
-    } else {
-      img.src = '';
-      img.style.display = 'none';
-      controls.style.display = 'none';
-    }
+  if (!app) {
+    alert("❌ Could not load your application.");
+    return;
   }
-});
 
-// ✅ Show performer photo if exists
-const img = document.getElementById('imagePreview');
-const controls = document.getElementById('imageControls');
-if (app.photo_url) {
+  originalApp = app;
+
+  const upload = document.getElementById('photoUpload');
+  const img = document.getElementById('imagePreview');
+  const controls = document.getElementById('imageControls');
+
+  document.getElementById('name').value = app.name || '';
+  document.getElementById('description').value = app.description || '';
+  document.getElementById('photoUrl').value = app.photo_url || '';
+  document.getElementById('vendorType').value = app.vendor_type || '';
+  document.getElementById('website').value = app.website || '';
+  document.getElementById('contactName').value = app.contact_name || '';
+  document.getElementById('contactEmail').value = app.contact_email || '';
+
+  if (app.photo_url && app.photo_url.trim() !== '') {
   img.src = app.photo_url;
   img.style.display = 'block';
   controls.style.display = 'block';
+  upload.disabled = true;
 } else {
+  document.getElementById('photoUrl').value = '';
   img.src = '';
   img.style.display = 'none';
-  controls.style.display = 'none';
+  controls.style.display = 'block'; // ✅ Show controls so user can upload
+  upload.disabled = false;
 }
 
-document.getElementById('contactName').value = app.contact_name || '';
-document.getElementById('contactEmail').value = app.contact_email || '';
-const { data: rawFairs = [] } = await supabase
-  .from('vendor_application_fairs')
-  .select('fair_id,start_date,end_date,renaissance_fairs(name)')
-  .eq('application_id', app.id);  // ✅ This is good
+
+  const { data: rawFairs = [] } = await supabase
+    .from('vendor_application_fairs')
+    .select('fair_id,start_date,end_date,renaissance_fairs(name)')
+    .eq('application_id', app.id);
 
   const { data: rawManual = [] } = await supabase
-  .from('suggested_fairs')
-  .select('fair_name,start_date,end_date')
-  .eq('application_id', app.id)
-  .eq('application_type', true); // 👈 MAKE SURE this is true not 'performer'
+    .from('suggested_fairs')
+    .select('fair_name,start_date,end_date')
+    .eq('application_id', app.id)
+    .eq('application_type', true);
 
+  rawFairs.forEach(f =>
+    originalFairs.push({
+      id: f.fair_id,
+      name: f.renaissance_fairs.name,
+      start: f.start_date,
+      end: f.end_date
+    })
+  );
 
-      rawFairs.forEach(f => originalFairs.push({ id: f.fair_id, name: f.renaissance_fairs.name, start: f.start_date, end: f.end_date }));
-      rawManual.forEach(m => originalFairs.push({ id: `manual_${m.start_date}_${m.end_date}`, name: m.fair_name, start: m.start_date, end: m.end_date }));
-      originalFairs.forEach(f => addFairSearch(f));
-    });
+  rawManual.forEach(m =>
+    originalFairs.push({
+      id: `manual_${m.start_date}_${m.end_date}`,
+      name: m.fair_name,
+      start: m.start_date,
+      end: m.end_date
+    })
+  );
+
+  originalFairs.forEach(f => addFairSearch(f));
+});
+
 
     function getCurrentFairs(){
       return Array.from(document.querySelectorAll('.fair-block'))

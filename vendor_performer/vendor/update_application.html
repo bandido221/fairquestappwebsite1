@@ -87,8 +87,8 @@
       <input id="name">
       <label>Quick Bio</label>
       <textarea id="description"></textarea>
-      <label>Photo URL</label>
-      <input id="photoUrl">
+      <input id="photoUrl" type="hidden">
+
       <img id="imagePreview" style="display:none; max-height:150px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.3); margin-top:10px;" />
       <div id="imageControls" style="display:none; margin-top:10px;">
         <input type="file" id="photoUpload" accept="image/*" style="margin-bottom: 10px;" />
@@ -249,24 +249,22 @@ if (!prefill) fairSearchCount++;
 
     // ✅ If photoUrl, also show preview image
     if (id === 'photoUrl') {
-  const img = document.getElementById('imagePreview');
-  const controls = document.getElementById('imageControls');
-  const upload = document.getElementById('photoUpload');
-  if (value) {
-    img.src = value;
-    img.style.display = 'block';
-    controls.style.display = 'block';
-    upload.disabled = true;
-  } else {
-    img.src = '';
-    img.style.display = 'none';
-    controls.style.display = 'none';
-    upload.disabled = false;
-  }
-}
-
-
+      const img = document.getElementById('imagePreview');
+      const controls = document.getElementById('imageControls');
+      const upload = document.getElementById('photoUpload');
+      controls.style.display = 'block';
+      if (value) {
+        img.src = value;
+        img.style.display = 'block';
+        upload.disabled = true;
+      } else {
+        img.src = '';
+        img.style.display = 'none';
+        upload.disabled = false;
+      }
+    }
   });
+
 
       // get known fairs
       const { data: rawFairs, error: fe } = await supabase
@@ -351,15 +349,18 @@ if (!prefill) fairSearchCount++;
 
   // Update main profile fields
   await supabase
-    .from('vendor_performer_applications')
-    .update({
-      name:         document.getElementById('name').value,
-      description:  document.getElementById('description').value,
-      photo_url:    document.getElementById('photoUrl').value,
-      vendor_type:  document.getElementById('vendorType').value,
-      update_pending: true
-    })
-    .eq('id', originalApp.id);
+  .from('vendor_performer_applications')
+  .update({
+    name:         document.getElementById('name').value,
+    description:  document.getElementById('description').value,
+    photo_url:    document.getElementById('photoUrl').value,
+    vendor_type:  document.getElementById('vendorType').value,
+    contact_name: document.getElementById('contactName').value,
+    contact_email: document.getElementById('contactEmail').value,
+    update_pending: true
+  })
+  .eq('id', originalApp.id);
+
 
   // Delete removed fairs
   for (const fair of removedFairs) {

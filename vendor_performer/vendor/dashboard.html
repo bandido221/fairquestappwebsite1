@@ -132,7 +132,7 @@
         } else fairHtml+=`<li>None listed</li>`;
         fairHtml+=`</ul>`;
 
-        const safeName = v.name.replace(/'/g,"\\'");
+        const safeName = (v.name || 'Unnamed Vendor').replace(/'/g,"\\'");
         const box = document.createElement('div');
         box.className = 'info';
         box.innerHTML = `
@@ -150,7 +150,7 @@
           }</p>
           ${fairHtml}
           ${v.website?`<p><a href="${v.website}" target="_blank">${v.website}</a></p>`:''}
-          ${v.photo_url?`<p><img src="${v.photo_url}" width="150"/></p>`:''}
+${v.photo_url?`<p><img src="${v.photo_url}" width="150" style="border-radius:8px; margin-bottom:10px;"/></p>`:''}
           <button class="update-app" onclick="startUpdate(${v.id})">
             Update Application
           </button>

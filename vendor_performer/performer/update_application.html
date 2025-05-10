@@ -379,8 +379,8 @@ for (const fair of removed) {
       .eq('fair_name', fair.name)
       .eq('start_date', fair.start)
       .eq('end_date', fair.end)
-      .eq('application_type', 'performer');
-  }
+      .eq('application_type', true);
+    }
 }
 
   // ➡️ Now insert the currently selected fairs

@@ -370,8 +370,8 @@ if (!prefill) fairSearchCount++;
         .eq('fair_name', fair.name)
         .eq('start_date', fair.start)
         .eq('end_date', fair.end)
-        .eq('application_type', 'vendor');
-    } else {
+        .eq('application_type', false);
+      } else {
       await supabase.from('vendor_application_fairs')
         .delete()
         .eq('application_id', originalApp.id)

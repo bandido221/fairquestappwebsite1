@@ -335,7 +335,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     async function confirmSave() {
   closeModal();
-  
+
   const photo = document.getElementById('photoUrl').value.trim();
   if (!photo) {
     document.getElementById('updateMessage').textContent = '❌ Please upload a photo before saving.';
@@ -344,69 +344,101 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('updateMessage').textContent = 'Saving…';
 
-  // Update main performer profile
-  await supabase.from('vendor_performer_applications').update({
+  // Build new values
+  const updatedFields = {
     name: document.getElementById('name').value,
     description: document.getElementById('description').value,
     photo_url: document.getElementById('photoUrl').value,
     vendor_type: document.getElementById('vendorType').value,
     website: document.getElementById('website').value,
     contact_name: document.getElementById('contactName').value,
-    contact_email: document.getElementById('contactEmail').value,
-    update_pending: true
-  }).eq('id', originalApp.id);
+    contact_email: document.getElementById('contactEmail').value
+  };
 
-  // 🛑 DELETE all previous fairs before saving new ones
-
-  const { added, removed } = diffFairs();
-
-// Delete only fairs that were REMOVED
-for (const fair of removed) {
-  if (!String(fair.id).startsWith('manual_')) {
-    await supabase.from('vendor_application_fairs')
-      .delete()
-      .eq('application_id', originalApp.id)
-      .eq('fair_id', fair.id)
-      .eq('start_date', fair.start)
-      .eq('end_date', fair.end);
-  } else {
-    await supabase.from('suggested_fairs')
-      .delete()
-      .eq('application_id', originalApp.id)
-      .eq('fair_name', fair.name)
-      .eq('start_date', fair.start)
-      .eq('end_date', fair.end)
-      .eq('application_type', true);
+  const logs = [];
+  for (const field in updatedFields) {
+    const newVal = updatedFields[field] || '';
+    const oldVal = originalApp[field] || '';
+    if (newVal !== oldVal) {
+      logs.push({
+        application_id: originalApp.id,
+        application_type: 'performer',
+        updated_by: originalApp.user_id,
+        field_name: field,
+        old_value: oldVal,
+        new_value: newVal
+      });
     }
+  }
+
+  // Update the performer application immediately
+  await supabase.from('vendor_performer_applications')
+    .update(updatedFields)
+    .eq('id', originalApp.id);
+
+  // Log changes (if any)
+  if (logs.length) {
+    await supabase.from('application_update_log').insert(logs);
+  }
+
+  // Update fair changes as before
+  const { added, removed } = diffFairs();
+// Delete ALL existing fair links first
+await supabase.from('vendor_application_fairs')
+  .delete()
+  .eq('application_id', originalApp.id);
+
+await supabase.from('suggested_fairs')
+  .delete()
+  .eq('application_id', originalApp.id)
+  .eq('application_type', true);
+
+  const curr = getCurrentFairs();
+
+// 🔒 Deduplicate by fair_id + start_date + end_date
+const uniqueKeys = new Set();
+const uniqueFairs = curr.filter(f => {
+  const key = `${f.id}_${f.start}_${f.end}`;
+  if (uniqueKeys.has(key)) return false;
+  uniqueKeys.add(key);
+  return true;
+});
+
+const known = uniqueFairs.filter(c => !c.id.startsWith('manual_')).map(c => ({
+  application_id: originalApp.id,
+  fair_id: Number(c.id),
+  start_date: c.start,
+  end_date: c.end
+}));
+
+const manual = uniqueFairs.filter(c => c.id.startsWith('manual_')).map(c => ({
+  application_id: originalApp.id,
+  fair_name: c.name,
+  start_date: c.start,
+  end_date: c.end,
+  notes: 'Manually entered',
+  application_type: 'performer'
+}));
+
+
+  if (known.length) {
+  for (const fair of known) {
+    await supabase.from('vendor_application_fairs').insert(fair).select();
+
+  }
 }
 
-  // ➡️ Now insert the currently selected fairs
-  const curr = getCurrentFairs();
-  const known = curr.filter(c => !c.id.startsWith('manual_')).map(c => ({
-    application_id: originalApp.id,
-    fair_id: Number(c.id),
-    start_date: c.start,
-    end_date: c.end
-  }));
+if (manual.length) {
+  for (const fair of manual) {
+    await supabase.from('suggested_fairs')
+      .upsert(fair, { onConflict: ['application_id', 'fair_name', 'start_date', 'end_date'] });
+  }
+}
 
-  const manual = curr.filter(c => c.id.startsWith('manual_')).map(c => ({
-    application_id: originalApp.id,
-    fair_name: c.name,
-    start_date: c.start,
-    end_date: c.end,
-    notes: 'Manually entered',
-    application_type: 'performer'
-  }));
-
-  if (known.length) await supabase.from('vendor_application_fairs').insert(known);
-  if (manual.length) await supabase.from('suggested_fairs').insert(manual);
 
   document.getElementById('updateMessage').textContent = '✅ Changes submitted — redirecting…';
   setTimeout(() => location.href = 'dashboard.html', 1500);
 }
-
-
-
 
 // Upload logic for performers
 document.getElementById('photoUpload').addEventListener('change', async function () {
@@ -450,19 +482,41 @@ document.getElementById('removeImageBtn').addEventListener('click', function () 
 
   document.getElementById('photoUpload').disabled = false;
 });
-function removeFair(closeBtn) {
+
+async function removeFair(closeBtn) {
   const block = closeBtn.parentElement;
-  if (block.dataset.fairId) {
-    removedFairs.push({
-      id: block.dataset.fairId,
-      name: block.dataset.name,
-      start: block.dataset.start,
-      end: block.dataset.end
-    });
-  }
+  const fairId = block.dataset.fairId;
+  const start = block.dataset.start;
+  const end = block.dataset.end;
+  const name = block.dataset.name;
+
   block.remove();
   fairSearchCount--;
+
+  originalFairs = originalFairs.filter(f =>
+    !(f.id == fairId && f.start == start && f.end == end)
+  );
+
+  if (fairId.startsWith("manual_")) {
+    await supabase.from("suggested_fairs")
+      .delete()
+      .eq("application_id", originalApp.id)
+      .eq("fair_name", name)
+      .eq("start_date", start)
+      .eq("end_date", end)
+      .eq("application_type", true);
+  } else {
+    await supabase.from("vendor_application_fairs")
+      .delete()
+      .eq("application_id", originalApp.id)
+      .eq("fair_id", fairId)
+      .eq("start_date", start)
+      .eq("end_date", end);
+  }
 }
+
+
+
 
 
   </script>

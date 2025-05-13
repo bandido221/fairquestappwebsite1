@@ -1,38 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Approve Updates | FairQuest</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Review Vendor/Performer Updates</title>
+  <link rel="stylesheet" href="/css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    body { background:#000; color:#f0e6d2; font-family:'Domine', serif; padding:40px; text-align:center; }
-    h1 { font-family:'Cinzel', serif; margin-bottom:30px; }
-    .nav-bar { margin-bottom:30px; display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
-    .nav-bar a { background-color:#bb9457; color:black; padding:10px 16px; border-radius:6px; font-weight:bold; text-decoration:none; }
-    .app-box { background:#dbc67d; color:#333; padding:20px; margin:20px auto; border-radius:12px; max-width:700px; text-align:left; }
-    .buttons { margin-top:20px; text-align:center; }
-    button { padding:10px 16px; margin:0 10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
-    .approve { background-color:#2ecc71; color:white; }
-    .decline { background-color:#e74c3c; color:white; }
+    body {
+      background-color: #000;
+      font-family: 'Domine', serif;
+      color: #f0e6d2;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 30px;
+    }
+    .log-entry {
+      background: rgba(172, 148, 49, 0.88);
+      color: #3b1f1f;
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 12px;
+      max-width: 700px;
+      border: 2px solid #aa8452;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      text-align: left;
+    }
+    .log-entry strong { display: block; margin-top: 10px; }
+    .log-entry button {
+      margin-top: 12px;
+      background: #5b2a86;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .log-entry button:hover {
+      background: #472066;
+    }
+    #searchBox {
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      border: 1px solid #aa8452;
+      display: block;
+    }
   </style>
 </head>
 <body>
-  <h1>🛠️ Approve Vendor/Performer Updates</h1>
-  <div class="nav-bar">
-    <a href="admin_dashboard.html">🏠 Home</a>
-    <a href="approve_vendors.html">📦 Approve Vendors</a>
-    <a href="approve_performers.html">🎤 Approve Performers</a>
-    <a href="vendor_list.html">📋 Vendor List</a>
-    <a href="performer_list.html">💂 Performer List</a>
-    <a href="all_fairs.html">🎪 All Fairs</a>
-    <a href="reports.html">📊 Reports</a>
-    <a href="settings.html">⚙️ Settings</a>
-  </div>
+  <h1>📜 Vendor/Performer Update Logs</h1>
 
-  <div id="updatesList">Loading updates...</div>
+  <input type="text" id="searchBox" placeholder="Search by vendor or performer name..." oninput="loadLogs()">
+
+  <div id="logContainer"></div>
 
   <script>
     const supabase = window.supabase.createClient(
@@ -40,57 +68,73 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
-    async function loadUpdates() {
-      const { data: apps, error } = await supabase
-        .from('vendor_performer_applications')
-        .select('*')
-        .eq('update_pending', true);
+    async function loadLogs() {
+      const query = document.getElementById('searchBox').value.trim();
 
-      const container = document.getElementById('updatesList');
-      if (error || !apps || apps.length === 0) {
-        container.innerHTML = '<p>No pending updates found.</p>';
+      let { data: logs, error } = await supabase
+        .from('application_update_log')
+        .select('*')
+        .eq('seen', false)
+        .order('updated_at', { ascending: false })
+        .limit(100);
+
+      const container = document.getElementById('logContainer');
+
+      if (error) {
+        console.error('Error loading logs:', error);
+        container.innerHTML = '<p>Error loading logs. Please check the console.</p>';
         return;
       }
 
+      // Fetch all related application names in one batch
+      const appIds = [...new Set(logs.map(log => log.application_id))];
+      const { data: apps, error: appError } = await supabase
+        .from('vendor_performer_applications')
+        .select('id, name')
+        .in('id', appIds);
+
+      const appMap = new Map((apps || []).map(app => [app.id, app.name]));
+
+      if (query) {
+        logs = logs.filter(log =>
+          (appMap.get(log.application_id) || '').toLowerCase().includes(query.toLowerCase())
+        );
+      }
+
       container.innerHTML = '';
-      apps.forEach(app => {
+
+      for (const log of logs) {
+        const name = appMap.get(log.application_id) || 'Unknown';
         const div = document.createElement('div');
-        div.className = 'app-box';
+        div.className = 'log-entry';
+
         div.innerHTML = `
-          <p><strong>Name:</strong> ${app.name}</p>
-          <p><strong>Description:</strong> ${app.description}</p>
-          <p><strong>Performance/Vendor Type:</strong> ${app.vendor_type}</p>
-          <p><strong>Website:</strong> ${app.website ? `<a href="${app.website}" target="_blank">${app.website}</a>` : 'N/A'}</p>
-          <p><strong>Contact:</strong> ${app.contact_name} (${app.contact_email})</p>
-          ${app.photo_url ? `<p><strong>Photo:</strong><br><img src="${app.photo_url}" width="100"/></p>` : ''}
-          <div class="buttons">
-            <button class="approve" onclick="approveUpdate(${app.id})">✅ Approve Update</button>
-            <button class="decline" onclick="rejectUpdate(${app.id})">❌ Reject Update</button>
-          </div>
+          <strong>${name} (${log.application_type})</strong>
+          <div><strong>Field:</strong> ${log.field_name}</div>
+        ${log.field_name === 'photo_url'
+  ? `<div><strong>Old:</strong><br><img src="${log.old_value}" width="100"/></div>
+     <div><strong>New:</strong><br><img src="${log.new_value}" width="100"/></div>`
+  : `<div><strong>Old:</strong> ${log.old_value}</div>
+     <div><strong>New:</strong> ${log.new_value}</div>`}
+
+          <div><strong>Time:</strong> ${new Date(log.updated_at).toLocaleString()}</div>
         `;
+
+        const seenBtn = document.createElement('button');
+        seenBtn.textContent = 'Mark as Seen';
+        seenBtn.onclick = async () => {
+          await supabase
+            .from('application_update_log')
+            .update({ seen: true })
+            .eq('id', log.id);
+          loadLogs();
+        };
+        div.appendChild(seenBtn);
         container.appendChild(div);
-      });
+      }
     }
 
-    async function approveUpdate(id) {
-      await supabase
-        .from('vendor_performer_applications')
-        .update({ update_pending: false })
-        .eq('id', id);
-      alert('✅ Update approved.');
-      loadUpdates();
-    }
-
-    async function rejectUpdate(id) {
-      await supabase
-        .from('vendor_performer_applications')
-        .update({ update_pending: false })
-        .eq('id', id);
-      alert('🚫 Update rejected.');
-      loadUpdates();
-    }
-
-    loadUpdates();
+    loadLogs();
   </script>
 </body>
 </html>

@@ -105,6 +105,115 @@
 
   </div>
   <!-- Admin Upload Vendor/Performer Photo -->
+   <!-- Add Search and Select Section -->
+<div style="margin: 40px auto; max-width: 600px; background: #fdf7e1; padding: 20px; border-radius: 12px; color: #000;">
+  <h2>Select Vendor or Performer</h2>
+  <input type="text" id="searchQuery" placeholder="Search by name..." style="width:100%; margin-bottom: 10px; padding: 8px; border-radius:6px;" oninput="searchApplications()">
+  <select id="applicationDropdown" style="width:100%; padding: 8px; border-radius:6px;">
+    <option value="">-- Select an application --</option>
+  </select>
+  
+</div>
+<div id="selectedApplicationCard" style="display:none; background: #fdf7e1; color:#000; margin: 20px auto; padding: 20px; border-radius: 12px; max-width: 600px;">
+  <h3>📝 Edit Application</h3>
+  <label>Name:</label>
+  <input type="text" id="editName" style="width:100%; margin-bottom:10px; padding:8px; border-radius:6px;" />
+  
+  <label>Tier:</label>
+  <input type="text" id="editTier" style="width:100%; margin-bottom:10px; padding:8px; border-radius:6px;" />
+
+  <label>Type:</label>
+  <select id="editType" style="width:100%; margin-bottom:10px; padding:8px; border-radius:6px;">
+    <option value="vendor">Vendor</option>
+    <option value="performer">Performer</option>
+  </select>
+
+  <button onclick="saveApplicationEdits()" class="action-button">💾 Save Changes</button>
+</div>
+
+<script>
+async function searchApplications() {
+  const query = document.getElementById('searchQuery').value.trim();
+  if (!query) return;
+
+  const { data, error } = await supabase
+    .from('vendor_performer_applications')
+    .select('id, name')
+    .ilike('name', `%${query}%`);
+
+  const dropdown = document.getElementById('applicationDropdown');
+  dropdown.innerHTML = '<option value="">-- Select an application --</option>';
+
+  if (error) {
+    console.error('❌ Supabase error:', error);
+    const option = document.createElement('option');
+    option.value = "";
+    option.textContent = "Search error";
+    dropdown.appendChild(option);
+    return;
+  }
+
+  if (data && data.length > 0) {
+    data.forEach(app => {
+      const option = document.createElement('option');
+      option.value = app.id;
+      option.textContent = `#${app.id} - ${app.name}`;
+      dropdown.appendChild(option);
+    });
+  } else {
+    const option = document.createElement('option');
+    option.value = "";
+    option.textContent = "No results found";
+    dropdown.appendChild(option);
+  }
+}
+
+
+// Update applicationId input when dropdown changes
+const dropdown = document.getElementById('applicationDropdown');
+dropdown.addEventListener('change', async () => {
+  const selectedId = dropdown.value;
+  document.getElementById('applicationIdInput').value = selectedId;
+
+  if (!selectedId) {
+    document.getElementById('selectedApplicationCard').style.display = 'none';
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('vendor_performer_applications')
+    .select('name, tier, application_type, photo_url')
+    .eq('id', selectedId)
+    .single();
+
+  if (error || !data) {
+    alert("Failed to load application data.");
+    return;
+  }
+
+  document.getElementById('editName').value = data.name || '';
+document.getElementById('editTier').value = data.tier || '';
+document.getElementById('editType').value = data.application_type ? 'performer' : 'vendor';
+
+document.getElementById('selectedApplicationCard').style.display = 'block';
+
+// Show existing photo if available
+if (data.photo_url) {
+  const preview = document.getElementById('adminImagePreview');
+  preview.src = data.photo_url;
+  preview.style.display = 'block';
+  preview.dataset.url = data.photo_url;
+
+  document.getElementById('existingImageLabel').textContent = '📷 Current Photo:';
+} else {
+  document.getElementById('adminImagePreview').style.display = 'none';
+  document.getElementById('existingImageLabel').textContent = '';
+}
+
+});
+
+</script>
+
 <div style="margin: 40px auto; max-width: 600px; background: #fdf7e1; padding: 20px; border-radius: 12px; color: #000;">
   <h2>Upload Vendor/Performer Image</h2>
   <input type="text" id="applicationIdInput" placeholder="Enter Application ID" style="width:100%; margin-bottom: 10px; padding: 8px; border-radius:6px;">
@@ -113,8 +222,9 @@
     <input type="file" id="adminPhotoUpload" accept="image/*" style="display:none;">
   </div>
     <br/>
-  <img id="adminImagePreview" style="display:none; max-height:150px; border-radius:8px; margin-top:10px; box-shadow:0 2px 8px rgba(0,0,0,0.3);" />
-  <br/>
+    <img id="adminImagePreview" style="display:none; max-height:150px; border-radius:8px; margin-top:10px; box-shadow:0 2px 8px rgba(0,0,0,0.3);" />
+    <p id="existingImageLabel" style="margin-top:10px;"></p>
+      <br/>
   <button onclick="adminUploadPhoto()" class="action-button">Upload Image</button>
   <button onclick="savePhotoToApplication()" class="action-button" style="background:#5b2a86; color:white;">Save to Vendor/Performer</button>
   <p id="uploadStatus" style="margin-top:10px;"></p>
@@ -131,11 +241,12 @@
       <a class="action-button" href="approve_performers.html">Review Performers</a>
     </p>
     <p>
-      🛠️ Vendor/Performer Updates: <strong id="updateApplicationCount">...</strong>
+      🛠️ Vendor/Performer Updates: <strong id="updateApplicationCount">...</strong> |
+      <strong id="logUpdateCount">...</strong> new fields
       <a class="action-button" href="approve_updates.html">Review Updates</a>
     </p>
     
-
+    
     <p>
       🏰 New Fair Submissions: <strong id="fairCount">...</strong>
       <a class="action-button" href="fair_approval.html">Review Fairs</a>
@@ -162,6 +273,47 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 // Admin Upload Photo Logic
+
+async function savePhotoToApplication() {
+  const appId = document.getElementById('applicationIdInput').value.trim();
+  const preview = document.getElementById('adminImagePreview');
+  const photoUrl = preview.dataset.url;
+
+  console.log("🔍 Current preview.src:", preview.src);
+  console.log("🧪 dataset.url:", photoUrl);
+
+  if (!appId || !photoUrl) {
+    alert('Missing Application ID or uploaded image.');
+    return;
+  }
+
+  console.log("🚀 Saving photo for ID:", appId, "with URL:", photoUrl);
+  console.log("📤 Will attempt to update Supabase with:", {
+  id: parseInt(appId),
+  photo_url: photoUrl,
+});
+
+  const { error } = await supabase
+    .from('vendor_performer_applications')
+    .update({ photo_url: photoUrl, update_pending: true }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .eq('id', parseInt(appId));
+
+  if (error) {
+    console.error('❌ Supabase error:', error);
+    document.getElementById('uploadStatus').textContent = '❌ Error saving photo.';
+  } else {
+    console.log('✅ Supabase photo_url updated!');
+    document.getElementById('uploadStatus').textContent = '✅ Photo saved successfully!';
+    localStorage.setItem('selectedApplicationId', appId);
+    console.log("✅ Reloading with saved application ID:", appId);
+    setTimeout(() => window.location.reload(), 3000);
+  }
+}
+
 async function adminUploadPhoto() {
   const fileInput = document.getElementById('adminPhotoUpload');
   const file = fileInput.files[0];
@@ -172,54 +324,39 @@ async function adminUploadPhoto() {
 
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', 'vendor_upload'); // your Cloudinary preset
+
+  const type = document.getElementById('editType').value;
+  if (type === 'performer') {
+    formData.append('upload_preset', 'performer_upload');
+    formData.append('folder', 'performers');
+  } else {
+    formData.append('upload_preset', 'vendor_upload');
+    formData.append('folder', 'vendors');
+  }
 
   try {
     const response = await fetch('https://api.cloudinary.com/v1_1/dft7xclvh/image/upload', {
       method: 'POST',
       body: formData
     });
-    const result = await response.json();
 
+    const result = await response.json();
     if (!result.secure_url) {
       document.getElementById('uploadStatus').textContent = '❌ Upload failed.';
       return;
     }
 
-    document.getElementById('adminImagePreview').src = result.secure_url;
-    document.getElementById('adminImagePreview').style.display = 'block';
+    const preview = document.getElementById('adminImagePreview');
+    preview.src = result.secure_url;
+    preview.style.display = 'block';
+    preview.dataset.url = result.secure_url;
     document.getElementById('uploadStatus').textContent = '✅ Upload successful. Now save to database.';
-    document.getElementById('adminImagePreview').dataset.url = result.secure_url;
-
   } catch (error) {
-    document.getElementById('uploadStatus').textContent = '❌ Error: ' + error.message;
+    document.getElementById('uploadStatus').textContent = '❌ Upload error: ' + error.message;
   }
 }
 
-async function savePhotoToApplication() {
-  const appId = document.getElementById('applicationIdInput').value.trim();
-  const photoUrl = document.getElementById('adminImagePreview').dataset.url;
 
-  if (!appId || !photoUrl) {
-    alert('Missing Application ID or uploaded image.');
-    return;
-  }
-
-  const { error } = await supabase
-    .from('vendor_performer_applications')
-    .update({
-      photo_url: photoUrl,
-      update_pending: true
-    })
-    .eq('id', appId);
-
-  if (error) {
-    document.getElementById('uploadStatus').textContent = '❌ Error saving photo.';
-  } else {
-    document.getElementById('uploadStatus').textContent = '✅ Photo saved successfully!';
-    setTimeout(() => location.reload(), 1500);
-  }
-}
 // Drag and Drop Upload Handling
 const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('adminPhotoUpload');
@@ -289,6 +426,12 @@ const { count: updateApplicationCount } = await supabase
   .select('*', { count: 'exact', head: true })
   .eq('update_pending', true);
 
+
+  const { count: updateLogCount } = await supabase
+  .from('application_update_log')
+  .select('*', { count: 'exact', head: true })
+  .eq('seen', false);
+
 // Now set all the text like before
 document.getElementById('vendorCount').innerText = vendorCount ?? 0;
 document.getElementById('performerCount').innerText = performerCount ?? 0;
@@ -305,9 +448,56 @@ document.getElementById('updateApplicationCount').innerText = updateApplicationC
       await supabase.auth.signOut();
       window.location.href = '/';
     }
+    async function saveApplicationEdits() {
+  const appId = document.getElementById('applicationIdInput').value;
+  const name = document.getElementById('editName').value.trim();
+  const tier = document.getElementById('editTier').value.trim();
+  const type = document.getElementById('editType').value;
+
+  const response = await supabase
+  .from('vendor_performer_applications')
+  .update({
+    photo_url: photoUrl,
+    update_pending: true
+  })
+  .eq('id', parseInt(appId));
+
+console.log("🛠️ Supabase update response:", response);
+
+if (response.error) {
+  console.error('❌ Supabase error:', response.error);
+  document.getElementById('uploadStatus').textContent = '❌ Error saving photo.';
+} else {
+  console.log('✅ Supabase photo_url updated!');
+  console.log('📸 Saved photo_url in Supabase:', photoUrl);
+  document.getElementById('uploadStatus').textContent = '✅ Photo saved successfully!';
+  localStorage.setItem('selectedApplicationId', appId);
+  console.log("✅ Reloading with saved application ID:", appId);
+  setTimeout(() => window.location.reload(), 3000);
+}
+
+
+  if (error) {
+    alert('❌ Failed to save changes.');
+  } else {
+    alert('✅ Application updated successfully!');
+  }
+}
 
     // Load summary when page starts
     showPendingCounts();
+    window.addEventListener('DOMContentLoaded', async () => {
+  const savedId = localStorage.getItem('selectedApplicationId');
+  await searchApplications(); // ensure options are loaded first
+  if (savedId) {
+    document.getElementById('applicationIdInput').value = savedId;
+    document.getElementById('applicationDropdown').value = savedId;
+    document.getElementById('applicationDropdown').dispatchEvent(new Event('change'));
+    localStorage.removeItem('selectedApplicationId');
+  }
+});
+
+
   </script>
 </body>
 </html>

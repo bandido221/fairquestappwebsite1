@@ -239,31 +239,29 @@ if (!prefill) fairSearchCount++;
       }
       originalApp = app;
 
-      ['name','description','photoUrl','vendorType','contactName','contactEmail']
-  .forEach(id=>{
-    const value =
-      id==='photoUrl'    ? app.photo_url :
-      id==='vendorType'  ? app.vendor_type :
-      app[id] || '';
-    document.getElementById(id).value = value;
+      document.getElementById('name').value = app.name || '';
+document.getElementById('description').value = app.description || '';
+document.getElementById('photoUrl').value = app.photo_url || '';
+document.getElementById('vendorType').value = app.vendor_type || '';
+document.getElementById('contactName').value = app.contact_name || '';
+document.getElementById('contactEmail').value = app.contact_email || '';
 
-    // ✅ If photoUrl, also show preview image
-    if (id === 'photoUrl') {
-      const img = document.getElementById('imagePreview');
-      const controls = document.getElementById('imageControls');
-      const upload = document.getElementById('photoUpload');
-      controls.style.display = 'block';
-      if (value) {
-        img.src = value;
-        img.style.display = 'block';
-        upload.disabled = true;
-      } else {
-        img.src = '';
-        img.style.display = 'none';
-        upload.disabled = false;
-      }
-    }
-  });
+const img = document.getElementById('imagePreview');
+const controls = document.getElementById('imageControls');
+const upload = document.getElementById('photoUpload');
+
+controls.style.display = 'block';
+if (app.photo_url && app.photo_url.trim() !== '') {
+  img.src = app.photo_url;
+  img.style.display = 'block';
+  upload.disabled = true;
+} else {
+  document.getElementById('photoUrl').value = '';
+  img.src = '';
+  img.style.display = 'none';
+  upload.disabled = false;
+}
+
 
 
       // get known fairs
@@ -360,6 +358,34 @@ if (!prefill) fairSearchCount++;
     update_pending: true
   })
   .eq('id', originalApp.id);
+  const updatedFields = {
+  name:         document.getElementById('name').value,
+  description:  document.getElementById('description').value,
+  photo_url:    document.getElementById('photoUrl').value,
+  vendor_type:  document.getElementById('vendorType').value,
+  contact_name: document.getElementById('contactName').value,
+  contact_email: document.getElementById('contactEmail').value
+};
+
+const logs = [];
+for (const field in updatedFields) {
+  const newVal = updatedFields[field] || '';
+  const oldVal = originalApp[field] || '';
+  if (newVal !== oldVal) {
+    logs.push({
+      application_id: originalApp.id,
+      application_type: 'vendor',
+      updated_by: originalApp.user_id,
+      field_name: field,
+      old_value: oldVal,
+      new_value: newVal
+    });
+  }
+}
+
+if (logs.length) {
+  await supabase.from('application_update_log').insert(logs);
+}
 
 
   // Delete removed fairs
@@ -396,21 +422,32 @@ if (!prefill) fairSearchCount++;
 
   // Now insert the CURRENT fairs
   const curr = getCurrentFairs();
-  const known = curr.filter(c => !c.id.startsWith('manual_')).map(c => ({
-    application_id: originalApp.id,
-    fair_id: Number(c.id),
-    start_date: c.start,
-    end_date: c.end
-  }));
 
-  const manual = curr.filter(c => c.id.startsWith('manual_')).map(c => ({
-    application_id: originalApp.id,
-    fair_name: c.name,
-    start_date: c.start,
-    end_date: c.end,
-    notes: 'Manually entered',
-    application_type: 'vendor'
-  }));
+// 🔒 Deduplicate by fair_id + start_date + end_date
+const uniqueKeys = new Set();
+const uniqueFairs = curr.filter(f => {
+  const key = `${f.id}_${f.start}_${f.end}`;
+  if (uniqueKeys.has(key)) return false;
+  uniqueKeys.add(key);
+  return true;
+});
+
+const known = uniqueFairs.filter(c => !c.id.startsWith('manual_')).map(c => ({
+  application_id: originalApp.id,
+  fair_id: Number(c.id),
+  start_date: c.start,
+  end_date: c.end
+}));
+
+const manual = uniqueFairs.filter(c => c.id.startsWith('manual_')).map(c => ({
+  application_id: originalApp.id,
+  fair_name: c.name,
+  start_date: c.start,
+  end_date: c.end,
+  notes: 'Manually entered',
+  application_type: 'vendor'
+}));
+
 
   if (known.length) await supabase.from('vendor_application_fairs').insert(known);
   if (manual.length) await supabase.from('suggested_fairs').insert(manual);

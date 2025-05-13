@@ -56,6 +56,13 @@
       font-weight: bold;
       margin-top: 10px;
     }
+    .performer-card img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
 
     .approved { color: green; }
     .pending { color: orange; }
@@ -116,12 +123,13 @@
       const { data, error } = await supabase
         .from('vendor_performer_applications')
         .select(`
-          id, name, description, approval_status,
-          vendor_application_fairs (
-            start_date, end_date,
-            renaissance_fairs (name, state)
-          )
-        `)
+  id, name, description, approval_status, photo_url,
+  vendor_application_fairs (
+    start_date, end_date,
+    renaissance_fairs (name, state)
+  )
+`)
+
         .eq('application_type', true); // Only performers
 
       if (error || !data) {
@@ -183,13 +191,15 @@
                               : performer.approval_status === 'pending' ? 'pending'
                               : 'declined';
 
-        container.innerHTML += `
-          <div class="performer-card">
-            <h2>${performer.name}</h2>
-            <p><strong>Description:</strong> ${performer.description || 'No description'}</p>
-            <p class="status ${statusClass}">Status: ${performer.approval_status.toUpperCase()}</p>
-          </div>
-        `;
+                              container.innerHTML += `
+  <div class="performer-card">
+    <h2>${performer.name}</h2>
+    ${performer.photo_url ? `<img src="${performer.photo_url}" alt="${performer.name}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}
+    <p><strong>Description:</strong> ${performer.description || 'No description'}</p>
+    <p class="status ${statusClass}">Status: ${performer.approval_status.toUpperCase()}</p>
+  </div>
+`;
+
       });
 
       if (container.innerHTML.trim() === '') {

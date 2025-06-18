@@ -64,13 +64,17 @@
 
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Password" />
+    <input type="checkbox" id="showPassword" /> Show Password
 
     <div class="button-row">
       <button class="signin" onclick="signIn()">Sign In</button>
       <button class="signup" onclick="signUp()">Sign Up</button>
     </div>
 
+    <button class="google-signin" onclick="signInWithGoogle()">Sign In with Google</button>
+
     <p id="authMessage" class="msg"></p>
+    <a href="reset_password.html" style="color: #5b2a86;">Forgot Password?</a>
   </div>
 
   <script>
@@ -80,69 +84,88 @@
     );
 
     async function signIn() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const message = document.getElementById('authMessage');
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const message = document.getElementById('authMessage');
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-  if (error) {
-    message.textContent = `❌ ${error.message}`;
-  } else {
-    message.textContent = '✅ Login successful! Redirecting...';
-    
-    // 🆕 Insert a log saying the user signed in
-    if (data?.user?.id) {
-      await insertUserLog(data.user.id, 'user', 'sign_in', 'User signed in.');
+      if (error) {
+        message.textContent = `❌ ${error.message}`;
+      } else {
+        message.textContent = '✅ Login successful! Redirecting...';
+        
+        if (data?.user?.id) {
+          await insertUserLog(data.user.id, 'user', 'sign_in', 'User signed in.');
+        }
+
+        setTimeout(() => {
+          window.location.href = '/index.html';
+        }, 1500);
+      }
     }
-
-    setTimeout(() => {
-      window.location.href = '/index.html';
-    }, 1500);
-  }
-}
-
 
     async function signUp() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const message = document.getElementById('authMessage');
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const message = document.getElementById('authMessage');
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password
-  });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
 
-  if (error) {
-    message.textContent = `❌ ${error.message}`;
-  } else {
-    message.textContent = '✅ Sign up successful! Please check your email to confirm.';
-    
-    // 🆕 Insert a log saying the user signed up
-    if (data?.user?.id) {
-      await insertUserLog(data.user.id, 'user', 'sign_up', 'User signed up.');
+      if (error) {
+        message.textContent = `❌ ${error.message}`;
+      } else {
+        message.textContent = '✅ Sign up successful! Please check your email to confirm.';
+        
+        if (data?.user?.id) {
+          await insertUserLog(data.user.id, 'user', 'sign_up', 'User signed up.');
+        }
+      }
     }
-  }
-}
 
-    async function insertUserLog(userId, userType, actionType, description) {
-  const { error } = await supabase.from('user_logs').insert({
-    user_id: userId,
-    user_type: userType,
-    action_type: actionType,
-    description: description
-  });
+    async function signInWithGoogle() {
+      const { user, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
 
-  if (error) {
-    console.error('Error inserting user log:', error.message);
-  } else {
-    console.log('✅ User action logged successfully');
-  }
-}
+      if (error) {
+        document.getElementById('authMessage').textContent = `❌ ${error.message}`;
+      } else {
+        document.getElementById('authMessage').textContent = '✅ Login successful! Redirecting...';
 
+        if (user?.id) {
+          await insertUserLog(user.id, 'user', 'google_sign_in', 'User signed in with Google.');
+        }
+
+        setTimeout(() => {
+          window.location.href = '/index.html';
+        }, 1500);
+      }
+    }
+
+    function insertUserLog(userId, userType, actionType, description) {
+      supabase.from('user_logs').insert({
+        user_id: userId,
+        user_type: userType,
+        action_type: actionType,
+        description: description
+      });
+    }
+
+    document.getElementById('showPassword').addEventListener('change', function() {
+      const passwordField = document.getElementById('password');
+      if (this.checked) {
+        passwordField.type = 'text';
+      } else {
+        passwordField.type = 'password';
+      }
+    });
   </script>
 </body>
 </html>

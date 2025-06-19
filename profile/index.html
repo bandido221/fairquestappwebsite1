@@ -140,9 +140,13 @@ function goToSettings() {
     .single();
 
   if (error || !data) {
-    document.getElementById('profileCard').innerHTML = '<p>⚠️ Profile not found.</p>';
-    return;
-  }
+  document.getElementById('profileCard').innerHTML = `
+    <p>⚠️ We couldn’t find your FairQuest profile.</p>
+    <p>Please make sure you’ve created your profile in the FairQuest app.</p>
+  `;
+  return;
+}
+
 
   document.getElementById('profileCard').innerHTML = `
     <a href="/home.html">

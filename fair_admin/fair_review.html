@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fair Review | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 20px;
+    }
+    .review-card {
+      background: rgba(241, 223, 153, 0.88);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 20px auto;
+      max-width: 700px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+    .input-field {
+      width: 100%;
+      max-width: 600px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .button {
+      margin-top: 20px;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .button:hover {
+      background-color: #45a049;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      color: #bb9457;
+      font-weight: bold;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Review Fair Updates</h1>
+
+  <div class="review-card" id="fairReviewCard">
+    <h2>Fair Information Preview</h2>
+
+    <div id="fairInfoPreview">
+      <!-- Fair info will be populated here -->
+    </div>
+
+    <button class="button" onclick="confirmUpdate()">Confirm Updates</button>
+    <button class="button" onclick="cancelUpdate()">Cancel</button>
+  </div>
+
+  <a href="/index.html" class="back-link">🏡 Back to Home</a>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    // Get the updated fair data from sessionStorage
+    const updatedFairData = JSON.parse(sessionStorage.getItem('updatedFairData'));
+
+    // Display the fair information preview
+    function displayFairPreview() {
+      if (!updatedFairData) {
+        console.error("No fair data found in sessionStorage.");
+        alert("Fair data could not be loaded. Please try again.");
+        return;
+      }
+
+      // Display fair data from sessionStorage
+      const fairPreview = `
+        <p><strong>Fair Name:</strong> ${updatedFairData.name || 'No data'}</p>
+        <p><strong>Address:</strong> ${updatedFairData.address || 'No data'}</p>
+        <p><strong>City:</strong> ${updatedFairData.city || 'No data'}</p>
+        <p><strong>State:</strong> ${updatedFairData.state || 'No data'}</p>
+        <p><strong>Zip:</strong> ${updatedFairData.zip || 'No data'}</p>
+        <p><strong>Website:</strong> ${updatedFairData.website || 'No data'}</p>
+        <p><strong>Fair Image:</strong> 
+          <img src="${updatedFairData.fairImage || '/images/default_image.png'}" alt="Fair Image" style="max-width: 200px; max-height: 150px;">
+        </p>
+      `;
+
+      document.getElementById('fairInfoPreview').innerHTML = fairPreview;
+    }
+
+    // Confirm the update and send to the database
+    async function confirmUpdate() {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error("User not found");
+        return;
+      }
+
+      // Get fair_admin record for this user
+      const { data: adminData, error: adminError } = await supabase
+        .from('fair_admins')
+        .select('fair_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (adminError || !adminData) {
+        console.error("User is not an admin for any fair.");
+        return;
+      }
+
+      const fairId = adminData.fair_id;
+
+      const updateData = {};
+
+      // Only update the fields that have been changed
+      if (updatedFairData.name && updatedFairData.name !== updatedFairData.currentFairName) updateData.name = updatedFairData.name;
+      if (updatedFairData.address && updatedFairData.address !== updatedFairData.currentFairAddress) updateData.address = updatedFairData.address;
+      if (updatedFairData.city && updatedFairData.city !== updatedFairData.currentFairCity) updateData.city = updatedFairData.city;
+      if (updatedFairData.state && updatedFairData.state !== updatedFairData.currentFairState) updateData.state = updatedFairData.state;
+      if (updatedFairData.zip && updatedFairData.zip !== updatedFairData.currentFairZip) updateData.zip = updatedFairData.zip;
+      if (updatedFairData.website && updatedFairData.website !== updatedFairData.currentFairWebsite) updateData.website = updatedFairData.website;
+
+      if (updatedFairData.fairImage && updatedFairData.fairImage !== updatedFairData.currentFairImage) {
+        const { data: uploadedImage, error: imageError } = await supabase.storage
+          .from('fair_images')
+          .upload(`public/${updatedFairData.fairImage.name}`, updatedFairData.fairImage);
+
+        if (imageError) {
+          console.error('Error uploading image:', imageError);
+        } else {
+          updateData.image_url = uploadedImage.path;
+        }
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        alert("No changes detected. No updates will be made.");
+        return; // No changes, so do nothing
+      }
+
+      const { data, error } = await supabase
+        .from('renaissance_fairs')
+        .update(updateData)
+        .eq('id', fairId);
+
+      if (error) {
+        console.error('Error updating fair:', error);
+      } else {
+        alert('Fair updated successfully!');
+        sessionStorage.removeItem('updatedFairData');
+        window.location.href = '/index.html'; // Redirect to home or another page
+      }
+    }
+
+    // Cancel the update and go back to the update page
+    function cancelUpdate() {
+      window.location.href = '/fair_admin/fair_review.html'; // Redirect to update fair page
+    }
+
+    // Display the preview data when the page loads
+    window.onload = displayFairPreview;
+  </script>
+
+</body>
+</html>

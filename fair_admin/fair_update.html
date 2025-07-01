@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Update Fair | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 20px;
+    }
+    .profile-card, .fair-info-card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 20px auto;
+      max-width: 700px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+    .input-field {
+      width: 100%;
+      max-width: 600px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .button {
+      margin-top: 20px;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .button:hover {
+      background-color: #45a049;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      color: #bb9457;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    /* Single column layout for fields */
+    .fair-info-card .fair-info {
+      display: block;
+      margin-bottom: 20px;
+    }
+
+    /* Styling for Labels */
+    .fair-info-card .fair-info label {
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    /* Styling for Info */
+    .fair-info-card .fair-info .info {
+      margin-bottom: 10px;
+    }
+
+    /* Input fields */
+    .input-field {
+      margin-top: 10px;
+      padding: 10px;
+      width: 100%;
+      max-width: 600px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+  </style>
+</head>
+<body>
+
+  <h1>Update Fair Information</h1>
+
+  <!-- Fair Information -->
+  <div class="fair-info-card" id="fairInfo">
+    <h2>Current Fair Information</h2>
+    <div class="fair-info">
+      <!-- Fair Name (Editable) -->
+      <label for="currentFairName">Fair Name:</label>
+      <div class="info" id="currentFairName">Loading...</div>
+      <input type="text" id="newFairName" class="input-field" placeholder="Enter new fair name">
+
+      <!-- Fair Address (Editable) -->
+      <label for="currentFairAddress">Address:</label>
+      <div class="info" id="currentFairAddress">Loading...</div>
+      <input type="text" id="newFairAddress" class="input-field" placeholder="Enter new address">
+
+      <!-- Fair City (Editable) -->
+      <label for="currentFairCity">City:</label>
+      <div class="info" id="currentFairCity">Loading...</div>
+      <input type="text" id="newFairCity" class="input-field" placeholder="Enter new city">
+
+      <!-- Fair State (Editable) -->
+      <label for="currentFairState">State:</label>
+      <div class="info" id="currentFairState">Loading...</div>
+      <input type="text" id="newFairState" class="input-field" placeholder="Enter new state">
+
+      <!-- Fair Zip (Editable) -->
+      <label for="currentFairZip">Zip:</label>
+      <div class="info" id="currentFairZip">Loading...</div>
+      <input type="text" id="newFairZip" class="input-field" placeholder="Enter new zip">
+
+      <!-- Fair Website (Editable) -->
+      <label for="currentFairWebsite">Website:</label>
+      <div class="info" id="currentFairWebsite">Loading...</div>
+      <input type="text" id="newFairWebsite" class="input-field" placeholder="Enter new website">
+
+      <!-- Fair Image URL (Editable) -->
+      <label for="currentFairImage">Fair Image URL:</label>
+      <div class="info" id="currentFairImage">Loading...</div>
+      <input type="text" id="newFairImageURL" class="input-field" placeholder="Enter new image URL">
+
+    </div>
+
+    <!-- Update Button (Redirect to Review Page) -->
+    <button class="button" onclick="redirectToReview()">Proceed to Review</button>
+  </div>
+
+  <a href="/index.html" class="back-link">🏡 Back to Home</a>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    // Load fair admin dashboard
+    async function loadAdminDashboard() {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error("User not found");
+        return;
+      }
+
+      // Get fair_admin record for this user
+      const { data: adminData, error: adminError } = await supabase
+        .from('fair_admins')
+        .select('fair_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (adminError || !adminData) {
+        console.error("User is not an admin for any fair.");
+        return;
+      }
+
+      const fairId = adminData.fair_id;
+
+      // Fetch fair info from renaissance_fairs table
+      const { data: fairData, error: fairError } = await supabase
+        .from('renaissance_fairs')
+        .select('*')
+        .eq('id', fairId)
+        .single();
+
+      if (fairError || !fairData) {
+        console.error("Fair not found or error fetching fair details.");
+        return;
+      }
+
+      // Populate current fair information
+      document.getElementById('currentFairName').textContent = `${fairData.name || 'N/A'}`;
+      document.getElementById('currentFairAddress').textContent = `${fairData.address || 'N/A'}`;
+      document.getElementById('currentFairCity').textContent = `${fairData.city || 'N/A'}`;
+      document.getElementById('currentFairState').textContent = `${fairData.state || 'N/A'}`;
+      document.getElementById('currentFairZip').textContent = `${fairData.zip || 'N/A'}`;
+      document.getElementById('currentFairWebsite').textContent = `${fairData.website || 'N/A'}`;
+      document.getElementById('currentFairImage').innerHTML = `<img src="${fairData.image_url || '/images/default_image.png'}" alt="Fair Image">`;
+    }
+
+    // Proceed to review page and store updated fair data in sessionStorage
+function redirectToReview() {
+  // Get fair image URL (use the existing one if no new URL is provided)
+  const fairImageURL = document.getElementById('newFairImageURL').value.trim() || document.getElementById('currentFairImage').textContent.trim();
+
+  // Log the fair image URL for debugging
+  console.log("Fair Image URL being passed:", fairImageURL);
+
+  const updatedFairData = {
+    name: document.getElementById('newFairName').value || document.getElementById('currentFairName').textContent,
+    address: document.getElementById('newFairAddress').value || document.getElementById('currentFairAddress').textContent,
+    city: document.getElementById('newFairCity').value || document.getElementById('currentFairCity').textContent,
+    state: document.getElementById('newFairState').value || document.getElementById('currentFairState').textContent,
+    zip: document.getElementById('newFairZip').value || document.getElementById('currentFairZip').textContent,
+    website: document.getElementById('newFairWebsite').value || document.getElementById('currentFairWebsite').textContent,
+    fairImage: fairImageURL,  // Use the existing or updated image URL
+  };
+
+  console.log("Updated Fair Data:", updatedFairData);  // Log the entire data for debugging
+
+  // Store the fair data to be reviewed
+  sessionStorage.setItem('updatedFairData', JSON.stringify(updatedFairData));
+
+  // Redirect to review page
+  window.location.href = 'fair_review.html';
+}
+
+
+
+    loadAdminDashboard();
+  </script>
+
+</body>
+</html>

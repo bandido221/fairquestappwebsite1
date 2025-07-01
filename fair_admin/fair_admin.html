@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fair Admin Dashboard | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 20px;
+    }
+    .profile-card, .fair-info-card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 20px auto;
+      max-width: 700px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+    .profile-logo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 60px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .profile-card img.profile-img, .fair-info-card img {
+      max-width: 120px;   /* Adjust size for profile image */
+      max-height: 120px;  /* Adjust size for profile image */
+      border-radius: 50%; /* Circular shape for profile image */
+      margin: 0 auto 15px auto;
+      display: block;
+    }
+    .fair-info-card img {
+      max-width: 100%;
+      max-height: 300px;  /* Adjust size for fair image */
+      margin: 0 auto 15px auto;
+      display: block;
+      border-radius: 0;
+    }
+    .profile-card p, .fair-info-card p {
+      margin: 8px 0;
+    }
+    .settings-button, .update-fair-button {
+      margin-top: 20px;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .settings-button:hover, .update-fair-button:hover {
+      background-color: #45a049;
+    }
+    a.back-link {
+      display: inline-block;
+      margin-top: 30px;
+      color: #bb9457;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    /* Layout for Profile and Fair Information */
+    .profile-card .profile-info, .fair-info-card .fair-info {
+      display: grid;
+      grid-template-columns: 1fr 2fr; /* 1/3 for labels and 2/3 for data */
+      grid-gap: 5px;
+    }
+    
+    /* Styling for Labels */
+    .profile-card .profile-info label, .fair-info-card .fair-info label {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    /* Styling for Info */
+    .profile-card .profile-info .info, .fair-info-card .fair-info .info {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Welcome to Your Admin Dashboard</h1>
+
+  <!-- Profile Card -->
+  <div class="profile-card" id="profileCard">
+    <a href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+    </a>
+    Loading profile...
+  </div>
+
+  <!-- Fair Information -->
+  <div class="fair-info-card" id="fairInfo">
+    <h2>Fair Information</h2>
+    <div class="fair-info">
+
+      <label for="fairImage">Fair Image:</label>
+      <div class="info" id="fairImage">Loading...</div>
+
+      <label for="fairWeekends">Weekend Dates:</label>
+      <div class="info" id="fairWeekends">Loading...</div>
+      
+      <label for="fairName">Fair Name:</label>
+      <div class="info" id="fairName">Loading...</div>
+
+      <label for="fairAddress">Address:</label>
+      <div class="info" id="fairAddress">Loading...</div>
+
+      <label for="fairCity">City:</label>
+      <div class="info" id="fairCity">Loading...</div>
+
+      <label for="fairState">State:</label>
+      <div class="info" id="fairState">Loading...</div>
+
+      <label for="fairZip">Zip:</label>
+      <div class="info" id="fairZip">Loading...</div>
+
+      <label for="fairWebsite">Website:</label>
+      <div class="info" id="fairWebsite">Loading...</div>
+
+      <label for="fairLevel">Level:</label>
+      <div class="info" id="fairLevel">Loading...</div>
+    </div>
+
+    <!-- Update Fair Button -->
+    <button class="update-fair-button" onclick="window.location.href='/update_fair.html'">Update Fair</button>
+  </div>
+
+  <a href="/index.html" class="back-link">🏡 Back to Home</a>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    async function loadAdminDashboard() {
+      // Get the logged-in user's information
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error("User not found");
+        return;
+      }
+
+      // Call loadProfile() to fetch and display the user's profile
+      await loadProfile(user.id);
+
+      // Get fair_admin record for this user
+      const { data: adminData, error: adminError } = await supabase
+        .from('fair_admins')
+        .select('fair_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (adminError || !adminData) {
+        console.error("User is not an admin for any fair.");
+        return;
+      }
+
+      const fairId = adminData.fair_id;
+
+      // Fetch fair info from renaissance_fairs table
+      const { data: fairData, error: fairError } = await supabase
+        .from('renaissance_fairs')
+        .select('*')
+        .eq('id', fairId)
+        .single();
+
+      if (fairError || !fairData) {
+        console.error("Fair not found or error fetching fair details.");
+        return;
+      }
+
+      // Image URL or message if null
+      const imageMessage = fairData.image_url ? `<img src="${fairData.image_url}" alt="Fair Image" />` : 'Please add an image for the fair.';
+      document.getElementById('fairImage').innerHTML = ` ${imageMessage}`;
+
+      // Populate fair information on the page
+      document.getElementById('fairName').textContent = `Fair Name: ${fairData.name || 'N/A'}`;
+      document.getElementById('fairAddress').textContent = `Address: ${fairData.address || 'N/A'}`;
+      document.getElementById('fairCity').textContent = `City: ${fairData.city || 'N/A'}`;
+      document.getElementById('fairState').textContent = `State: ${fairData.state || 'N/A'}`;
+      document.getElementById('fairZip').textContent = `Zip: ${fairData.zip || 'N/A'}`;
+
+      // Weekends
+      let weekendsMessage = '';
+      for (let i = 1; i <= 10; i++) {
+        if (fairData[`week${i}_start_date`] && fairData[`week${i}_end_date`]) {
+          weekendsMessage += `Week ${i}: ${new Date(fairData[`week${i}_start_date`]).toLocaleDateString()} to ${new Date(fairData[`week${i}_end_date`]).toLocaleDateString()}<br>`;
+        }
+      }
+      document.getElementById('fairWeekends').innerHTML = weekendsMessage || 'No weekends scheduled.';
+
+      // Website
+      document.getElementById('fairWebsite').textContent = `Website: ${fairData.website || 'N/A'}`;
+
+      // Fair Admin Level
+      document.getElementById('fairLevel').textContent = `Level: ${fairData.fair_admin_level || 'N/A'}`;
+    }
+
+    async function loadProfile(userId) {
+      const { data, error } = await supabase
+        .from('app_users')
+        .select('username, email, profile_image_url, created_at')
+        .eq('id', userId)
+        .single();
+
+      if (error || !data) {
+        document.getElementById('profileCard').innerHTML = `
+          <p>⚠️ We couldn’t find your FairQuest profile.</p>
+          <p>Please make sure you’ve created your profile in the FairQuest app.</p>
+        `;
+        console.error("Error fetching profile data:", error);
+        return;
+      }
+
+      // Update profile card with the fetched data
+      document.getElementById('profileCard').innerHTML = `
+        <a href="/home.html">
+          <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+        </a>
+        ${data.profile_image_url ? `<img src="${data.profile_image_url}" alt="Profile Picture" class="profile-img" />` : ''}
+        <p><strong>Username:</strong> ${data.username || '(Not Set)'}</p>
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Member Since:</strong> ${new Date(data.created_at).toLocaleDateString()}</p>
+      `;
+    }
+
+    loadAdminDashboard();
+  </script>
+
+</body>
+</html>

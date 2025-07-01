@@ -98,10 +98,10 @@
   </div>
 
   <div id="profileButtons">
-    <button class="settings-button" onclick="goToSettings()">⚙️ Settings</button>
+    <button class="settings-button" onclick="goToSettings()">⚙️Settings</button>
   </div>
   
-  <a href="/index.html" class="back-link">🏡 Back to Home</a>
+  <a href="/index.html" class="back-link">🏡Back to Home</a>
   <a href="/delet_account.html" class="back-link" style="color: red; display: inline-block; margin-top: 20px;">
     🗑️ Delete My Account
   </a>
@@ -117,6 +117,7 @@
   </div>
 
   <script>
+    console.log("Script loaded successfully");
     const supabase = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
@@ -125,8 +126,9 @@ function goToSettings() {
   window.location.href = 'settings.html'; 
 }
 
-    async function loadProfile() {
+   async function loadProfile() {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
+  console.log('Logged-in user:', user);  // Log user data
 
   if (userError || !user) {
     document.getElementById('profileCard').innerHTML = '<p>⚠️ Failed to load user info.</p>';
@@ -140,13 +142,12 @@ function goToSettings() {
     .single();
 
   if (error || !data) {
-  document.getElementById('profileCard').innerHTML = `
-    <p>⚠️ We couldn’t find your FairQuest profile.</p>
-    <p>Please make sure you’ve created your profile in the FairQuest app.</p>
-  `;
-  return;
-}
-
+    document.getElementById('profileCard').innerHTML = `
+      <p>⚠️ We couldn’t find your FairQuest profile.</p>
+      <p>Please make sure you’ve created your profile in the FairQuest app.</p>
+    `;
+    return;
+  }
 
   document.getElementById('profileCard').innerHTML = `
     <a href="/home.html">
@@ -163,7 +164,28 @@ function goToSettings() {
     <p><strong>Alignment:</strong> ${data.character_alignment || '(None)'}</p>
     <p><strong>Member Since:</strong> ${new Date(data.created_at).toLocaleDateString()}</p>
   `;
+
+  // Check if the user is an admin
+  const { data: adminData, error: adminError } = await supabase
+    .from('fair_admins')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .single();
+
+ if (adminError || !adminData) {
+  console.log("User is not an admin");
+} else {
+  // User is an admin, show the button
+  const adminButton = document.createElement('button');
+  adminButton.className = 'settings-button';
+  adminButton.innerHTML = '⚙️Admin Dashboard';
+  adminButton.onclick = () => window.location.href = '/fair_admin/fair_admin.html';
+  adminButton.style.marginTop = '10px';  // Add space between the buttons
+  document.getElementById('profileButtons').appendChild(adminButton);
 }
+
+}
+
     async function loadDashboardButtons() {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) return;
@@ -267,6 +289,7 @@ function formatUpdateMessage(message) {
     </ul>
   `;
 }
+
 
 
 

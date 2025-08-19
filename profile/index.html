@@ -201,36 +201,48 @@ function goToSettings() {
 
   const profileButtons = document.getElementById('profileButtons');
 
-  let hasVendor = false;
-  let hasPerformer = false;
+ let hasVendor = false;
+let hasPerformer = false;
+let isFoodVendor = false;
 
-  data.forEach(app => {
-    if (app.application_type === true) {
-      hasPerformer = true;
-    } else {
-      hasVendor = true;
+data.forEach(app => {
+  if (app.application_type === true) {
+    hasPerformer = true;
+  } else {
+    hasVendor = true;
+    if (app.is_food_vendor === true) {
+      isFoodVendor = true;
     }
-  });
-
-  if (hasVendor) {
-    const vendorBtn = document.createElement('button');
-    vendorBtn.className = 'settings-button';
-    vendorBtn.style.marginLeft = '10px';
-    vendorBtn.innerHTML = '🧺 Vendor Dashboard';
-    vendorBtn.onclick = () => window.location.href = '/vendor_performer/vendor/index.html';
-    profileButtons.appendChild(vendorBtn);
   }
+});
 
-  if (hasPerformer) {
-    const performerBtn = document.createElement('button');
-    performerBtn.className = 'settings-button';
-    performerBtn.style.marginLeft = '10px';
-    performerBtn.innerHTML = '🎭 Performer Dashboard';
-    performerBtn.onclick = () => window.location.href = '/vendor_performer/performer/index.html';
-    profileButtons.appendChild(performerBtn);
-  }
+if (hasVendor) {
+  const vendorBtn = document.createElement('button');
+  vendorBtn.className = 'settings-button';
+  vendorBtn.style.marginLeft = '10px';
+  vendorBtn.innerHTML = '🧺 Vendor Dashboard';
+  vendorBtn.onclick = () => window.location.href = '/vendor_performer/vendor/index.html';
+  profileButtons.appendChild(vendorBtn);
 }
 
+if (hasPerformer) {
+  const performerBtn = document.createElement('button');
+  performerBtn.className = 'settings-button';
+  performerBtn.style.marginLeft = '10px';
+  performerBtn.innerHTML = '🎭 Performer Dashboard';
+  performerBtn.onclick = () => window.location.href = '/vendor_performer/performer/index.html';
+  profileButtons.appendChild(performerBtn);
+}
+
+if (isFoodVendor) {
+  const foodBtn = document.createElement('button');
+  foodBtn.className = 'settings-button';
+  foodBtn.style.marginLeft = '10px';
+  foodBtn.innerHTML = '🍔 Manage Food Vendor';
+  foodBtn.onclick = () => window.location.href = '/food_vendor/index.html';
+  profileButtons.appendChild(foodBtn);
+}
+    }
 
 async function loadUpdates() {
   const { data: { user }, error: userError } = await supabase.auth.getUser();

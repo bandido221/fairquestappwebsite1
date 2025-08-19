@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add New Menu Item</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> <!-- ✅ Supabase library -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #000;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      text-align: center;
+      padding: 40px;
+    }
+    h2 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: rgba(251, 241, 200, 0.88);
+      color: #3b1f1f;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 600px;
+      margin: 0 auto;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      text-align: left;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 12px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .nav-buttons {
+      margin-top: 20px;
+    }
+    .nav-buttons a {
+      margin: 0 10px;
+      color: #f0e6d2;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .error {
+      color: red;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Add New Menu Item</h2>
+
+  <div class="card">
+    <form id="addItemForm">
+      <div id="errorMsg" class="error"></div>
+
+      <label>Item Name:</label>
+      <input type="text" name="name" required>
+
+      <label>Description:</label>
+      <textarea name="description" required></textarea>
+
+      <label>Price ($):</label>
+      <input type="number" name="price" required>
+
+      <label>Type (e.g., Food or Drink):</label>
+      <input type="text" name="type" required>
+
+      <label>Available:</label>
+      <select name="available">
+        <option value="true">Yes</option>
+        <option value="false">No</option>
+      </select>
+
+      <label>Image:</label><br>
+      <button type="button" onclick="openUploadWidget()">Upload Image</button><br><br>
+      <img id="previewImage" style="display:none; max-width: 200px; border-radius: 12px;" /><br><br>
+      <input type="hidden" name="image_url" id="imageUrl" />
+
+      <button type="submit">Submit Item</button>
+    </form>
+  </div>
+
+  <div class="nav-buttons">
+    <a href="/food_vendor/index.html">🏠 Dashboard</a>
+    <a href="/profile/index.html">👤 Profile</a>
+  </div>
+
+  <script>
+    const cloudName = "dft7xclvh";
+    const uploadPreset = "food_vendor_uploads";
+
+    function openUploadWidget() {
+      cloudinary.openUploadWidget({
+        cloudName,
+        uploadPreset,
+        cropping: false,
+        multiple: false,
+        folder: "food_vendor",
+        sources: ['local', 'camera'],
+        clientAllowedFormats: ['jpg', 'jpeg', 'png'],
+        transformation: [
+          { width: 400, height: 400, crop: "limit", quality: "auto" }
+        ],
+        resourceType: 'image'
+      }, (error, result) => {
+        if (!error && result && result.event === "success") {
+          const url = result.info.secure_url;
+          document.getElementById("previewImage").src = url;
+          document.getElementById("previewImage").style.display = "block";
+          document.getElementById("imageUrl").value = url;
+        }
+      });
+    }
+
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    document.getElementById("addItemForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  const rawData = Object.fromEntries(formData.entries());
+
+  const errorMsg = document.getElementById("errorMsg");
+  errorMsg.textContent = "";
+
+  if (!rawData.name || !rawData.description || !rawData.price || !rawData.type) {
+  errorMsg.textContent = "Name, description, price, and type are required.";
+  return;
+}
+
+
+  const confirmation = confirm(
+    `Submit this item?\n\n` +
+    `Name: ${rawData.name}\n` +
+    `Description: ${rawData.description}\n` +
+    `Price: $${rawData.price}\n` +
+    `Type: ${rawData.type}\n` +
+    `Available: ${rawData.available}`
+  );
+
+  if (!confirmation) return;
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+if (userError || !user) {
+  errorMsg.textContent = "⚠️ User not logged in.";
+  return;
+}
+
+const { data: vendors, error: vendorError } = await supabase
+  .from('food_vendors')
+  .select('id')
+  .eq('approved', true)
+  .eq('user_id', user.id);
+
+if (vendorError || !vendors || vendors.length === 0) {
+  errorMsg.textContent = "❌ Approved vendor not found. Please wait for approval.";
+  return;
+}
+
+const food_vendor_id = vendors[0].id;
+
+
+  const mappedData = {
+    food_vendor_id: food_vendor_id,
+    item_name: rawData.name,
+    description: rawData.description,
+    price: parseFloat(rawData.price),
+    is_drink: rawData.type.toLowerCase() === "drink",
+    is_available: rawData.available === "true",
+    prep_time_minutes: 10,
+image_url: rawData.image_url || null
+  };
+
+  try {
+    const { error } = await supabase
+      .from("food_menu_items")
+      .insert([mappedData]);
+
+    if (error) throw error;
+
+    window.location.href = "/food_vendor/menu/menu.html";
+  } catch (err) {
+    errorMsg.textContent = err.message;
+  }
+});
+
+  </script>
+</body>
+</html>

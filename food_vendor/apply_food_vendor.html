@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Food Vendor Application | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background-color: #000;
+      padding: 40px;
+      text-align: center;
+      color: #f0e6d2;
+    }
+    h1, h2 { font-family: 'Cinzel', serif; }
+    .top-banner {
+      width: 100%; max-width: 600px;
+      margin: 0 auto 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      display: block;
+    }
+    .logo {
+      max-width: 80px;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      transition: transform 0.3s ease;
+      display: block;
+    }
+    .logo:hover { transform: scale(1.05); }
+    form {
+      max-width: 700px; margin: auto;
+      background: rgba(251,241,200,0.88);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      color: #3b1f1f;
+    }
+    label { margin-top: 12px; display: block; text-align: left; }
+    input, textarea, select {
+      width: 100%; padding: 10px; margin: 6px 0 12px;
+      border: 1px solid #aa8452; border-radius: 6px;
+      background-color: #fdf7e1; color: #3b1f1f;
+    }
+    #imagePreview {
+      margin-top: 10px;
+      max-height: 100px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .card-style {
+      background: rgba(251,241,200,0.88);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      margin-bottom: 30px;
+      color: #3b1f1f;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      font-size: 16px;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    #validationMessage {
+      color: red;
+      font-weight: bold;
+      margin-top: 12px;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+  <button onclick="location.href='/index.html'" style="
+  background-color: #444;
+  color: white;
+  font-size: 14px;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  cursor: pointer;">🏠 Back to Home</button>
+
+<h1>Food Vendor Application Form</h1>
+
+  <div class="card-style">
+    <form id="applicationForm">
+      <label for="name">Food Vendor Name: *</label>
+      <input type="text" id="name" required />
+
+      <label for="description">Food Type / Menu Summary (max 50 words): *</label>
+      <textarea id="description" required></textarea>
+
+      <label for="photoUpload">Upload Logo or Banner Photo:</label>
+      <input type="hidden" id="photoUrl" />
+      <input type="file" id="photoUpload" accept="image/*" />
+      <div id="photoPreviewContainer"></div>
+
+      <label for="vendorType">Vendor Category: *</label>
+      <select id="vendorType" required>
+        <option value="Food">Food</option>
+        <option value="Drink">Drink</option>
+        <option value="Dessert">Dessert</option>
+      </select>
+
+      <label for="contactName">Contact Person: *</label>
+      <input type="text" id="contactName" required />
+
+      <label for="contactEmail">Contact Email: *</label>
+      <input type="email" id="contactEmail" required />
+
+      <label for="website">Website or Menu Link (optional):</label>
+      <input type="url" id="website" />
+
+      <label for="comments">Additional Notes:</label>
+      <textarea id="comments"></textarea>
+
+      <div style="margin-top:20px; text-align:left;">
+        <label>
+          <input type="checkbox" id="termsCheckbox" />
+          I agree to the <a href="terms.html" target="_blank">Terms & Conditions</a> *
+        </label>
+      </div>
+
+      <button type="button" id="previewButton">Preview</button>
+      <p id="validationMessage"></p>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+const validationDiv = document.getElementById('validationMessage');
+validationDiv.innerText = ''; // clear before validation starts
+
+    function checkFormValidity() {
+      const requiredFields = ['name','description','vendorType','contactName','contactEmail'];
+      const isChecked = document.getElementById('termsCheckbox').checked;
+      const allFilled = requiredFields.every(id => document.getElementById(id).value.trim() !== '');
+      document.getElementById('previewButton').disabled = !(allFilled && isChecked);
+    }
+
+    document.getElementById('photoUpload').addEventListener('change', async () => {
+      const file = document.getElementById('photoUpload').files[0];
+      if (!file) return;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `food_vendor/${crypto.randomUUID()}.${fileExt}`;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'performer_upload');
+
+      const response = await fetch('https://api.cloudinary.com/v1_1/dft7xclvh/image/upload', {
+        method: 'POST', body: formData
+      });
+      const result = await response.json();
+      if (!result.secure_url) return;
+
+      document.getElementById('photoUrl').value = result.secure_url;
+
+      const preview = document.getElementById('photoPreviewContainer');
+      preview.innerHTML = `<img id="imagePreview" src="${result.secure_url}" alt="Preview" />`;
+    });
+
+    document.getElementById('applicationForm').addEventListener('input', checkFormValidity);
+    document.getElementById('termsCheckbox').addEventListener('change', checkFormValidity);
+
+   document.getElementById('previewButton').addEventListener('click', () => {
+  console.log('🔍 Preview button clicked');
+  const requiredFields = [
+    { id: 'name', label: 'Vendor Name' },
+    { id: 'description', label: 'Description' },
+    { id: 'vendorType', label: 'Vendor Category' },
+    { id: 'contactName', label: 'Contact Name' },
+    { id: 'contactEmail', label: 'Contact Email' }
+  ];
+
+  let errorMessages = [];
+
+  for (const field of requiredFields) {
+    const val = document.getElementById(field.id).value.trim();
+    if (!val) {
+      errorMessages.push(`❌ ${field.label} is required`);
+    }
+  }
+
+  const termsCheckbox = document.getElementById('termsCheckbox');
+if (!termsCheckbox || !termsCheckbox.checked) {
+  console.warn('❌ Terms not checked');
+  errorMessages.push('❌ You must agree to the Terms & Conditions');
+}
+
+
+  const nameError = document.getElementById('validationMessage').innerText;
+  if (nameError.includes('already in use')) {
+    errorMessages.push('❌ Vendor name already in use — choose another name');
+  }
+
+  const validationDiv = document.getElementById('validationMessage');
+  if (errorMessages.length > 0) {
+    console.warn('🛑 Validation errors:', errorMessages);
+    validationDiv.innerText = errorMessages.join('\n');
+    return;
+  }
+
+  console.log('✅ Validation passed, saving draft');
+
+  const draft = {
+    name: document.getElementById('name').value.trim(),
+    description: document.getElementById('description').value.trim(),
+    photoUrl: document.getElementById('photoUrl').value.trim(),
+    vendorType: document.getElementById('vendorType').value.trim(),
+    contactName: document.getElementById('contactName').value.trim(),
+    contactEmail: document.getElementById('contactEmail').value.trim(),
+    website: document.getElementById('website').value.trim(),
+    comments: document.getElementById('comments').value.trim()
+  };
+
+  localStorage.setItem('foodVendorAppDraft', JSON.stringify(draft));
+  window.location.href = 'review_food_vendor.html';
+});
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const draft = JSON.parse(localStorage.getItem('foodVendorAppDraft') || '{}');
+      if (!draft) return;
+
+      if (draft.name) document.getElementById('name').value = draft.name;
+      if (draft.description) document.getElementById('description').value = draft.description;
+      if (draft.photoUrl) {
+        document.getElementById('photoUrl').value = draft.photoUrl;
+        const preview = document.getElementById('photoPreviewContainer');
+        preview.innerHTML = `<img id="imagePreview" src="${draft.photoUrl}" alt="Preview" />`;
+      }
+      if (draft.vendorType) document.getElementById('vendorType').value = draft.vendorType;
+      if (draft.contactName) document.getElementById('contactName').value = draft.contactName;
+      if (draft.contactEmail) document.getElementById('contactEmail').value = draft.contactEmail;
+      if (draft.website) document.getElementById('website').value = draft.website;
+      if (draft.comments) document.getElementById('comments').value = draft.comments;
+
+      checkFormValidity();
+    });
+    // 🔐 Check if user is authenticated
+supabase.auth.getSession().then(({ data, error }) => {
+  if (error || !data.session) {
+    alert('⚠️ You must be logged in to access this page.');
+    window.location.href = 'login.html';
+  }
+});
+document.getElementById('name').addEventListener('blur', async () => {
+  const name = document.getElementById('name').value.trim();
+  const validationDiv = document.getElementById('validationMessage');
+
+  if (!name) return;
+
+  const { data, error } = await supabase
+    .from('vendor_performer_applications')
+    .select('id')
+    .ilike('name', name) // case-insensitive match
+    .eq('is_food_vendor', true)
+    .limit(1);
+
+  if (error) {
+    console.error('Error checking name:', error.message);
+    validationDiv.innerText = '❌ Error checking name. Please try again.';
+    return;
+  }
+
+  if (data.length > 0) {
+    validationDiv.innerText = `❌ The vendor name "${name}" is already in use. Please choose another.`;
+  } else {
+    validationDiv.innerText = ''; // clear any previous warning
+  }
+});
+
+  </script>
+</body>
+</html>

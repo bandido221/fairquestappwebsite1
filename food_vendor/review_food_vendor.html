@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Review Food Vendor Application</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    body {
+      background-color: #000;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      text-align: center;
+      padding: 40px;
+    }
+    .card {
+      background: rgba(251,241,200,0.88);
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 700px;
+      margin: 0 auto;
+      color: #3b1f1f;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    img.preview {
+      max-height: 100px;
+      border-radius: 8px;
+      margin: 10px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    button {
+      padding: 12px 24px;
+      margin-top: 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+    }
+    .back-btn {
+      background-color: #777;
+      margin-right: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Review Your Application</h1>
+  <div class="card" id="previewCard"></div>
+
+  <div>
+    <button class="back-btn" onclick="goBack()">🔙 Edit</button>
+    <button onclick="submitFinalApplication()">✅ Submit</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    const draft = JSON.parse(localStorage.getItem('foodVendorAppDraft'));
+    if (!draft) {
+      alert('⚠️ No saved application found.');
+      window.location.href = 'apply_food_vendor.html';
+    } else {
+      const container = document.getElementById('previewCard');
+      container.innerHTML = `
+        <h2>${draft.name}</h2>
+        <img class="preview" src="${draft.photoUrl}" alt="Preview Image" />
+        <p><strong>Category:</strong> ${draft.vendorType}</p>
+        <p><strong>Description:</strong> ${draft.description}</p>
+        <p><strong>Contact:</strong> ${draft.contactName} (${draft.contactEmail})</p>
+        ${draft.website ? `<p><strong>Website:</strong> <a href="${draft.website}" target="_blank">${draft.website}</a></p>` : ''}
+        ${draft.comments ? `<p><strong>Notes:</strong> ${draft.comments}</p>` : ''}
+      `;
+    }
+
+   async function submitFinalApplication() {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError || !sessionData.session) {
+    alert('⚠️ You must be logged in to submit an application.');
+    return;
+  }
+
+  const userId = sessionData.session.user.id;
+
+ const { data, error } = await supabase.from('vendor_performer_applications').insert({
+  user_id: userId,
+  name: draft.name,
+  description: draft.description,
+  vendor_type: draft.vendorType,
+  contact_name: draft.contactName,
+  contact_email: draft.contactEmail,
+  website: draft.website,
+  photo_url: draft.photoUrl,
+  application_type: false,
+  is_food_vendor: true,
+  approval_status: 'pending'
+}).select();
+
+console.log("Insert result:", data);
+
+
+  if (error) {
+    alert('❌ Error submitting: ' + error.message);
+  } else {
+    alert('✅ Application submitted!');
+    localStorage.removeItem('foodVendorAppDraft');
+    window.location.href = 'thank_you.html';
+  }
+}
+
+    function goBack() {
+      window.location.href = 'apply_food_vendor.html';
+    }
+  </script>
+</body>
+</html>

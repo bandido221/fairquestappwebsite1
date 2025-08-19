@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Menu | FairQuest</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background-color: #000;
+      color: #f0e6d2;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: rgba(251,241,200,0.88);
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px auto;
+      max-width: 700px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      color: #3b1f1f;
+      text-align: left;
+    }
+    .button-link {
+      display: inline-block;
+      margin: 12px 8px;
+      padding: 10px 18px;
+      background: #4CAF50;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Manage Menu</h1>
+  <div id="menuItems"></div>
+  <div id="menuButtons"></div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    async function loadMenuPage() {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        document.getElementById('menuItems').innerHTML = '<p>❌ Please log in to manage your menu.</p>';
+        return;
+      }
+
+      const { data: vendors } = await supabase
+        .from('food_vendors')
+        .select('*')
+        .eq('approved', true)
+        .eq('user_id', user.id);
+
+      if (!vendors || vendors.length === 0) {
+        document.getElementById('menuItems').innerHTML = '<p>⏳ No approved food vendor found.</p>';
+        return;
+      }
+
+      const vendor = vendors[0];
+      const { data: menuItems } = await supabase
+        .from('food_menu_items')
+        .select('*')
+        .eq('food_vendor_id', vendor.id);
+
+      if (!menuItems || menuItems.length === 0) {
+        document.getElementById('menuItems').innerHTML = '<p>🍽 No menu items added yet.</p>';
+      } else {
+        menuItems.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'card';
+       card.innerHTML = `
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+    <div style="flex: 1;">
+      <h2>${item.item_name}</h2>
+      <p>${item.description || 'No description provided.'}</p>
+      <p><strong>Price:</strong> $${item.price}</p>
+      <p><strong>Type:</strong> ${item.is_drink ? 'Drink' : 'Food'}</p>
+      <p><strong>Available:</strong> ${item.is_available ? '✅ Yes' : '❌ No'}</p>
+      <a class="button-link" href="edit_menu_item.html?id=${item.id}">✏️ Edit Item</a>
+    </div>
+    <div style="flex-shrink: 0;">
+      ${item.url_image ? `
+        <a href="${item.url_image}" target="_blank" rel="noopener noreferrer">
+          <img src="${item.url_image}" alt="${item.item_name}" 
+               style="width: 100px; height: auto; border-radius: 8px;" />
+        </a>
+      ` : `<p><em>📸 Image coming soon</em></p>`}
+    </div>
+  </div>
+`;
+
+
+
+          document.getElementById('menuItems').appendChild(card);
+        });
+      }
+
+      const buttonContainer = document.getElementById('menuButtons');
+      if (menuItems && menuItems.length > 0) {
+        buttonContainer.innerHTML += `<a class="button-link" href="edit_menu.html">✏️ Edit Menu</a>`;
+      }
+      buttonContainer.innerHTML += `
+        <a class="button-link" href="add_menu_item.html">➕ Add Item</a>
+        <a class="button-link" href="/food_vendor/index.html">🏠 Go to Vendor Dashboard</a>
+        <a class="button-link" href="/profile/index.html">👤 Profile</a>
+      `;
+    }
+
+    loadMenuPage();
+  </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Menu Item | FairQuest</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background-color: #000;
+      color: #f0e6d2;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: rgba(251,241,200,0.88);
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px auto;
+      max-width: 700px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      color: #3b1f1f;
+      text-align: left;
+    }
+    .button-link {
+      display: inline-block;
+      margin: 12px 8px;
+      padding: 10px 18px;
+      background: #4CAF50;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      margin-top: 5px;
+      padding: 8px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: none;
+    }
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .overlay-box {
+      background: #fdf3cc;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 500px;
+      color: #3b1f1f;
+    }
+  </style>
+</head>
+<body>
+  <a class="button-link" href="/food_vendor/index.html">🏠 Dashboard</a>
+  <a class="button-link" href="/profile/index.html">👤 Profile</a>
+  <h1>Edit Menu Item</h1>
+  <div id="itemCard" class="card"></div>
+  <div id="confirmBox" class="overlay" style="display:none;">
+    <div class="overlay-box">
+      <h2>Confirm Changes</h2>
+      <div id="changeSummary"></div>
+      <button onclick="submitChanges()" class="button-link">✅ Save</button>
+      <button onclick="cancelChanges()" class="button-link" style="background:#B22222;">❌ Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    let original = {};
+    let itemId = new URLSearchParams(window.location.search).get('id');
+
+    async function loadItem() {
+      const { data, error } = await supabase
+        .from('food_menu_items')
+        .select('*')
+        .eq('id', itemId)
+        .single();
+
+      if (!data) return;
+      original = data;
+
+      document.getElementById('itemCard').innerHTML = `
+        <p><strong>Name:</strong> ${data.item_name}</p>
+        <input id="nameInput" placeholder="No update" />
+
+        <p><strong>Description:</strong> ${data.description}</p>
+        <textarea id="descInput" placeholder="No update"></textarea>
+
+        <p><strong>Price:</strong> $${data.price}</p>
+        <input id="priceInput" type="number" step="0.01" placeholder="No update" />
+
+        <p><strong>Type:</strong> ${data.is_drink ? 'Drink' : 'Food'}</p>
+        <select id="typeInput">
+          <option value="">No update</option>
+          <option value="food">Food</option>
+          <option value="drink">Drink</option>
+        </select>
+
+        <p><strong>Available:</strong> ${data.is_available ? '✅ Yes' : '❌ No'}</p>
+        <select id="availInput">
+          <option value="">No update</option>
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+
+        <p><strong>Image:</strong> ${data.url_image || '📸 None'}</p>
+        <input id="imageInput" placeholder="No update" />
+
+        <button class="button-link" onclick="previewChanges()">💾 Save Changes</button>
+      `;
+    }
+
+    function previewChanges() {
+      const updates = {};
+      const summary = [];
+
+      const name = document.getElementById('nameInput').value.trim();
+      const desc = document.getElementById('descInput').value.trim();
+      const price = document.getElementById('priceInput').value.trim();
+      const type = document.getElementById('typeInput').value;
+      const avail = document.getElementById('availInput').value;
+      const image = document.getElementById('imageInput').value.trim();
+
+      if (name) { updates.item_name = name; summary.push(`<p><strong>Name:</strong> ${name}</p>`); }
+      if (desc) { updates.description = desc; summary.push(`<p><strong>Description:</strong> ${desc}</p>`); }
+      if (price) { updates.price = parseFloat(price); summary.push(`<p><strong>Price:</strong> $${price}</p>`); }
+      if (type === 'food') { updates.is_drink = false; summary.push('<p><strong>Type:</strong> Food</p>'); }
+      if (type === 'drink') { updates.is_drink = true; summary.push('<p><strong>Type:</strong> Drink</p>'); }
+      if (avail === 'true') { updates.is_available = true; summary.push('<p><strong>Available:</strong> ✅ Yes</p>'); }
+      if (avail === 'false') { updates.is_available = false; summary.push('<p><strong>Available:</strong> ❌ No</p>'); }
+      if (image) { updates.url_image = image; summary.push(`<p><strong>Image:</strong> ${image}</p>`); }
+
+      if (Object.keys(updates).length === 0) {
+  alert('No changes made.');
+  window.location.href = "menu.html";
+  return;
+}
+
+
+      window.itemUpdates = updates;
+      document.getElementById('changeSummary').innerHTML = summary.join('');
+      document.getElementById('confirmBox').style.display = 'flex';
+    }
+
+    async function submitChanges() {
+      const { error } = await supabase
+        .from('food_menu_items')
+        .update(window.itemUpdates)
+        .eq('id', itemId);
+
+      if (!error) {
+  window.location.href = "menu.html";
+}
+ else {
+        alert('❌ Error saving changes.');
+      }
+    }
+
+    function cancelChanges() {
+      document.getElementById('confirmBox').style.display = 'none';
+    }
+
+    loadItem();
+  </script>
+</body>
+</html>

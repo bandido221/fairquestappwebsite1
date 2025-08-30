@@ -43,14 +43,23 @@
       margin: 0 auto;
     }
 
-    .vendor-card {
-        background-color: #c9a364;
-        color: #3b1f1f;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      text-align: left;
-    }
+   .vendor-card {
+  background-color: #c9a364;
+  color: #3b1f1f;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  text-align: left;
+}
+.vendor-card .vendor-photo{
+  width:100%;
+  max-height:180px;
+  object-fit:cover;
+  border-radius:8px;
+  margin-bottom:10px;
+}
+.muted{opacity:.8;font-size:.9rem}
+
 
     .status {
       font-weight: bold;
@@ -113,16 +122,17 @@
     let vendors = [];
 
     async function loadVendors() {
-      const { data, error } = await supabase
-        .from('vendor_performer_applications')
-        .select(`
-          id, name, vendor_type, description, approval_status,
-          vendor_application_fairs (
-            start_date, end_date,
-            renaissance_fairs (name, state)
-          )
-        `)
-        .or('application_type.is.false,application_type.is.null');
+     const { data, error } = await supabase
+  .from('vendor_performer_applications')
+  .select(`
+    *,
+    vendor_application_fairs (
+      start_date, end_date,
+      renaissance_fairs (name, state)
+    )
+  `)
+  .or('application_type.is.false,application_type.is.null')
+  .order('name', { ascending: true });
 
       if (error || !data) {
         document.getElementById('vendorGrid').innerHTML = '<p>⚠️ Failed to load vendors.</p>';
@@ -183,14 +193,46 @@
                            : vendor.approval_status === 'pending' ? 'pending'
                            : 'declined';
 
-        container.innerHTML += `
-          <div class="vendor-card">
-            <h2>${vendor.name}</h2>
-            <p><strong>Type:</strong> ${vendor.vendor_type || 'N/A'}</p>
-            <p><strong>Description:</strong> ${vendor.description || 'No description'}</p>
-            <p class="status ${statusClass}">Status: ${vendor.approval_status.toUpperCase()}</p>
-          </div>
-        `;
+       const fairs = (vendor.vendor_application_fairs || []).map(f => {
+  const label = f.renaissance_fairs?.name ? `${f.renaissance_fairs.name} (${f.renaissance_fairs.state||''})` : 'Unknown Fair';
+  const dates = `${f.start_date} → ${f.end_date}`;
+  return `<li>${label}: <span class="muted">${dates}</span></li>`;
+}).join('');
+
+container.innerHTML += `
+  <div class="vendor-card">
+    ${vendor.photo_url ? `<img class="vendor-photo" src="${vendor.photo_url}" alt="${vendor.name}">` : ''}
+    <h2>${vendor.name}</h2>
+
+    <p><strong>Type:</strong> ${vendor.vendor_type || 'N/A'}</p>
+    <p><strong>Description:</strong> ${vendor.description || 'No description'}</p>
+
+    <p><strong>Tier:</strong> ${vendor.tier || 'bronze'}</p>
+    <p><strong>Food Vendor:</strong> ${vendor.is_food_vendor ? 'Yes' : 'No'}</p>
+
+    <p><strong>Contact:</strong> ${vendor.contact_name || ''} ${vendor.contact_email ? `(&lt;${vendor.contact_email}&gt;)` : ''}</p>
+    ${vendor.website ? `<p><strong>Website:</strong> <a href="${vendor.website}" target="_blank">${vendor.website}</a></p>` : ''}
+
+    <p class="status ${statusClass}">Status: ${vendor.approval_status?.toUpperCase() || 'UNKNOWN'}</p>
+    ${vendor.rejection_reason ? `<p><strong>Rejection Reason:</strong> ${vendor.rejection_reason}</p>` : ''}
+
+    <details>
+      <summary><strong>IDs & Flags</strong></summary>
+      <p><strong>Application ID:</strong> ${vendor.id}</p>
+      <p><strong>User ID:</strong> ${vendor.user_id || '—'}</p>
+      <p><strong>Vendor ID:</strong> ${vendor.vendor_id || '—'}</p>
+      <p><strong>Performer ID:</strong> ${vendor.performer_id || '—'}</p>
+      <p><strong>application_type:</strong> ${vendor.application_type === true ? 'performer' : (vendor.application_type === false ? 'vendor' : 'null')}</p>
+      <p><strong>update_pending:</strong> ${vendor.update_pending ? 'true' : 'false'}</p>
+    </details>
+
+    <div class="fairs">
+      <p><strong>Fairs & Dates:</strong></p>
+      ${fairs ? `<ul>${fairs}</ul>` : '<p class="muted">None linked</p>'}
+    </div>
+  </div>
+`;
+
       });
 
       if (container.innerHTML.trim() === '') {

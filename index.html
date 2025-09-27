@@ -104,6 +104,16 @@
       .btn { width: 100%; margin-top: 10px; }
       .button-group { flex-direction: column; align-items: center; }
     }
+
+    .explore-btn {
+  font-size: 1.3rem;
+  padding: 16px 32px;
+  background-color: #d4af37; /* gold highlight */
+}
+.explore-btn:hover {
+  background-color: #e6c85c;
+}
+
   </style>
 </head>
 
@@ -122,16 +132,17 @@
       or “Fair Quest festival finder,” this is the place to discover, apply, and attend your favorite renfairs.</p>
   </header>
 
-  <div class="button-group">
+   <div class="button-group">
+    <!--
     <a class="btn" href="/dowload_app.html">
       📲 Download App
     </a>
-   <a class="btn" id="vendorButton" href="#" onclick="requireLoginAndRedirect('vendor_performer/vendor/application.html')">🧺 Apply as Vendor</a>
-<a class="btn" id="performerButton" href="#" onclick="requireLoginAndRedirect('vendor_performer/performer/application.html')">🎭 Apply as Performer</a>
-<a class="btn" id="foodVendorButton" href="#" onclick="requireLoginAndRedirect('food_vendor/apply_food_vendor.html')">🍔 Apply as Food Vendor</a>
- <a class="btn" href="/fairs/explore.html" onclick="trackExploreFairs(event)">🎪 Explore Fairs</a>
+    -->
+    <a class="btn explore-btn" id="exploreBtn" href="/fairs/explore.html" onclick="trackExploreFairs(event)">🎪 Explore Fairs</a>
+    <a class="btn" id="vendorButton" href="#" onclick="requireLoginAndRedirect('vendor_performer/vendor/application.html')">🧺 Apply as Vendor</a>
+    <a class="btn" id="performerButton" href="#" onclick="requireLoginAndRedirect('vendor_performer/performer/application.html')">🎭 Apply as Performer</a>
+    <a class="btn" id="foodVendorButton" href="#" onclick="requireLoginAndRedirect('food_vendor/apply_food_vendor.html')">🍔 Apply as Food Vendor</a>
     <a class="btn" href="/how_to/help_center.html">❓ Help Center</a>
-
   </div>
 
   <div id="earlyTesterCard" style="margin: 40px auto; padding: 30px; background: #bdaa64; color: #3b1f1f; max-width: 700px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center;">

@@ -6,47 +6,20 @@
   <title>Privacy Policy | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Domine', serif;
-      background-color: #000;
-      padding: 40px;
-      text-align: center;
-      color: #f0e6d2;
-      margin: 0;
-    }
-    h1, h2 { font-family: 'Cinzel', serif; }
-    .top-banner {
-      width: 100%; max-width: 600px; height: auto; object-fit: contain;
-      display: block; margin: 0 auto 20px auto; border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    .logo {
-      max-width: 100px; height: auto; margin: 0 auto 20px auto; display: block;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); transition: transform 0.3s ease;
-    }
-    .logo:hover { transform: scale(1.05); }
-    .container {
-      max-width: 900px; margin: auto; background: rgba(251, 241, 200, 0.88);
-      padding: 30px 40px; border-radius: 12px; border: 2px solid #aa8452;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4); color: #3b1f1f; text-align: left;
-    }
-    p, li { font-size: 16px; line-height: 1.6; margin-top: 10px; }
-    a { color: #5b2a86; text-decoration: underline; }
-    .home-button {
-      display: inline-block; margin-top: 30px; padding: 10px 20px; background-color: #5b2a86;
-      color: white; font-size: 16px; border-radius: 6px; text-decoration: none; font-weight: bold;
-    }
-    .home-button:hover { filter: brightness(1.1); }
-    .muted { opacity: .9; font-size: 14px; }
-    .list-tight li { margin-top: 6px; }
-    @media (max-width: 768px) {
-      body { padding: 20px; }
-      .container { padding: 20px; }
-      h1 { font-size: 28px; text-align: center; }
-      h2 { font-size: 20px; margin-top: 20px; }
-      p, li { font-size: 15px; }
-      .home-button { font-size: 15px; padding: 10px 16px; }
-    }
+    body { font-family:'Domine',serif; background:#000; padding:40px; text-align:center; color:#f0e6d2; margin:0; }
+    h1,h2 { font-family:'Cinzel',serif; }
+    .top-banner { width:100%; max-width:600px; height:auto; object-fit:contain; display:block; margin:0 auto 20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.3); }
+    .logo { max-width:100px; height:auto; margin:0 auto 20px; display:block; filter:drop-shadow(0 2px 4px rgba(0,0,0,.4)); transition:transform .3s ease; }
+    .logo:hover { transform:scale(1.05); }
+    .container { max-width:900px; margin:auto; background:rgba(251,241,200,.88); padding:30px 40px; border-radius:12px; border:2px solid #aa8452; box-shadow:0 4px 15px rgba(0,0,0,.4); color:#3b1f1f; text-align:left; }
+    p,li { font-size:16px; line-height:1.6; margin-top:10px; }
+    a { color:#5b2a86; text-decoration:underline; }
+    .home-button { display:inline-block; margin-top:30px; padding:10px 20px; background:#5b2a86; color:#fff; font-size:16px; border-radius:6px; text-decoration:none; font-weight:bold; }
+    .home-button:hover { filter:brightness(1.1); }
+    .muted { opacity:.9; font-size:14px; }
+    .list-tight li { margin-top:6px; }
+    .callout { background:#fff7d6; border:1px solid #d7b86a; padding:12px 14px; border-radius:8px; }
+    @media (max-width:768px){ body{padding:20px;} .container{padding:20px;} h1{font-size:28px;text-align:center;} h2{font-size:20px;margin-top:20px;} p,li{font-size:15px;} .home-button{font-size:15px;padding:10px 16px;} }
   </style>
 </head>
 <body>
@@ -57,85 +30,89 @@
     <h1>Privacy Policy</h1>
     <p class="muted"><strong>Effective Date:</strong> September 30, 2025</p>
 
-    <p>At FairQuest, we value your privacy. This policy explains how we collect, use, and protect information on the FairQuest website and mobile app (“Services”).</p>
+    <p><strong>Scope.</strong> This policy applies to the FairQuest website and Android/iOS apps (“Services”). It explains what we collect, why, how we use/share it, and your choices.</p>
 
     <h2>Information We Collect</h2>
     <ul class="list-tight">
-      <li><strong>Account &amp; Profile:</strong> email address, username, display name, optional profile photo, vendor/performer details (if you choose to create/associate these profiles).</li>
-      <li><strong>App Content You Provide:</strong> fair submissions, team/guild information, quest/check-in photos you choose to upload.</li>
-      <li><strong>Location Data</strong> (see “Location” section below): approximate and/or precise location <em>with your permission</em> to power nearby fairs, check-ins, and optional local features.</li>
-      <li><strong>Usage &amp; Diagnostics:</strong> app events (pages/screens viewed, taps, feature usage), device type, language, basic performance and crash logs.</li>
-      <li><strong>Identifiers:</strong> user ID, and mobile push token (e.g., FCM token) used to deliver notifications.</li>
+      <li><strong>Account &amp; Profile:</strong> email address, username, display name, optional profile photo; vendor/performer details you choose to add.</li>
+      <li><strong>Content You Provide:</strong> fair submissions, team/guild info, quest/check-in photos you upload.</li>
+      <li><strong>Location Data:</strong> <em>approximate and/or precise</em> location <em>with your permission</em> to power nearby fairs, check-ins, and optional local/geofence features (see “Location” below).</li>
+      <li><strong>Usage &amp; Diagnostics:</strong> screens viewed, taps, device type, language, performance and crash logs.</li>
+      <li><strong>Identifiers:</strong> user ID and push token (e.g., FCM) to deliver notifications.</li>
       <li><strong>Gameplay/Progress:</strong> points, tokens, achievements, check-in history, saved/bookmarked fairs.</li>
     </ul>
 
     <h2>How We Use Information</h2>
     <ul class="list-tight">
-      <li>Provide and operate core features (accounts, teams, check-ins, fairs, vendors/performers, bookmarks, rewards).</li>
+      <li>Provide core features (accounts, teams, fairs, check-ins, rewards, bookmarks).</li>
       <li>Show nearby fairs and verify check-ins (uses location when permitted).</li>
-      <li>Send service notifications (e.g., account updates, team changes, reminders) and optional promotional messages.</li>
-      <li>Maintain safety, integrity, and anti-abuse/fraud controls.</li>
-      <li>Analyze and improve product performance, reliability, and user experience.</li>
-      <li>Comply with law and enforce our terms.</li>
+      <li>Send service notifications (account updates, team changes, reminders).</li>
+      <li>Maintain security/anti-abuse; comply with law; enforce terms.</li>
+      <li>Analyze and improve reliability, performance, and user experience.</li>
     </ul>
 
     <h2>Location</h2>
-    <p><strong>What we access:</strong> With your permission, the app may access your device’s <em>approximate</em> and/or <em>precise</em> location.</p>
-    <p><strong>Why:</strong> to (a) display nearby fairs and local content, and (b) enable check-in and related features (e.g., validating you’re within a fair’s radius). If you enable optional reminders or automatic check-in, we may evaluate geofence events to trigger those features.</p>
-    <p><strong>Foreground vs. Background:</strong> Location is typically used while you are using the app. If you enable features that require geofences to work reliably, the OS may allow the app to receive location/geofence events when the app is not open. You can turn these features off in-app (if provided) and you can revoke location permission at any time in your device settings.</p>
-    <p><strong>What we keep:</strong> We do not continuously record your path. For check-ins, we may store the fair identifier and geofence center/radius and the fact that a check-in occurred (with timestamp). Raw GPS points are not stored on an ongoing basis for tracking.</p>
-    <p><strong>Sharing &amp; sale:</strong> We <em>do not sell</em> location data. We may share it only with service providers that help us deliver mapping/geofence/analytics and are bound by contracts restricting use to our instructions.</p>
+    <p><strong>What we access.</strong> With your permission, the app may access <em>approximate</em> (coarse) and/or <em>precise</em> (fine) location. On Android, we may request <code>ACCESS_COARSE_LOCATION</code> and/or <code>ACCESS_FINE_LOCATION</code>. We only request <code>ACCESS_BACKGROUND_LOCATION</code> if you enable geofence-based features.</p>
+    <p><strong>Why.</strong> (a) Show nearby fairs and local content; (b) verify check-ins (confirm you are within a fair’s radius); (c) optional geofence reminders/automatic check-in if you turn them on.</p>
+    <p><strong>Foreground vs. Background.</strong> Location is typically used while you use the app. If you enable geofence features, your OS may deliver geofence/location events when the app is not open to make those features work. <em>Background location is off by default and entirely optional.</em></p>
+    <p><strong>What we keep.</strong> We do <em>not</em> continuously record your path. For check-ins, we may store the fair identifier, geofence center/radius, and the fact that a check-in occurred with timestamp. We do not maintain a continuous GPS trail.</p>
+    <p><strong>Sharing &amp; sale.</strong> We <em>do not sell</em> location data. We share it only with service providers that help deliver mapping, geofence, analytics, or hosting and who are bound by contracts restricting use to our instructions.</p>
+    <p><strong>Your control.</strong> You can deny or revoke location permission any time in device settings, and you can disable geofence features in-app (if provided).</p>
+
+    <div class="callout">
+      <strong>In-App Location Disclosure (shown before permission):</strong><br/>
+      “FairQuest uses your location to show nearby fairs and verify check-ins. If you enable reminders, we may process geofence events in the background. You can deny or change this anytime in Settings.”
+    </div>
 
     <h2>Photos &amp; Camera</h2>
-    <p>Camera access is used only when you choose to capture photos for quests or fair moments. Photos are uploaded to secure storage to support in-app features and are not sold or used for third-party advertising. No biometric or face recognition is performed. You can deny camera access and still use non-photo features.</p>
+    <p>Camera access is used only when you choose to capture photos for quests or fair moments. Photos may be uploaded to secure storage to support in-app features. We do not use facial recognition or sell photos. You can deny camera access and still use non-photo features.</p>
 
     <h2>Push Notifications</h2>
-    <p>We use a device push token to send notifications (e.g., team updates, check-ins, reminders). You can manage or disable notifications in your device settings. Notification content is limited to FairQuest features and updates.</p>
+    <p>We use a device push token to send notifications (e.g., team updates, check-ins, reminders). Manage or disable notifications in device settings.</p>
 
     <h2>Third-Party Services (Processors)</h2>
     <ul class="list-tight">
-      <li><strong>Supabase</strong> (authentication, database, file storage, realtime): stores your account/profile data and app content under encryption. <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer">Privacy</a></li>
-      <li><strong>Firebase/Google</strong> (push messaging, analytics, crash reporting): delivers notifications and collects usage/performance metrics. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy</a></li>
-      <li><strong>Image &amp; media hosting/CDN</strong> (as applicable): serves user-uploaded images and assets efficiently.</li>
+      <li><strong>Supabase</strong> (authentication, database, file storage, realtime) — stores account/profile data and app content under encryption. <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer">Privacy</a></li>
+      <li><strong>Firebase/Google</strong> (push messaging, analytics, crash reporting) — delivers notifications and collects usage/performance metrics. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy</a></li>
+      <li><strong>Image/CDN hosting</strong> — serves user-uploaded images and assets efficiently.</li>
     </ul>
     <p>These providers act on our behalf and are contractually restricted from using your data for their own purposes.</p>
 
     <h2>Data Sharing</h2>
-    <p>We do <strong>not</strong> sell personal data. We share data only with: (a) service providers listed above; (b) other users, when you intentionally interact (e.g., team members see team-related info); (c) authorities when required by law; or (d) a successor in a merger/acquisition with appropriate safeguards.</p>
+    <p>We do <strong>not</strong> sell personal data. We share data only with processors above, with other users when you intentionally interact (e.g., team members see team info), with authorities when required by law, or with a successor in a merger/acquisition with appropriate safeguards.</p>
+
+    <h2>Data Safety Alignment (Google Play)</h2>
+    <ul class="list-tight">
+      <li><strong>Location:</strong> collected for <em>App functionality</em> (nearby fairs, check-ins). Background processing occurs only if you enable geofence features. Not sold. Shared only with processors.</li>
+      <li><strong>Device or other IDs / Diagnostics:</strong> used for analytics and crash reporting to improve stability. Not sold.</li>
+    </ul>
 
     <h2>Legal Bases (EEA/UK)</h2>
     <ul class="list-tight">
-      <li><em>Contract</em> (provide the Services you request).</li>
-      <li><em>Legitimate interests</em> (security, integrity, analytics to improve the Services).</li>
+      <li><em>Contract</em> (to provide the Services you request).</li>
+      <li><em>Legitimate interests</em> (security, integrity, product analytics).</li>
       <li><em>Consent</em> (e.g., location permission, notifications where required).</li>
     </ul>
 
     <h2>Your Choices &amp; Rights</h2>
     <ul class="list-tight">
-      <li>Access and update profile information in-app.</li>
-      <li>Control permissions at any time in device settings (location, camera, notifications).</li>
-      <li>Opt out of non-essential emails or notifications.</li>
-      <li>Request account/data deletion by emailing <a href="mailto:fairquest2025@gmail.com">fairquest2025@gmail.com</a>.</li>
+      <li>Access/update profile info in-app.</li>
+      <li>Control permissions any time in device settings (location, camera, notifications).</li>
+      <li>Opt out of non-essential communications.</li>
+      <li>Request account/data deletion: <a href="mailto:fairquest2025@gmail.com">fairquest2025@gmail.com</a>.</li>
     </ul>
 
     <h2>Data Retention</h2>
-    <p>We keep data for as long as your account is active or as needed to provide the Services. Typical examples: profile data (while your account exists), check-in records/points history (while needed for rewards and auditing), diagnostics (short periods necessary to improve stability). We delete or de-identify data when no longer needed.</p>
+    <p>We keep data while your account is active or as needed to provide the Services. Examples: profile (while account exists); check-in/points history (while needed for rewards and auditing); diagnostics (short periods to improve stability). We delete or de-identify data when no longer needed.</p>
 
     <h2>Security</h2>
-    <p>We use industry-standard safeguards (encryption in transit/at rest where supported, access controls, and monitoring). No system can be 100% secure; we work to protect your information and continually improve our defenses.</p>
+    <p>We use industry-standard safeguards (encryption in transit/at rest where supported, access controls, monitoring). No system is 100% secure; we continually improve our defenses.</p>
 
     <h2>International Transfers</h2>
     <p>We may process and store information in countries other than where you live. When we transfer data, we use appropriate safeguards consistent with applicable law.</p>
 
     <h2>Children’s Privacy</h2>
-    <p>FairQuest is not directed to children under 13 (or the minimum age required in your jurisdiction). If you believe a child has provided us personal data, contact us to request deletion.</p>
-
-    <h2>In-App Disclosures &amp; Permissions Summary</h2>
-    <ul class="list-tight">
-      <li><strong>Location:</strong> used for nearby fairs and check-ins; optional background processing may occur if you enable geofence-based features. Manage in device settings.</li>
-      <li><strong>Camera:</strong> used only when you capture photos you choose to upload.</li>
-      <li><strong>Notifications:</strong> used to deliver account and team updates; manage in device settings.</li>
-    </ul>
+    <p>FairQuest is not directed to children under 13 (or the minimum age required in your jurisdiction). If you believe a child has provided personal data, contact us to request deletion.</p>
 
     <h2>Contact Us</h2>
     <p>Questions or requests? Email <a href="mailto:fairquest2025@gmail.com">fairquest2025@gmail.com</a>.</p>

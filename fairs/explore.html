@@ -165,6 +165,13 @@ a:hover {
 .nav-button:hover {
   background-color: #f2e1c1;
 }
+/* NEW: centered message when there is no image */
+.no-image-msg {
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+  padding: 0 8px;
+}
 
     .nav-home, .nav-add {
       display: inline-block;
@@ -281,23 +288,30 @@ a:hover {
         const end = fair[`week${i}_end_date`];
         if (start && end) weekends.push(`${start} to ${end}`);
       }
-      div.innerHTML = `
-        <div class="card">
-          <div class="card-image">
-            <img src="${fair.image_url || 'https://placehold.co/600x180?text=No+Image'}" alt="${fair.name}" />
-          </div>
-          <div class="card-content">
-            <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
-            <p><span class="badge">${fair.state}</span></p>
-            <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
-            ${fair.website ? `<p><strong>🌐 Website:</strong> <a href="${fair.website}" target="_blank">${fair.website}</a></p>` : ''}
-            ${weekends.length > 0 ? `
-              <p><strong>📅 Weekends:</strong></p>
-              ${weekends.map(date => `<p>${date}</p>`).join('')}
-            ` : '<p><strong>📅 Weekends:</strong> None listed</p>'}
-          </div>
-        </div>
-      `;
+// NEW: show image if present; otherwise show a message
+const imgUrl = (fair.image_url || '').trim();
+const imageHtml = imgUrl
+  ? `<img src="${imgUrl}" alt="${fair.name}" />`
+  : `<div class="no-image-msg">Waiting for fair to add image</div>`;
+
+div.innerHTML = `
+  <div class="card">
+    <div class="card-image">
+      ${imageHtml}
+    </div>
+    <div class="card-content">
+      <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
+      <p><span class="badge">${fair.state}</span></p>
+      <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
+      ${fair.website ? `<p><strong>🌐 Website:</strong> <a href="${fair.website}" target="_blank">${fair.website}</a></p>` : ''}
+      ${weekends.length > 0 ? `
+        <p><strong>📅 Weekends:</strong></p>
+        ${weekends.map(date => `<p>${date}</p>`).join('')}
+      ` : '<p><strong>📅 Weekends:</strong> None listed</p>'}
+    </div>
+  </div>
+`;
+
       return div;
     }
 

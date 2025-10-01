@@ -42,23 +42,14 @@
 
 
 
-    .card-image {
-  width: 100%;
-  height: 180px; /* fixed image container height */
-  background-color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  flex-shrink: 0;
+ /* NEW: centered message when there is no image */
+.no-image-msg {
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+  padding: 0 8px;
 }
 
-.card-image img {
-  height: 100%;
-  width: auto;
-  object-fit: contain;
-  object-position: center;
-}
 
 
 .top-banner {
@@ -204,23 +195,30 @@ function displayFairs(fairs) {
       }
     }
 
-    container.innerHTML += `
-      <div class="card">
-        <div class="card-image">
-          <img src="${fair.image_url || 'https://placehold.co/600x180?text=No+Image'}" alt="${fair.name}" />
-        </div>
-        <div class="card-content">
-          <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
-          <p><span class="badge">${fair.state}</span></p>
-          <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
-          ${fair.website ? `<p><strong>🌐 Website:</strong> <a href="${fair.website}" target="_blank">${fair.website}</a></p>` : ''}
-          ${weekends.length > 0 ? `
-            <p><strong>📅 Weekends:</strong></p>
-            ${weekends.map(date => `<p>${date}</p>`).join('')}
-          ` : '<p><strong>📅 Weekends:</strong> None listed</p>'}
-        </div>
-      </div>
-    `;
+// NEW: build image block with message when missing
+const imgUrl = (fair.image_url || '').trim();
+const imageHtml = imgUrl
+  ? `<img src="${imgUrl}" alt="${fair.name}" />`
+  : `<div class="no-image-msg">Waiting for fair to add image</div>`;
+
+container.innerHTML += `
+  <div class="card">
+    <div class="card-image">
+      ${imageHtml}
+    </div>
+    <div class="card-content">
+      <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
+      <p><span class="badge">${fair.state}</span></p>
+      <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
+      ${fair.website ? `<p><strong>🌐 Website:</strong> <a href="${fair.website}" target="_blank">${fair.website}</a></p>` : ''}
+      ${weekends.length > 0 ? `
+        <p><strong>📅 Weekends:</strong></p>
+        ${weekends.map(date => `<p>${date}</p>`).join('')}
+      ` : '<p><strong>📅 Weekends:</strong> None listed</p>'}
+    </div>
+  </div>
+`;
+
   });
 }
 

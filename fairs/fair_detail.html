@@ -54,6 +54,14 @@
     .card * {
       color: #222 !important;
     }
+    /* NEW: centered message when there is no image */
+.no-image-msg {
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+  padding: 8px 0;
+}
+
     .card h2, .card h3 {
       color: #2a2a2a;
     }
@@ -136,7 +144,28 @@
       document.getElementById('fairState').textContent = data.state;
       document.getElementById('fairWebsite').innerHTML = data.website
         ? `<a href="${data.website}" target="_blank">${data.website}</a>` : 'N/A';
-      document.getElementById('fairImage').src = data.image_url || 'https://placehold.co/600x200?text=No+Image';
+// NEW: show image when present; else show a message
+{
+  const imgUrl = (data.image_url || '').trim();
+  const imgEl = document.getElementById('fairImage');
+  const imgWrap = imgEl.parentElement; // <p> that contains the image
+
+  if (imgUrl) {
+    imgEl.src = imgUrl;
+    imgEl.alt = data.name || 'Fair image';
+    imgEl.style.display = 'block';
+    const oldMsg = imgWrap.querySelector('.no-image-msg');
+    if (oldMsg) oldMsg.remove();
+  } else {
+    imgEl.style.display = 'none';
+    if (!imgWrap.querySelector('.no-image-msg')) {
+      const msg = document.createElement('div');
+      msg.className = 'no-image-msg';
+      msg.textContent = 'Waiting for fair to add image';
+      imgWrap.appendChild(msg);
+    }
+  }
+}
 
       const weekendFields = [
         ['start_date', 'end_date'],

@@ -51,9 +51,9 @@
       text-align: left;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
-    .card * {
-      color: #222 !important;
-    }
+    .card, .card * {
+  color: #000 !important;
+}
     /* NEW: centered message when there is no image */
 .no-image-msg {
   font-weight: 600;
@@ -62,9 +62,14 @@
   padding: 8px 0;
 }
 
-    .card h2, .card h3 {
-      color: #2a2a2a;
-    }
+  .card h2, .card h3 {
+  color: #000 !important;
+}
+/* Ensure the website link renders black too */
+#fairWebsite a {
+  color: #000 !important;
+}
+
     .card p {
       margin: 8px 0;
     }

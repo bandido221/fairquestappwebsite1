@@ -207,35 +207,11 @@
          data-ad-slot="4178733051"
          data-ad-format="auto"
          data-full-width-responsive="true"></ins>
-    <div id="ad-fallback"
-         style="display:none; padding:12px; border:1px dashed #555; border-radius:8px; color:#aaa; font-size:0.95rem; margin-top:8px;">
-      Ad space — If you’re not seeing an ad, it may be blocked or not available right now.
-    </div>
+ 
   </div>
   <script>
-    (function () {
-      function showFallback() {
-        var f = document.getElementById('ad-fallback');
-        if (f) f.style.display = 'block';
-      }
-      try {
-        if (window.adsbygoogle && Array.isArray(window.adsbygoogle)) {
-          (adsbygoogle = window.adsbygoogle).push({});
-          setTimeout(function () {
-            var ins = document.querySelector('#ad-container ins.adsbygoogle');
-            var hasIframe = ins && ins.querySelector('iframe');
-            var h = ins ? ins.offsetHeight : 0;
-            if (!hasIframe && h < 20) showFallback();
-          }, 1500);
-        } else {
-          showFallback();
-        }
-      } catch (e) {
-        showFallback();
-      }
-    })();
+    (adsbygoogle = window.adsbygoogle || []).push({});
   </script>
-
 
 
 

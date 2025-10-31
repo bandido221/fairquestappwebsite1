@@ -152,34 +152,35 @@
     <a class="btn" href="/how_to/help_center.html">❓ Help Center</a>
    </div>
 
-   <!-- Fair of the Month Card -->
+ <!-- Fair of the Month Card -->
 <div style="background:#1b1b1b; border-radius:12px; box-shadow:0 0 12px rgba(0,0,0,0.6); margin:40px auto; padding:28px; max-width:700px; text-align:center; color:#f0e6d2;">
   <h2 style="font-family:'Cinzel',serif; font-size:1.6rem; margin-bottom:12px;">🏰 Fair of the Month</h2>
   <p style="font-size:1.2rem; margin-bottom:12px; color:#d4af37; font-weight:bold;">
-    Central Missouri Renaissance Festival
+    Hot Springs Renaissance Faire
   </p>
   <p style="font-size:1rem; max-width:600px; margin:0 auto 18px auto;">
-    Experience the magic of fall at the <strong>Central Missouri Renaissance Festival</strong> — jousts, crafts, and feasts await!
+    Immerse yourself in the magic of the <strong>Hot Springs Renaissance Faire</strong> — Arkansas’ longest-running Renaissance faire, filled with revelry, artisans, jousts and feasts!
   </p>
 
   <!-- Live Website Preview -->
   <div style="width:100%; height:420px; border-radius:10px; overflow:hidden; margin-bottom:20px;">
     <iframe 
-      src="https://www.centralmorenfest.net/" 
+      src="https://www.hsrenfaire.org/" 
       style="width:100%; height:100%; border:none;" 
       loading="lazy">
     </iframe>
   </div>
 
   <p style="font-size:1rem; max-width:600px; margin:0 auto 12px auto;">
-    Dive into a weekend of knights, artisans, and merriment at the <em>Central MO Ren Fest</em>. Whether you're a visitor, performer, or merchant, this fair is one of the Midwest’s highlights of the season.
+    Whether you're visiting, performing, or vending, the Hot Springs Renaissance Faire offers an unforgettable weekend of merriment and community. Join us and be part of the enchantment.
   </p>
 
-  <a href="https://www.centralmorenfest.net/" target="_blank" 
+  <a href="https://www.hsrenfaire.org/" target="_blank" 
      style="display:inline-block; margin-top:6px; padding:12px 20px; background-color:#d4af37; color:#000; font-weight:bold; border-radius:8px; text-decoration:none;">
     🎟️ Visit Website
   </a>
 </div>
+
 
 <!-- Performer Spotlight Card -->
 <div style="background:#222; border-radius:12px; box-shadow:0 0 12px rgba(0,0,0,0.6); margin:40px auto; padding:28px; max-width:700px; text-align:center; color:#f0e6d2;">
@@ -250,6 +251,37 @@
       <a href="/faq.html" class="btn" style="display:inline-block; margin:6px;">FAQ</a>
     </div>
   </section>
+<!-- Featured Fairs Directory Preview -->
+<section style="max-width:760px; margin:40px auto; padding:0 18px; text-align:left;">
+  <h2 style="font-family:'Cinzel',serif; margin-bottom:12px; font-size:1.7rem;">Featured Fairs Directory Preview</h2>
+  <p>
+    Here’s a glimpse of fairs listed in the FairQuest directory. Each event includes verified details from organizers—dates, locations, and contact links. 
+    For the full directory, visit the <a href="/fairs/explore.html" style="color:#d4af37;">Explore Fairs</a> page.
+  </p>
+  <ul style="list-style-type:none; padding:0; line-height:1.6;">
+    <li><strong>Hot Springs Renaissance Faire</strong> – Arkansas – November 2025 – <a href="https://www.hsrenfaire.org/" target="_blank" style="color:#d4af37;">hsrenfaire.org</a></li>
+    <li><strong>Texas Renaissance Festival</strong> – Magnolia, TX – Oct–Dec 2025 – <a href="https://www.texrenfest.com/" target="_blank" style="color:#d4af37;">texrenfest.com</a></li>
+    <li><strong>Minnesota Renaissance Festival</strong> – Shakopee, MN – Aug–Sept 2025 – <a href="https://www.renaissancefest.com/" target="_blank" style="color:#d4af37;">renaissancefest.com</a></li>
+  </ul>
+  <p style="margin-top:12px;">
+    We’re constantly expanding our listings to cover more fairs across the U.S. and beyond. If your event isn’t here yet, 
+    you can <a href="/how_to/help_center.html" style="color:#d4af37;">submit it for inclusion</a> through the FairQuest vendor or performer application portal.
+  </p>
+</section>
+<section style="max-width:760px;margin:40px auto;padding:0 18px;text-align:left;">
+  <h2 style="font-family:'Cinzel',serif;margin-bottom:12px;font-size:1.7rem;">Behind FairQuest</h2>
+  <p>
+    FairQuest was created by Renaissance-fair enthusiasts who wanted one reliable source
+    for discovering events, performers, and merchants across the country.
+    Our small team verifies fair listings manually, adds new vendors weekly,
+    and keeps information fresh so you can plan your magical weekends with confidence.
+  </p>
+  <p>
+    Each update you see on this site represents direct communication with event organizers,
+    crafters, and performers who make the fairs come alive. We believe every artisan
+    and entertainer deserves to be found easily — and FairQuest helps make that happen.
+  </p>
+</section>
 
   <!-- Google AdSense Banner: HomepageBanner with fallback -->
   <div id="ad-container" style="max-width:700px; margin:0 auto;">
@@ -370,21 +402,14 @@ async function loadEarlyTesterCard() {
         <button onclick="logout()" style="margin-left: 10px; padding: 10px 20px; background: #b73239; color: white; border: none; border-radius: 8px;">🚪 Log Out</button>
       </div>
     `;
-  } else {
-    if (userCount < 100) {
-      card.innerHTML = `
-        <h3>🚀 Become an Early App Tester!</h3>
-        <p>Sign in or sign up now to be among the first 100 testers! 🎯</p>
-        <a href="/user_login.html" class="btn" style="background: #5b2a86; color: white;">Log In / Sign Up</a>
-      `;
-    } else {
-      card.innerHTML = `
-        <h3>🏰 Help Grow the FairQuest Community!</h3>
-        <p>Sign in or sign up to earn points by adding and updating fairs! 🎯</p>
-        <a href="/user_login.html" class="btn" style="background: #5b2a86; color: white;">Log In / Sign Up</a>
-      `;
-    }
+   } else {
+    card.innerHTML = `
+      <h3>🪄 Create Your FairQuest Account</h3>
+      <p>Log in or sign up to start discovering fairs, applying as a vendor or performer, and joining our growing community.</p>
+      <a href="/user_login.html" class="btn" style="background: #5b2a86; color: white;">Log In / Sign Up</a>
+    `;
   }
+
 }
 
 async function checkIfUserApplied() {

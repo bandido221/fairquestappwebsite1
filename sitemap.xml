@@ -4,84 +4,85 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
 
+<!-- Updated 2025-10-30 for FairQuest -->
 
 <url>
   <loc>https://www.fairquestapp.com/</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
   <priority>1.00</priority>
 </url>
-<url>
-  <loc>https://www.fairquestapp.com/fairs/explore.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/how_to/help_center.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/faq.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/terms.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/privacy.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/contact.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/admin/admin_login.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/profile/reset-password.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
+
 <url>
   <loc>https://www.fairquestapp.com/index.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/fairs/add_fair.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/how_to/how_to_get_image_link.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/how_to/how_to_fill_application.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/how_to/how_to_login_and_use_profile.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://www.fairquestapp.com/info.html</loc>
-  <lastmod>2025-10-08T03:36:11+00:00</lastmod>
-  <priority>0.64</priority>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.95</priority>
 </url>
 
+<url>
+  <loc>https://www.fairquestapp.com/fairs/explore.html</loc>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.90</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fairs/add_fair.html</loc>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.85</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/how_to/help_center.html</loc>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/how_to/how_to_get_image_link.html</loc>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/how_to/how_to_fill_application.html</loc>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/how_to/how_to_login_and_use_profile.html</loc>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/info.html</loc>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.75</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/faq.html</loc>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.85</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/terms.html</loc>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.85</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/privacy.html</loc>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.85</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/contact.html</loc>
+  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <priority>0.85</priority>
+</url>
 
 </urlset>

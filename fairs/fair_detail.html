@@ -112,13 +112,17 @@
   <div class="card" id="fairCard">
 
     <p><strong></strong><br><img id="fairImage" src="" style="width:100%; max-width:600px; border-radius:10px; margin-top:10px;" /></p>
-    <h2 id="fairName">Loading...</h2>
-    <p><strong>📍 Address:</strong> <span id="fairAddress"></span></p>
+<h2 id="fairName">Loading...</h2>
+<p><strong>📜 Description:</strong> <span id="fairDescription"></span></p>
+<p><strong>📍 Address:</strong> <span id="fairAddress"></span></p>
+
     <p><strong>🏙️ City:</strong> <span id="fairCity"></span></p>
     <p><strong>🗺️ State:</strong> <span id="fairState"></span></p>
-    <p><strong>🌐 Website:</strong> <span id="fairWebsite"></span></p>
-    <p><strong>📅 Weekends:</strong></p>
-    <ul id="weekendsList"></ul>
+<p><strong>🌐 Website:</strong> <span id="fairWebsite"></span></p>
+<p><strong>🕒 Hours:</strong> <span id="fairHours"></span></p>
+<p><strong>📅 Weekends:</strong></p>
+<ul id="weekendsList"></ul>
+
 
     <button class="update-btn" onclick="goToUpdatePage()">🛠️ Update This Fair</button>
   </div>
@@ -154,13 +158,26 @@
         return;
       }
 
-      document.getElementById('fairName').textContent = data.name;
-      document.getElementById('fairAddress').textContent = data.address;
-      document.getElementById('fairCity').textContent = data.city;
-      document.getElementById('fairState').textContent = data.state;
-      document.getElementById('fairWebsite').innerHTML = data.website
-        ? `<a href="${data.website}" target="_blank">${data.website}</a>` : 'N/A';
-// NEW: show image when present; else show a message
+document.getElementById('fairName').textContent = data.name;
+
+document.getElementById('fairDescription').textContent =
+  data.description && data.description.trim() !== ''
+    ? data.description
+    : 'Look on the website';
+
+document.getElementById('fairAddress').textContent = data.address;
+document.getElementById('fairCity').textContent = data.city;
+document.getElementById('fairState').textContent = data.state;
+
+document.getElementById('fairWebsite').innerHTML = data.website
+  ? `<a href="${data.website}" target="_blank">${data.website}</a>`
+  : 'N/A';
+
+document.getElementById('fairHours').textContent =
+  data.hours && data.hours.trim() !== ''
+    ? data.hours
+    : 'Look on the website';
+
 {
   const imgUrl = (data.image_url || '').trim();
   const imgEl = document.getElementById('fairImage');
@@ -183,20 +200,30 @@
   }
 }
 
-      const weekendFields = [
-        ['start_date', 'end_date'],
-        ...Array.from({length: 9}, (_, i) => [`week${i+2}_start_date`, `week${i+2}_end_date`])
-      ];
+    function formatDate(d) {
+  const date = new Date(d);
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yy = String(date.getFullYear()).slice(-2);
+  return `${dd}-${mm}-${yy}`;
+}
 
-      const weekendsList = document.getElementById('weekendsList');
-      weekendsList.innerHTML = '';
-      weekendFields.forEach(([startKey, endKey]) => {
-        if (data[startKey] && data[endKey]) {
-          const li = document.createElement('li');
-          li.textContent = `${data[startKey]} → ${data[endKey]}`;
-          weekendsList.appendChild(li);
-        }
-      });
+const weekendFields = [
+  ['start_date', 'end_date'],
+  ...Array.from({length: 9}, (_, i) => [`week${i+2}_start_date`, `week${i+2}_end_date`])
+];
+
+const weekendsList = document.getElementById('weekendsList');
+weekendsList.innerHTML = '';
+
+weekendFields.forEach(([startKey, endKey]) => {
+  if (data[startKey] && data[endKey]) {
+    const li = document.createElement('li');
+    li.textContent = `${formatDate(data[startKey])} → ${formatDate(data[endKey])}`;
+    weekendsList.appendChild(li);
+  }
+});
+
     }
 
     async function loadShowcase() {

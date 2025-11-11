@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gatekeeper's Access | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+
   <style>
     body {
       background-color: #000;
@@ -86,7 +87,14 @@
     <p>Only those granted privileges may enter.</p>
 
     <input type="email" id="email" placeholder="Admin Email" />
-    <input type="password" id="password" placeholder="Password" />
+<div style="position: relative;">
+  <input type="password" id="password" placeholder="Password" style="padding-right: 40px;" />
+  <span id="togglePassword"
+        style="position:absolute; right:10px; top:50%; transform:translateY(-50%);
+               cursor:pointer; font-size:18px; color:#5b2a86;">
+    👁️
+  </span>
+</div>
     <button onclick="login()">Enter Portal</button>
 
     <p class="msg" id="authMessage"></p>
@@ -102,6 +110,21 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
+    // ✅ Autofill saved credentials
+    const savedEmail = localStorage.getItem('admin_email');
+    const savedPassword = localStorage.getItem('admin_password');
+
+    if (savedEmail) document.getElementById('email').value = savedEmail;
+    if (savedPassword) document.getElementById('password').value = savedPassword;
+
+    // ✅ Auto-login if session exists
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        window.location.href = 'admin_dashboard.html';
+      }
+    });
+
+    // ✅ Login function
     async function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
@@ -111,9 +134,15 @@
 
       if (error) {
         msg.textContent = `❌ ${error.message}`;
+        document.getElementById('password').value = ""; // clear wrong password
         return;
       }
 
+      // ✅ Save credentials to remember for next time
+      localStorage.setItem('admin_email', email);
+      localStorage.setItem('admin_password', password);
+
+      // ✅ Check admin table
       const { data, error: fetchError } = await supabase
         .from('admins')
         .select('*')
@@ -131,6 +160,16 @@
         window.location.href = 'admin_dashboard.html';
       }, 1000);
     }
+
+    // ✅ Clear error as soon as user types a new password
+    document.getElementById('password').addEventListener('input', () => {
+      document.getElementById('authMessage').textContent = "";
+    });
+document.getElementById('togglePassword').addEventListener('click', () => {
+  const pwd = document.getElementById('password');
+  pwd.type = pwd.type === "password" ? "text" : "password";
+});
+
   </script>
 
 </body>

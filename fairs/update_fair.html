@@ -140,13 +140,16 @@
     }
 
     async function submitUpdate() {
-  const name = document.getElementById('name').value.trim();
-  const address = document.getElementById('address').value.trim();
-  const city = document.getElementById('city').value.trim();
-  const state = document.getElementById('state').value.trim();
-  const zip = document.getElementById('zip').value.trim();
-  const website = document.getElementById('website').value.trim();
-  let image_url = '';
+const name = document.getElementById('name').value.trim();
+const address = document.getElementById('address').value.trim();
+const city = document.getElementById('city').value.trim();
+const state = document.getElementById('state').value.trim();
+const zip = document.getElementById('zip').value.trim();
+const website = document.getElementById('website').value.trim();
+const description = document.getElementById('description').value.trim();
+const hours = document.getElementById('hours').value.trim();
+let image_url = '';
+
 
   const imageFile = document.getElementById('image_file').files[0];
 if (imageFile) {
@@ -181,20 +184,23 @@ if (imageFile) {
 
   // Submit main fair info
   if (name || address || city || state || zip || website || image_url) {
-    const { error } = await supabase.rpc('insert_fair_suggestion_rate_limited', {
-      _fair_id: parseInt(fairId),
-      _name: name,
-      _address: address,
-      _city: city,
-      _state: state,
-      _zip: zip,
-      _website: website,
-      _image_url: image_url,
-      _start_date: null,
-      _end_date: null,
-      _submitted_by: user ? user.id : null, // 🛠️ FIXED: save user.id or null
-      _submitted_ip: userIP
-    });
+   const { error } = await supabase.rpc('insert_fair_suggestion_rate_limited', {
+  _fair_id: parseInt(fairId),
+  _name: name,
+  _address: address,
+  _city: city,
+  _state: state,
+  _zip: zip,
+  _website: website,
+  _description: description,
+  _hours: hours,
+  _image_url: image_url,
+  _start_date: null,
+  _end_date: null,
+  _submitted_by: user ? user.id : null,
+  _submitted_ip: userIP
+});
+
 
     if (error) {
       alert('❌ ' + error.message);
@@ -252,29 +258,37 @@ if (imageFile) {
 
       if (error) return;
 
-      const fields = [
-        ['name', 'Fair Name'],
-        ['address', 'Address'],
-        ['city', 'City'],
-        ['state', 'State'],
-        ['zip', 'ZIP Code'],
-        ['website', 'Website'],
-        ['image_url', 'Image URL']
-      ];
+ const fields = [
+  ['name', 'Fair Name'],
+  ['address', 'Address'],
+  ['city', 'City'],
+  ['state', 'State'],
+  ['zip', 'ZIP Code'],
+  ['website', 'Website'],
+  ['description', 'Description'],
+  ['hours', 'Hours'],
+  ['image_url', 'Image URL']
+];
+
 
       const fairFields = document.getElementById('fairFields');
       fields.forEach(([key, label]) => {
-  fairFields.innerHTML += `
-    <div class="field-group">
-      <label for="${key}">${label}</label>
-      <div class="current-value">${data[key] || 'None'}</div>
-      ${
-        key === 'image_url'
-          ? `<input type="file" id="image_file" accept="image/*" />`
-          : `<input type="text" id="${key}" placeholder="Update ${label.toLowerCase()} (optional)" />`
-      }
-    </div>
-  `;
+ fairFields.innerHTML += `
+  <div class="field-group">
+    <label for="${key}">${label}</label>
+    <div class="current-value">${data[key] || 'None'}</div>
+    ${
+      key === 'image_url'
+        ? `<input type="file" id="image_file" accept="image/*" />`
+        : key === 'description'
+        ? `<textarea id="description" placeholder="Update description (optional)"></textarea>`
+        : key === 'hours'
+        ? `<input type="text" id="hours" placeholder="Update hours (optional)" />`
+        : `<input type="text" id="${key}" placeholder="Update ${label.toLowerCase()} (optional)" />`
+    }
+  </div>
+`;
+
 });
 
       const weekendDiv = document.getElementById('existingWeekends');

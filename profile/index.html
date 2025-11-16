@@ -165,24 +165,23 @@ function goToSettings() {
     <p><strong>Member Since:</strong> ${new Date(data.created_at).toLocaleDateString()}</p>
   `;
 
-  // Check if the user is an admin
-  const { data: adminData, error: adminError } = await supabase
-    .from('fair_admins')
-    .select('user_id')
-    .eq('user_id', user.id)
-    .single();
+ // Check if the user is an admin of ANY fair
+const { data: adminRows, error: adminError } = await supabase
+  .from('fair_admins')
+  .select('fair_id')
+  .eq('user_id', user.id);
 
- if (adminError || !adminData) {
+if (adminError || !adminRows || adminRows.length === 0) {
   console.log("User is not an admin");
 } else {
-  // User is an admin, show the button
   const adminButton = document.createElement('button');
   adminButton.className = 'settings-button';
-  adminButton.innerHTML = '⚙️Admin Dashboard';
+  adminButton.innerHTML = '🏰 Manage My Fairs';
   adminButton.onclick = () => window.location.href = '/fair_admin/fair_admin.html';
-  adminButton.style.marginTop = '10px';  // Add space between the buttons
+  adminButton.style.marginTop = '10px';
   document.getElementById('profileButtons').appendChild(adminButton);
 }
+
 
 }
 

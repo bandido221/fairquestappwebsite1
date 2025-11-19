@@ -220,7 +220,7 @@ body {
   <!-- ROW 1 -->
   <div class="menu-row-1">
     <div class="menu-left">
-      <a class="menu-btn" href="/fairs/explore.html">🔍 Explore Fairs</a>
+      <a class="menu-btn" href="/fairs/explore.html">🔍 Fairs</a>
     </div>
 
     <div class="menu-right" id="menuRight"></div>
@@ -531,7 +531,7 @@ async function updateMenuBar() {
   const email = sessionData.session.user.email;
 
 menuRight.innerHTML = `
-  <a href="/profile/index.html">My Profile</a>
+  <a href="/profile/index.html">Profile</a>
   <a href="#" onclick="logout()">Logout</a>
 `;
 

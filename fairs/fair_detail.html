@@ -178,10 +178,10 @@ document.getElementById('fairWebsite').innerHTML = data.website
   ? `<a href="${data.website}" target="_blank">${data.website}</a>`
   : 'N/A';
 
+let hoursValue = (data.hours ?? '').trim();
 document.getElementById('fairHours').textContent =
-  data.hours && data.hours.trim() !== ''
-    ? data.hours
-    : 'Look on the website';
+  hoursValue !== '' ? hoursValue : 'Look on the website';
+
 
 {
   const imgUrl = (data.image_url || '').trim();

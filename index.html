@@ -121,10 +121,92 @@
   background-color: #e6c85c;
 }
 
+.top-menu a {
+  color: #f0e6d2;
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 6px 10px;
+}
+
+.top-menu a:hover {
+  color: #d4af37;
+}
+
+body {
+  padding-top: 70px; /* push page down so menu does NOT overlap content */
+}
+.top-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #111;
+  padding: 12px 12px;
+  display: flex;
+  flex-wrap: wrap;          /* ⭐ allows wrapping on narrow screens */
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;                /* small spacing */
+  z-index: 9999;
+  border-bottom: 2px solid #bb9457;
+}
+.menu-left, .menu-right {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+
+.menu-left a,
+.menu-right a {
+  color: #f0e6d2;
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.menu-left a:hover,
+.menu-right a:hover {
+  background-color: #bb9457;
+  color: #000;
+}
+
+.menu-btn {
+  background-color: #333;
+  border: 1px solid #bb9457;
+}
+
+body {
+  padding-top: 75px; 
+}
+
   </style>
 </head>
 
 <body>
+
+  <!-- FIXED TOP MENU BAR -->
+<div class="top-menu">
+
+  <!-- LEFT SIDE -->
+  <div class="menu-left">
+    <a class="menu-btn" href="/fairs/explore.html">🔍 Explore Fairs</a>
+  </div>
+
+  <!-- RIGHT SIDE -->
+  <div class="menu-right" id="menuRight">
+    <!-- JS will insert either: 
+         [Login | Sign Up] 
+         or: [username | My Profile | Logout] 
+    -->
+  </div>
+
+</div>
 
   <img src="images/banner.png" alt="FairQuest Banner" class="top-banner" />
 
@@ -316,6 +398,8 @@
          data-full-width-responsive="true"></ins>
  
   </div>
+
+
   <script>
     (adsbygoogle = window.adsbygoogle || []).push({});
   </script>
@@ -399,6 +483,34 @@
     <button onclick="submitNewPassword()">Set Password</button>
   </div>
 </div>
+
+<script>
+// TOP MENU UPDATE — shows Login/Signup OR User Name/Profile/Logout
+async function updateMenuBar() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const menuRight = document.getElementById("menuRight");
+
+  if (!menuRight) return;
+
+  const isLoggedIn = sessionData?.session?.user != null;
+
+  if (!isLoggedIn) {
+    menuRight.innerHTML = `
+      <a href="/user_login.html">Sign In</a>
+      <a href="/user_login.html">Sign Up</a>
+    `;
+    return;
+  }
+
+  const email = sessionData.session.user.email;
+
+  menuRight.innerHTML = `
+    <span style="margin-right:10px; font-weight:bold; color:#d4af37;">${email}</span>
+    <a href="/profile/index.html">My Profile</a>
+    <a href="#" onclick="logout()">Logout</a>
+  `;
+}
+</script>
 
 
 <script>
@@ -539,6 +651,8 @@ supabase.auth.getUser().then(({ data }) => {
 // Start everything
 loadEarlyTesterCard();
 checkIfUserApplied();
+updateMenuBar();
+
 
 
 </script>

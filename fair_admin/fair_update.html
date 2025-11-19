@@ -171,14 +171,48 @@
 <!-- Hours (Editable) -->
 <label for="currentFairHours">Hours of Operation:</label>
 <div class="info" id="currentFairHours">Loading...</div>
-<input 
-  type="text" 
-  id="newFairHours" 
-  class="input-field" 
-  placeholder="Example: 11:00 AM to 5:30 PM"
-  pattern="^[0-9]{1,2}:[0-9]{2} [AP]M to [0-9]{1,2}:[0-9]{2} [AP]M$"
-  title="Format must be: 11:00 AM to 5:30 PM"
-/>
+<label for="fairHours">Hours of Operation:</label>
+<div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
+
+  <!-- Start Time -->
+  <input 
+    type="text" 
+    id="hours_start_time"
+    class="input-field"
+    placeholder="12:00"
+    maxlength="5"
+    pattern="^[0-9]{1,2}:[0-9]{2}$"
+    required
+    style="max-width:110px;"
+  />
+
+  <select id="hours_start_ampm" class="input-field" style="max-width:90px;" required>
+    <option value="">AM/PM</option>
+    <option value="AM">AM</option>
+    <option value="PM">PM</option>
+  </select>
+
+  <span>to</span>
+
+  <!-- End Time -->
+  <input 
+    type="text" 
+    id="hours_end_time"
+    class="input-field"
+    placeholder="05:30"
+    maxlength="5"
+    pattern="^[0-9]{1,2}:[0-9]{2}$"
+    required
+    style="max-width:110px;"
+  />
+
+  <select id="hours_end_ampm" class="input-field" style="max-width:90px;" required>
+    <option value="">AM/PM</option>
+    <option value="AM">AM</option>
+    <option value="PM">PM</option>
+  </select>
+</div>
+
 <div id="weekContainer">
  <div class="week" data-week="1">
   <h3>Week 1</h3>
@@ -307,6 +341,26 @@ document.getElementById('currentFairImage').innerHTML =
   fairData.image_url
     ? `<img src="${fairData.image_url}" style="max-width:250px;border-radius:6px;">`
     : '';
+// ------------------------------
+// LOAD EXISTING HOURS INTO FIELDS
+// ------------------------------
+if (fairData.hours && fairData.hours.includes("to")) {
+  // Example: "11:00 AM to 6:00 PM"
+  const parts = fairData.hours.split(" ");
+
+  // parts[0] = "11:00"
+  // parts[1] = "AM"
+  // parts[2] = "to"
+  // parts[3] = "6:00"
+  // parts[4] = "PM"
+
+  document.getElementById("hours_start_time").value = parts[0];
+  document.getElementById("hours_start_ampm").value = parts[1];
+  document.getElementById("hours_end_time").value = parts[3];
+  document.getElementById("hours_end_ampm").value = parts[4];
+}
+
+
     /* Load existing weekend dates */
 for (let i = 1; i <= 10; i++) {
   const startKey = i === 1 ? 'start_date' : `week${i}_start_date`;
@@ -354,6 +408,41 @@ function redirectToReview() {
     document.querySelector("#currentFairImage img")?.src ||
     "";
 
+// ------------------------------
+// VALIDATE HOURS INPUT
+// ------------------------------
+const startTime = document.getElementById("hours_start_time").value.trim();
+const startAP   = document.getElementById("hours_start_ampm").value.trim();
+const endTime   = document.getElementById("hours_end_time").value.trim();
+const endAP     = document.getElementById("hours_end_ampm").value.trim();
+
+// Strong regex check (HH:MM)
+function isValidTime(t) {
+  return /^[0-9]{1,2}:[0-9]{2}$/.test(t);
+}
+
+// Check required fields
+if (startTime || startAP || endTime || endAP) {
+  // User began filling → now enforce all
+  if (!startTime || !startAP || !endTime || !endAP) {
+    alert("Please enter complete hours: start time, AM/PM, end time, AM/PM.");
+    return;
+  }
+
+  // Validate format
+  if (!isValidTime(startTime) || !isValidTime(endTime)) {
+    alert("Time must be in format HH:MM, example: 11:00");
+    return;
+  }
+}
+
+// Build final format
+let formattedHours = "";
+if (startTime && startAP && endTime && endAP) {
+  formattedHours = `${startTime} ${startAP} to ${endTime} ${endAP}`;
+}
+
+
 const updatedFairData = {
     name: document.getElementById('newFairName').value || document.getElementById('currentFairName').textContent,
     address: document.getElementById('newFairAddress').value || document.getElementById('currentFairAddress').textContent,
@@ -362,8 +451,11 @@ const updatedFairData = {
     zip: document.getElementById('newFairZip').value || document.getElementById('currentFairZip').textContent,
     website: document.getElementById('newFairWebsite').value || document.getElementById('currentFairWebsite').textContent,
     fairImage: fairImageURL,
-    hours: document.getElementById('newFairHours').value || document.getElementById('currentFairHours').textContent
+
+    // NEW HOURS FORMATTING
+    hours: formattedHours || document.getElementById('currentFairHours').textContent
 };
+
 updatedFairData.weekends = [];
 
 for (let i = 1; i <= currentWeek; i++) {

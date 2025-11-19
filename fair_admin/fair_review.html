@@ -16,6 +16,20 @@
       padding: 20px;
       margin: 0;
     }
+    p {
+  margin-bottom: 15px !important;
+  line-height: 1.6;
+}
+
+ul {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
     h1 {
       font-family: 'Cinzel', serif;
       margin-bottom: 20px;
@@ -95,6 +109,30 @@
       }
 
       // Display fair data from sessionStorage
+          let weekendsHTML = "";
+
+      if (updatedFairData.weekends && updatedFairData.weekends.length > 0) {
+        weekendsHTML += `<p><strong>Weekends:</strong></p><ul>`;
+        updatedFairData.weekends.forEach(w => {
+
+        function formatDate(d) {
+          const date = new Date(d);
+          const mm = String(date.getMonth() + 1).padStart(2, '0');
+          const dd = String(date.getDate()).padStart(2, '0');
+          const yy = String(date.getFullYear()).slice(-2);
+          return `${mm}-${dd}-${yy}`;
+        }
+
+        weekendsHTML += `
+          <li><strong>Week ${w.week}:</strong> ${formatDate(w.start)} → ${formatDate(w.end)}</li>
+        `;
+      });
+
+        weekendsHTML += `</ul>`;
+      } else {
+        weekendsHTML = `<p><strong>Weekends:</strong> No weekends entered.</p>`;
+      }
+
       const fairPreview = `
         <p><strong>Fair Name:</strong> ${updatedFairData.name || 'No data'}</p>
         <p><strong>Address:</strong> ${updatedFairData.address || 'No data'}</p>
@@ -102,81 +140,108 @@
         <p><strong>State:</strong> ${updatedFairData.state || 'No data'}</p>
         <p><strong>Zip:</strong> ${updatedFairData.zip || 'No data'}</p>
         <p><strong>Website:</strong> ${updatedFairData.website || 'No data'}</p>
-        <p><strong>Fair Image:</strong> 
-          <img src="${updatedFairData.fairImage || '/images/default_image.png'}" alt="Fair Image" style="max-width: 200px; max-height: 150px;">
-        </p>
+
+        <p><strong>Hours:</strong> ${updatedFairData.hours || 'No hours entered'}</p>
+
+        <p><strong>Description:</strong> ${updatedFairData.description || 'No description added yet.'}</p>
+
+        ${weekendsHTML}
+
+        <p><strong>Fair Image:</strong></p>
+        <img src="${updatedFairData.fairImage || '/images/default_image.png'}"
+             alt="Fair Image"
+             style="max-width: 200px; max-height: 150px;">
       `;
+
 
       document.getElementById('fairInfoPreview').innerHTML = fairPreview;
     }
 
     // Confirm the update and send to the database
-    async function confirmUpdate() {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        console.error("User not found");
-        return;
-      }
+   async function confirmUpdate() {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    console.error("User not found");
+    return;
+  }
 
-      // Get fair_admin record for this user
-      const { data: adminData, error: adminError } = await supabase
-        .from('fair_admins')
-        .select('fair_id')
-        .eq('user_id', user.id)
-        .single();
+  const fairId = sessionStorage.getItem("fair_id");
+  if (!fairId) {
+    console.error("No fair_id found in sessionStorage.");
+    alert("Fair ID missing. Please start over.");
+    return;
+  }
 
-      if (adminError || !adminData) {
-        console.error("User is not an admin for any fair.");
-        return;
-      }
+  // Load original data from sessionStorage draft
+  const draft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
 
-      const fairId = adminData.fair_id;
+   // Build ONLY changed fields
+  const updateData = {};
 
-      const updateData = {};
+  if (draft.newFairName) updateData.name = draft.newFairName;
+  if (draft.newFairAddress) updateData.address = draft.newFairAddress;
+  if (draft.newFairCity) updateData.city = draft.newFairCity;
+  if (draft.newFairState) updateData.state = draft.newFairState;
+  if (draft.newFairZip) updateData.zip = draft.newFairZip;
+  if (draft.newFairWebsite) updateData.website = draft.newFairWebsite;
 
-      // Only update the fields that have been changed
-      if (updatedFairData.name && updatedFairData.name !== updatedFairData.currentFairName) updateData.name = updatedFairData.name;
-      if (updatedFairData.address && updatedFairData.address !== updatedFairData.currentFairAddress) updateData.address = updatedFairData.address;
-      if (updatedFairData.city && updatedFairData.city !== updatedFairData.currentFairCity) updateData.city = updatedFairData.city;
-      if (updatedFairData.state && updatedFairData.state !== updatedFairData.currentFairState) updateData.state = updatedFairData.state;
-      if (updatedFairData.zip && updatedFairData.zip !== updatedFairData.currentFairZip) updateData.zip = updatedFairData.zip;
-      if (updatedFairData.website && updatedFairData.website !== updatedFairData.currentFairWebsite) updateData.website = updatedFairData.website;
+  // Hours
+  if (updatedFairData.hours && updatedFairData.hours.trim() !== "") {
+    updateData.hours = updatedFairData.hours.trim();
+  }
 
-      if (updatedFairData.fairImage && updatedFairData.fairImage !== updatedFairData.currentFairImage) {
-        const { data: uploadedImage, error: imageError } = await supabase.storage
-          .from('fair_images')
-          .upload(`public/${updatedFairData.fairImage.name}`, updatedFairData.fairImage);
-
-        if (imageError) {
-          console.error('Error uploading image:', imageError);
-        } else {
-          updateData.image_url = uploadedImage.path;
-        }
-      }
-
-      if (Object.keys(updateData).length === 0) {
-        alert("No changes detected. No updates will be made.");
-        return; // No changes, so do nothing
-      }
-
-      const { data, error } = await supabase
-        .from('renaissance_fairs')
-        .update(updateData)
-        .eq('id', fairId);
-
-      if (error) {
-        console.error('Error updating fair:', error);
+  // WEEKENDS
+  if (updatedFairData.weekends && updatedFairData.weekends.length > 0) {
+    updatedFairData.weekends.forEach(w => {
+      if (w.week === 1) {
+        updateData.start_date = w.start;
+        updateData.end_date = w.end;
       } else {
-        alert('Fair updated successfully!');
-        sessionStorage.removeItem('updatedFairData');
-        window.location.href = '/index.html'; // Redirect to home or another page
+        updateData[`week${w.week}_start_date`] = w.start;
+        updateData[`week${w.week}_end_date`] = w.end;
       }
-    }
+    });
+  }
+
+  // Image
+  const finalImage = sessionStorage.getItem("fair_image_url");
+  if (finalImage) {
+    updateData.image_url = finalImage;
+  }
+
+  // SAVE
+  const { data, error } = await supabase
+    .from("renaissance_fairs")
+    .update(updateData)
+    .eq("id", fairId);
+
+  if (error) {
+    console.error("Error updating fair:", error);
+    alert("Update failed");
+    return;
+  }
+
+  if (error) {
+    console.error("Error updating fair:", error);
+    alert("Update failed");
+    return;
+  }
+
+  // Clean session data
+  sessionStorage.removeItem("updatedFairData");
+  sessionStorage.removeItem("update_fair_draft");
+
+  alert("Fair updated successfully!");
+  window.location.href = "/index.html";
+}
+
+    
 
     // Cancel the update and go back to the update page
-    function cancelUpdate() {
-      window.location.href = '/fair_admin/fair_review.html'; // Redirect to update fair page
-    }
+   function cancelUpdate() {
+  window.location.href = 'fair_update.html?fair_id=' + sessionStorage.getItem("fair_id");
+}
+
 
     // Display the preview data when the page loads
     window.onload = displayFairPreview;

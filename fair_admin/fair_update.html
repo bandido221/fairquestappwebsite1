@@ -88,6 +88,46 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+.week {
+  margin-top: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #bbb;
+}
+
+.week-dates {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+
+.week h3 {
+  width: 80px;
+  margin: 0;
+}
+
+.week label {
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+.week input[type="text"],
+.week input[type="date"] {
+  padding: 6px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+.week-theme {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.week-dates {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
 
   </style>
 </head>
@@ -128,11 +168,59 @@
       <label for="currentFairWebsite">Website:</label>
       <div class="info" id="currentFairWebsite">Loading...</div>
       <input type="text" id="newFairWebsite" class="input-field" placeholder="Enter new website">
+<!-- Hours (Editable) -->
+<label for="currentFairHours">Hours of Operation:</label>
+<div class="info" id="currentFairHours">Loading...</div>
+<input 
+  type="text" 
+  id="newFairHours" 
+  class="input-field" 
+  placeholder="Example: 11:00 AM to 5:30 PM"
+  pattern="^[0-9]{1,2}:[0-9]{2} [AP]M to [0-9]{1,2}:[0-9]{2} [AP]M$"
+  title="Format must be: 11:00 AM to 5:30 PM"
+/>
+<div id="weekContainer">
+ <div class="week" data-week="1">
+  <h3>Week 1</h3>
+
+  <!-- Theme row -->
+  <div class="week-theme">
+    <label>Theme:</label>
+    <input type="text" id="week1_theme" placeholder="Optional theme" />
+  </div>
+
+  <!-- Start/End row -->
+  <div class="week-dates">
+    <label>Start:</label>
+    <input type="date" id="week1_start" />
+
+    <label>End:</label>
+    <input type="date" id="week1_end" />
+  </div>
+</div>
+
+</div>
+
+
+<button id="addWeekButton" type="button" class="button">Add another weekend</button>
+
+      <!-- Fair Description (Editable) -->
+<label for="currentFairDescription">Description:</label>
+<div class="info" id="currentFairDescription">Loading...</div>
+<input type="text" id="newFairDescription" class="input-field" placeholder="Enter fair description (max 400 characters)">
 
       <!-- Fair Image URL (Editable) -->
-      <label for="currentFairImage">Fair Image URL:</label>
-      <div class="info" id="currentFairImage">Loading...</div>
-      <input type="text" id="newFairImageURL" class="input-field" placeholder="Enter new image URL">
+      <label for="currentFairImage">Fair Image:</label>
+<div class="info" id="currentFairImage"></div>
+
+<input type="file" id="fairImageFile" accept="image/*" style="display:none;">
+<button class="button" onclick="document.getElementById('fairImageFile').click()">Upload Image</button>
+<button id="removeImageBtn" class="button" style="display:none; background:#c0392b;">
+  Remove Image
+</button>
+
+<!-- Preview -->
+<img id="fairImagePreview" style="max-width:250px;margin-top:15px;display:none;border-radius:6px;">
 
     </div>
 
@@ -143,6 +231,34 @@
   <a href="/index.html" class="back-link">🏡 Back to Home</a>
 
   <script>
+    // Restore saved fields
+const saved = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
+
+// Restore text fields
+["newFairName","newFairAddress","newFairCity","newFairState",
+ "newFairZip","newFairWebsite"].forEach(id => {
+  if (saved[id]) document.getElementById(id).value = saved[id];
+});
+
+// Restore uploaded image
+if (saved.fair_image_url) {
+  document.getElementById("currentFairImage").innerHTML =
+    `<img src="${saved.fair_image_url}" style="max-width:250px;border-radius:6px;">`;
+
+  document.getElementById("removeImageBtn").style.display = "inline-block";
+  sessionStorage.setItem("fair_image_url", saved.fair_image_url);
+}
+
+// Auto-save on typing
+["newFairName","newFairAddress","newFairCity","newFairState",
+ "newFairZip","newFairWebsite"].forEach(id => {
+  document.getElementById(id).addEventListener("input", () => {
+    const draft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
+    draft[id] = document.getElementById(id).value;
+    sessionStorage.setItem("update_fair_draft", JSON.stringify(draft));
+  });
+});
+
     const supabase = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
@@ -155,27 +271,25 @@
         console.error("User not found");
         return;
       }
+// Read fair_id from URL
+const fairId = new URLSearchParams(window.location.search).get("fair_id");
 
-      // Get fair_admin record for this user
-      const { data: adminData, error: adminError } = await supabase
-        .from('fair_admins')
-        .select('fair_id')
-        .eq('user_id', user.id)
-        .single();
+if (!fairId) {
+  console.error("No fair_id provided in URL.");
+  return;
+}
 
-      if (adminError || !adminData) {
-        console.error("User is not an admin for any fair.");
-        return;
-      }
+// Load fair info
+const { data: fairData, error: fairError } = await supabase
+  .from('renaissance_fairs')
+  .select('*')
+  .eq('id', fairId)
+  .single();
 
-      const fairId = adminData.fair_id;
-
-      // Fetch fair info from renaissance_fairs table
-      const { data: fairData, error: fairError } = await supabase
-        .from('renaissance_fairs')
-        .select('*')
-        .eq('id', fairId)
-        .single();
+if (fairError || !fairData) {
+  console.error("Fair not found.");
+  return;
+}
 
       if (fairError || !fairData) {
         console.error("Fair not found or error fetching fair details.");
@@ -189,36 +303,212 @@
       document.getElementById('currentFairState').textContent = `${fairData.state || 'N/A'}`;
       document.getElementById('currentFairZip').textContent = `${fairData.zip || 'N/A'}`;
       document.getElementById('currentFairWebsite').textContent = `${fairData.website || 'N/A'}`;
-      document.getElementById('currentFairImage').innerHTML = `<img src="${fairData.image_url || '/images/default_image.png'}" alt="Fair Image">`;
+document.getElementById('currentFairImage').innerHTML =
+  fairData.image_url
+    ? `<img src="${fairData.image_url}" style="max-width:250px;border-radius:6px;">`
+    : '';
+    /* Load existing weekend dates */
+for (let i = 1; i <= 10; i++) {
+  const startKey = i === 1 ? 'start_date' : `week${i}_start_date`;
+  const endKey   = i === 1 ? 'end_date'   : `week${i}_end_date`;
+
+  if (fairData[startKey] && fairData[endKey]) {
+    if (i > 1) {
+      currentWeek++;
+      const weekContainer = document.getElementById('weekContainer');
+      const weekDiv = document.createElement('div');
+      weekDiv.className = 'week';
+      weekDiv.setAttribute('data-week', i);
+
+   weekDiv.innerHTML = `
+        <h3>Week ${i}</h3>
+
+        <label>Theme:</label>
+        <input type="text" id="week${i}_theme" value="${fairData[`week${i}_theme`] || ''}" placeholder="Optional theme" />
+
+        <label>Start:</label>
+        <input type="date" id="week${i}_start" value="${fairData[startKey]}" />
+
+        <label>End:</label>
+        <input type="date" id="week${i}_end" value="${fairData[endKey]}" />
+      `;
+
+
+      weekContainer.appendChild(weekDiv);
+    } else {
+      document.getElementById('week1_start').value = fairData.start_date;
+      document.getElementById('week1_end').value = fairData.end_date;
+    }
+  }
+}
+
     }
 
     // Proceed to review page and store updated fair data in sessionStorage
 function redirectToReview() {
-  // Get fair image URL (use the existing one if no new URL is provided)
-  const fairImageURL = document.getElementById('newFairImageURL').value.trim() || document.getElementById('currentFairImage').textContent.trim();
+  const fairId = new URLSearchParams(window.location.search).get("fair_id");
+  sessionStorage.setItem('fair_id', fairId);
 
-  // Log the fair image URL for debugging
-  console.log("Fair Image URL being passed:", fairImageURL);
+  const fairImageURL =
+    sessionStorage.getItem("fair_image_url") ||
+    document.querySelector("#currentFairImage img")?.src ||
+    "";
 
-  const updatedFairData = {
+const updatedFairData = {
     name: document.getElementById('newFairName').value || document.getElementById('currentFairName').textContent,
     address: document.getElementById('newFairAddress').value || document.getElementById('currentFairAddress').textContent,
     city: document.getElementById('newFairCity').value || document.getElementById('currentFairCity').textContent,
     state: document.getElementById('newFairState').value || document.getElementById('currentFairState').textContent,
     zip: document.getElementById('newFairZip').value || document.getElementById('currentFairZip').textContent,
     website: document.getElementById('newFairWebsite').value || document.getElementById('currentFairWebsite').textContent,
-    fairImage: fairImageURL,  // Use the existing or updated image URL
-  };
+    fairImage: fairImageURL,
+    hours: document.getElementById('newFairHours').value || document.getElementById('currentFairHours').textContent
+};
+updatedFairData.weekends = [];
 
-  console.log("Updated Fair Data:", updatedFairData);  // Log the entire data for debugging
+for (let i = 1; i <= currentWeek; i++) {
+  const start = document.getElementById(`week${i}_start`)?.value || '';
+  const end   = document.getElementById(`week${i}_end`)?.value || '';
 
-  // Store the fair data to be reviewed
-  sessionStorage.setItem('updatedFairData', JSON.stringify(updatedFairData));
-
-  // Redirect to review page
-  window.location.href = 'fair_review.html';
+  if (start && end) {
+    updatedFairData.weekends.push({ week: i, start, end });
+  }
 }
 
+
+sessionStorage.setItem('updatedFairData', JSON.stringify(updatedFairData));
+
+// keep draft so returning to edit restores everything
+window.location.href = 'fair_review.html';
+
+}
+
+
+const cloudName = "dft7xclvh";
+const uploadPreset = "fair_upload";
+
+document.getElementById("fairImageFile").addEventListener("change", async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Compress the image
+    const compressed = await compressImage(file, 0.6);
+
+    // Upload to Cloudinary
+    let formData = new FormData();
+    formData.append("file", compressed);
+    formData.append("upload_preset", uploadPreset);
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+
+    // Save final URL
+    sessionStorage.setItem("fair_image_url", data.secure_url);
+    sessionStorage.setItem("uploaded_public_id", data.public_id);
+
+    // Show uploaded image
+    document.getElementById("currentFairImage").innerHTML =
+      `<img id="uploadedFairImage" src="${data.secure_url}" style="max-width:250px;border-radius:6px;">`;
+
+    document.getElementById("fairImagePreview").style.display = "none";
+
+    // Show remove button
+    document.getElementById("removeImageBtn").style.display = "inline-block";
+
+    // ---- UPDATE DRAFT (ONLY ONCE) ----
+    let tempDraft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
+    tempDraft.fair_image_url = data.secure_url;
+    sessionStorage.setItem("update_fair_draft", JSON.stringify(tempDraft));
+});
+
+
+// Image compression
+function compressImage(file, quality) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                const maxWidth = 1080;
+                const scaleSize = maxWidth / img.width;
+
+                canvas.width = maxWidth;
+                canvas.height = img.height * scaleSize;
+
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                canvas.toBlob(
+                    (blob) => resolve(blob),
+                    "image/jpeg",
+                    quality
+                );
+            };
+        };
+    });
+}
+document.getElementById("removeImageBtn").onclick = async function () {
+    document.getElementById("currentFairImage").innerHTML = "";
+    document.getElementById("removeImageBtn").style.display = "none";
+
+    // Reset preview if used
+    document.getElementById("fairImagePreview").style.display = "none";
+    document.getElementById("fairImagePreview").src = "";
+
+    // Clear file input so SAME file can be selected again
+    document.getElementById("fairImageFile").value = "";
+
+    // Clear stored cloudinary info
+sessionStorage.removeItem("uploaded_public_id");
+sessionStorage.removeItem("fair_image_url");
+
+const draft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
+delete draft.fair_image_url;
+sessionStorage.setItem("update_fair_draft", JSON.stringify(draft));
+
+};
+
+const maxWeeks = 10;
+let currentWeek = 1;
+
+document.getElementById('addWeekButton').addEventListener('click', () => {
+  if (currentWeek < maxWeeks) {
+    currentWeek++;
+    const weekContainer = document.getElementById('weekContainer');
+    const weekDiv = document.createElement('div');
+    weekDiv.className = 'week';
+    weekDiv.setAttribute('data-week', currentWeek);
+
+weekDiv.innerHTML = `
+  <h3>Week ${currentWeek}</h3>
+
+  <div class="week-theme">
+    <label>Theme:</label>
+    <input type="text" id="week${currentWeek}_theme" placeholder="Optional theme" />
+  </div>
+
+  <div class="week-dates">
+    <label>Start:</label>
+    <input type="date" id="week${currentWeek}_start" />
+
+    <label>End:</label>
+    <input type="date" id="week${currentWeek}_end" />
+  </div>
+`;
+
+
+
+    weekContainer.appendChild(weekDiv);
+  }
+});
 
 
     loadAdminDashboard();

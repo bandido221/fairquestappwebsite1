@@ -117,8 +117,12 @@
       <label for="fairImage">Fair Image:</label>
       <div class="info" id="fairImage">Loading...</div>
 
-      <label for="fairWeekends">Weekend Dates:</label>
-      <div class="info" id="fairWeekends">Loading...</div>
+     <label for="fairWeekends">Weekend Dates:</label>
+<div class="info" id="fairWeekends">Loading...</div>
+
+<label for="fairHours">Hours of Operation:</label>
+<div class="info" id="fairHours">Loading...</div>
+
       
       <label for="fairName">Fair Name:</label>
       <div class="info" id="fairName">Loading...</div>
@@ -149,6 +153,7 @@
   <a href="/index.html" class="back-link">🏡 Back to Home</a>
 
   <script>
+    
     const supabase = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
@@ -166,25 +171,111 @@
       await loadProfile(user.id);
 
       // Get fair_admin record for this user
-      const { data: adminData, error: adminError } = await supabase
-        .from('fair_admins')
-        .select('fair_id')
-        .eq('user_id', user.id)
-        .single();
+ // Get ALL fairs this user is admin of
+const { data: adminRows, error: adminError } = await supabase
+  .from('fair_admins')
+  .select('fair_id')
+  .eq('user_id', user.id);
 
-      if (adminError || !adminData) {
-        console.error("User is not an admin for any fair.");
-        return;
-      }
+if (adminError || !adminRows || adminRows.length === 0) {
+  console.error("User is not an admin for any fair.");
+  return;
+}
 
-      const fairId = adminData.fair_id;
+// Clear old single fair card
+document.getElementById('fairInfo').innerHTML = "";
 
-      // Fetch fair info from renaissance_fairs table
-      const { data: fairData, error: fairError } = await supabase
-        .from('renaissance_fairs')
-        .select('*')
-        .eq('id', fairId)
-        .single();
+// Loop through each fair
+for (const row of adminRows) {
+  const fairId = row.fair_id;
+
+  const { data: fairData, error: fairError } = await supabase
+    .from('renaissance_fairs')
+    .select('*')
+    .eq('id', fairId)
+    .single();
+
+  if (fairError || !fairData) continue;
+
+const weekendsHtml = (() => {
+  let html = "";
+
+  function fmt(d) {
+    const date = new Date(d);
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const yy = String(date.getFullYear()).slice(-2);
+    return `${mm}-${dd}-${yy}`;
+  }
+
+  // WEEK 1 (main columns)
+  if (fairData.start_date && fairData.end_date) {
+    html += `Week 1: ${fmt(fairData.start_date)} → ${fmt(fairData.end_date)}<br>`;
+  }
+
+  // WEEK 2–10 (extra weekends)
+  for (let i = 2; i <= 10; i++) {
+    const s = fairData[`week${i}_start_date`];
+    const e = fairData[`week${i}_end_date`];
+
+    if (s && e) {
+      html += `Week ${i}: ${fmt(s)} → ${fmt(e)}<br>`;
+    }
+  }
+
+  return html || "No weekends scheduled.";
+})();
+
+
+  // Append card for this fair
+  document.getElementById('fairInfo').innerHTML += `
+    <div class="fair-info-card">
+      <h2>Fair Information</h2>
+      <div class="fair-info">
+
+        <label>Fair Image:</label>
+        <div class="info">
+          ${fairData.image_url ? `<img src="${fairData.image_url}" style="max-width:100%;max-height:300px;">` : 'No Image'}
+        </div>
+<label>Description:</label>
+<div class="info">${fairData.description || "No description added yet."}</div>
+
+        <label>Weekend Dates:</label>
+        <div class="info">${weekendsHtml}</div>
+
+        <label>Fair Name:</label>
+        <div class="info">${fairData.name}</div>
+
+        <label>Address:</label>
+        <div class="info">${fairData.address}</div>
+
+        <label>City:</label>
+        <div class="info">${fairData.city}</div>
+
+        <label>State:</label>
+        <div class="info">${fairData.state}</div>
+
+        <label>Zip:</label>
+        <div class="info">${fairData.zip || "N/A"}</div>
+
+        <label>Website:</label>
+        <div class="info">${fairData.website || "N/A"}</div>
+
+        <label>Level:</label>
+        <div class="info">${fairData.fair_admin_level || "N/A"}</div>
+
+      </div>
+
+<button class="update-fair-button" onclick="window.location.href='fair_update.html?fair_id=${fairId}'">
+    Update Fair
+</button>
+
+
+
+    </div>
+  `;
+}
+
 
       if (fairError || !fairData) {
         console.error("Fair not found or error fetching fair details.");

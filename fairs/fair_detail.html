@@ -113,7 +113,9 @@
 
     <p><strong></strong><br><img id="fairImage" src="" style="width:100%; max-width:600px; border-radius:10px; margin-top:10px;" /></p>
 <h2 id="fairName">Loading...</h2>
-<p><strong>📜 Description:</strong> <span id="fairDescription"></span></p>
+<p id="descriptionRow" style="display:none;">
+  <strong>📜 Description:</strong> <span id="fairDescription"></span>
+</p>
 <p><strong>📍 Address:</strong> <span id="fairAddress"></span></p>
 
     <p><strong>🏙️ City:</strong> <span id="fairCity"></span></p>
@@ -160,10 +162,13 @@
 
 document.getElementById('fairName').textContent = data.name;
 
-document.getElementById('fairDescription').textContent =
-  data.description && data.description.trim() !== ''
-    ? data.description
-    : 'Look on the website';
+if (data.description && data.description.trim() !== '') {
+  document.getElementById('descriptionRow').style.display = 'block';
+  document.getElementById('fairDescription').textContent = data.description;
+} else {
+  document.getElementById('descriptionRow').style.display = 'none';
+}
+
 
 document.getElementById('fairAddress').textContent = data.address;
 document.getElementById('fairCity').textContent = data.city;

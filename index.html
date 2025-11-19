@@ -143,21 +143,45 @@ body {
   left: 0;
   width: 100%;
   background: #111;
-  padding: 12px 12px;
+  padding: 10px 12px;
   display: flex;
-  flex-wrap: wrap;          /* ⭐ allows wrapping on narrow screens */
-  justify-content: space-between;
+  flex-direction: column;   /* ⭐ FORCE 2 ROWS ALWAYS */
   align-items: center;
-  gap: 10px;                /* small spacing */
   z-index: 9999;
   border-bottom: 2px solid #bb9457;
 }
-.menu-left, .menu-right {
+
+.menu-row-1 {
+  width: 100%;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
 }
 
+.menu-left,
+.menu-right {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.menu-email-bar {
+  width: 100%;
+  text-align: center;
+  margin-top: 4px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #d4af37;
+}
+
+/* ⭐ MOBILE FONT SHRINK */
+@media (max-width: 768px) {
+  .menu-left a,
+  .menu-right a {
+    font-size: 0.85rem;
+    padding: 4px 8px;
+  }
+}
 
 .menu-left a,
 .menu-right a {
@@ -193,18 +217,20 @@ body {
   <!-- FIXED TOP MENU BAR -->
 <div class="top-menu">
 
-  <!-- LEFT SIDE -->
-  <div class="menu-left">
-    <a class="menu-btn" href="/fairs/explore.html">🔍 Explore Fairs</a>
+  <!-- ROW 1 -->
+  <div class="menu-row-1">
+    <div class="menu-left">
+      <a class="menu-btn" href="/fairs/explore.html">🔍 Explore Fairs</a>
+    </div>
+
+    <div class="menu-right" id="menuRight"></div>
   </div>
 
-  <!-- RIGHT SIDE -->
-  <div class="menu-right" id="menuRight">
-    <!-- JS will insert either: 
-         [Login | Sign Up] 
-         or: [username | My Profile | Logout] 
-    -->
-  </div>
+  <!-- ROW 2 EMAIL BAR (JS will fill it) -->
+  <div id="menuEmail" class="menu-email-bar"></div>
+
+</div>
+
 
 </div>
 
@@ -504,11 +530,13 @@ async function updateMenuBar() {
 
   const email = sessionData.session.user.email;
 
-  menuRight.innerHTML = `
-    <span style="margin-right:10px; font-weight:bold; color:#d4af37;">${email}</span>
-    <a href="/profile/index.html">My Profile</a>
-    <a href="#" onclick="logout()">Logout</a>
-  `;
+menuRight.innerHTML = `
+  <a href="/profile/index.html">My Profile</a>
+  <a href="#" onclick="logout()">Logout</a>
+`;
+
+document.getElementById("menuEmail").innerHTML = `${email}`;
+
 }
 </script>
 

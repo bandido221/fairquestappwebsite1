@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FairQuest – Fair Admin Access</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  body { background:#000; color:#f0e6d2; font-family: 'Domine', serif; margin:0; padding:0; }
+  .box { max-width:600px; margin:40px auto; background:#111; padding:20px; border-radius:10px; }
+  h1 { text-align:center; font-family:'Cinzel', serif; }
+  button, input, textarea, select {
+    width:100%; padding:10px; margin-top:10px; border-radius:6px;
+    border:1px solid #444; background:#222; color:#f0e6d2;
+  }
+  button { background:#c79a3b; color:#000; font-weight:bold; cursor:pointer; }
+  .hidden { display:none; }
+  label { margin-top:15px; display:block; font-weight:bold; }
+  .msg { margin-top:15px; padding:10px; border-radius:6px; }
+  .error { background:#3b1212; color:#ffb3b3; }
+  .success { background:#123b1c; color:#b3ffcf; }
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h1>FairQuest – Fair Admin Access</h1>
+
+  <!-- STEP 1: Ask if they have account -->
+  <div id="stepChoose">
+    <button onclick="showSignup()">No, I need to create an account</button>
+    <button onclick="showLogin()">Yes, I already have an account</button>
+  </div>
+
+  <!-- STEP 2: SIGNUP -->
+  <div id="stepSignup" class="hidden">
+    <h2>Create Your Account</h2>
+    <input id="signupEmail" type="email" placeholder="Email">
+    <input id="signupPass" type="password" placeholder="Password (8+ chars)">
+    <label><input type="checkbox" onclick="togglePass('signupPass')"> Show password</label>
+    <button onclick="signup()">Sign Up</button>
+    <div id="signupMsg" class="msg hidden"></div>
+  </div>
+
+  <!-- STEP 3: TELL THEM TO CHECK EMAIL -->
+  <div id="stepCheckEmail" class="hidden">
+    <h2>Check Your Email</h2>
+    <p>Please verify your email, then come back and log in.</p>
+    <button onclick="showLogin()">Go to Login</button>
+  </div>
+
+  <!-- STEP 4: LOGIN -->
+  <div id="stepLogin" class="hidden">
+    <h2>Login</h2>
+    <input id="loginEmail" type="email" placeholder="Email">
+    <input id="loginPass" type="password" placeholder="Password">
+    <label><input type="checkbox" onclick="togglePass('loginPass')"> Show password</label>
+    <button onclick="login()">Login</button>
+    <div id="loginMsg" class="msg hidden"></div>
+  </div>
+
+  <!-- STEP 5: FULL FAIR VERIFICATION FORM -->
+<div id="stepFairForm" class="hidden">
+  <h2>1. Your Fair Information</h2>
+
+  <label for="fairName">Fair name</label>
+  <input type="text" id="fairName" required placeholder="Example: Iowa Renaissance Festival" />
+
+  <label for="fairCity">City</label>
+  <input type="text" id="fairCity" required placeholder="City" />
+
+  <label for="fairState">State / Region</label>
+  <input type="text" id="fairState" required placeholder="Example: IA" />
+
+  <label for="fairWebsite">Official fair website (if any)</label>
+  <input type="url" id="fairWebsite" placeholder="https://yourfair.com" />
+
+  <label for="fairRole">Your role at the fair</label>
+  <select id="fairRole" required>
+    <option value="">Select one…</option>
+    <option value="owner">Owner</option>
+    <option value="president">President</option>
+    <option value="director">Director / Manager</option>
+    <option value="marketing">Marketing / Promotions</option>
+    <option value="other">Other</option>
+  </select>
+
+  <label for="roleDetails">If “Other”, please explain</label>
+  <input type="text" id="roleDetails" placeholder="Example: Vendor coordinator, Board member…" />
+
+  <label for="fairNotes">Anything important we should know about your fair?</label>
+  <textarea id="fairNotes" placeholder="Dates, themes, special notes, or anything you’d like us to know when reviewing your request."></textarea>
+
+  <h2>2. Your Contact Information</h2>
+
+  <label for="contactName">Your full name</label>
+  <input type="text" id="contactName" required placeholder="Your name" />
+
+  <label for="contactPhone">Phone number (optional)</label>
+  <input type="tel" id="contactPhone" placeholder="+1 (555) 555-5555" />
+
+  <button onclick="submitFairInfo()">Submit Fair Verification</button>
+  <div id="fairMsg" class="msg hidden"></div>
+</div>
+
+</div>
+
+<script>
+const supa = window.supabase.createClient(
+       'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  
+);
+
+function togglePass(id){ 
+  let x=document.getElementById(id);
+  x.type = x.type==="password" ? "text" : "password";
+}
+
+// UI helpers
+function showSignup(){ stepChoose.classList.add('hidden'); stepSignup.classList.remove('hidden'); }
+function showLogin(){ stepChoose.classList.add('hidden'); stepLogin.classList.remove('hidden'); }
+function showFairForm(){ stepFairForm.classList.remove('hidden'); }
+
+// SIGNUP
+async function signup(){
+  const email = signupEmail.value;
+  const pass = signupPass.value;
+
+const { error } = await supa.auth.signUp({ email, password: pass });
+
+  if(error){
+    signupMsg.textContent = error.message;
+    signupMsg.className = "msg error";
+    signupMsg.classList.remove("hidden");
+    return;
+  }
+
+  stepSignup.classList.add('hidden');
+  stepCheckEmail.classList.remove('hidden');
+}
+
+// LOGIN
+async function login(){
+  const email = loginEmail.value;
+  const pass = loginPass.value;
+
+  const { data, error } = await supa.auth.signInWithPassword({
+    email, password:pass
+  });
+
+  if(error){
+    loginMsg.textContent = error.message;
+    loginMsg.className = "msg error";
+    loginMsg.classList.remove("hidden");
+    return;
+  }
+
+  stepLogin.classList.add('hidden');
+  stepFairForm.classList.remove('hidden');
+}
+
+// SUBMIT FAIR INFO TO METADATA
+async function submitFairInfo(){
+  const updates = {
+    fair_name: fairName.value.trim(),
+    fair_city: fairCity.value.trim(),
+    fair_state: fairState.value.trim(),
+    fair_website: fairWebsite.value.trim(),
+    fair_role: fairRole.value,
+    role_details: roleDetails.value.trim(),
+    fair_notes: fairNotes.value.trim(),
+    contact_name: contactName.value.trim(),
+    contact_phone: contactPhone.value.trim()
+  };
+
+  const { data: userData } = await supa.auth.getUser();
+  const user = userData.user;
+
+  if(!user){
+    fairMsg.textContent = "Not logged in.";
+    fairMsg.className="msg error";
+    fairMsg.classList.remove("hidden");
+    return;
+  }
+
+  // INSERT INTO fair_verification TABLE
+  const { error } = await supa
+    .from('fair_verification')
+    .insert([
+      {
+        user_id: user.id,
+        fair_name: updates.fair_name,
+        fair_city: updates.fair_city,
+        fair_state: updates.fair_state,
+        fair_website: updates.fair_website,
+        fair_role: updates.fair_role,
+        role_details: updates.role_details,
+        fair_notes: updates.fair_notes,
+        contact_name: updates.contact_name,
+        contact_phone: updates.contact_phone
+      }
+    ]);
+
+  if(error){
+    fairMsg.textContent = error.message;
+    fairMsg.className="msg error";
+    fairMsg.classList.remove("hidden");
+    return;
+  }
+
+  fairMsg.textContent = "Fair information submitted! We will review your request.";
+  fairMsg.className="msg success";
+  fairMsg.classList.remove("hidden");
+}
+
+
+</script>
+
+</body>
+</html>

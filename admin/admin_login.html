@@ -64,11 +64,79 @@
       user-select: none;
     }
 
-    .msg {
+     .msg {
       margin-top: 12px;
       font-weight: bold;
       color: #b73239;
     }
+
+    /* Modal "new window" for errors */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 9999;
+    }
+    .modal {
+      width: 100%;
+      max-width: 560px;
+      background: rgba(251, 241, 200, 0.96);
+      border: 2px solid #aa8452;
+      border-radius: 12px;
+      color: #3b1f1f;
+      text-align: left;
+      padding: 18px 18px 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+    }
+    .modal h2 {
+      margin: 0 0 8px;
+      font-family: 'Cinzel', serif;
+      color: #5b2a86;
+      font-size: 18px;
+    }
+    .modal p {
+      margin: 0 0 10px;
+      line-height: 1.35;
+    }
+    .modal .details {
+      background: rgba(0,0,0,0.06);
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 8px;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-top: 8px;
+      display: none;
+    }
+    .modal .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+    .modal .btn {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .modal .btn-primary {
+      background: #5b2a86;
+      color: #fff;
+    }
+    .modal .btn-secondary {
+      background: #aa8452;
+      color: #000;
+    }
+
   </style>
 </head>
 <body>
@@ -76,59 +144,179 @@
 <div class="container">
   <h1>Gatekeeper's Access</h1>
 
-  <input type="email" id="email" placeholder="Admin Email" />
+  <form id="loginForm" autocomplete="on">
+    <input type="email" id="email" placeholder="Admin Email" autocomplete="username" required />
 
-  <div style="position:relative;">
-    <input type="password" id="password" placeholder="Password" />
-    <span class="eye" onclick="
-      const p = document.getElementById('password');
-      p.type = p.type === 'password' ? 'text' : 'password';
-    ">👁️</span>
-  </div>
+    <div style="position:relative;">
+      <input type="password" id="password" placeholder="Password" autocomplete="current-password" required />
+      <span class="eye" onclick="
+        const p = document.getElementById('password');
+        p.type = p.type === 'password' ? 'text' : 'password';
+      ">👁️</span>
+    </div>
 
-  <button onclick="login()">Enter Portal</button>
+    <button id="loginBtn" type="submit">Enter Portal</button>
+  </form>
+
   <p class="msg" id="authMessage"></p>
 </div>
 
+<div class="modal-overlay" id="errorOverlay" role="dialog" aria-modal="true" aria-labelledby="errorTitle">
+ <div class="modal">
+    <h2 id="errorTitle">Login issue</h2>
+    <p id="errorFriendly"></p>
+
+    <button class="btn btn-secondary" type="button" id="toggleDetailsBtn">Show details</button>
+    <div class="details" id="errorDetails"></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" type="button" id="closeErrorBtn">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  const supabase = window.supabase.createClient(
+   window._supabaseClient = window._supabaseClient || window.supabase.createClient(
     'https://awtbjuiqgtdydsqzimul.supabase.co',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
   );
+  window.supabaseClient = window._supabaseClient;
+
+
+  const emailEl = document.getElementById('email');
+  const passwordEl = document.getElementById('password');
+  const msgEl = document.getElementById('authMessage');
+  const loginForm = document.getElementById('loginForm');
+  const loginBtn = document.getElementById('loginBtn');
+
+  // Modal elements
+  const overlay = document.getElementById('errorOverlay');
+  const friendlyEl = document.getElementById('errorFriendly');
+  const detailsEl = document.getElementById('errorDetails');
+  const closeBtn = document.getElementById('closeErrorBtn');
+  const toggleDetailsBtn = document.getElementById('toggleDetailsBtn');
+
+  function openErrorModal(friendlyMessage, details) {
+    friendlyEl.textContent = friendlyMessage || "Something went wrong.";
+    detailsEl.textContent = details || "";
+    detailsEl.style.display = "none";
+    toggleDetailsBtn.textContent = "Show details";
+    overlay.style.display = "flex";
+  }
+
+  function closeErrorModal() {
+    overlay.style.display = "none";
+  }
+
+  closeBtn.addEventListener('click', closeErrorModal);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeErrorModal();
+  });
+  toggleDetailsBtn.addEventListener('click', () => {
+    const isOpen = detailsEl.style.display === "block";
+    detailsEl.style.display = isOpen ? "none" : "block";
+    toggleDetailsBtn.textContent = isOpen ? "Show details" : "Hide details";
+  });
+
+  function setBusy(isBusy) {
+    loginBtn.disabled = isBusy;
+    loginBtn.textContent = isBusy ? "Signing in..." : "Enter Portal";
+  }
+
+  function mapAuthErrorToFriendly(error) {
+    const raw = (error && error.message) ? String(error.message) : "Unknown error";
+    const lower = raw.toLowerCase();
+
+    if (lower.includes("invalid login credentials")) {
+      return { friendly: "Email or password is incorrect. Please try again.", details: raw };
+    }
+    if (lower.includes("email not confirmed")) {
+      return { friendly: "Your email is not confirmed yet. Check your inbox for the confirmation email.", details: raw };
+    }
+    if (lower.includes("rate limit") || lower.includes("too many")) {
+      return { friendly: "Too many attempts. Please wait a moment and try again.", details: raw };
+    }
+    if (lower.includes("network") || lower.includes("fetch") || lower.includes("failed to fetch")) {
+      return { friendly: "Network problem. Check your connection and try again.", details: raw };
+    }
+    return { friendly: "Login failed. Please try again.", details: raw };
+  }
 
   // stay logged in
-  supabase.auth.getSession().then(({ data }) => {
-    if (data.session) {
+  window.supabaseClient.auth.getSession().then(({ data, error }) => {
+    if (error) {
+      const mapped = mapAuthErrorToFriendly(error);
+      openErrorModal(mapped.friendly, mapped.details);
+      return;
+    }
+    if (data && data.session) {
       window.location.href = 'admin_dashboard.html';
     }
   });
 
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    login();
+  });
+
   async function login() {
-    const email = email.value;
-    const password = document.getElementById('password').value;
-    const msg = document.getElementById('authMessage');
+    msgEl.textContent = "";
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      msg.textContent = error.message;
+    const email = (emailEl.value || "").trim();
+    const password = passwordEl.value || "";
+
+    if (!email || !password) {
+      openErrorModal("Please enter both email and password.", "Missing field(s): " + (!email ? "email " : "") + (!password ? "password" : ""));
       return;
     }
 
-    const { data } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('email', email)
-      .single();
+    setBusy(true);
 
-    if (!data) {
-      msg.textContent = "Access denied.";
-      await supabase.auth.signOut();
-      return;
+    try {
+      const { error: signInError } = await window.supabaseClient.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        const mapped = mapAuthErrorToFriendly(signInError);
+        openErrorModal(mapped.friendly, mapped.details);
+        return;
+      }
+
+       const { data: adminRow, error: adminErr } = await window.supabaseClient
+        .from('admins')
+
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (adminErr) {
+        openErrorModal(
+          "Signed in, but we couldn't verify admin access. Please try again or contact support.",
+          "Admin check error: " + (adminErr.message || String(adminErr))
+        );
+        await window.supabaseClient.auth.signOut();
+        return;
+      }
+
+      if (!adminRow) {
+        openErrorModal(
+          "Access denied. This account is not an admin.",
+          "No matching row found in admins table for email: " + email
+        );
+        await supabase.auth.signOut();
+        return;
+      }
+
+      window.location.href = 'admin_dashboard.html';
+    } catch (e) {
+      openErrorModal(
+        "Unexpected error while signing in. Please try again.",
+        String(e && e.message ? e.message : e)
+      );
+    } finally {
+      setBusy(false);
     }
-
-    window.location.href = 'admin_dashboard.html';
   }
 </script>
+
 
 </body>
 </html>

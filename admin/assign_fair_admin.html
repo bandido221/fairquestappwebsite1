@@ -81,9 +81,9 @@ button.action {
 <div id="list">Loading…</div>
 
 <script>
-const supa = window.supabase.createClient(
+var supabase = window.supabase.createClient(
   'https://awtbjuiqgtdydsqzimul.supabase.co',
-  'YOUR_ANON_KEY'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
 );
 
 let mode = 'pending';
@@ -95,12 +95,24 @@ function goHome(){
 function showPending(){ mode='pending'; load(); }
 function showApproved(){ mode='approved'; load(); }
 
+async function requireSessionOrRedirect(){
+  const { data } = await supabase.auth.getSession();
+  if (!data || !data.session) {
+    window.location.href = "/admin/admin_login.html";
+    return false;
+  }
+  return true;
+}
+
 async function load(){
+  const ok = await requireSessionOrRedirect();
+  if (!ok) return;
+
   const list = document.getElementById('list');
   list.innerHTML = 'Loading…';
 
   if(mode === 'pending'){
-    const { data, error } = await supa
+    const { data, error } = await supabase
       .from('fair_verification')
       .select(`
         id,
@@ -118,9 +130,9 @@ async function load(){
       .order('submitted_at', { ascending:false });
 
     if(error){ list.innerHTML='Error loading'; return; }
-    renderPending(data);
+    renderPending(data || []);
   } else {
-    const { data, error } = await supa
+    const { data, error } = await supabase
       .from('fair_admins')
       .select(`
         email,
@@ -134,7 +146,7 @@ async function load(){
       .order('created_at', { ascending:false });
 
     if(error){ list.innerHTML='Error loading'; return; }
-    renderApproved(data);
+    renderApproved(data || []);
   }
 }
 
@@ -159,7 +171,7 @@ function renderPending(rows){
       <p><b>Notes:</b> ${r.fair_notes || '—'}</p>
       <p><b>Submitted:</b> ${new Date(r.submitted_at).toLocaleString()}</p>
 
-      <button class="action approve" onclick="approve('${r.id}','${r.user_id}','${r.fair_name}')">
+      <button class="action approve" onclick="approve('${r.id}','${r.user_id}','${r.fair_name.replace(/'/g, "\\'")}')">
         Approve & Assign Admin
       </button>
       <button class="action reject" onclick="reject('${r.id}')">
@@ -184,7 +196,7 @@ function renderApproved(rows){
     div.className='card';
     div.innerHTML=`
       <span class="badge approved">APPROVED</span>
-      <h3>${r.renaissance_fairs.name} (${r.renaissance_fairs.state})</h3>
+      <h3>${r.renaissance_fairs?.name || 'Unknown Fair'} (${r.renaissance_fairs?.state || ''})</h3>
       <p><b>Admin Email:</b> ${r.email}</p>
       <p><b>Level:</b> ${r.admin_level || 'free'}</p>
       <p><b>Assigned:</b> ${new Date(r.created_at).toLocaleString()}</p>
@@ -194,32 +206,38 @@ function renderApproved(rows){
 }
 
 async function approve(verificationId, userId, fairName){
+  const ok = await requireSessionOrRedirect();
+  if (!ok) return;
+
   if(!confirm(`Approve and assign admin for ${fairName}?`)) return;
 
-  const { data: fair } = await supa
+  const { data: fair, error: fairError } = await supabase
     .from('renaissance_fairs')
     .select('id')
     .eq('name', fairName)
     .single();
 
-  if(!fair){ alert('Fair not found'); return; }
+  if(fairError || !fair){ alert('Fair not found'); return; }
 
-  await supa.from('fair_admins').insert({
+  await supabase.from('fair_admins').insert({
     user_id: userId,
     fair_id: fair.id
   });
 
-  await supa.from('fair_verification')
-    .update({ approved:true, approved_at:new Date() })
+  await supabase.from('fair_verification')
+    .update({ approved:true, approved_at:new Date().toISOString() })
     .eq('id', verificationId);
 
   load();
 }
 
 async function reject(id){
+  const ok = await requireSessionOrRedirect();
+  if (!ok) return;
+
   if(!confirm('Reject this application?')) return;
 
-  await supa.from('fair_verification')
+  await supabase.from('fair_verification')
     .update({ approved:false })
     .eq('id', id);
 

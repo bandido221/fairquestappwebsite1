@@ -106,16 +106,17 @@ button.action {
   function showPending(){ mode='pending'; load(); }
   function showApproved(){ mode='approved'; load(); }
 
-  async function requireAdminLogin(){
-    // supabase-js v1 session check
-    var session = supabase.auth.session();
-    if (!session || !session.user) {
-      // adjust if your admin login file path is different
-      window.location.href = "/admin/admin_login.html";
-      return false;
-    }
-    return true;
+ async function requireAdminLogin(){
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error || !data?.session?.user) {
+    window.location.href = "/admin/admin_login.html";
+    return false;
   }
+
+  return true;
+}
+
 
   async function load(){
     var ok = await requireAdminLogin();

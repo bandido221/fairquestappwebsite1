@@ -5,7 +5,9 @@
 <title>Fair Admin Approval | FairQuest</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- MATCH DASHBOARD: supabase-js v1 (NO @2) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
 body {
@@ -73,178 +75,230 @@ button.action {
 
 <div class="controls">
   <button class="secondary" onclick="goHome()">← Go to FairQuest Main Page</button>
+  <button class="secondary" onclick="goBackToDashboard()">← Back to Admin Dashboard</button>
   <br><br>
   <button class="primary" onclick="showPending()">Pending Applications</button>
   <button class="secondary" onclick="showApproved()">Approved / Admins</button>
+  <br><br>
+  <button class="secondary" onclick="logout()">Logout</button>
 </div>
 
 <div id="list">Loading…</div>
 
 <script>
-var supabase = window.supabase.createClient(
-  'https://awtbjuiqgtdydsqzimul.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-);
+  // IMPORTANT: use "var" so it never crashes if another script also used "const supabase"
+  var supabase = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
 
-let mode = 'pending';
+  var mode = 'pending';
 
-function goHome(){
-  window.location.href = "https://www.fairquestapp.com";
-}
+  function goHome(){
+    window.location.href = "https://www.fairquestapp.com";
+  }
 
-function showPending(){ mode='pending'; load(); }
-function showApproved(){ mode='approved'; load(); }
+  function goBackToDashboard(){
+    // adjust if your dashboard file path is different
+    window.location.href = "/admin/admin_dashboard.html";
+  }
 
-async function requireSessionOrRedirect(){
-  const { data } = await supabase.auth.getSession();
-  if (!data || !data.session) {
+  function showPending(){ mode='pending'; load(); }
+  function showApproved(){ mode='approved'; load(); }
+
+  async function requireAdminLogin(){
+    // supabase-js v1 session check
+    var session = supabase.auth.session();
+    if (!session || !session.user) {
+      // adjust if your admin login file path is different
+      window.location.href = "/admin/admin_login.html";
+      return false;
+    }
+    return true;
+  }
+
+  async function load(){
+    var ok = await requireAdminLogin();
+    if (!ok) return;
+
+    var list = document.getElementById('list');
+    list.innerHTML = 'Loading…';
+
+    if(mode === 'pending'){
+      var resp = await supabase
+        .from('fair_verification')
+        .select(`
+          id,
+          user_id,
+          user_email,
+          fair_name,
+          fair_state,
+          contact_name,
+          fair_role,
+          fair_notes,
+          submitted_at,
+          approved
+        `)
+        .is('approved', null)
+        .order('submitted_at', { ascending:false });
+
+      if(resp.error){
+        console.error(resp.error);
+        list.innerHTML = 'Error loading pending applications.';
+        return;
+      }
+      renderPending(resp.data || []);
+    } else {
+      var resp2 = await supabase
+        .from('fair_admins')
+        .select(`
+          email,
+          admin_level,
+          created_at,
+          renaissance_fairs (
+            name,
+            state
+          )
+        `)
+        .order('created_at', { ascending:false });
+
+      if(resp2.error){
+        console.error(resp2.error);
+        list.innerHTML = 'Error loading approved admins.';
+        return;
+      }
+      renderApproved(resp2.data || []);
+    }
+  }
+
+  function renderPending(rows){
+    var list = document.getElementById('list');
+    list.innerHTML = '';
+
+    if(!rows.length){
+      list.innerHTML='<p style="text-align:center;">No pending applications.</p>';
+      return;
+    }
+
+    rows.forEach(function(r){
+      var div = document.createElement('div');
+      div.className='card';
+      div.innerHTML=`
+        <span class="badge pending">PENDING</span>
+        <h3>${r.fair_name} (${r.fair_state})</h3>
+        <p><b>Applicant:</b> ${r.contact_name}</p>
+        <p><b>Email:</b> ${r.user_email}</p>
+        <p><b>Role:</b> ${r.fair_role}</p>
+        <p><b>Notes:</b> ${r.fair_notes || '—'}</p>
+        <p><b>Submitted:</b> ${new Date(r.submitted_at).toLocaleString()}</p>
+
+        <button class="action approve" onclick="approve('${r.id}','${r.user_id}','${escapeQuotes(r.fair_name)}')">
+          Approve & Assign Admin
+        </button>
+        <button class="action reject" onclick="rejectReq('${r.id}')">
+          Reject
+        </button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function renderApproved(rows){
+    var list = document.getElementById('list');
+    list.innerHTML='';
+
+    if(!rows.length){
+      list.innerHTML='<p style="text-align:center;">No approved admins.</p>';
+      return;
+    }
+
+    rows.forEach(function(r){
+      var div=document.createElement('div');
+      div.className='card';
+      var fairName = (r.renaissance_fairs && r.renaissance_fairs.name) ? r.renaissance_fairs.name : '(Unknown fair)';
+      var fairState = (r.renaissance_fairs && r.renaissance_fairs.state) ? r.renaissance_fairs.state : '';
+      div.innerHTML=`
+        <span class="badge approved">APPROVED</span>
+        <h3>${fairName} ${fairState ? `(${fairState})` : ''}</h3>
+        <p><b>Admin Email:</b> ${r.email}</p>
+        <p><b>Level:</b> ${r.admin_level || 'free'}</p>
+        <p><b>Assigned:</b> ${new Date(r.created_at).toLocaleString()}</p>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function escapeQuotes(s){
+    return String(s || '').replace(/'/g, "\\'");
+  }
+
+  async function approve(verificationId, userId, fairName){
+    var ok = await requireAdminLogin();
+    if (!ok) return;
+
+    if(!confirm(`Approve and assign admin for ${fairName}?`)) return;
+
+    var fairResp = await supabase
+      .from('renaissance_fairs')
+      .select('id')
+      .eq('name', fairName)
+      .single();
+
+    if(fairResp.error || !fairResp.data){
+      alert('Fair not found (by name).');
+      return;
+    }
+
+    var insertResp = await supabase.from('fair_admins').insert({
+      user_id: userId,
+      fair_id: fairResp.data.id
+    });
+
+    if(insertResp.error){
+      console.error(insertResp.error);
+      alert('Error assigning admin.');
+      return;
+    }
+
+    var updateResp = await supabase.from('fair_verification')
+      .update({ approved:true, approved_at: new Date().toISOString() })
+      .eq('id', verificationId);
+
+    if(updateResp.error){
+      console.error(updateResp.error);
+      alert('Error updating verification.');
+      return;
+    }
+
+    load();
+  }
+
+  async function rejectReq(id){
+    var ok = await requireAdminLogin();
+    if (!ok) return;
+
+    if(!confirm('Reject this application?')) return;
+
+    var r = await supabase.from('fair_verification')
+      .update({ approved:false })
+      .eq('id', id);
+
+    if(r.error){
+      console.error(r.error);
+      alert('Error rejecting application.');
+      return;
+    }
+
+    load();
+  }
+
+  async function logout(){
+    await supabase.auth.signOut();
     window.location.href = "/admin/admin_login.html";
-    return false;
-  }
-  return true;
-}
-
-async function load(){
-  const ok = await requireSessionOrRedirect();
-  if (!ok) return;
-
-  const list = document.getElementById('list');
-  list.innerHTML = 'Loading…';
-
-  if(mode === 'pending'){
-    const { data, error } = await supabase
-      .from('fair_verification')
-      .select(`
-        id,
-        user_id,
-        user_email,
-        fair_name,
-        fair_state,
-        contact_name,
-        fair_role,
-        fair_notes,
-        submitted_at,
-        approved
-      `)
-      .is('approved', null)
-      .order('submitted_at', { ascending:false });
-
-    if(error){ list.innerHTML='Error loading'; return; }
-    renderPending(data || []);
-  } else {
-    const { data, error } = await supabase
-      .from('fair_admins')
-      .select(`
-        email,
-        admin_level,
-        created_at,
-        renaissance_fairs (
-          name,
-          state
-        )
-      `)
-      .order('created_at', { ascending:false });
-
-    if(error){ list.innerHTML='Error loading'; return; }
-    renderApproved(data || []);
-  }
-}
-
-function renderPending(rows){
-  const list = document.getElementById('list');
-  list.innerHTML = '';
-
-  if(!rows.length){
-    list.innerHTML='<p style="text-align:center;">No pending applications.</p>';
-    return;
   }
 
-  rows.forEach(r=>{
-    const div = document.createElement('div');
-    div.className='card';
-    div.innerHTML=`
-      <span class="badge pending">PENDING</span>
-      <h3>${r.fair_name} (${r.fair_state})</h3>
-      <p><b>Applicant:</b> ${r.contact_name}</p>
-      <p><b>Email:</b> ${r.user_email}</p>
-      <p><b>Role:</b> ${r.fair_role}</p>
-      <p><b>Notes:</b> ${r.fair_notes || '—'}</p>
-      <p><b>Submitted:</b> ${new Date(r.submitted_at).toLocaleString()}</p>
-
-      <button class="action approve" onclick="approve('${r.id}','${r.user_id}','${r.fair_name.replace(/'/g, "\\'")}')">
-        Approve & Assign Admin
-      </button>
-      <button class="action reject" onclick="reject('${r.id}')">
-        Reject
-      </button>
-    `;
-    list.appendChild(div);
-  });
-}
-
-function renderApproved(rows){
-  const list = document.getElementById('list');
-  list.innerHTML='';
-
-  if(!rows.length){
-    list.innerHTML='<p style="text-align:center;">No approved admins.</p>';
-    return;
-  }
-
-  rows.forEach(r=>{
-    const div=document.createElement('div');
-    div.className='card';
-    div.innerHTML=`
-      <span class="badge approved">APPROVED</span>
-      <h3>${r.renaissance_fairs?.name || 'Unknown Fair'} (${r.renaissance_fairs?.state || ''})</h3>
-      <p><b>Admin Email:</b> ${r.email}</p>
-      <p><b>Level:</b> ${r.admin_level || 'free'}</p>
-      <p><b>Assigned:</b> ${new Date(r.created_at).toLocaleString()}</p>
-    `;
-    list.appendChild(div);
-  });
-}
-
-async function approve(verificationId, userId, fairName){
-  const ok = await requireSessionOrRedirect();
-  if (!ok) return;
-
-  if(!confirm(`Approve and assign admin for ${fairName}?`)) return;
-
-  const { data: fair, error: fairError } = await supabase
-    .from('renaissance_fairs')
-    .select('id')
-    .eq('name', fairName)
-    .single();
-
-  if(fairError || !fair){ alert('Fair not found'); return; }
-
-  await supabase.from('fair_admins').insert({
-    user_id: userId,
-    fair_id: fair.id
-  });
-
-  await supabase.from('fair_verification')
-    .update({ approved:true, approved_at:new Date().toISOString() })
-    .eq('id', verificationId);
-
+  // start
   load();
-}
-
-async function reject(id){
-  const ok = await requireSessionOrRedirect();
-  if (!ok) return;
-
-  if(!confirm('Reject this application?')) return;
-
-  await supabase.from('fair_verification')
-    .update({ approved:false })
-    .eq('id', id);
-
-  load();
-}
-
-load();
 </script>
 
 </body>

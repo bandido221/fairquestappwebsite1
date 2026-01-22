@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://fairquestapp.com/sitemap.xml
+Sitemap: https://www.fairquestapp.com/sitemap.xml

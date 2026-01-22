@@ -6,6 +6,7 @@
   <title>FairQuest - Login / Sign Up</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
   <style>
     body {
       font-family: 'Domine', serif;
@@ -55,6 +56,15 @@
       font-weight: bold;
       font-size: 18px;
     }
+    .eye {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
+      user-select: none;
+    }
   </style>
 </head>
 
@@ -62,110 +72,68 @@
   <div class="container">
     <h1>FairQuest Login / Sign Up</h1>
 
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Password" />
-    <input type="checkbox" id="showPassword" /> Show Password
+    <input type="email" id="email" placeholder="Email">
+
+    <div style="position:relative;">
+      <input type="password" id="password" placeholder="Password" style="padding-right:60px;">
+      <span class="eye" onclick="
+        const p = document.getElementById('password');
+        p.type = (p.type === 'password') ? 'text' : 'password';
+      ">👁️</span>
+    </div>
 
     <div class="button-row">
       <button class="signin" onclick="signIn()">Sign In</button>
       <button class="signup" onclick="signUp()">Sign Up</button>
     </div>
 
-    <button class="google-signin" onclick="signInWithGoogle()">Sign In with Google</button>
+    <button onclick="signInWithGoogle()">Sign In with Google</button>
 
     <p id="authMessage" class="msg"></p>
-    <a href="/profile/forgot_password.html" style="color: #5b2a86;">Forgot Password?</a>
+    <a href="/profile/forgot_password.html" style="color:#5b2a86;">Forgot Password?</a>
   </div>
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+<script>
+/* 🔒 renamed to avoid duplicate global */
+const supabaseClient = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
 
-    async function signIn() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const message = document.getElementById('authMessage');
+async function signIn() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const msg = document.getElementById('authMessage');
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-      if (error) {
-        message.textContent = `❌ ${error.message}`;
-      } else {
-        message.textContent = '✅ Login successful! Redirecting...';
-        
-        if (data?.user?.id) {
-          await insertUserLog(data.user.id, 'user', 'sign_in', 'User signed in.');
-        }
+  if (error) {
+    msg.textContent = error.message;
+    return;
+  }
 
-        setTimeout(() => {
-          window.location.href = '/index.html';
-        }, 1500);
-      }
-    }
+  window.location.href = '/index.html';
+}
 
-    async function signUp() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const message = document.getElementById('authMessage');
+async function signUp() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const msg = document.getElementById('authMessage');
 
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password
-      });
+  const { error } = await supabaseClient.auth.signUp({ email, password });
 
-      if (error) {
-        message.textContent = `❌ ${error.message}`;
-      } else {
-        message.textContent = '✅ Sign up successful! Please check your email to confirm.';
-        
-        if (data?.user?.id) {
-          await insertUserLog(data.user.id, 'user', 'sign_up', 'User signed up.');
-        }
-      }
-    }
+  if (error) {
+    msg.textContent = error.message;
+    return;
+  }
 
-    async function signInWithGoogle() {
-      const { user, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-      });
+  msg.textContent = 'Check your email to confirm.';
+}
 
-      if (error) {
-        document.getElementById('authMessage').textContent = `❌ ${error.message}`;
-      } else {
-        document.getElementById('authMessage').textContent = '✅ Login successful! Redirecting...';
+async function signInWithGoogle() {
+  await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
+}
+</script>
 
-        if (user?.id) {
-          await insertUserLog(user.id, 'user', 'google_sign_in', 'User signed in with Google.');
-        }
-
-        setTimeout(() => {
-          window.location.href = '/index.html';
-        }, 1500);
-      }
-    }
-
-    function insertUserLog(userId, userType, actionType, description) {
-      supabase.from('user_logs').insert({
-        user_id: userId,
-        user_type: userType,
-        action_type: actionType,
-        description: description
-      });
-    }
-
-    document.getElementById('showPassword').addEventListener('change', function() {
-      const passwordField = document.getElementById('password');
-      if (this.checked) {
-        passwordField.type = 'text';
-      } else {
-        passwordField.type = 'password';
-      }
-    });
-  </script>
 </body>
 </html>

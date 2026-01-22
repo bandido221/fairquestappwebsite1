@@ -231,9 +231,6 @@ body {
 
 </div>
 
-
-</div>
-
   <img src="images/banner.png" alt="FairQuest Banner" class="top-banner" />
 
   <header>
@@ -264,7 +261,7 @@ body {
 
     </header>
 
-   <div class="button-group">
+    <div class="button-group">
     <!--
     <a class="btn" href="/dowload_app.html">
       📲 Download App
@@ -276,12 +273,124 @@ body {
     <a class="btn" id="foodVendorButton" href="#" onclick="requireLoginAndRedirect('food_vendor/apply_food_vendor.html')">🍔 Apply as Food Vendor</a>
     <a class="btn" href="/how_to/help_center.html">❓ Help Center</a>
    </div>
+
+<!-- Fairs Around You -->
+<div id="nearbyFairsCard"
+     style="background:#1b1b1b; border-radius:12px; box-shadow:0 0 12px rgba(0,0,0,0.6);
+            margin:20px auto 40px auto; padding:28px; max-width:700px; text-align:center; color:#f0e6d2;">
+
+  <h2 style="font-family:'Cinzel',serif; font-size:1.6rem; margin:0 0 6px 0;">
+    📍 Fairs Around You
+  </h2>
+
+<div id="locationStatus"
+     style="font-size:0.95rem; color:#d4af37; margin-bottom:14px;">
+  <span style="font-weight:bold;">Near:</span>
+  <span id="locationLabel">Detecting…</span>
+</div>
+
+
+
+  <!-- Location override form (hidden by default) -->
+  <div id="locationForm"
+       style="display:none; margin-bottom:18px; background:#111;
+              padding:14px; border-radius:10px;">
+
+    <p style="margin:0 0 10px 0; font-weight:bold;">
+      Set your location
+    </p>
+
+    <input id="zipInput"
+           type="text"
+           placeholder="ZIP code"
+           style="width:120px; padding:8px; margin:4px; border-radius:6px; border:none;" />
+
+    <span style="margin:0 6px;">or</span>
+
+    <input id="cityInput"
+           type="text"
+           placeholder="City"
+           style="width:140px; padding:8px; margin:4px; border-radius:6px; border:none;" />
+
+    <input id="stateInput"
+           type="text"
+           placeholder="State (FL)"
+           maxlength="2"
+           style="width:70px; padding:8px; margin:4px; border-radius:6px; border:none;" />
+
+    <div style="margin-top:10px;">
+      <button onclick="applyManualLocation()"
+              style="padding:8px 16px; border-radius:8px;
+                     border:none; background:#d4af37; font-weight:bold; cursor:pointer;">
+        Apply
+      </button>
+    </div>
+  </div>
+
+  <div style="margin:0 0 8px 0; color:#aaa;">
+  <label for="radiusSelect" style="margin-right:8px;">Distance:</label>
+<select id="radiusSelect"
+        style="padding:8px 10px; border-radius:8px; border:none; font-weight:bold;">
+  <option value="50" selected>50 miles</option>
+  <option value="75">75 miles</option>
+  <option value="100">100 miles</option>
+  <option value="200">200 miles</option>
+</select>
+
+
+</div>
+<p id="nearbyFairsMessage" style="margin:14px 0 0 0;">
+  Waiting for location…
+</p>
+
+<div id="nearbyFairsResults" style="margin-top:14px;"></div>
+
+</div>
+
+<script>
+function toggleLocationForm() {
+  const form = document.getElementById('locationForm');
+  form.style.display = (form.style.display === 'none') ? 'block' : 'none';
+}
+
+function applyManualLocation() {
+  const zip = document.getElementById('zipInput').value.trim();
+  const city = document.getElementById('cityInput').value.trim();
+  const state = document.getElementById('stateInput').value.trim().toUpperCase();
+
+  if (!zip && !(city && state)) {
+    alert('Enter a ZIP code or City + State');
+    return;
+  }
+
+  document.getElementById('locationStatus').innerHTML =
+    `Using manual location
+     <button onclick="toggleLocationForm()"
+             style="margin-left:10px; padding:4px 10px; border-radius:6px;
+                    border:none; cursor:pointer; font-weight:bold;">
+       Change
+     </button>`;
+
+  document.getElementById('nearbyFairsMessage').innerText =
+    'Location set. Searching nearby fairs…';
+
+  document.getElementById('locationForm').style.display = 'none';
+
+    // Trigger manual flow (zip OR city/state)
+  window.__manualLocation = { zip, city, state };
+  loadNearbyFairsCard({ source: "manual" });
+
+}
+</script>
+
+
 <!-- Dynamic Spotlight Card -->
 <div id="spotlightCard"
      style="background:#222; border-radius:12px; box-shadow:0 0 12px rgba(0,0,0,0.6);
             margin:40px auto; padding:28px; max-width:700px; text-align:center; color:#f0e6d2;">
   Loading featured vendor/performer...
 </div>
+
 
 
 
@@ -495,7 +604,7 @@ body {
 <script>
 // TOP MENU UPDATE — shows Login/Signup OR User Name/Profile/Logout
 async function updateMenuBar() {
-  const { data: sessionData } = await supabase.auth.getSession();
+  const { data: sessionData } = await supabaseClient.auth.getSession();
   const menuRight = document.getElementById("menuRight");
 
   if (!menuRight) return;
@@ -524,44 +633,261 @@ document.getElementById("menuEmail").innerHTML = `${email}`;
 
 
 <script>
-const supabase = window.supabase.createClient(
-  
+const supabaseClient = window.supabase.createClient(
   'https://awtbjuiqgtdydsqzimul.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
 );
-function isValidImage(url) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => resolve(true);
-    img.onerror = () => resolve(false);
-    img.src = url;
-  });
+
+function milesBetween(lat1, lon1, lat2, lon2) {
+  const toRad = (v) => (v * Math.PI) / 180;
+  const R = 3958.7613; // Earth radius in miles
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
-async function loadSpotlight() {
-  const { data, error } = await supabase
-    .from("web_vendor_performer_spotlight")
-    .select("*");
 
-  if (error || !data || data.length === 0) {
-    document.getElementById("spotlightCard").innerHTML = "No spotlight available.";
+// Convert coordinates -> "City, ST" (fallback to coords if it fails)
+async function reverseGeocodeCityState(lat, lon) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+    const res = await fetch(url, { headers: { "Accept": "application/json" } });
+    if (!res.ok) return null;
+
+    const json = await res.json();
+    const a = json.address || {};
+
+    const city = a.city || a.town || a.village || a.hamlet || a.county || null;
+    const state = a.state_code || (a.state ? String(a.state).slice(0, 2).toUpperCase() : null);
+
+    if (!city || !state) return null;
+    return `${city}, ${state}`;
+  } catch (e) {
+    console.warn("reverseGeocodeCityState failed:", e);
+    return null;
+  }
+}
+
+
+async function loadNearbyFairsCard(options = {}) {
+  const locationLabelEl = document.getElementById("locationLabel");
+  const msgEl = document.getElementById("nearbyFairsMessage");
+  const resultsEl = document.getElementById("nearbyFairsResults");
+  const radiusSelect = document.getElementById("radiusSelect");
+
+  if (!locationLabelEl || !msgEl || !resultsEl || !radiusSelect) return;
+
+  // cache (so changing miles does not re-fetch from Supabase)
+  window.__nearbyFairsCache = window.__nearbyFairsCache || {
+    userLat: null,
+    userLon: null,
+    withDistances: null,
+    allFairs: null
+  };
+
+  const defaultRadius = 50;
+
+  const clearResults = () => {
+    resultsEl.innerHTML = "";
+    window.__nearbyFairsCache.withDistances = null;
+    window.__nearbyFairsCache.userLat = null;
+    window.__nearbyFairsCache.userLon = null;
+  };
+
+  const render = (radiusMiles) => {
+    const cache = window.__nearbyFairsCache;
+    resultsEl.innerHTML = "";
+
+    if (!cache.withDistances) {
+      // If we don’t have a resolved location, never show fairs
+      return;
+    }
+
+    const r = Number(radiusMiles || defaultRadius);
+    const within = cache.withDistances.filter((f) => f._miles <= r).slice(0, 20);
+
+    if (within.length === 0) {
+      msgEl.innerText = `No fairs found within ${r} miles.`;
+      return;
+    }
+
+    msgEl.innerText = `Showing fairs within ${r} miles:`;
+
+    resultsEl.innerHTML = within.map((f) => {
+      const miles = Math.round(f._miles);
+      const dateLine = (f.start_date && f.end_date) ? `${f.start_date} – ${f.end_date}` : "";
+      return `
+        <div style="text-align:left; padding:12px 14px; background:#111; border:1px solid #333; border-radius:10px; margin:10px 0;">
+          <a href="/fairs/fair_detail.html?id=${f.id}" style="color:#d4af37; font-weight:bold; text-decoration:none;">
+            ${f.name}
+          </a>
+          <div style="margin-top:6px; color:#f0e6d2;">
+            ${f.city}, ${f.state} · <strong>${miles} mi</strong>
+            ${dateLine ? `<div style="margin-top:6px; color:#aaa;">${dateLine}</div>` : ``}
+          </div>
+        </div>
+      `;
+    }).join("");
+  };
+
+  // Only attach once
+  if (!radiusSelect.__listenerAttached) {
+    radiusSelect.addEventListener("change", () => render(radiusSelect.value));
+    radiusSelect.__listenerAttached = true;
+  }
+
+  // Ensure default 50 selected (even if HTML gets edited later)
+  if (!radiusSelect.value) radiusSelect.value = String(defaultRadius);
+
+  // Load fairs list once (used by both gps + manual)
+  const ensureAllFairsLoaded = async () => {
+    if (window.__nearbyFairsCache.allFairs) return window.__nearbyFairsCache.allFairs;
+
+    const { data, error } = await supabaseClient
+      .from("renaissance_fairs")
+      .select("id,name,city,state,latitude,longitude,start_date,end_date,website")
+      .not("latitude", "is", null)
+      .not("longitude", "is", null);
+
+    if (error) throw new Error(error.message);
+
+    window.__nearbyFairsCache.allFairs = (data || []);
+    return window.__nearbyFairsCache.allFairs;
+  };
+
+  // MANUAL MODE (ZIP or City/State)
+  if (options.source === "manual") {
+    clearResults();
+
+    const manual = window.__manualLocation || {};
+    const zip = (manual.zip || "").trim();
+    const city = (manual.city || "").trim();
+    const state = (manual.state || "").trim().toUpperCase();
+
+    msgEl.innerText = "Location set. Searching nearby fairs…";
+
+    try {
+      let userLat = null;
+      let userLon = null;
+      let label = "";
+
+      if (zip) {
+        label = zip;
+        const geoUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=us&postalcode=${encodeURIComponent(zip)}&limit=1`;
+        const res = await fetch(geoUrl, { headers: { "Accept": "application/json" } });
+        if (!res.ok) throw new Error("ZIP lookup failed");
+        const json = await res.json();
+        if (!json || !json[0]) throw new Error("ZIP not found");
+        userLat = Number(json[0].lat);
+        userLon = Number(json[0].lon);
+      } else {
+        if (!(city && state)) throw new Error("Missing city/state");
+        label = `${city}, ${state}`;
+        const geoUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=us&q=${encodeURIComponent(label)}&limit=1`;
+        const res = await fetch(geoUrl, { headers: { "Accept": "application/json" } });
+        if (!res.ok) throw new Error("City lookup failed");
+        const json = await res.json();
+        if (!json || !json[0]) throw new Error("City not found");
+        userLat = Number(json[0].lat);
+        userLon = Number(json[0].lon);
+      }
+
+      window.__nearbyFairsCache.userLat = userLat;
+      window.__nearbyFairsCache.userLon = userLon;
+
+      locationLabelEl.innerText = label;
+
+      const allFairs = await ensureAllFairsLoaded();
+      window.__nearbyFairsCache.withDistances = allFairs
+        .map((f) => ({ ...f, _miles: milesBetween(userLat, userLon, f.latitude, f.longitude) }))
+        .filter((f) => Number.isFinite(f._miles))
+        .sort((a, b) => a._miles - b._miles);
+
+      render(radiusSelect.value || defaultRadius);
+    } catch (e) {
+      console.error(e);
+      clearResults();
+      locationLabelEl.innerText = "Manual location failed";
+      msgEl.innerText = "Could not find that ZIP/city. Please try again.";
+    }
+
     return;
   }
 
-  // filter out broken images
-  const valid = [];
-  for (const row of data) {
-    const ok = await isValidImage(row.photo_url);
-    if (ok) valid.push(row);
-  }
-
-  if (valid.length === 0) {
-    document.getElementById("spotlightCard").innerHTML = "No spotlight available.";
+  // GPS MODE
+  // If browser has no geolocation support -> DO NOT show fairs
+  if (!("geolocation" in navigator)) {
+    clearResults();
+    locationLabelEl.innerText = "Location unavailable";
+    msgEl.innerText = "Location is not available. Click Change and enter ZIP or City + State.";
     return;
   }
 
-  const item = valid[Math.floor(Math.random() * valid.length)];
+  msgEl.innerText = "Requesting your location…";
 
-  document.getElementById("spotlightCard").innerHTML = `
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      try {
+        const userLat = pos.coords.latitude;
+        const userLon = pos.coords.longitude;
+
+        window.__nearbyFairsCache.userLat = userLat;
+        window.__nearbyFairsCache.userLon = userLon;
+
+        locationLabelEl.innerText = "Finding city…";
+        const cityState = await reverseGeocodeCityState(userLat, userLon);
+        locationLabelEl.innerText = cityState || `${userLat.toFixed(4)}, ${userLon.toFixed(4)}`;
+
+        const allFairs = await ensureAllFairsLoaded();
+        window.__nearbyFairsCache.withDistances = allFairs
+          .map((f) => ({ ...f, _miles: milesBetween(userLat, userLon, f.latitude, f.longitude) }))
+          .filter((f) => Number.isFinite(f._miles))
+          .sort((a, b) => a._miles - b._miles);
+
+        // AUTO: show default 50 miles immediately
+        radiusSelect.value = String(defaultRadius);
+        render(defaultRadius);
+      } catch (e) {
+        console.error(e);
+        clearResults();
+        msgEl.innerText = "Unexpected error loading nearby fairs.";
+      }
+    },
+    (err) => {
+      console.warn("Geolocation error:", err);
+      clearResults();
+      locationLabelEl.innerText = "Location blocked";
+      msgEl.innerText = "Location permission is blocked. Click Change and enter ZIP or City + State.";
+    },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+  );
+}
+
+
+ async function loadSpotlight() {
+  const card = document.getElementById("spotlightCard");
+  if (!card) return;
+
+  const { data, error } = await supabaseClient.rpc("get_next_web_spotlight");
+
+  if (error) {
+    console.error("Spotlight RPC error:", error);
+    card.innerHTML = "No spotlight available.";
+    return;
+  }
+
+  const item = Array.isArray(data) ? data[0] : data;
+
+  if (!item) {
+    card.innerHTML = "No spotlight available.";
+    return;
+  }
+
+  card.innerHTML = `
     <h2 style="font-family:'Cinzel',serif; font-size:1.6rem; margin-bottom:12px;">
       🎉 Featured Vendor / Performer
     </h2>
@@ -572,13 +898,15 @@ async function loadSpotlight() {
 
     <img src="${item.photo_url}"
          alt="${item.name}"
+         loading="lazy"
+         decoding="async"
          style="width:100%; border-radius:10px; margin-bottom:20px;" />
 
     <p style="font-size:1rem; margin:0 auto 20px auto; max-width:600px;">
       ${item.description}
     </p>
 
-    <a href="${item.website}" target="_blank"
+    <a href="${item.website}" target="_blank" rel="noopener"
        style="display:inline-block; margin-top:6px; padding:12px 20px;
               background-color:#d4af37; color:#000; font-weight:bold;
               border-radius:8px; text-decoration:none;">
@@ -586,6 +914,7 @@ async function loadSpotlight() {
     </a>
   `;
 }
+
 
 
 // ⭐ Start spotlight after Supabase exists
@@ -596,7 +925,7 @@ loadSpotlight();
 async function loadEarlyTesterCard() {
   const card = document.getElementById('earlyTesterCard');
   
-  const { data: sessionData } = await supabase.auth.getSession();
+  const { data: sessionData } = await supabaseClient.auth.getSession();
   const isLoggedIn = sessionData?.session?.user != null;
 
   let userCount = 50; // Temporary static user count
@@ -622,15 +951,15 @@ async function loadEarlyTesterCard() {
 
 
 async function checkIfUserApplied() {
-  const { data: sessionData } = await supabase.auth.getSession();
+  const { data: sessionData } = await supabaseClient.auth.getSession();
   const isLoggedIn = sessionData?.session?.user != null;
   if (!isLoggedIn) return;
 
   const userId = sessionData.session.user.id;
 
-  const { data: applications, error } = await supabase
-    .from('vendor_performer_applications')
-    .select('application_type')
+  const { data: applications, error } = await supabaseClient
+  .from('vendor_performer_applications')
+ .select('application_type')
     .eq('user_id', userId)
     .eq('approval_status', 'approved')
     .maybeSingle();
@@ -654,7 +983,7 @@ async function checkIfUserApplied() {
 }
 
 async function logout() {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   window.location.href = '/';
 }
 
@@ -686,7 +1015,7 @@ async function submitNewPassword() {
     return;
   }
 
-  const { error } = await supabase.auth.updateUser({ password });
+  const { error } = await supabaseClient.auth.updateUser({ password });
 
   if (error) {
     alert('Error: ' + error.message);
@@ -716,7 +1045,7 @@ function closeResetPrompt() {
 
 showResetPromptIfFirstLogin();
 
-supabase.auth.getUser().then(({ data }) => {
+supabaseClient.auth.getUser().then(({ data }) => {
   const email = data?.user?.email;
   if (email) {
     document.getElementById('inviteEmail').textContent = `Set a password for: ${email}`;
@@ -727,13 +1056,15 @@ supabase.auth.getUser().then(({ data }) => {
 loadEarlyTesterCard();
 checkIfUserApplied();
 updateMenuBar();
+loadNearbyFairsCard();
+
 
 
 
 </script>
 <script>
 async function requireLoginAndRedirect(destination) {
-  const { data: sessionData } = await supabase.auth.getSession();
+  const { data: sessionData } = await supabaseClient.auth.getSession();
   const isLoggedIn = sessionData?.session?.user != null;
 
   if (isLoggedIn) {

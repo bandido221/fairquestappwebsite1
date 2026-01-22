@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="/css/style.css" />
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gatekeeper's Access | FairQuest</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
     body {
@@ -31,7 +31,6 @@
       border-radius: 12px;
       color: #3b1f1f;
       border: 2px solid #aa8452;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
 
     input {
@@ -42,7 +41,6 @@
       font-size: 16px;
       border: 1px solid #aa8452;
       border-radius: 6px;
-      background-color: #fdf7e1;
     }
 
     button {
@@ -56,121 +54,81 @@
       font-weight: bold;
     }
 
+    .eye {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
+      user-select: none;
+    }
+
     .msg {
       margin-top: 12px;
       font-weight: bold;
       color: #b73239;
     }
-
-    footer {
-      margin-top: 40px;
-      font-size: 14px;
-    }
-
-    footer a {
-      color: #aa8452;
-      text-decoration: none;
-      margin: 0 8px;
-    }
-
-    footer a:hover {
-      text-decoration: underline;
-    }
   </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
 
-  <div class="container">
-    <h1>Gatekeeper's Access</h1>
-    <p>Only those granted privileges may enter.</p>
+<div class="container">
+  <h1>Gatekeeper's Access</h1>
 
-    <input type="email" id="email" placeholder="Admin Email" />
-<div style="position: relative;">
-  <input type="password" id="password" placeholder="Password" style="padding-right: 40px;" />
-  <span id="togglePassword"
-        style="position:absolute; right:10px; top:50%; transform:translateY(-50%);
-               cursor:pointer; font-size:18px; color:#5b2a86;">
-    👁️
-  </span>
-</div>
-    <button onclick="login()">Enter Portal</button>
+  <input type="email" id="email" placeholder="Admin Email" />
 
-    <p class="msg" id="authMessage"></p>
+  <div style="position:relative;">
+    <input type="password" id="password" placeholder="Password" />
+    <span class="eye" onclick="
+      const p = document.getElementById('password');
+      p.type = p.type === 'password' ? 'text' : 'password';
+    ">👁️</span>
   </div>
 
-  <footer>
-    <a href="/index.html">Return to Main Gate</a>
-  </footer>
+  <button onclick="login()">Enter Portal</button>
+  <p class="msg" id="authMessage"></p>
+</div>
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+<script>
+  const supabase = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
 
-    // ✅ Autofill saved credentials
-    const savedEmail = localStorage.getItem('admin_email');
-    const savedPassword = localStorage.getItem('admin_password');
+  // stay logged in
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) {
+      window.location.href = 'admin_dashboard.html';
+    }
+  });
 
-    if (savedEmail) document.getElementById('email').value = savedEmail;
-    if (savedPassword) document.getElementById('password').value = savedPassword;
+  async function login() {
+    const email = email.value;
+    const password = document.getElementById('password').value;
+    const msg = document.getElementById('authMessage');
 
-    // ✅ Auto-login if session exists
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        window.location.href = 'admin_dashboard.html';
-      }
-    });
-
-    // ✅ Login function
-    async function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const msg = document.getElementById('authMessage');
-
-      const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        msg.textContent = `❌ ${error.message}`;
-        document.getElementById('password').value = ""; // clear wrong password
-        return;
-      }
-
-      // ✅ Save credentials to remember for next time
-      localStorage.setItem('admin_email', email);
-      localStorage.setItem('admin_password', password);
-
-      // ✅ Check admin table
-      const { data, error: fetchError } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('email', email)
-        .single();
-
-      if (fetchError || !data) {
-        msg.textContent = "⛔ Access denied. You're not listed as an admin.";
-        await supabase.auth.signOut();
-        return;
-      }
-
-      msg.textContent = "✅ Access granted! Redirecting...";
-      setTimeout(() => {
-        window.location.href = 'admin_dashboard.html';
-      }, 1000);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      msg.textContent = error.message;
+      return;
     }
 
-    // ✅ Clear error as soon as user types a new password
-    document.getElementById('password').addEventListener('input', () => {
-      document.getElementById('authMessage').textContent = "";
-    });
-document.getElementById('togglePassword').addEventListener('click', () => {
-  const pwd = document.getElementById('password');
-  pwd.type = pwd.type === "password" ? "text" : "password";
-});
+    const { data } = await supabase
+      .from('admins')
+      .select('id')
+      .eq('email', email)
+      .single();
 
-  </script>
+    if (!data) {
+      msg.textContent = "Access denied.";
+      await supabase.auth.signOut();
+      return;
+    }
+
+    window.location.href = 'admin_dashboard.html';
+  }
+</script>
 
 </body>
 </html>

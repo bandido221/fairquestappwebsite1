@@ -272,7 +272,7 @@ async function signUp() {
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://fairquestapp.com/reset-password.html'
+    redirectTo: 'https://www.fairquestapp.com/reset-password.html'
   });
 
   if (error) {

@@ -1,409 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Assign Fair Admins | FairQuest</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <style>
-    body {
-      font-family: 'Domine', serif;
-      background: #000;
-      color: #f0e6d2;
-      padding: 30px;
-      text-align: center;
-    }
-    h1 {
-      font-family: 'Cinzel', serif;
-      margin-bottom: 20px;
-    }
-    .fair-card {
-      background: #fdf7e1;
-      color: #3b1f1f;
-      margin: 20px auto;
-      padding: 20px;
-      border-radius: 12px;
-      max-width: 800px;
-      text-align: left;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      position: relative;
-    }
-    .badge {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .bronze-badge { background: #cd7f32; color: black; }
-    .silver-badge { background: #c0c0c0; color: black; }
-    .gold-badge { background: #ffd700; color: black; }
-    .button-group { margin-top: 10px; }
-    button {
-      margin: 5px;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .approve { background-color: #27ae60; color: white; }
-    .bronze { background-color: #cd7f32; color: black; }
-    .silver { background-color: #c0c0c0; color: black; }
-    .gold { background-color: #ffd700; color: black; }
-    .clear { background-color: #c0392b; color: white; }
-    .assign { background-color: #2980b9; color: white; }
-    .modal {
-      background: rgba(0,0,0,0.7);
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      display: none;
-    }
-    .modal-content {
-      background: #fdf7e1;
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-      width: 300px;
-    }
-    .modal-content input {
-      margin: 10px 0;
-      padding: 8px;
-      width: 100%;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Fair Admin Approval | FairQuest</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body {
+  background:#000;
+  color:#f0e6d2;
+  font-family:'Domine', serif;
+  padding:30px;
+}
+h1 {
+  font-family:'Cinzel', serif;
+  text-align:center;
+}
+.controls {
+  text-align:center;
+  margin-bottom:20px;
+}
+.controls button {
+  margin:5px;
+  padding:10px 16px;
+  border-radius:8px;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
+}
+.primary { background:#c79a3b; color:#000; }
+.secondary { background:#444; color:#fff; }
+
+.card {
+  background:#111;
+  border-radius:12px;
+  padding:20px;
+  margin:20px auto;
+  max-width:800px;
+}
+.card h3 {
+  margin-top:0;
+}
+.badge {
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:bold;
+}
+.pending { background:#b58900; color:#000; }
+.approved { background:#2ecc71; color:#000; }
+
+button.action {
+  margin-top:10px;
+  margin-right:10px;
+  padding:8px 14px;
+  border-radius:6px;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+}
+.approve { background:#27ae60; color:#fff; }
+.reject { background:#c0392b; color:#fff; }
+</style>
 </head>
+
 <body>
-  <h1>🏰 Assign Fair Admins</h1>
 
-  <div style="margin-bottom: 20px;">
-    <input 
-      type="text" 
-      id="searchInput" 
-      placeholder="🔍 Search by Fair Name or State..." 
-      oninput="applySearchFilter()" 
-      style="padding: 10px; width: 300px; border-radius: 8px; border: none; font-size: 16px;"
-    />
-  </div>
+<h1>🏰 Fair Admin Approval</h1>
 
-  <div id="fairList">Loading fairs...</div>
+<div class="controls">
+  <button class="secondary" onclick="goHome()">← Go to FairQuest Main Page</button>
+  <br><br>
+  <button class="primary" onclick="showPending()">Pending Applications</button>
+  <button class="secondary" onclick="showApproved()">Approved / Admins</button>
+</div>
 
-  <a href="/admin/index.html" class="back-link">⬅️ Back to Admin Panel</a>
-
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <h3 id="modalTitle">Assign Admin</h3>
-      <p id="currentAdmin"></p>
-      <input type="email" id="adminEmailInput" placeholder="Enter admin email">
-      <div id="modalButtons"></div>
-      <button onclick="closeModal()">Cancel</button>
-    </div>
-  </div>
+<div id="list">Loading…</div>
 
 <script>
-const supabase = window.supabase.createClient(
+const supa = window.supabase.createClient(
   'https://awtbjuiqgtdydsqzimul.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  'YOUR_ANON_KEY'
 );
 
-let allFairs = [];
-let currentSearchTerm = "";
-let currentFairId = null;
-let currentAdminId = null;
-let currentAdminEmail = null;
+let mode = 'pending';
 
-async function loadFairs() {
-  const { data: fairsData, error: fairsError } = await supabase
-    .from('renaissance_fairs')
-    .select('id, name, state, approved_for_admin, fair_admin_level')
-    .order('state', { ascending: true });
+function goHome(){
+  window.location.href = "https://www.fairquestapp.com";
+}
 
-  if (fairsError) {
-    console.error(fairsError);
-    return;
+function showPending(){ mode='pending'; load(); }
+function showApproved(){ mode='approved'; load(); }
+
+async function load(){
+  const list = document.getElementById('list');
+  list.innerHTML = 'Loading…';
+
+  if(mode === 'pending'){
+    const { data, error } = await supa
+      .from('fair_verification')
+      .select(`
+        id,
+        user_id,
+        user_email,
+        fair_name,
+        fair_state,
+        contact_name,
+        fair_role,
+        fair_notes,
+        submitted_at,
+        approved
+      `)
+      .is('approved', null)
+      .order('submitted_at', { ascending:false });
+
+    if(error){ list.innerHTML='Error loading'; return; }
+    renderPending(data);
+  } else {
+    const { data, error } = await supa
+      .from('fair_admins')
+      .select(`
+        email,
+        admin_level,
+        created_at,
+        renaissance_fairs (
+          name,
+          state
+        )
+      `)
+      .order('created_at', { ascending:false });
+
+    if(error){ list.innerHTML='Error loading'; return; }
+    renderApproved(data);
   }
-
-  // Fetch fair admins
-  const { data: adminsData, error: adminsError } = await supabase
-    .from('fair_admins')
-    .select('fair_id, email');
-
-  if (adminsError) {
-    console.error(adminsError);
-    return;
-  }
-
-  // Attach admin emails to fairs
-  allFairs = fairsData.map(fair => {
-    const admin = adminsData.find(a => a.fair_id === fair.id);
-    return { ...fair, adminEmail: admin ? admin.email : null };
-  });
-
-  displayFairs();
 }
 
-
-function applySearchFilter() {
-  const input = document.getElementById('searchInput');
-  currentSearchTerm = input.value.trim();
-  displayFairs();
-}
-
-function badgeColor(level) {
-  if (level === 'gold') return 'gold-badge';
-  if (level === 'silver') return 'silver-badge';
-  if (level === 'bronze') return 'bronze-badge';
-  return '';
-}
-
-function displayFairs() {
-  const list = document.getElementById('fairList');
+function renderPending(rows){
+  const list = document.getElementById('list');
   list.innerHTML = '';
 
-  const filtered = allFairs.filter(fair => {
-    if (!currentSearchTerm) return true;
-    const search = currentSearchTerm.toLowerCase();
-    return fair.name.toLowerCase().includes(search) || fair.state.toLowerCase().includes(search);
-  });
-
-  filtered.forEach(fair => {
-    const card = document.createElement('div');
-    card.className = 'fair-card';
-
-    if (fair.fair_admin_level) {
-      const badge = document.createElement('div');
-      badge.className = `badge ${badgeColor(fair.fair_admin_level)}`;
-      badge.textContent = fair.fair_admin_level.toUpperCase();
-      badge.onclick = (e) => reloadLevelButtons(fair.id, e);
-      card.appendChild(badge);
-    }
-
-    const title = document.createElement('h3');
-    title.innerHTML = `${fair.name} (${fair.state})`;
-    card.appendChild(title);
-
-    const approved = document.createElement('p');
-    approved.innerHTML = `<strong>Approved:</strong> ${fair.approved_for_admin ? '✅ Yes' : '❌ No'}`;
-    card.appendChild(approved);
-
-    const level = document.createElement('p');
-    level.innerHTML = `<strong>Level:</strong> ${fair.fair_admin_level ? fair.fair_admin_level : '(free)'}`;
-    card.appendChild(level);
-
-    const buttonsDiv = document.createElement('div');
-    buttonsDiv.className = 'button-group';
-    buttonsDiv.id = `buttons-${fair.id}`;
-
-    if (!fair.approved_for_admin) {
-      const approveButton = document.createElement('button');
-      approveButton.className = 'approve';
-      approveButton.textContent = 'Approve Fair';
-      approveButton.onclick = () => approveFair(fair.id);
-      buttonsDiv.appendChild(approveButton);
-    }
-
-    if (!fair.fair_admin_level) {
-      ['bronze', 'silver', 'gold', 'clear'].forEach(level => {
-        const button = document.createElement('button');
-        button.className = level;
-        button.textContent = level.charAt(0).toUpperCase() + level.slice(1);
-        button.onclick = () => {
-          if (level === 'clear') clearLevel(fair.id);
-          else setLevel(fair.id, level);
-        };
-        buttonsDiv.appendChild(button);
-      });
-    }
-
-    card.appendChild(buttonsDiv);
-    const assignDiv = document.createElement('div');
-assignDiv.style.marginTop = '10px';
-
-// Admin Email (above the button)
-if (fair.adminEmail) {
-  const emailP = document.createElement('p');
-  emailP.innerHTML = `<strong>Admin Email:</strong> ${fair.adminEmail}`;
-  assignDiv.appendChild(emailP);
-} else {
-  const emailP = document.createElement('p');
-  emailP.innerHTML = `<strong>Admin Email:</strong> (none assigned)`;
-  assignDiv.appendChild(emailP);
-}
-
-// Assign Button
-const assignButton = document.createElement('button');
-assignButton.className = 'assign';
-assignButton.textContent = 'Assign Fair Admin';
-assignButton.onclick = () => openAdminModal(fair.id);
-assignDiv.appendChild(assignButton);
-
-card.appendChild(assignDiv);
-
-
-    list.appendChild(card);
-  });
-}
-
-
-async function approveFair(fairId) {
-  await supabase.from('renaissance_fairs').update({ approved_for_admin: true }).eq('id', fairId);
-  await loadFairs();
-}
-
-async function setLevel(fairId, level) {
-  await supabase.from('renaissance_fairs').update({ fair_admin_level: level }).eq('id', fairId);
-  await loadFairs();
-}
-
-async function clearLevel(fairId) {
-  await supabase.from('renaissance_fairs').update({ fair_admin_level: null }).eq('id', fairId);
-  await loadFairs();
-}
-
-function reloadLevelButtons(fairId, event) {
-  const fair = allFairs.find(f => f.id === fairId);
-  if (fair) {
-    fair.fair_admin_level = null;
-    const buttons = document.getElementById(`buttons-${fairId}`);
-    if (buttons) {
-      buttons.innerHTML = `
-        <button class="bronze" onclick="setLevel(${fairId}, 'bronze')">Bronze</button>
-        <button class="silver" onclick="setLevel(${fairId}, 'silver')">Silver</button>
-        <button class="gold" onclick="setLevel(${fairId}, 'gold')">Gold</button>
-        <button class="clear" onclick="clearLevel(${fairId})">Clear Level</button>
-      `;
-    }
-    if (event && event.target) {
-      event.target.remove(); // remove only the clicked badge
-    }
-  }
-}
-
-
-
-
-function closeModal() {
-  document.getElementById('modal').style.display = 'none';
-  currentFairId = null;
-  currentAdminId = null;
-}
-
-async function openAdminModal(fairId) {
-  currentFairId = fairId;
-  document.getElementById('modal').style.display = 'flex';
-  document.getElementById('adminEmailInput').value = '';
-  document.getElementById('currentAdmin').innerHTML = 'Loading...';
-
-
-  const { data: fairAdminData, error: fairAdminError } = await supabase
-  .from('fair_admins')
-  .select('user_id, email')
-  .eq('fair_id', fairId)
-  .maybeSingle();
-
-
-  const modalButtons = document.getElementById('modalButtons');
-  modalButtons.innerHTML = '';
-
-  if (fairAdminError) {
-    alert('❌ Error loading fair admin.');
-    console.error(fairAdminError);
+  if(!rows.length){
+    list.innerHTML='<p style="text-align:center;">No pending applications.</p>';
     return;
   }
 
-  if (fairAdminData) {
-  
+  rows.forEach(r=>{
+    const div = document.createElement('div');
+    div.className='card';
+    div.innerHTML=`
+      <span class="badge pending">PENDING</span>
+      <h3>${r.fair_name} (${r.fair_state})</h3>
+      <p><b>Applicant:</b> ${r.contact_name}</p>
+      <p><b>Email:</b> ${r.user_email}</p>
+      <p><b>Role:</b> ${r.fair_role}</p>
+      <p><b>Notes:</b> ${r.fair_notes || '—'}</p>
+      <p><b>Submitted:</b> ${new Date(r.submitted_at).toLocaleString()}</p>
 
-    if (fairAdminData && fairAdminData.email) {
-  currentAdminId = fairAdminData.user_id;
-  currentAdminEmail = fairAdminData.email;
-  document.getElementById('currentAdmin').innerHTML = `<strong>Current Admin:</strong> ${currentAdminEmail}`;
-} else {
-  currentAdminId = fairAdminData ? fairAdminData.user_id : null;
-  currentAdminEmail = '(unknown)';
-  document.getElementById('currentAdmin').innerHTML = `<strong>Current Admin:</strong> (unknown)`;
+      <button class="action approve" onclick="approve('${r.id}','${r.user_id}','${r.fair_name}')">
+        Approve & Assign Admin
+      </button>
+      <button class="action reject" onclick="reject('${r.id}')">
+        Reject
+      </button>
+    `;
+    list.appendChild(div);
+  });
 }
 
+function renderApproved(rows){
+  const list = document.getElementById('list');
+  list.innerHTML='';
 
-    const updateButton = document.createElement('button');
-    updateButton.textContent = 'Update Admin';
-    updateButton.onclick = updateAdmin;
-
-    const deleteButton = document.createElement('button');
-    deleteButton.textContent = 'Delete Admin';
-    deleteButton.onclick = deleteAdmin;
-
-    modalButtons.appendChild(updateButton);
-    modalButtons.appendChild(deleteButton);
-
-  } else {
-    currentAdminId = null;
-    currentAdminEmail = null;
-    document.getElementById('currentAdmin').innerHTML = `<strong>No admin assigned yet.</strong>`;
-
-    const addButton = document.createElement('button');
-    addButton.textContent = 'Add Admin';
-    addButton.onclick = addAdmin;
-
-    modalButtons.appendChild(addButton);
+  if(!rows.length){
+    list.innerHTML='<p style="text-align:center;">No approved admins.</p>';
+    return;
   }
+
+  rows.forEach(r=>{
+    const div=document.createElement('div');
+    div.className='card';
+    div.innerHTML=`
+      <span class="badge approved">APPROVED</span>
+      <h3>${r.renaissance_fairs.name} (${r.renaissance_fairs.state})</h3>
+      <p><b>Admin Email:</b> ${r.email}</p>
+      <p><b>Level:</b> ${r.admin_level || 'free'}</p>
+      <p><b>Assigned:</b> ${new Date(r.created_at).toLocaleString()}</p>
+    `;
+    list.appendChild(div);
+  });
 }
 
+async function approve(verificationId, userId, fairName){
+  if(!confirm(`Approve and assign admin for ${fairName}?`)) return;
 
-async function addAdmin() {
-  const email = document.getElementById('adminEmailInput').value.trim();
-
-  const { data: userData, error: userError } = await supabase
-    .from('users_public_table')
+  const { data: fair } = await supa
+    .from('renaissance_fairs')
     .select('id')
-    .eq('email', email)
+    .eq('name', fairName)
     .single();
 
-  if (userError || !userData) {
-    alert('❌ User not found.');
-    return;
-  }
+  if(!fair){ alert('Fair not found'); return; }
 
-  const { error: insertError } = await supabase
-  .from('fair_admins')
-  .insert({
-    user_id: userData.id,
-    fair_id: currentFairId,
-    email: email
+  await supa.from('fair_admins').insert({
+    user_id: userId,
+    fair_id: fair.id
   });
 
+  await supa.from('fair_verification')
+    .update({ approved:true, approved_at:new Date() })
+    .eq('id', verificationId);
 
-  if (insertError) {
-    alert('❌ Failed to assign admin: ' + insertError.message);
-    return;
-  }
-  await loadFairs();
-await openAdminModal(currentFairId);
-
+  load();
 }
 
+async function reject(id){
+  if(!confirm('Reject this application?')) return;
 
-async function updateAdmin() {
-  await deleteAdmin();
-  await addAdmin();
+  await supa.from('fair_verification')
+    .update({ approved:false })
+    .eq('id', id);
+
+  load();
 }
 
-async function deleteAdmin() {
-  await supabase.from('fair_admins').delete().eq('fair_id', currentFairId);
-  closeModal();
-  await loadFairs();
-}
-
-loadFairs();
+load();
 </script>
 
 </body>

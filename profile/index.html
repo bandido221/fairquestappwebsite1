@@ -100,216 +100,188 @@
   <div id="profileButtons">
     <button class="settings-button" onclick="goToSettings()">⚙️Settings</button>
   </div>
-  
+
   <a href="/index.html" class="back-link">🏡Back to Home</a>
   <a href="/delet_account.html" class="back-link" style="color: red; display: inline-block; margin-top: 20px;">
     🗑️ Delete My Account
   </a>
-  
-  <!-- 🆕 Updates Section -->
+
   <div class="updates-section" id="updatesSection">
     <h2>
-      📢 Latest FairQuest Updates 
+      📢 Latest FairQuest Updates
       <span id="newBadge" style="display:none; color: red; font-size: 16px;">● NEW</span>
     </h2>
     <div id="updatesList">Loading updates...</div>
-    
   </div>
 
   <script>
     console.log("Script loaded successfully");
-    const supabase = window.supabase.createClient(
+
+    // ✅ FIX: do NOT declare "supabase" again. Use a unique name.
+    const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
-function goToSettings() {
-  window.location.href = 'settings.html'; 
-}
 
-   async function loadProfile() {
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  console.log('Logged-in user:', user);  // Log user data
+    function goToSettings() {
+      window.location.href = 'settings.html';
+    }
 
-  if (userError || !user) {
-    document.getElementById('profileCard').innerHTML = '<p>⚠️ Failed to load user info.</p>';
-    return;
-  }
+    async function loadProfile() {
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      console.log('Logged-in user:', user);
 
-  const { data, error } = await supabase
-    .from('app_users')
-    .select('username, email, profile_image_url, level, tokens, points, character_class, character_clan, character_alignment, created_at')
-    .eq('id', user.id)
-    .single();
+      if (userError || !user) {
+        document.getElementById('profileCard').innerHTML = '<p>⚠️ Failed to load user info.</p>';
+        return;
+      }
 
-  if (error || !data) {
-    document.getElementById('profileCard').innerHTML = `
-      <p>⚠️ We couldn’t find your FairQuest profile.</p>
-      <p>Please make sure you’ve created your profile in the FairQuest app.</p>
-    `;
-    return;
-  }
+      const { data, error } = await supabaseClient
+        .from('app_users')
+        .select('username, email, profile_image_url, level, tokens, points, character_class, character_clan, character_alignment, created_at')
+        .eq('id', user.id)
+        .single();
 
-  document.getElementById('profileCard').innerHTML = `
-    <a href="/home.html">
-      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
-    </a>
-    ${data.profile_image_url ? `<img src="${data.profile_image_url}" alt="Profile Picture" class="profile-img" />` : ''}
-    <p><strong>Username:</strong> ${data.username || '(Not Set)'}</p>
-    <p><strong>Email:</strong> ${data.email}</p>
-    <p><strong>Level:</strong> ${data.level ?? 1}</p>
-    <p><strong>XP Points:</strong> ${data.points ?? 0}</p>
-    <p><strong>Tokens:</strong> ${data.tokens ?? 0}</p>
-    <p><strong>Character Class:</strong> ${data.character_class || '(None)'}</p>
-    <p><strong>Character Clan:</strong> ${data.character_clan || '(None)'}</p>
-    <p><strong>Alignment:</strong> ${data.character_alignment || '(None)'}</p>
-    <p><strong>Member Since:</strong> ${new Date(data.created_at).toLocaleDateString()}</p>
-  `;
+      if (error || !data) {
+        document.getElementById('profileCard').innerHTML = `
+          <p>⚠️ We couldn’t find your FairQuest profile.</p>
+          <p>Please make sure you’ve created your profile in the FairQuest app.</p>
+        `;
+        return;
+      }
 
- // Check if the user is an admin of ANY fair
-const { data: adminRows, error: adminError } = await supabase
-  .from('fair_admins')
-  .select('fair_id')
-  .eq('user_id', user.id);
+      document.getElementById('profileCard').innerHTML = `
+        <a href="/home.html">
+          <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+        </a>
+        ${data.profile_image_url ? `<img src="${data.profile_image_url}" alt="Profile Picture" class="profile-img" />` : ''}
+        <p><strong>Username:</strong> ${data.username || '(Not Set)'}</p>
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Level:</strong> ${data.level ?? 1}</p>
+        <p><strong>XP Points:</strong> ${data.points ?? 0}</p>
+        <p><strong>Tokens:</strong> ${data.tokens ?? 0}</p>
+        <p><strong>Character Class:</strong> ${data.character_class || '(None)'}</p>
+        <p><strong>Character Clan:</strong> ${data.character_clan || '(None)'}</p>
+        <p><strong>Alignment:</strong> ${data.character_alignment || '(None)'}</p>
+        <p><strong>Member Since:</strong> ${new Date(data.created_at).toLocaleDateString()}</p>
+      `;
 
-if (adminError || !adminRows || adminRows.length === 0) {
-  console.log("User is not an admin");
-} else {
-  const adminButton = document.createElement('button');
-  adminButton.className = 'settings-button';
-  adminButton.innerHTML = '🏰 Manage My Fairs';
-  adminButton.onclick = () => window.location.href = '/fair_admin/fair_admin.html';
-  adminButton.style.marginTop = '10px';
-  document.getElementById('profileButtons').appendChild(adminButton);
-}
+      const { data: adminRows, error: adminError } = await supabaseClient
+        .from('fair_admins')
+        .select('fair_id')
+        .eq('user_id', user.id);
 
-
-}
+      if (!adminError && adminRows && adminRows.length > 0) {
+        const adminButton = document.createElement('button');
+        adminButton.className = 'settings-button';
+        adminButton.innerHTML = '🏰 Manage My Fairs';
+        adminButton.onclick = () => window.location.href = '/fair_admin/fair_admin.html';
+        adminButton.style.marginTop = '10px';
+        document.getElementById('profileButtons').appendChild(adminButton);
+      }
+    }
 
     async function loadDashboardButtons() {
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) return;
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) return;
 
-  const { data, error } = await supabase
-  .from('vendor_performer_applications')
-  .select('*')
-  .eq('user_id', user.id);
+      const { data, error } = await supabaseClient
+        .from('vendor_performer_applications')
+        .select('*')
+        .eq('user_id', user.id);
 
+      if (error || !data || !data.length) return;
 
+      const profileButtons = document.getElementById('profileButtons');
 
-  if (error || !data || !data.length) return;
+      let hasVendor = false;
+      let hasPerformer = false;
+      let isFoodVendor = false;
 
-  const profileButtons = document.getElementById('profileButtons');
+      data.forEach(app => {
+        if (app.application_type === true) {
+          hasPerformer = true;
+        } else {
+          hasVendor = true;
+          if (app.is_food_vendor === true) {
+            isFoodVendor = true;
+          }
+        }
+      });
 
- let hasVendor = false;
-let hasPerformer = false;
-let isFoodVendor = false;
+      if (hasVendor) {
+        const vendorBtn = document.createElement('button');
+        vendorBtn.className = 'settings-button';
+        vendorBtn.style.marginLeft = '10px';
+        vendorBtn.innerHTML = '🧺 Vendor Dashboard';
+        vendorBtn.onclick = () => window.location.href = '/vendor_performer/vendor/index.html';
+        profileButtons.appendChild(vendorBtn);
+      }
 
-data.forEach(app => {
-  if (app.application_type === true) {
-    hasPerformer = true;
-  } else {
-    hasVendor = true;
-    if (app.is_food_vendor === true) {
-      isFoodVendor = true;
-    }
-  }
-});
+      if (hasPerformer) {
+        const performerBtn = document.createElement('button');
+        performerBtn.className = 'settings-button';
+        performerBtn.style.marginLeft = '10px';
+        performerBtn.innerHTML = '🎭 Performer Dashboard';
+        performerBtn.onclick = () => window.location.href = '/vendor_performer/performer/index.html';
+        profileButtons.appendChild(performerBtn);
+      }
 
-if (hasVendor) {
-  const vendorBtn = document.createElement('button');
-  vendorBtn.className = 'settings-button';
-  vendorBtn.style.marginLeft = '10px';
-  vendorBtn.innerHTML = '🧺 Vendor Dashboard';
-  vendorBtn.onclick = () => window.location.href = '/vendor_performer/vendor/index.html';
-  profileButtons.appendChild(vendorBtn);
-}
-
-if (hasPerformer) {
-  const performerBtn = document.createElement('button');
-  performerBtn.className = 'settings-button';
-  performerBtn.style.marginLeft = '10px';
-  performerBtn.innerHTML = '🎭 Performer Dashboard';
-  performerBtn.onclick = () => window.location.href = '/vendor_performer/performer/index.html';
-  profileButtons.appendChild(performerBtn);
-}
-
-if (isFoodVendor) {
-  const foodBtn = document.createElement('button');
-  foodBtn.className = 'settings-button';
-  foodBtn.style.marginLeft = '10px';
-  foodBtn.innerHTML = '🍔 Manage Food Vendor';
-  foodBtn.onclick = () => window.location.href = '/food_vendor/index.html';
-  profileButtons.appendChild(foodBtn);
-}
+      if (isFoodVendor) {
+        const foodBtn = document.createElement('button');
+        foodBtn.className = 'settings-button';
+        foodBtn.style.marginLeft = '10px';
+        foodBtn.innerHTML = '🍔 Manage Food Vendor';
+        foodBtn.onclick = () => window.location.href = '/food_vendor/index.html';
+        profileButtons.appendChild(foodBtn);
+      }
     }
 
-async function loadUpdates() {
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) {
-    console.error('❌ No user found for updates.');
-    return;
-  }
+    async function loadUpdates() {
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) return;
 
-  const { data, error } = await supabase
-    .from('vendor_performer_applications')
-    .select('*')
-    .eq('user_id', user.id);
+      const { data, error } = await supabaseClient
+        .from('vendor_performer_applications')
+        .select('*')
+        .eq('user_id', user.id);
 
-  const list = document.getElementById('updatesList');
-  const badge = document.getElementById('newBadge');
-  list.innerHTML = '';
+      const list = document.getElementById('updatesList');
+      const badge = document.getElementById('newBadge');
+      list.innerHTML = '';
 
-  if (error || !data.length) {
-    list.innerHTML = '<p>No updates available.</p>';
-    return;
-  }
+      if (error || !data || !data.length) {
+        list.innerHTML = '<p>No updates available.</p>';
+        return;
+      }
 
-  let hasRecentUpdate = false;
-  const today = new Date();
+      let hasRecentUpdate = false;
+      const today = new Date();
 
-  data.forEach(update => {
-    const updateDate = new Date(update.created_at);
-    const diffDays = (today - updateDate) / (1000 * 60 * 60 * 24);
-    if (diffDays <= 7) {
-      hasRecentUpdate = true;
+      data.forEach(update => {
+        const updateDate = new Date(update.created_at);
+        const diffDays = (today - updateDate) / (1000 * 60 * 60 * 24);
+        if (diffDays <= 7) hasRecentUpdate = true;
+
+        const formattedMessage = (update.message || '').replace(/\n/g, '<br>');
+
+        const div = document.createElement('div');
+        div.className = 'update-item';
+        div.innerHTML = `
+          <strong>${updateDate.toLocaleDateString()}</strong><br/>
+          ${formattedMessage}
+        `;
+        list.appendChild(div);
+      });
+
+      if (hasRecentUpdate) badge.style.display = 'inline';
     }
 
-    const formattedMessage = update.message.replace(/\n/g, '<br>');
-
-    const div = document.createElement('div');
-    div.className = 'update-item';
-    div.innerHTML = `
-      <strong>${updateDate.toLocaleDateString()}</strong><br/>
-      ${formattedMessage}
-    `;
-    list.appendChild(div);
-  });
-
-  if (hasRecentUpdate) {
-    badge.style.display = 'inline';
-  }
-}
-
-
-// ➡️ Helper function to format the message into nice bullet points
-function formatUpdateMessage(message) {
-  const sections = message.split('•').map(part => part.trim()).filter(part => part !== '');
-  return `
-    <ul>
-      ${sections.map(section => `<li>${section}</li>`).join('')}
-    </ul>
-  `;
-}
-
-
-
-
-loadDashboardButtons();
+    loadDashboardButtons();
     loadProfile();
     loadUpdates();
   </script>
 
-  <!-- Small bottom content (kept out of the way) -->
   <section style="max-width:760px;margin:24px auto 12px;padding:0 18px;text-align:left;opacity:0.9;">
     <p style="font-size:0.95rem;">
       This profile shows your FairQuest account details and shortcuts to your dashboards.
@@ -320,4 +292,3 @@ loadDashboardButtons();
 
 </body>
 </html>
-

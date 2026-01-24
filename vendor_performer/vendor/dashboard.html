@@ -83,22 +83,28 @@
   </div>
 
   <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+
+
+
+   const supabaseClient =
+  (typeof supabase !== 'undefined' && supabase?.auth?.getSession)
+    ? supabase
+    : window.supabase.createClient(
+        'https://awtbjuiqgtdydsqzimul.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+      );
 
     async function initDashboard(){
-      const { data:{ session } } = await supabase.auth.getSession();
-      if(session?.user?.id) loadDashboard(session.user.id);
-      else supabase.auth.onAuthStateChange((_, s)=> s?.user?.id ? loadDashboard(s.user.id)
+      const { data:{ session } } = await supabaseClient.auth.getSession();
+ if(session?.user?.id) loadDashboard(session.user.id);
+      else supabaseClient.auth.onAuthStateChange((_, s)=> s?.user?.id ? loadDashboard(s.user.id)
         : document.getElementById('dashboardContent').innerHTML='<p>Please sign in.</p>');
     }
 
     async function loadDashboard(userId){
       const container = document.getElementById('dashboardContent');
       container.innerHTML = '';
-      let { data: apps, error } = await supabase
+      let { data: apps, error } = await supabaseClient
         .from('vendor_performer_applications')
         .select('*')
         .eq('user_id',userId)
@@ -111,15 +117,16 @@
       for(let i=0; i<apps.length; i++){
         let v = apps[i];
         // load linked fairs
-        let { data: fairs=[] } = await supabase
-          .from('vendor_application_fairs')
-          .select('start_date,end_date,renaissance_fairs(name)')
-          .eq('application_id', v.id);
-        let { data: manual=[] } = await supabase
-          .from('suggested_fairs')
-          .select('fair_name,start_date,end_date')
-          .eq('application_id', v.id)
-          .eq('application_type','vendor');
+  let { data: fairs=[] } = await supabaseClient
+  .from('vendor_application_fairs')
+  .select('start_date,end_date,renaissance_fairs(name)')
+  .eq('application_id', v.id);
+
+      let { data: manual=[] } = await supabaseClient
+  .from('suggested_fairs')
+  .select('fair_name,start_date,end_date')
+  .eq('application_id', v.id)
+  .eq('application_type','vendor');
 
         let fairHtml = `<p><strong>🎪 Fairs & Dates:</strong></p><ul>`;
         if(fairs.length||manual.length){
@@ -166,25 +173,26 @@ ${v.photo_url?`<p><img src="${v.photo_url}" width="150" style="border-radius:8px
     async function deleteApplication(appId,appName){
       if(!confirm(`Delete application “${appName}”?`)) return;
       // 1) known fairs
-      await supabase.from('vendor_application_fairs')
-        .delete().eq('application_id',appId);
-      // 2) manual suggestions
-      await supabase.from('suggested_fairs')
-        .delete()
-        .eq('application_id',appId)
-        .eq('application_type','vendor');
-      // 3) application record
+    await supabaseClient.from('vendor_application_fairs')
+  .delete().eq('application_id',appId);
+ // 2) manual suggestions
+   await supabaseClient.from('suggested_fairs')
+  .delete()
+  .eq('application_id',appId)
+  .eq('application_type','vendor');
+ // 3) application record
       await supabase.from('vendor_performer_applications')
         .delete().eq('id',appId);
       // 4) admin notification
-      await supabase.from('admin_notifications')
-        .insert([{
-          application_id:appId,
-          message:`Vendor application "${appName}" was deleted.`,
-          category:'application_deleted'
-        }]);
+    await supabaseClient.from('admin_notifications')
+  .insert([{
+    application_id:appId,
+    message:`Vendor application "${appName}" was deleted.`,
+    category:'application_deleted'
+  }]);
+
       alert('✅ Deleted and admin notified.');
-      const { data:{ session } } = await supabase.auth.getSession();
+      const { data:{ session } } = await supabaseClient.auth.getSession();
       if(session?.user?.id) loadDashboard(session.user.id);
     }
 
@@ -193,11 +201,12 @@ ${v.photo_url?`<p><img src="${v.photo_url}" width="150" style="border-radius:8px
   localStorage.removeItem('applicationProfile');
 
   // Fetch full application record fresh
-  const { data, error } = await supabase
-    .from('vendor_performer_applications')
-    .select('*')
-    .eq('id', id)
-    .single();
+ const { data, error } = await supabaseClient
+  .from('vendor_performer_applications')
+  .select('*')
+  .eq('id', id)
+  .single();
+
 
   if (error) {
     alert('❌ Could not load this application.');
@@ -210,7 +219,7 @@ ${v.photo_url?`<p><img src="${v.photo_url}" width="150" style="border-radius:8px
 
 
     async function logout(){
-      await supabase.auth.signOut();
+await supabaseClient.auth.signOut();
       location.href='index.html';
     }
 

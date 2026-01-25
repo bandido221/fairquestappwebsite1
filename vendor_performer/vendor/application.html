@@ -210,11 +210,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
-    // 1) Supabase client
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+// 1) Supabase client
+const sb = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
 
     // 2) State map & counter must come before addFairSearch
     const stateMap = {
@@ -229,9 +229,10 @@
 
     // 4) Load all fairs once
     async function loadFairs() {
-      const { data, error } = await supabase
-        .from('renaissance_fairs')
-        .select('*');
+const { data, error } = await sb
+  .from('renaissance_fairs')
+  .select('*');
+
       if (error) console.error('Fairs load error:', error);
       else allFairs = data;
     }
@@ -429,11 +430,12 @@
 
 
   // 1) Check if they've already applied under this business name
-  const { data: existing, error } = await supabase
-    .from('vendor_performer_applications')
-    .select('id')
-    .eq('name', name)
-    .limit(1);
+ const { data: existing, error } = await sb
+  .from('vendor_performer_applications')
+  .select('id')
+  .eq('name', name)
+  .limit(1);
+
 
   if (error) {
     return alert("❌ Could not verify existing applications: " + error.message);
@@ -489,7 +491,7 @@
   }
 
       // prefill contact email from auth, if available
-      const user = supabase.auth.user?.();
+      const user = sb.auth.user?.();
       if (user?.email) {
         document.getElementById('contactEmail').value = user.email;
       }

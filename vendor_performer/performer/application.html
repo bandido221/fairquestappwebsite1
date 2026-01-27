@@ -246,10 +246,11 @@ const publicUrl = result.secure_url;
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
-const supabase = window.supabase.createClient(
+const sb = window.supabase.createClient(
   'https://awtbjuiqgtdydsqzimul.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-  );
+);
+
 
 const stateMap = {
   'iowa': 'ia', 'texas': 'tx', 'california': 'ca', 'florida': 'fl',
@@ -261,7 +262,7 @@ let fairSearchCount = 0;
 let allFairs = [];
 
 async function loadFairs() {
-  const { data, error } = await supabase.from('renaissance_fairs').select('*');
+  const { data, error } = await sb.from('renaissance_fairs').select('*');
   if (data) allFairs = data;
 }
 

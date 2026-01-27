@@ -169,13 +169,13 @@
 
   <div class="message" id="message"></div>
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+<script>
+  const sb = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
 
-    const data = JSON.parse(localStorage.getItem('vendorAppDraft')) || {};
+  const data = JSON.parse(localStorage.getItem('vendorAppDraft')) || {};
 
     function renderReview() {
       const box = document.getElementById('reviewBox');
@@ -217,12 +217,12 @@ ${data.photoUrl ? `<p><strong>Photo:</strong><br><img src="${data.photoUrl}" sty
       msg.textContent = 'Submitting...';
       msg.className = '';
 
-      const { data: user } = await supabase.auth.getUser();
+const { data: user } = await sb.auth.getUser();
       console.log("user ID going into insert:", user?.user?.id);
 
-      const { data: appData, error: insertError } = await supabase
-        .from('vendor_performer_applications')
-        .insert([{
+      const { data: appData, error: insertError } = await sb
+  .from('vendor_performer_applications')
+  .insert([{
           name: data.name,
           description: data.description,
           photo_url: data.photoUrl,
@@ -269,7 +269,7 @@ data.fairs.forEach(f => {
 
 // Insert known fairs
 if (fairRows.length > 0) {
-  const { error: fairError } = await supabase.from('vendor_application_fairs').insert(fairRows);
+  const { error: fairError } = await sb.from('vendor_application_fairs').insert(fairRows);
   if (fairError) {
     msg.textContent = '⚠️ Application saved, but failed to link fair(s): ' + fairError.message;
     msg.className = 'error';
@@ -279,7 +279,7 @@ if (fairRows.length > 0) {
 
 // Insert manual fair suggestions
 if (manualFairSuggestions.length > 0) {
-  const { error: suggestionError } = await supabase.from('suggested_fairs').insert(manualFairSuggestions);
+  const { error: suggestionError } = await sb.from('suggested_fairs').insert(manualFairSuggestions);
   if (suggestionError) {
     msg.textContent = '⚠️ Application saved, but failed to suggest manual fair(s): ' + suggestionError.message;
     msg.className = 'error';

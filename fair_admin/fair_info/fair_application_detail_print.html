@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Printable Application | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #f5f0df;
+      color: #1e1e1e;
+      padding: 20px;
+      margin: 0;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Cinzel', serif;
+      margin: 0 0 10px;
+      color: #1e1e1e;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .btn {
+      background-color: #2f2f2f;
+      color: #fff;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: 0.92; }
+
+    .sheet {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.2);
+      border-radius: 10px;
+      padding: 18px 18px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 6px 12px;
+      margin-top: 10px;
+    }
+
+    .k { font-weight: bold; }
+    .v { white-space: pre-wrap; word-break: break-word; }
+
+    .section {
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(0,0,0,0.15);
+    }
+
+    .field {
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 10px;
+      background: #fafafa;
+    }
+    .field .label { font-weight: bold; margin-bottom: 6px; }
+    .field .value { white-space: pre-wrap; word-break: break-word; }
+
+    .file-row {
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-top: 10px;
+      background: #fafafa;
+    }
+    .file-name { font-weight: bold; }
+    .file-sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+
+    .contract-box {
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 10px;
+      background: #fff;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0 0;
+      font-weight: bold;
+    }
+
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #111;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .small {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-top: 6px;
+    }
+
+    .empty {
+      opacity: 0.85;
+      margin-top: 8px;
+    }
+
+    /* Print rules */
+    @media print {
+      body { background: #fff; padding: 0; }
+      .toolbar { display: none !important; }
+      .sheet {
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        max-width: none;
+        margin: 0;
+      }
+      a { color: #000; text-decoration: none; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="toolbar">
+    <button class="btn" id="btnBack">⬅ Back</button>
+    <button class="btn" id="btnPrint">Print</button>
+    <button class="btn" id="btnRefresh">Refresh</button>
+  </div>
+
+  <div class="sheet">
+    <h1 id="pageTitle">Printable Application</h1>
+
+    <div class="meta-grid" style="margin-top:14px;">
+      <div class="k">Applicant Name:</div><div class="v" id="applicantName">Loading...</div>
+      <div class="k">Applicant Email:</div><div class="v" id="applicantEmail">Loading...</div>
+      <div class="k">Status:</div><div class="v" id="appStatus">Loading...</div>
+      <div class="k">Submitted:</div><div class="v" id="submittedAt">Loading...</div>
+      <div class="k">Form Type:</div><div class="v" id="formType">Loading...</div>
+      <div class="k">Form Title:</div><div class="v" id="formTitle">Loading...</div>
+      <div class="k">Contract Accepted:</div><div class="v" id="contractAccepted">Loading...</div>
+      <div class="k">Mailing Address:</div><div class="v" id="mailingAddress">Loading...</div>
+    </div>
+
+    <div class="section">
+      <h2>Answers</h2>
+      <div id="answersWrap"></div>
+      <div id="answersEmpty" class="empty" style="display:none;">No answers found for this submission.</div>
+    </div>
+
+    <div class="section">
+      <h2>Files</h2>
+      <div id="filesWrap"></div>
+      <div id="filesEmpty" class="empty" style="display:none;">No files uploaded for this submission.</div>
+    </div>
+
+    <div class="section">
+      <h2>Contract</h2>
+      <div class="contract-box">
+        <div class="v" id="contractText">Loading...</div>
+
+        <div class="checkbox-row">
+          <span class="checkbox" id="contractCheckbox"></span>
+          <span>User accepted contract</span>
+        </div>
+
+        <div class="small" id="contractAcceptedDetail"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY,
+      {
+        global: {
+          headers: { apikey: SUPABASE_ANON_KEY }
+        }
+      }
+    );
+
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
+      const fairIdRaw = params.get('fair_id');
+      const fairId = Number(fairIdRaw);
+      const submissionId = params.get('submission_id');
+      return {
+        fairId: Number.isFinite(fairId) ? fairId : null,
+        submissionId: submissionId || null
+      };
+    }
+
+    function safeText(v) {
+      return (v === null || v === undefined || v === '') ? 'N/A' : String(v);
+    }
+
+    function formatDate(ts) {
+      try {
+        const d = new Date(ts);
+        if (isNaN(d.getTime())) return 'N/A';
+        return d.toLocaleString();
+      } catch (_) {
+        return 'N/A';
+      }
+    }
+
+    function statusPretty(status) {
+      if (status === 'approved') return 'approved';
+      if (status === 'rejected') return 'rejected';
+      if (status === 'in_review') return 'in_review';
+      return safeText(status);
+    }
+
+    function jsonToDisplay(val) {
+      if (val === null || val === undefined) return 'N/A';
+      if (typeof val === 'string') return val;
+      try { return JSON.stringify(val, null, 2); }
+      catch (_) { return String(val); }
+    }
+
+    async function requireAccess(fairId) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'read' });
+      if (error) throw error;
+      return data;
+    }
+
+    async function loadSubmission(fairId, submissionId) {
+      const { data: sessionData, error: sessErr } = await supabaseClient.auth.getSession();
+      if (sessErr) throw sessErr;
+
+      const accessToken = sessionData?.session?.access_token || null;
+      if (!accessToken) throw new Error('No session token');
+
+      const base = `${SUPABASE_URL}/rest/v1`;
+
+      // submission
+  const subUrl =
+  `${base}/fair_man_app_submission` +
+  `?select=id,fair_id,form_id,user_id,applicant_email,applicant_name,status,submitted_at,updated_at,vendor_performer_application_id,mailing_street,mailing_city,mailing_state,mailing_zip,contract_accepted_at` +
+  `&fair_id=eq.${encodeURIComponent(String(fairId))}` +
+  `&id=eq.${encodeURIComponent(String(submissionId))}`;
+
+
+      const subRes = await fetch(subUrl, {
+        method: 'GET',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          authorization: `Bearer ${accessToken}`,
+          'accept-profile': 'public',
+          accept: 'application/vnd.pgrst.object+json'
+        }
+      });
+
+      if (!subRes.ok) {
+        const txt = await subRes.text();
+        throw new Error(txt || `Submission request failed (${subRes.status})`);
+      }
+
+      const sub = await subRes.json();
+      if (!sub) throw new Error('Submission not found');
+
+      // form (includes contract_text)
+      const formUrl =
+        `${base}/fair_man_app_form` +
+        `?select=id,title,contract_text,version` +
+        `&id=eq.${encodeURIComponent(String(sub.form_id))}`;
+
+      const formRes = await fetch(formUrl, {
+        method: 'GET',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          authorization: `Bearer ${accessToken}`,
+          'accept-profile': 'public',
+          accept: 'application/vnd.pgrst.object+json'
+        }
+      });
+
+      if (!formRes.ok) {
+        const txt = await formRes.text();
+        throw new Error(txt || `Form request failed (${formRes.status})`);
+      }
+
+      const form = await formRes.json();
+
+      return { ...sub, fair_man_app_form: form };
+    }
+
+    async function loadFormFields(formId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_form_field')
+        .select('id, field_key, label, field_type, help_text, placeholder, config, is_required, sort_order, is_active')
+        .eq('form_id', formId)
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+
+    async function loadSubmissionValues(submissionId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_submission_value')
+        .select('id, submission_id, field_id, value')
+        .eq('submission_id', submissionId);
+
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+
+    async function loadSubmissionFiles(submissionId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_submission_file')
+        .select('id, submission_id, file_role, storage_bucket, storage_path, original_name, mime_type, size_bytes, created_at')
+        .eq('submission_id', submissionId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+
+    function renderAnswers(fields, values) {
+      const wrap = document.getElementById('answersWrap');
+      const empty = document.getElementById('answersEmpty');
+      wrap.innerHTML = '';
+      empty.style.display = 'none';
+
+      const map = new Map();
+      for (const v of values) map.set(v.field_id, v.value);
+
+      if (!Array.isArray(fields) || fields.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+
+      let shown = 0;
+      for (const f of fields) {
+        const card = document.createElement('div');
+        card.className = 'field';
+
+        const k = document.createElement('div');
+        k.className = 'label';
+        k.textContent = f.label || f.field_key || 'Field';
+        card.appendChild(k);
+
+        const v = document.createElement('div');
+        v.className = 'value';
+        v.textContent = jsonToDisplay(map.has(f.id) ? map.get(f.id) : null);
+        card.appendChild(v);
+
+        wrap.appendChild(card);
+        shown++;
+      }
+
+      if (shown === 0) empty.style.display = 'block';
+    }
+
+    function renderFiles(files) {
+      const wrap = document.getElementById('filesWrap');
+      const empty = document.getElementById('filesEmpty');
+      wrap.innerHTML = '';
+      empty.style.display = 'none';
+
+      if (!Array.isArray(files) || files.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+
+      for (const f of files) {
+        const row = document.createElement('div');
+        row.className = 'file-row';
+
+        const name = document.createElement('div');
+        name.className = 'file-name';
+        name.textContent = safeText(f.original_name || f.storage_path || 'file');
+        row.appendChild(name);
+
+        const sub = document.createElement('div');
+        sub.className = 'file-sub';
+        sub.textContent =
+          `Role: ${safeText(f.file_role)} • Type: ${safeText(f.mime_type)} • Size: ${safeText(f.size_bytes)} bytes • ${formatDate(f.created_at)}`;
+        row.appendChild(sub);
+
+        wrap.appendChild(row);
+      }
+    }
+
+    async function loadPage() {
+      const { fairId, submissionId } = getParams();
+
+      if (!fairId || !submissionId) {
+        document.getElementById('pageTitle').textContent = 'Printable Application — Missing fair_id or submission_id';
+        return;
+      }
+
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) {
+        document.getElementById('pageTitle').textContent = 'Printable Application — Please log in';
+        return;
+      }
+
+      try {
+        await requireAccess(fairId);
+      } catch (_) {
+        document.getElementById('pageTitle').textContent = 'Printable Application — Not authorized';
+        return;
+      }
+
+      document.getElementById('pageTitle').textContent = `Printable Application — Fair ID ${fairId}`;
+
+      let submission;
+      try {
+        submission = await loadSubmission(fairId, submissionId);
+      } catch (_) {
+        document.getElementById('pageTitle').textContent = 'Printable Application — Not found';
+        return;
+      }
+
+      document.getElementById('applicantName').textContent = safeText(submission.applicant_name);
+      document.getElementById('applicantEmail').textContent = safeText(submission.applicant_email);
+      document.getElementById('appStatus').textContent = statusPretty(submission.status);
+      document.getElementById('submittedAt').textContent = formatDate(submission.submitted_at);
+   document.getElementById('formType').textContent = safeText(submission.fair_man_app_form?.form_type);
+document.getElementById('formTitle').textContent = safeText(submission.fair_man_app_form?.title);
+
+      document.getElementById('contractAccepted').textContent = submission.contract_accepted_at
+        ? formatDate(submission.contract_accepted_at)
+        : 'N/A';
+
+      const addr = [
+        submission.mailing_street,
+        [submission.mailing_city, submission.mailing_state].filter(Boolean).join(', '),
+        submission.mailing_zip
+      ].filter(Boolean).join(' • ');
+      document.getElementById('mailingAddress').textContent = addr || 'N/A';
+
+      // Contract
+      const contractText = submission.fair_man_app_form?.contract_text || 'N/A';
+      document.getElementById('contractText').textContent = contractText;
+
+      const accepted = !!submission.contract_accepted_at;
+      document.getElementById('contractCheckbox').textContent = accepted ? '✓' : '';
+      document.getElementById('contractAcceptedDetail').textContent =
+        accepted ? `Accepted at: ${formatDate(submission.contract_accepted_at)}` : 'Not accepted';
+
+      // Answers + Files
+      let fields = [];
+      let values = [];
+      let files = [];
+
+      try { fields = await loadFormFields(submission.form_id); } catch (_) { fields = []; }
+      try { values = await loadSubmissionValues(submission.id); } catch (_) { values = []; }
+      try { files = await loadSubmissionFiles(submission.id); } catch (_) { files = []; }
+
+      renderAnswers(fields, values);
+      renderFiles(files);
+    }
+
+    // Buttons
+    document.getElementById('btnBack').onclick = () => {
+      const { fairId, submissionId } = getParams();
+      if (!fairId || !submissionId) return;
+      window.location.href = `fair_application_detail.html?fair_id=${fairId}&submission_id=${submissionId}`;
+    };
+
+    document.getElementById('btnPrint').onclick = () => {
+      window.print();
+    };
+
+    document.getElementById('btnRefresh').onclick = async () => {
+      await loadPage();
+    };
+
+    loadPage();
+  </script>
+
+</body>
+</html>

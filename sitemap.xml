@@ -5,84 +5,528 @@
       xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
-<!-- Updated 2025-10-30 for FairQuest -->
+<!-- Updated 2026-02-20 for FairQuest -->
+
+<!-- ===================== -->
+<!--   CORE PUBLIC PAGES   -->
+<!-- ===================== -->
 
 <url>
   <loc>https://www.fairquestapp.com/</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
   <priority>1.00</priority>
 </url>
 
 <url>
   <loc>https://www.fairquestapp.com/index.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
   <priority>0.95</priority>
 </url>
 
 <url>
-  <loc>https://www.fairquestapp.com/fairs/explore.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
-  <priority>0.90</priority>
-</url>
-
-<url>
-  <loc>https://www.fairquestapp.com/fairs/add_fair.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
-  <priority>0.85</priority>
-</url>
-
-<url>
-  <loc>https://www.fairquestapp.com/how_to/help_center.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <loc>https://www.fairquestapp.com/info.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
   <priority>0.80</priority>
 </url>
 
 <url>
-  <loc>https://www.fairquestapp.com/how_to/how_to_get_image_link.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
-  <priority>0.70</priority>
-</url>
-
-<url>
-  <loc>https://www.fairquestapp.com/how_to/how_to_fill_application.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
-  <priority>0.70</priority>
-</url>
-
-<url>
-  <loc>https://www.fairquestapp.com/how_to/how_to_login_and_use_profile.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
-  <priority>0.70</priority>
-</url>
-
-<url>
-  <loc>https://www.fairquestapp.com/info.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
-  <priority>0.75</priority>
-</url>
-
-<url>
   <loc>https://www.fairquestapp.com/faq.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
-  <priority>0.85</priority>
-</url>
-
-<url>
-  <loc>https://www.fairquestapp.com/terms.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
-  <priority>0.85</priority>
-</url>
-
-<url>
-  <loc>https://www.fairquestapp.com/privacy.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
   <priority>0.85</priority>
 </url>
 
 <url>
   <loc>https://www.fairquestapp.com/contact.html</loc>
-  <lastmod>2025-10-30T00:00:00+00:00</lastmod>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
   <priority>0.85</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/terms.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/privacy.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/renaissance-fairs.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.85</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/performer_list.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.75</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_list.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.75</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/dowload_app.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.85</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/googleapp.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/apptermscreen.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.60</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/reports.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/delet_account.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.60</priority>
+</url>
+
+<!-- ===================== -->
+<!--     FAIRS SECTION     -->
+<!-- ===================== -->
+
+<url>
+  <loc>https://www.fairquestapp.com/fairs/explore.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.90</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fairs/fairs_by_month.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.85</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fairs/fairs_by_state.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.85</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fairs/fair_detail.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fairs/add_fair.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.75</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fairs/update_fair.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fairs/vendor_performer_detail.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+
+<!-- ===================== -->
+<!--     HOW TO SECTION    -->
+<!-- ===================== -->
+
+<url>
+  <loc>https://www.fairquestapp.com/how_to/help_center.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/how_to/how_to_fill_application.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/how_to/how_to_get_image_link.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/how_to/how_to_login_and_use_profile.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+
+<!-- ===================== -->
+<!--    PROFILE SECTION    -->
+<!-- ===================== -->
+
+<url>
+  <loc>https://www.fairquestapp.com/profile/index.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/profile/setup.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/profile/settings.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/profile/change_email.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.55</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/profile/forgot_password.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.55</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/profile/reset-password.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.55</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/user_login.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<!-- =========================== -->
+<!--  VENDOR / PERFORMER SECTION -->
+<!-- =========================== -->
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/vendor_list.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.75</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/performer_list.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.75</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/vendor/index.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/vendor/dashboard.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/vendor/application.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/vendor/fair_applications.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/vendor/info.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/vendor/review.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.60</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/vendor/update_application.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.60</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/vendor/thankyou.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.50</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/performer/index.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/performer/dashboard.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/performer/application.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/performer/fair_applications.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/performer/info.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/performer/review.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.60</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/performer/update_application.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.60</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/vendor_performer/performer/thankyou.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.50</priority>
+</url>
+
+<!-- ======================== -->
+<!--   FOOD VENDOR SECTION    -->
+<!-- ======================== -->
+
+<url>
+  <loc>https://www.fairquestapp.com/food_vendor/index.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/food_vendor/apply_food_vendor.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/food_vendor/review_food_vendor.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.60</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/food_vendor/menu/menu.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.65</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/food_vendor/menu/add_menu_item.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.55</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/food_vendor/menu/edit_menu_item.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.55</priority>
+</url>
+
+<!-- =========================== -->
+<!--   FAIR ADMIN SECTION        -->
+<!-- =========================== -->
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_admin.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.50</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_review.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.45</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_update.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.45</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_info/fair_dashboard.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.50</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_info/fair_applications.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.50</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_info/fair_application_detail.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.45</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_info/fair_application_setup.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.45</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_info/fair_apply.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.50</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_info/fair_form_create.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.45</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_info/fair_form_edit.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.45</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_info/fair_review.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.45</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/fair_admin/fair_verification/fair-access.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.45</priority>
+</url>
+
+<!-- =========================== -->
+<!--   ADMIN SECTION (LOW PRIO)  -->
+<!-- =========================== -->
+
+<url>
+  <loc>https://www.fairquestapp.com/admin/admin_login.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.30</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/admin/admin_dashboard.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.30</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/admin/admin_update_message.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.25</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/admin/approve_performers.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.25</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/admin/approve_updates.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.25</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/admin/approve_vendors.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.25</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/admin/app_users.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.25</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/admin/assign_fair_admin.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.25</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/admin/fair_amenities.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.25</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/admin/fair_approval.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.25</priority>
+</url>
+
+<url>
+  <loc>https://www.fairquestapp.com/admin/fair_update_review.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.25</priority>
+</url>
+
+<!-- =========================== -->
+<!--   SUPABASE / UTILITY PAGES  -->
+<!-- =========================== -->
+
+<url>
+  <loc>https://www.fairquestapp.com/suoabase_pages/email_verified.html</loc>
+  <lastmod>2026-02-20T00:00:00+00:00</lastmod>
+  <priority>0.40</priority>
 </url>
 
 </urlset>

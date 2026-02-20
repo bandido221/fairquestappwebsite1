@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Contract | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 { font-family: 'Cinzel', serif; margin-bottom: 10px; }
+
+    .card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 26px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 18px auto;
+      max-width: 980px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+
+    .profile-logo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 60px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn:hover { background-color: #45a049; }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #222; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 10px 14px;
+      margin-top: 12px;
+      align-items: center;
+    }
+    .label { font-weight: bold; }
+
+    textarea {
+      font-size: 15px;
+      width: 100%;
+      min-height: 420px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.25);
+      box-sizing: border-box;
+      resize: vertical;
+      font-family: 'Domine', serif;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .hint { margin-top: 10px; opacity: 0.9; }
+
+    .divider {
+      margin: 18px 0;
+      height: 1px;
+      background: rgba(0,0,0,0.18);
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      opacity: 0.85;
+    }
+
+    /* Loader */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <h1 id="pageTitle">Edit Contract</h1>
+
+  <div id="loadingOverlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  ">
+    <div style="
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #bb9457;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    "></div>
+  </div>
+
+  <div class="card">
+    <a href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+    </a>
+
+    <h2 style="margin-top:0;">Contract Editor</h2>
+
+    <div class="grid" style="margin-top:16px;">
+      <div class="label">Fair:</div><div id="txtFairName">—</div>
+      <div class="label">Form:</div><div id="txtFormTitle">—</div>
+      <div class="label">Version:</div><div id="txtFormVersion">—</div>
+      <div class="label">Last Updated:</div><div id="txtContractUpdatedAt">—</div>
+      <div class="label">Updated By:</div><div id="txtContractUpdatedBy">—</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="hint" style="margin-top:0;">
+      Paste your contract as plain text. Line breaks and spacing will be preserved when rendered.
+      <div class="mono" style="margin-top:6px;">
+        Tip: Use blank lines between sections. Keep it plain text (no HTML).
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <textarea id="contractText" placeholder="Paste contract text here..."></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-dark" id="btnBack">⬅ Back to Edit Form</button>
+      <button class="btn" id="btnSave">Save Contract</button>
+    </div>
+
+    <div class="hint" id="statusMsg"></div>
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    function showLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'flex';
+    }
+    function hideLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'none';
+    }
+    function setMsg(t) {
+      document.getElementById('statusMsg').textContent = t || '';
+    }
+
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
+      const fairId = Number(params.get('fair_id'));
+      const formId = params.get('form_id');
+      return {
+        fairId: Number.isFinite(fairId) ? fairId : null,
+        formId: formId || null
+      };
+    }
+
+    async function requireAccess(fairId) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'edit_forms' });
+      if (error) throw error;
+      return data;
+    }
+
+    async function loadFairName(fairId) {
+      const { data, error } = await supabaseClient
+        .from('renaissance_fairs')
+        .select('name')
+        .eq('id', fairId)
+        .single();
+      if (error) throw error;
+      return data?.name || '—';
+    }
+
+    async function loadFormRow(fairId, formId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_form')
+        .select('id, fair_id, title, version, contract_text, contract_updated_at, contract_updated_by')
+        .eq('id', formId)
+        .eq('fair_id', fairId)
+        .single();
+      if (error) throw error;
+      return data;
+    }
+
+    async function saveContract(fairId, formId, contractText) {
+      const { error } = await supabaseClient.rpc('fair_man_app_update_form_contract', {
+        p_fair_id: fairId,
+        p_form_id: formId,
+        p_contract_text: contractText
+      });
+      if (error) throw error;
+    }
+
+    function fmtTs(ts) {
+      if (!ts) return '—';
+      try {
+        const d = new Date(ts);
+        if (isNaN(d.getTime())) return String(ts);
+        return d.toLocaleString();
+      } catch {
+        return String(ts);
+      }
+    }
+
+    async function loadPage() {
+      showLoader();
+      setMsg('');
+
+      const { fairId, formId } = getParams();
+      if (!fairId || !formId) {
+        setMsg('Missing fair_id or form_id in URL.');
+        hideLoader();
+        return;
+      }
+
+      document.getElementById('btnBack').onclick = () => {
+        window.location.href = `fair_form_edit.html?fair_id=${fairId}&form_id=${formId}`;
+      };
+
+      try {
+        await requireAccess(fairId);
+      } catch (e) {
+        console.error(e);
+        setMsg('Not authorized.');
+        hideLoader();
+        return;
+      }
+
+      try {
+        const fairName = await loadFairName(fairId);
+        const form = await loadFormRow(fairId, formId);
+
+        document.getElementById('txtFairName').textContent = fairName;
+        document.getElementById('txtFormTitle').textContent = form.title || '—';
+        document.getElementById('txtFormVersion').textContent = String(form.version ?? '—');
+        document.getElementById('txtContractUpdatedAt').textContent = fmtTs(form.contract_updated_at);
+        document.getElementById('txtContractUpdatedBy').textContent = form.contract_updated_by || '—';
+
+        document.getElementById('pageTitle').textContent = `Edit Contract — ${form.title || 'Form'}`;
+
+        const txt = (form.contract_text || '');
+        document.getElementById('contractText').value = txt;
+
+      } catch (e) {
+        console.error(e);
+        setMsg('Error loading contract. Check console.');
+        hideLoader();
+        return;
+      }
+
+      document.getElementById('btnSave').onclick = async () => {
+        const contractText = document.getElementById('contractText').value || '';
+
+        showLoader();
+        setMsg('Saving...');
+        try {
+          await saveContract(fairId, formId, contractText);
+          const form = await loadFormRow(fairId, formId);
+          document.getElementById('txtContractUpdatedAt').textContent = fmtTs(form.contract_updated_at);
+          document.getElementById('txtContractUpdatedBy').textContent = form.contract_updated_by || '—';
+          setMsg('Saved.');
+        } catch (e) {
+          console.error(e);
+          setMsg('Save failed. Check console.');
+        } finally {
+          hideLoader();
+        }
+      };
+
+      hideLoader();
+    }
+
+    loadPage();
+  </script>
+</body>
+</html>

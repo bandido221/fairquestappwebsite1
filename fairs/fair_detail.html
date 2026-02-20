@@ -127,6 +127,14 @@
 
 
     <button class="update-btn" onclick="goToUpdatePage()">🛠️ Update This Fair</button>
+
+<button class="update-btn" id="applyBtn" style="display:none; margin-left:10px;">
+  📄 Apply To This Fair
+</button>
+
+<div class="hint" id="applyHint" style="display:none; margin-top:10px;">
+  To apply, you must be logged in and have an approved Vendor/Performer profile.
+</div>
   </div>
 
   <div class="card" id="vendorsCard" style="display:none">
@@ -140,7 +148,7 @@
   </div>
 
   <script>
-    const supabase = window.supabase.createClient(
+    const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
@@ -149,7 +157,7 @@
     const fairId = urlParams.get('id');
 
     async function loadFair() {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('renaissance_fairs')
         .select('*')
         .eq('id', fairId)
@@ -232,7 +240,7 @@ weekendFields.forEach(([startKey, endKey]) => {
     }
 
     async function loadShowcase() {
-      const { data: applications, error } = await supabase
+      const { data: applications, error } = await supabaseClient
         .from('vendor_performer_applications')
         .select('id, name, application_type, approval_status, vendor_type')
         .eq('approval_status', 'approved');
@@ -273,8 +281,133 @@ weekendFields.forEach(([startKey, endKey]) => {
       window.location.href = `update_fair.html?id=${fairId}`;
     }
 
-    loadFair();
-    loadShowcase();
+  async function setupApplyButton(fairRow) {
+  const applyBtn = document.getElementById('applyBtn');
+  const applyHint = document.getElementById('applyHint');
+
+  // default hidden
+  applyBtn.style.display = 'none';
+  applyHint.style.display = 'none';
+
+  // only Gold fairs show apply entry point
+  if ((fairRow.fair_tier || '').toLowerCase() !== 'gold') return;
+
+  // must be logged in
+  const { data: { user }, error: userErr } = await supabaseClient.auth.getUser();
+  if (userErr || !user) {
+    applyHint.style.display = 'block';
+    return;
+  }
+
+  // must have at least 1 approved VPA identity
+  const { data: vpaRows, error: vpaErr } = await supabaseClient
+    .from('vendor_performer_applications')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('approval_status', 'approved')
+    .limit(1);
+
+  if (vpaErr || !vpaRows || vpaRows.length === 0) {
+    applyHint.style.display = 'block';
+    return;
+  }
+
+  // show button
+  applyBtn.style.display = 'inline-block';
+applyBtn.onclick = () => {
+  // apply page will handle 1 identity vs dropdown for multiple identities
+  window.location.href = `/fair_admin/fair_info/fair_apply.html?fair_id=${fairRow.id}`;
+};
+
+}
+
+const _origLoadFair = loadFair;
+loadFair = async function() {
+  const { data, error } = await supabaseClient
+    .from('renaissance_fairs')
+    .select('*')
+    .eq('id', fairId)
+    .single();
+
+  if (error || !data) {
+    document.getElementById('fairCard').innerHTML = '<p>❌ Failed to load fair information.</p>';
+    return;
+  }
+
+  document.getElementById('fairName').textContent = data.name;
+
+  if (data.description && data.description.trim() !== '') {
+    document.getElementById('descriptionRow').style.display = 'block';
+    document.getElementById('fairDescription').textContent = data.description;
+  } else {
+    document.getElementById('descriptionRow').style.display = 'none';
+  }
+
+  document.getElementById('fairAddress').textContent = data.address;
+  document.getElementById('fairCity').textContent = data.city;
+  document.getElementById('fairState').textContent = data.state;
+
+  document.getElementById('fairWebsite').innerHTML = data.website
+    ? `<a href="${data.website}" target="_blank">${data.website}</a>`
+    : 'N/A';
+
+  let hoursValue = (data.hours ?? '').trim();
+  document.getElementById('fairHours').textContent =
+    hoursValue !== '' ? hoursValue : 'Look on the website';
+
+  {
+    const imgUrl = (data.image_url || '').trim();
+    const imgEl = document.getElementById('fairImage');
+    const imgWrap = imgEl.parentElement;
+
+    if (imgUrl) {
+      imgEl.src = imgUrl;
+      imgEl.alt = data.name || 'Fair image';
+      imgEl.style.display = 'block';
+      const oldMsg = imgWrap.querySelector('.no-image-msg');
+      if (oldMsg) oldMsg.remove();
+    } else {
+      imgEl.style.display = 'none';
+      if (!imgWrap.querySelector('.no-image-msg')) {
+        const msg = document.createElement('div');
+        msg.className = 'no-image-msg';
+        msg.textContent = 'Waiting for fair to add image';
+        imgWrap.appendChild(msg);
+      }
+    }
+  }
+
+  function formatDate(d) {
+    const date = new Date(d);
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yy = String(date.getFullYear()).slice(-2);
+    return `${dd}-${mm}-${yy}`;
+  }
+
+  const weekendFields = [
+    ['start_date', 'end_date'],
+    ...Array.from({length: 9}, (_, i) => [`week${i+2}_start_date`, `week${i+2}_end_date`])
+  ];
+
+  const weekendsList = document.getElementById('weekendsList');
+  weekendsList.innerHTML = '';
+
+  weekendFields.forEach(([startKey, endKey]) => {
+    if (data[startKey] && data[endKey]) {
+      const li = document.createElement('li');
+      li.textContent = `${formatDate(data[startKey])} → ${formatDate(data[endKey])}`;
+      weekendsList.appendChild(li);
+    }
+  });
+
+  // NEW: gate Apply button
+  await setupApplyButton(data);
+};
+
+loadFair();
+loadShowcase();
+
   </script>
 </body>
 </html>

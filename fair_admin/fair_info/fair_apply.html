@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apply | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1, h2 { font-family: 'Cinzel', serif; margin: 10px 0; }
+
+    .card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 26px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 18px auto;
+      max-width: 980px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn:hover { background-color: #45a049; }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #222; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 10px 14px;
+      margin-top: 12px;
+      align-items: center;
+    }
+    .label { font-weight: bold; }
+
+    input[type="text"], select, textarea, input[type="number"], input[type="date"] {
+      font-size: 15px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.25);
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.9);
+      color: #111;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+
+    .hint { margin-top: 10px; opacity: 0.9; }
+    .divider { margin: 18px 0; height: 1px; background: rgba(0,0,0,0.18); }
+
+    /* Loader */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Apply</h1>
+
+  <div id="loadingOverlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  ">
+    <div style="
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #bb9457;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    "></div>
+  </div>
+
+  <div class="card">
+  <h2 id="fairTitle">Loading fair…</h2>
+<div class="hint" id="pageHint"></div>
+
+<div id="applyMsgBox" style="
+  display:none;
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:10px;
+  background: rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.20);
+">
+  <div id="applyMsgText" style="font-weight:700;"></div>
+  <div id="applyMsgSub" class="hint" style="margin-top:6px; color:#3b1f1f;"></div>
+</div>
+
+
+    <div class="divider"></div>
+
+    <h3 style="margin:0;">Choose your profile</h3>
+    <div class="hint" style="margin-top:6px;">
+      If you have more than one approved Vendor/Performer profile, pick the one you want to use for this application.
+    </div>
+
+    <div class="grid" style="margin-top:12px;">
+      <div class="label">Profile:</div>
+      <div>
+        <select id="vpaSelect" style="display:none;"></select>
+        <div id="vpaSingle" style="display:none;"></div>
+      </div>
+
+      <div class="label">Type:</div><div id="vpaType">—</div>
+      <div class="label">Food Vendor:</div><div id="vpaFood">—</div>
+      <div class="label">Email:</div><div id="vpaEmail">—</div>
+      <div class="label">Contact Name:</div><div id="vpaContact">—</div>
+      <div class="label">Application Form:</div><div id="activeFormInfo">—</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3 style="margin:0;">Application</h3>
+    <div class="hint" id="formHint" style="margin-top:6px;"></div>
+    <div id="appFormFields"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-dark" id="btnBack">⬅ Back to Fair</button>
+      <button class="btn" id="btnReview" disabled>Review</button>
+    </div>
+
+    <div class="hint" id="statusMsg"></div>
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXvThMVMwIUxPqL1cvM1J2kUQ'.replace('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXvThMVMwIUxPqL1cvM1J2kUQ', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ')
+    );
+
+    function showLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'flex';
+    }
+    function hideLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'none';
+    }
+  function setMsg(t) {
+  document.getElementById('statusMsg').textContent = t || '';
+}
+
+function hideApplyMsgBox() {
+  const box = document.getElementById('applyMsgBox');
+  if (box) box.style.display = 'none';
+}
+
+function showApplyMsgBox(title, sub) {
+  const box = document.getElementById('applyMsgBox');
+  const t = document.getElementById('applyMsgText');
+  const s = document.getElementById('applyMsgSub');
+  if (!box || !t || !s) return;
+
+  t.textContent = title || '';
+  s.textContent = sub || '';
+  box.style.display = 'block';
+}
+
+function prettySubmitStatus(st) {
+  const v = String(st || '').toLowerCase();
+  if (v === 'pending') return 'Draft (not submitted)';
+  if (v === 'in_review') return 'In Review';
+  if (v === 'approved') return 'Approved';
+  if (v === 'declined' || v === 'rejected') return 'Declined';
+  return st || 'Unknown';
+}
+
+async function findExistingSubmission(fairId, vpaId) {
+  const { data, error } = await supabaseClient
+    .from('fair_man_app_submission')
+    .select('id, status, submitted_at, updated_at')
+    .eq('fair_id', fairId)
+    .eq('vendor_performer_application_id', String(vpaId))
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data || null;
+}
+
+
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
+      const fairId = Number(params.get('fair_id'));
+      const vpaId = params.get('vpa_id'); // bigint-safe string
+      return {
+        fairId: Number.isFinite(fairId) ? fairId : null,
+        vpaId: vpaId ? String(vpaId) : null
+      };
+    }
+
+    function fmtDate(d) {
+      if (!d) return '';
+      const dt = new Date(d + 'T00:00:00');
+      return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    async function loadFair(fairId) {
+      const { data, error } = await supabaseClient
+        .from('renaissance_fairs')
+        .select(`
+          id, name, fair_tier,
+          start_date, end_date,
+          week2_start_date, week2_end_date,
+          week3_start_date, week3_end_date,
+          week4_start_date, week4_end_date,
+          week5_start_date, week5_end_date,
+          week6_start_date, week6_end_date,
+          week7_start_date, week7_end_date,
+          week8_start_date, week8_end_date,
+          week9_start_date, week9_end_date,
+          week10_start_date, week10_end_date
+        `)
+        .eq('id', fairId)
+        .single();
+      if (error) throw error;
+      return data;
+    }
+
+    function buildFairWeekendOptions(fairRow) {
+      const out = [];
+      const w1s = fairRow.start_date;
+      const w1e = fairRow.end_date;
+      if (w1s && w1e) {
+        out.push({ value: 'weekend_1', label: `Weekend 1: ${fmtDate(w1s)} — ${fmtDate(w1e)}` });
+      }
+      for (let i = 2; i <= 10; i++) {
+        const s = fairRow[`week${i}_start_date`];
+        const e = fairRow[`week${i}_end_date`];
+        if (s && e) {
+          out.push({ value: `weekend_${i}`, label: `Weekend ${i}: ${fmtDate(s)} — ${fmtDate(e)}` });
+        }
+      }
+      return out;
+    }
+
+    async function loadApprovedVpa(userId) {
+      const { data, error } = await supabaseClient
+        .from('vendor_performer_applications')
+        .select('id, name, contact_name, contact_email, application_type, is_food_vendor, approval_status')
+        .eq('user_id', userId)
+        .eq('approval_status', 'approved')
+        .order('id', { ascending: false });
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+
+    function getFormTypeFromVpa(vpa) {
+      if (vpa.application_type === true) return 'performer';
+      if (vpa.is_food_vendor === true) return 'food_vendor';
+      return 'vendor';
+    }
+
+    function renderSelectedVpa(vpa) {
+      const type = (vpa.application_type === true) ? 'Performer' : 'Vendor';
+      const food = (vpa.is_food_vendor === true) ? 'Yes' : 'No';
+      document.getElementById('vpaType').textContent = type;
+      document.getElementById('vpaFood').textContent = food;
+      document.getElementById('vpaEmail').textContent = vpa.contact_email || '—';
+      document.getElementById('vpaContact').textContent = vpa.contact_name || '—';
+    }
+
+    async function loadActiveForm(fairId, formType) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_fair_form_active')
+        .select(`
+          active_form_id,
+          fair_man_app_form (
+            id,
+            title,
+            version
+          )
+        `)
+        .eq('fair_id', fairId)
+        .eq('form_type', formType)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    }
+
+    async function loadFormFields(formId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_form_field')
+        .select('id, field_key, label, field_type, is_required, sort_order, help_text, placeholder, config, is_active')
+        .eq('form_id', formId)
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+
+    // -------------------------
+    // LOCAL DRAFT (localStorage)
+    // -------------------------
+    function draftKey(fairId, vpaId, formId) {
+      return `fairapp:draft:f${fairId}:v${vpaId}:form${formId}`;
+    }
+
+    function loadDraftMap(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return new Map();
+        const obj = JSON.parse(raw);
+        const m = new Map();
+        if (obj && typeof obj === 'object') {
+          for (const [k, v] of Object.entries(obj)) m.set(k, v);
+        }
+        return m;
+      } catch (e) {
+        console.error('loadDraftMap failed', e);
+        return new Map();
+      }
+    }
+
+    function saveDraftMap(key, map) {
+      const obj = {};
+      for (const [k, v] of map.entries()) obj[k] = v;
+      localStorage.setItem(key, JSON.stringify(obj));
+    }
+
+    // -------------------------
+    // FILES (IndexedDB)
+    // -------------------------
+    const FILE_DB_NAME = 'fairapp_files_v1';
+    const FILE_STORE = 'files';
+
+    function openFileDb() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(FILE_DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(FILE_STORE)) {
+            db.createObjectStore(FILE_STORE, { keyPath: 'key' });
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function idbPutFile(key, blob, meta) {
+      const db = await openFileDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(FILE_STORE, 'readwrite');
+        tx.objectStore(FILE_STORE).put({ key, blob, meta, saved_at: new Date().toISOString() });
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function idbGetFile(key) {
+      const db = await openFileDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(FILE_STORE, 'readonly');
+        const req = tx.objectStore(FILE_STORE).get(key);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function idbDeleteFile(key) {
+      const db = await openFileDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(FILE_STORE, 'readwrite');
+        tx.objectStore(FILE_STORE).delete(key);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    function el(tag, attrs = {}, children = []) {
+      const n = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        if (k === 'className') n.className = v;
+        else if (k === 'text') n.textContent = v;
+        else if (k === 'html') n.innerHTML = v;
+        else if (k === 'style') n.style.cssText = v;
+        else n.setAttribute(k, v);
+      }
+      for (const c of children) n.appendChild(c);
+      return n;
+    }
+
+    function normalizeConfig(cfg) {
+      let c = cfg;
+      if (typeof c === 'string') {
+        try { c = JSON.parse(c); } catch (_) { c = null; }
+      }
+      return (c && typeof c === 'object') ? c : null;
+    }
+    function isEmptyValueForRequired(field, val) {
+      const t = (field.field_type || '').toLowerCase();
+
+      if (val === null || val === undefined) return true;
+
+      // Required checkbox must be checked
+      if (t === 'checkbox') return !(val === true || val?.checked === true);
+
+      // Required weekends multi-select
+      const cfg = normalizeConfig(field.config);
+      const source = cfg ? cfg.source : null;
+      const mode = cfg ? cfg.mode : null;
+      const labelLooksLikeWeekends = /weekend/i.test(String(field.label || ''));
+      const isFairWeekendsMulti =
+        (t === 'select' && source === 'fair_weekends' && mode === 'multi') ||
+        (t === 'select' && labelLooksLikeWeekends);
+
+      if (isFairWeekendsMulti) {
+        if (Array.isArray(val)) return val.length === 0;
+        if (Array.isArray(val?.selected)) return val.selected.length === 0;
+        return true;
+      }
+
+      // Required file: must have a name (local persisted marker is ok)
+      if (t === 'file') {
+        return !(val && typeof val === 'object' && val.name);
+      }
+
+      // Required address: require at least street + city + state + zip
+      if (t === 'address') {
+        const a = (val && typeof val === 'object') ? val : {};
+        const street = (a.street || '').trim();
+        const city = (a.city || '').trim();
+        const state = (a.state || '').trim();
+        const zip = (a.zip || '').trim();
+        return !(street && city && state && zip);
+      }
+
+      // Strings
+      if (typeof val === 'string') return val.trim() === '';
+
+      // Select stored as {value}
+      if (t === 'select' && typeof val === 'object' && val !== null && 'value' in val) {
+        const v = String(val.value || '').trim();
+        return v === '';
+      }
+
+      return false;
+    }
+
+    function listMissingRequired(fields, valuesMap) {
+      const missing = [];
+      for (const f of fields) {
+        if (!f.is_required) continue;
+        const v = valuesMap.get(f.id);
+        if (isEmptyValueForRequired(f, v)) {
+          missing.push({ id: f.id, label: f.label || f.field_key || f.id });
+        }
+      }
+      return missing;
+    }
+
+    function openReqModal(missing) {
+      const modal = document.getElementById('reqModal');
+      const list = document.getElementById('reqModalList');
+      const closeX = document.getElementById('reqModalCloseX');
+      const closeBtn = document.getElementById('reqModalClose');
+
+      list.innerHTML = '';
+
+      const ul = document.createElement('ul');
+      ul.style.margin = '10px 0 0 18px';
+      ul.style.padding = '0';
+      ul.style.display = 'grid';
+      ul.style.gap = '8px';
+
+      for (const m of missing) {
+        const li = document.createElement('li');
+
+        const a = document.createElement('a');
+        a.href = '#';
+        a.textContent = m.label;
+        a.style.color = '#3b1f1f';
+        a.style.fontWeight = '700';
+        a.style.textDecoration = 'underline';
+
+        a.onclick = (e) => {
+          e.preventDefault();
+          modal.style.display = 'none';
+          const el = document.getElementById(`field_${m.id}`);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+
+        li.appendChild(a);
+        ul.appendChild(li);
+      }
+
+      list.appendChild(ul);
+
+      const close = () => { modal.style.display = 'none'; };
+      closeX.onclick = close;
+      closeBtn.onclick = close;
+
+      modal.style.display = 'flex';
+    }
+
+    async function renderFieldsInto(container, fields, valuesMap, onChange, fairWeekendOptions, fileKeyBase) {
+      container.innerHTML = '';
+
+      if (!fields.length) {
+        container.appendChild(el('div', { className: 'hint', text: 'No fields configured for this form yet.' }));
+        return;
+      }
+
+      for (const f of fields) {
+        const wrapper = el('div', {
+          style: 'margin-top:14px; padding:14px; border-radius:10px; background: rgba(255,255,255,0.55); border:1px solid rgba(0,0,0,0.12);'
+        });
+        wrapper.id = `field_${f.id}`;
+
+
+        const labelLine = el('div', { style: 'font-weight:700; margin-bottom:6px;' });
+        labelLine.textContent = f.label + (f.is_required ? ' *' : '');
+        wrapper.appendChild(labelLine);
+
+        if (f.help_text) {
+          wrapper.appendChild(el('div', { className: 'hint', style: 'margin-top:0; margin-bottom:10px; color:#3b1f1f;', text: f.help_text }));
+        }
+
+        const t = (f.field_type || '').toLowerCase();
+        const existing = valuesMap.get(f.id);
+
+        // FAIR WEEKENDS (multi)
+        const cfg = normalizeConfig(f.config);
+        const source = cfg ? cfg.source : null;
+        const mode = cfg ? cfg.mode : null;
+        const labelLooksLikeWeekends = /weekend/i.test(String(f.label || ''));
+        const isFairWeekendsMulti =
+          (t === 'select' && source === 'fair_weekends' && mode === 'multi') ||
+          (t === 'select' && labelLooksLikeWeekends);
+
+        if (isFairWeekendsMulti) {
+          const selected = Array.isArray(existing)
+            ? existing
+            : (Array.isArray(existing?.selected) ? existing.selected : []);
+
+          const set = new Set(selected.map(String));
+          const box = el('div', { style: 'display:grid; gap:10px;' });
+
+          if (!Array.isArray(fairWeekendOptions) || fairWeekendOptions.length === 0) {
+            box.appendChild(el('div', {
+              className: 'hint',
+              style: 'margin-top:0; color:#3b1f1f;',
+              text: 'No weekend dates configured for this fair.'
+            }));
+          } else {
+            for (const opt of fairWeekendOptions) {
+              const row = el('label', { style: 'display:flex; align-items:center; gap:10px;' });
+              const cb = el('input', { type: 'checkbox' });
+              cb.checked = set.has(String(opt.value));
+
+              cb.addEventListener('change', () => {
+                if (cb.checked) set.add(String(opt.value));
+                else set.delete(String(opt.value));
+                onChange(f, Array.from(set));
+              });
+
+              row.appendChild(cb);
+              row.appendChild(el('span', { text: opt.label }));
+              box.appendChild(row);
+            }
+          }
+
+          wrapper.appendChild(box);
+          container.appendChild(wrapper);
+          continue;
+        }
+
+        let control = null;
+
+        if (t === 'textarea') {
+          control = el('textarea', { placeholder: f.placeholder || '' });
+          control.value = (typeof existing === 'string') ? existing : (existing?.text || '');
+          control.addEventListener('input', () => onChange(f, control.value));
+        } else if (t === 'number') {
+          control = el('input', { type: 'number', placeholder: f.placeholder || '' });
+          control.value = (existing === null || existing === undefined) ? '' : String(existing);
+          control.addEventListener('input', () => onChange(f, control.value === '' ? null : Number(control.value)));
+        } else if (t === 'date') {
+          control = el('input', { type: 'date' });
+          control.value = (typeof existing === 'string') ? existing : (existing?.date || '');
+          control.addEventListener('change', () => onChange(f, control.value || null));
+        } else if (t === 'checkbox') {
+          const row = el('label', { style: 'display:flex; align-items:center; gap:10px;' });
+          const cb = el('input', { type: 'checkbox' });
+          cb.checked = existing === true || existing?.checked === true;
+          cb.addEventListener('change', () => onChange(f, cb.checked));
+          row.appendChild(cb);
+          row.appendChild(el('span', { text: 'Yes / No' }));
+          control = row;
+        } else if (t === 'select') {
+          const sel = el('select');
+          const options = (cfg && Array.isArray(cfg.options)) ? cfg.options : [];
+          sel.appendChild(el('option', { value: '', text: 'Select...' }));
+          for (const optVal of options) {
+            sel.appendChild(el('option', { value: String(optVal), text: String(optVal) }));
+          }
+          const cur = (typeof existing === 'string') ? existing : (existing?.value || '');
+          sel.value = cur || '';
+          sel.addEventListener('change', () => onChange(f, sel.value || null));
+          control = sel;
+        } else if (t === 'address') {
+          const addr = (existing && typeof existing === 'object') ? existing : {};
+          const grid = el('div', { style: 'display:grid; grid-template-columns: 1.4fr 1fr 1fr 0.7fr; gap:10px;' });
+
+          const street = el('input', { type: 'text', placeholder: 'Street address' });
+          street.value = addr.street || '';
+
+          const city = el('input', { type: 'text', placeholder: 'City' });
+          city.value = addr.city || '';
+
+          const state = el('input', { type: 'text', placeholder: 'State' });
+          state.value = addr.state || '';
+
+          const zip = el('input', { type: 'text', placeholder: 'Zip' });
+          zip.value = addr.zip || '';
+
+          const push = () => onChange(f, {
+            street: street.value || null,
+            city: city.value || null,
+            state: state.value || null,
+            zip: zip.value || null
+          });
+
+          street.addEventListener('input', push);
+          city.addEventListener('input', push);
+          state.addEventListener('input', push);
+          zip.addEventListener('input', push);
+
+          grid.appendChild(street);
+          grid.appendChild(city);
+          grid.appendChild(state);
+          grid.appendChild(zip);
+
+          control = grid;
+        } else if (t === 'file') {
+          const fileRow = el('div', { style: 'display:flex; gap:10px; align-items:center; flex-wrap:wrap;' });
+          const inp = el('input', { type: 'file' });
+          const meta = el('div', { className: 'hint', style: 'margin-top:0; color:#3b1f1f;' });
+          const btnClear = el('button', { className: 'btn btn-dark', style: 'padding:8px 12px; font-size:14px;', text: 'Clear' });
+
+          const fileKey = `${fileKeyBase}:file:${f.id}`;
+
+          // Load persisted file (IndexedDB)
+          try {
+            const saved = await idbGetFile(fileKey);
+            if (saved && saved.meta && saved.meta.name) {
+              meta.textContent = `Selected: ${saved.meta.name}`;
+              // Keep a tiny marker in draft values so review knows "file selected"
+              if (!existing || !existing.name) {
+                onChange(f, { name: saved.meta.name, size: saved.meta.size, type: saved.meta.type, persisted: true });
+              }
+            } else {
+              meta.textContent = 'Select a file (upload comes later).';
+            }
+          } catch (e) {
+            console.error(e);
+            meta.textContent = 'Select a file (upload comes later).';
+          }
+
+          inp.addEventListener('change', async () => {
+            const f0 = inp.files && inp.files[0] ? inp.files[0] : null;
+            if (!f0) {
+              meta.textContent = 'No file selected.';
+              onChange(f, null);
+              await idbDeleteFile(fileKey).catch(() => {});
+              return;
+            }
+
+            meta.textContent = `Saving: ${f0.name}…`;
+            try {
+              await idbPutFile(fileKey, f0, { name: f0.name, size: f0.size, type: f0.type });
+              meta.textContent = `Selected: ${f0.name}`;
+              onChange(f, { name: f0.name, size: f0.size, type: f0.type, persisted: true });
+            } catch (e) {
+              console.error(e);
+              meta.textContent = `Could not save file locally.`;
+              onChange(f, { name: f0.name, size: f0.size, type: f0.type, persisted: false });
+            }
+          });
+
+          btnClear.addEventListener('click', async () => {
+            inp.value = '';
+            await idbDeleteFile(fileKey).catch(() => {});
+            meta.textContent = 'No file selected.';
+            onChange(f, null);
+          });
+
+          fileRow.appendChild(inp);
+          fileRow.appendChild(btnClear);
+          fileRow.appendChild(meta);
+          control = fileRow;
+        } else {
+          control = el('input', { type: 'text', placeholder: f.placeholder || '' });
+          control.value = (typeof existing === 'string') ? existing : (existing?.text || '');
+          control.addEventListener('input', () => onChange(f, control.value));
+        }
+
+        wrapper.appendChild(control);
+        container.appendChild(wrapper);
+      }
+    }
+
+    async function loadPage() {
+      showLoader();
+      setMsg('');
+
+      const { fairId, vpaId } = getParams();
+      if (!fairId) {
+        document.getElementById('fairTitle').textContent = 'Missing fair_id';
+        document.getElementById('pageHint').textContent = 'This page needs ?fair_id=... in the URL.';
+        hideLoader();
+        return;
+      }
+
+      document.getElementById('btnBack').onclick = () => {
+        window.location.href = `fair_detail.html?id=${fairId}`;
+      };
+
+      const { data: { user }, error: userErr } = await supabaseClient.auth.getUser();
+      if (userErr || !user) {
+        document.getElementById('fairTitle').textContent = 'Login required';
+        document.getElementById('pageHint').textContent = 'Please log in first, then come back to apply.';
+        hideLoader();
+        return;
+      }
+
+      let fairRow;
+      try {
+        fairRow = await loadFair(fairId);
+      } catch (e) {
+        console.error(e);
+        document.getElementById('fairTitle').textContent = 'Could not load fair';
+        document.getElementById('pageHint').textContent = 'Please go back and try again.';
+        hideLoader();
+        return;
+      }
+
+      document.getElementById('fairTitle').textContent = `Apply — ${fairRow.name}`;
+
+      if (((fairRow.fair_tier || '') + '').toLowerCase() !== 'gold') {
+        document.getElementById('pageHint').textContent = 'Applications are not enabled for this fair.';
+        hideLoader();
+        return;
+      }
+
+      let vpas = [];
+      try {
+        vpas = await loadApprovedVpa(user.id);
+      } catch (e) {
+        console.error(e);
+        document.getElementById('pageHint').textContent = 'Could not load your approved profile(s).';
+        hideLoader();
+        return;
+      }
+
+      if (!vpas.length) {
+        document.getElementById('pageHint').textContent =
+          'To apply, you must have an approved Vendor/Performer profile first.';
+        hideLoader();
+        return;
+      }
+
+      let selected = vpas[0];
+      if (vpaId) {
+        const found = vpas.find(v => String(v.id) === String(vpaId));
+        if (found) selected = found;
+      }
+
+      const vpaSelect = document.getElementById('vpaSelect');
+      const vpaSingle = document.getElementById('vpaSingle');
+
+      if (vpas.length === 1) {
+        vpaSingle.style.display = 'block';
+        vpaSingle.innerHTML = `<strong>${selected.name}</strong>`;
+        vpaSelect.style.display = 'none';
+      } else {
+        vpaSelect.style.display = 'block';
+        vpaSingle.style.display = 'none';
+
+        vpaSelect.innerHTML = '';
+        for (const v of vpas) {
+          const opt = document.createElement('option');
+          opt.value = String(v.id);
+          const t = (v.application_type === true) ? 'Performer' : 'Vendor';
+          const food = (v.is_food_vendor === true) ? ' • Food' : '';
+          opt.textContent = `${v.name} (${t}${food})`;
+          vpaSelect.appendChild(opt);
+        }
+        vpaSelect.value = String(selected.id);
+      }
+
+      const fieldsWrap = document.getElementById('appFormFields');
+      const formHint = document.getElementById('formHint');
+      const btnReview = document.getElementById('btnReview');
+
+      let currentFormId = null;
+      let currentDraftKey = null;
+      let valuesMap = new Map();
+      let saveTimer = null;
+
+      let currentFields = [];
+
+
+      async function refreshEverythingForSelected() {
+        showLoader();
+        setMsg('');
+        btnReview.disabled = true;
+        fieldsWrap.innerHTML = '';
+        formHint.textContent = '';
+
+        renderSelectedVpa(selected);
+
+        try {
+          const formType = getFormTypeFromVpa(selected);
+          const active = await loadActiveForm(fairId, formType);
+
+          if (!active || !active.fair_man_app_form) {
+            document.getElementById('activeFormInfo').textContent = 'No active application form configured.';
+            formHint.textContent = 'This fair has not set an active form for your type yet.';
+            hideLoader();
+            return;
+          }
+
+          document.getElementById('activeFormInfo').textContent =
+            `${active.fair_man_app_form.title} (v${active.fair_man_app_form.version})`;
+
+        currentFormId = active.fair_man_app_form.id;
+currentDraftKey = draftKey(fairId, String(selected.id), currentFormId);
+
+// ✅ If they already submitted (not pending), block applying again
+hideApplyMsgBox();
+
+const existingSub = await findExistingSubmission(fairId, selected.id);
+if (existingSub && String(existingSub.status || '').toLowerCase() !== 'pending') {
+  const human = prettySubmitStatus(existingSub.status);
+  showApplyMsgBox(
+    `You already applied to this fair with this profile.`,
+    `Current status: ${human}. If you need changes, use your dashboard to manage this application.`
+  );
+
+  btnReview.disabled = true;
+  formHint.textContent = 'This application is already submitted.';
+  fieldsWrap.innerHTML = '';
+  setMsg('');
+  hideLoader();
+  return;
+}
+
+// Load draft from localStorage
+valuesMap = loadDraftMap(currentDraftKey);
+
+const fields = await loadFormFields(currentFormId);
+
+formHint.textContent = 'Fill out the application below. Your answers save locally (not submitted yet).';
+const fairWeekendOptions = buildFairWeekendOptions(fairRow);
+const fileKeyBase = currentDraftKey;
+
+await renderFieldsInto(fieldsWrap, fields, valuesMap, (field, value) => {
+  // Save local draft (debounced)
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    valuesMap.set(field.id, value);
+    saveDraftMap(currentDraftKey, valuesMap);
+    setMsg('Saved locally.');
+  }, 150);
+}, fairWeekendOptions, fileKeyBase);
+
+btnReview.disabled = false;
+setMsg('Saved locally.');
+
+        } catch (e) {
+          console.error(e);
+          setMsg('Failed to load application. Check console.');
+        } finally {
+          hideLoader();
+        }
+      }
+
+      if (vpas.length > 1) {
+        vpaSelect.onchange = async () => {
+          const found = vpas.find(x => String(x.id) === String(vpaSelect.value));
+          if (found) {
+            selected = found;
+            // keep URL updated so refresh stays on the same profile
+            const u = new URL(window.location.href);
+            u.searchParams.set('vpa_id', String(selected.id));
+            history.replaceState(null, '', u.toString());
+            await refreshEverythingForSelected();
+          }
+        };
+      }
+
+      btnReview.onclick = () => {
+        if (!currentFormId || !currentDraftKey) return;
+
+        // Validate required fields BEFORE allowing review
+        const missing = listMissingRequired(currentFields, valuesMap);
+        if (missing.length > 0) {
+          setMsg(`Missing required fields: ${missing.length}. Click a field name to jump to it.`);
+          openReqModal(missing);
+          return;
+        }
+
+        window.location.href =
+          `fair_review.html?fair_id=${encodeURIComponent(String(fairId))}` +
+          `&vpa_id=${encodeURIComponent(String(selected.id))}` +
+          `&form_id=${encodeURIComponent(String(currentFormId))}` +
+          `&draft_key=${encodeURIComponent(String(currentDraftKey))}`;
+      };
+
+
+      await refreshEverythingForSelected();
+    }
+
+    loadPage();
+  </script>
+    <!-- Required-fields modal -->
+  <div id="reqModal" style="
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 18px;
+  ">
+    <div style="
+      width: min(760px, 100%);
+      background: rgba(241, 223, 153, 0.98);
+      color: #3b1f1f;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+      padding: 18px;
+      text-align: left;
+      border: 1px solid rgba(0,0,0,0.18);
+    ">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+        <div style="font-family:'Cinzel', serif; font-size:20px; font-weight:700;">
+          Missing required fields
+        </div>
+        <button id="reqModalCloseX" class="btn btn-dark" style="padding:8px 12px; font-size:14px;">Close</button>
+      </div>
+
+      <div class="hint" style="margin-top:10px; color:#3b1f1f;">
+        Please fill out the required fields below before you can continue to Review.
+      </div>
+
+      <div id="reqModalList" style="margin-top:12px;"></div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+        <button id="reqModalClose" class="btn">OK</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

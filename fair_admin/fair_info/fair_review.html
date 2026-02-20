@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Review Application | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1, h2 { font-family: 'Cinzel', serif; margin: 10px 0; }
+
+    .card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 26px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 18px auto;
+      max-width: 980px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn:hover { background-color: #45a049; }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #222; }
+    .btn-red { background-color: #a12828; }
+    .btn-red:hover { background-color: #8c1f1f; }
+
+    .divider { margin: 18px 0; height: 1px; background: rgba(0,0,0,0.18); }
+
+    .hint { margin-top: 10px; opacity: 0.9; }
+    .grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 10px 14px;
+      margin-top: 12px;
+      align-items: start;
+    }
+    .label { font-weight: bold; }
+
+    .answerCard {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(0,0,0,0.12);
+    }
+    .answerTitle {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .answerValue {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .missing {
+      outline: 2px solid rgba(161,40,40,0.55);
+      border-radius: 10px;
+    }
+
+    .contractBox {
+      background: rgba(255,255,255,0.65);
+      border: 1px solid rgba(0,0,0,0.18);
+      border-radius: 10px;
+      padding: 14px;
+      max-height: 320px;
+      overflow: auto;
+      color: #111;
+      white-space: pre-wrap;
+    }
+
+    /* Loader */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Review</h1>
+
+  <div id="loadingOverlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  ">
+    <div style="
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #bb9457;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    "></div>
+  </div>
+
+  <div class="card">
+    <h2 id="fairTitle">Loading…</h2>
+    <div class="hint" id="pageHint"></div>
+
+    <div class="divider"></div>
+
+    <h3 style="margin:0;">Applicant</h3>
+    <div class="grid">
+      <div class="label">Profile:</div><div id="vpaName">—</div>
+      <div class="label">Type:</div><div id="vpaType">—</div>
+      <div class="label">Food Vendor:</div><div id="vpaFood">—</div>
+      <div class="label">Email:</div><div id="vpaEmail">—</div>
+      <div class="label">Contact Name:</div><div id="vpaContact">—</div>
+      <div class="label">Form:</div><div id="formInfo">—</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3 style="margin:0;">Answers</h3>
+    <div class="hint" id="answersHint" style="margin-top:6px;"></div>
+    <div id="answersWrap"></div>
+
+    <div class="divider"></div>
+
+    <h3 style="margin:0;">Contract</h3>
+    <div class="hint" style="margin-top:6px;">
+      You must accept the contract to submit.
+    </div>
+    <div id="contractBox" class="contractBox">Loading contract…</div>
+
+    <div style="margin-top:12px; display:flex; align-items:center; gap:10px;">
+      <input type="checkbox" id="chkAccept" />
+      <label for="chkAccept" style="font-weight:700;">
+        I have read and accept the contract
+      </label>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-dark" id="btnBack">⬅ Go Back</button>
+      <button class="btn btn-red" id="btnCancel">Cancel</button>
+      <button class="btn" id="btnSubmit">Submit</button>
+    </div>
+
+    <div class="hint" id="statusMsg"></div>
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    function showLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'flex';
+    }
+    function hideLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'none';
+    }
+    function setMsg(t) {
+      document.getElementById('statusMsg').textContent = t || '';
+    }
+
+    function getParams() {
+      const p = new URLSearchParams(window.location.search);
+      const fairId = Number(p.get('fair_id'));
+      return {
+        fairId: Number.isFinite(fairId) ? fairId : null,
+        vpaId: p.get('vpa_id') ? String(p.get('vpa_id')) : null,
+        formId: p.get('form_id') ? String(p.get('form_id')) : null,
+        draftKey: p.get('draft_key') ? String(p.get('draft_key')) : null
+      };
+    }
+
+    function safeJsonParse(s) {
+      try { return JSON.parse(s); } catch (_) { return null; }
+    }
+
+    function loadDraftMap(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return new Map();
+        const obj = safeJsonParse(raw);
+        const m = new Map();
+        if (obj && typeof obj === 'object') {
+          for (const [k, v] of Object.entries(obj)) m.set(k, v);
+        }
+        return m;
+      } catch (e) {
+        console.error('loadDraftMap failed', e);
+        return new Map();
+      }
+    }
+
+    // IndexedDB (same as apply) — so we can show file name is still there
+    const FILE_DB_NAME = 'fairapp_files_v1';
+    const FILE_STORE = 'files';
+
+    function openFileDb() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(FILE_DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(FILE_STORE)) {
+            db.createObjectStore(FILE_STORE, { keyPath: 'key' });
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function idbGetFile(key) {
+      const db = await openFileDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(FILE_STORE, 'readonly');
+        const req = tx.objectStore(FILE_STORE).get(key);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function idbDeleteFile(key) {
+      const db = await openFileDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(FILE_STORE, 'readwrite');
+        tx.objectStore(FILE_STORE).delete(key);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    function el(tag, attrs = {}, children = []) {
+      const n = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        if (k === 'className') n.className = v;
+        else if (k === 'text') n.textContent = v;
+        else if (k === 'html') n.innerHTML = v;
+        else if (k === 'style') n.style.cssText = v;
+        else n.setAttribute(k, v);
+      }
+      for (const c of children) n.appendChild(c);
+      return n;
+    }
+
+    async function loadFair(fairId) {
+      const { data, error } = await supabaseClient
+        .from('renaissance_fairs')
+        .select('id, name, fair_tier')
+        .eq('id', fairId)
+        .single();
+      if (error) throw error;
+      return data;
+    }
+
+    async function loadVpa(vpaId) {
+      // Using current user's approved profile
+      const { data: { user }, error: userErr } = await supabaseClient.auth.getUser();
+      if (userErr || !user) throw new Error('not_logged_in');
+
+      const { data, error } = await supabaseClient
+        .from('vendor_performer_applications')
+        .select('id, name, contact_name, contact_email, application_type, is_food_vendor, approval_status, user_id')
+        .eq('id', vpaId)
+        .single();
+      if (error) throw error;
+
+      if (!data || data.user_id !== user.id) throw new Error('not_owner_of_vpa');
+      if (String(data.approval_status || '').toLowerCase() !== 'approved') throw new Error('vpa_not_approved');
+
+      return data;
+    }
+
+    async function loadForm(formId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_form')
+        .select('id, title, version, contract_text, contract_updated_at')
+        .eq('id', formId)
+        .single();
+      if (error) throw error;
+      return data;
+    }
+
+    async function loadFields(formId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_form_field')
+        .select('id, field_key, label, field_type, is_required, sort_order, help_text, placeholder, config, is_active')
+        .eq('form_id', formId)
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+
+    function prettyValue(fieldType, v) {
+      if (v === null || v === undefined) return '';
+
+      const t = String(fieldType || '').toLowerCase();
+
+      if (t === 'checkbox') return (v === true) ? 'Yes' : 'No';
+
+      if (t === 'address') {
+        if (typeof v !== 'object' || !v) return '';
+        const parts = [v.street, v.city, v.state, v.zip].filter(Boolean);
+        return parts.join(', ');
+      }
+
+      if (t === 'file') {
+        if (typeof v === 'object' && v && v.name) {
+          return `Selected: ${v.name}`;
+        }
+        return '';
+      }
+
+      if (Array.isArray(v)) return v.join(', ');
+      if (typeof v === 'object') return JSON.stringify(v, null, 2);
+      return String(v);
+    }
+
+    function isMissingRequired(field, value) {
+      if (!field.is_required) return false;
+
+      const t = String(field.field_type || '').toLowerCase();
+
+      if (t === 'checkbox') return value !== true;
+
+      if (t === 'file') {
+        return !(value && typeof value === 'object' && value.name);
+      }
+
+      if (t === 'address') {
+        if (!value || typeof value !== 'object') return true;
+        // minimal required for address: street + city + state + zip
+        return !(value.street && value.city && value.state && value.zip);
+      }
+
+      if (Array.isArray(value)) return value.length === 0;
+
+      if (value === null || value === undefined) return true;
+      if (typeof value === 'string' && value.trim() === '') return true;
+
+      return false;
+    }
+
+    async function clearDraftAndFiles(draftKey, fields) {
+      // clear localStorage draft
+      try { localStorage.removeItem(draftKey); } catch (_) {}
+
+      // clear files in IndexedDB for each file field
+      if (Array.isArray(fields)) {
+        for (const f of fields) {
+          if (String(f.field_type || '').toLowerCase() === 'file') {
+            const fileKey = `${draftKey}:file:${f.id}`;
+            await idbDeleteFile(fileKey).catch(() => {});
+          }
+        }
+      }
+    }
+
+    async function createOrGetSubmission(fairId, vpaId) {
+      const { data, error } = await supabaseClient.rpc('fair_man_app_apply', {
+        p_fair_id: fairId,
+        p_vendor_performer_application_id: vpaId
+      });
+      if (error) throw error;
+      return data; // uuid
+    }
+
+    async function submitToSupabase(submissionId, fields, valuesMap) {
+      // Build array payload: [{field_id, value}, ...]
+      const payload = [];
+      for (const f of fields) {
+        const v = valuesMap.get(f.id);
+        // include even nulls? (keep only present values)
+        if (v !== undefined) {
+          payload.push({ field_id: f.id, value: v === undefined ? null : v });
+        }
+      }
+
+      const { error } = await supabaseClient.rpc('fair_man_app_submit', {
+        p_submission_id: submissionId,
+        p_values: payload,
+        p_accept_contract: true
+      });
+
+      if (error) throw error;
+    }
+
+    async function loadPage() {
+      showLoader();
+      setMsg('');
+
+      const { fairId, vpaId, formId, draftKey } = getParams();
+      if (!fairId || !vpaId || !formId || !draftKey) {
+        document.getElementById('fairTitle').textContent = 'Missing parameters';
+        document.getElementById('pageHint').textContent =
+          'This page needs ?fair_id=...&vpa_id=...&form_id=...&draft_key=...';
+        hideLoader();
+        return;
+      }
+
+      // Buttons
+      document.getElementById('btnBack').onclick = () => {
+        window.location.href = `fair_apply.html?fair_id=${encodeURIComponent(String(fairId))}&vpa_id=${encodeURIComponent(String(vpaId))}`;
+      };
+
+      document.getElementById('btnCancel').onclick = async () => {
+        if (!confirm('Cancel this application? This will clear your saved draft.')) return;
+        try {
+          // need fields list to delete file keys
+          const fields = await loadFields(formId);
+          await clearDraftAndFiles(draftKey, fields);
+        } catch (e) {
+          console.error(e);
+        }
+        window.location.href = `fair_detail.html?id=${encodeURIComponent(String(fairId))}`;
+      };
+
+      // Load content
+      let fairRow, vpaRow, formRow, fields;
+      let valuesMap;
+
+      try {
+        fairRow = await loadFair(fairId);
+        document.getElementById('fairTitle').textContent = `Review — ${fairRow.name}`;
+
+        vpaRow = await loadVpa(vpaId);
+
+        const type = (vpaRow.application_type === true) ? 'Performer' : 'Vendor';
+        const food = (vpaRow.is_food_vendor === true) ? 'Yes' : 'No';
+
+        document.getElementById('vpaName').textContent = vpaRow.name || '—';
+        document.getElementById('vpaType').textContent = type;
+        document.getElementById('vpaFood').textContent = food;
+        document.getElementById('vpaEmail').textContent = vpaRow.contact_email || '—';
+        document.getElementById('vpaContact').textContent = vpaRow.contact_name || '—';
+
+        formRow = await loadForm(formId);
+        document.getElementById('formInfo').textContent = `${formRow.title} (v${formRow.version})`;
+
+        document.getElementById('contractBox').textContent =
+          (formRow.contract_text && String(formRow.contract_text).trim() !== '')
+            ? formRow.contract_text
+            : 'No contract text was found for this form.';
+
+        fields = await loadFields(formId);
+        valuesMap = loadDraftMap(draftKey);
+
+        const answersWrap = document.getElementById('answersWrap');
+        const answersHint = document.getElementById('answersHint');
+
+        if (!fields.length) {
+          answersHint.textContent = 'No fields configured for this form.';
+        } else {
+          answersHint.textContent = 'Check everything. Use “Go Back” to make changes.';
+        }
+
+        answersWrap.innerHTML = '';
+
+        // Render answers
+        for (const f of fields) {
+          const v = valuesMap.get(f.id);
+
+          const box = el('div', { className: 'answerCard', id: `ans_${f.id}` });
+          box.appendChild(el('div', { className: 'answerTitle', text: f.label + (f.is_required ? ' *' : '') }));
+
+          // For file fields, also check IndexedDB to confirm it persisted
+          if (String(f.field_type || '').toLowerCase() === 'file') {
+            const fileKey = `${draftKey}:file:${f.id}`;
+            let fileLabel = '';
+            try {
+              const saved = await idbGetFile(fileKey);
+              if (saved && saved.meta && saved.meta.name) {
+                fileLabel = `Selected: ${saved.meta.name}`;
+                // sync marker if draft missing
+                if (!v || !v.name) {
+                  valuesMap.set(f.id, { name: saved.meta.name, size: saved.meta.size, type: saved.meta.type, persisted: true });
+                  // keep draft updated so submit payload includes file marker
+                  try {
+                    const obj = JSON.parse(localStorage.getItem(draftKey) || '{}');
+                    obj[f.id] = valuesMap.get(f.id);
+                    localStorage.setItem(draftKey, JSON.stringify(obj));
+                  } catch (_) {}
+                }
+              } else {
+                fileLabel = prettyValue(f.field_type, v) || '';
+              }
+            } catch (e) {
+              console.error(e);
+              fileLabel = prettyValue(f.field_type, v) || '';
+            }
+
+            box.appendChild(el('div', { className: 'answerValue', text: fileLabel || '—' }));
+          } else {
+            box.appendChild(el('div', { className: 'answerValue', text: prettyValue(f.field_type, v) || '—' }));
+          }
+
+          if (isMissingRequired(f, valuesMap.get(f.id))) {
+            box.classList.add('missing');
+          }
+
+          answersWrap.appendChild(box);
+        }
+
+      } catch (e) {
+        console.error(e);
+        document.getElementById('pageHint').textContent = 'Failed to load review page. Check console.';
+        hideLoader();
+        return;
+      } finally {
+        hideLoader();
+      }
+
+      // Submit
+      document.getElementById('btnSubmit').onclick = async () => {
+        setMsg('');
+
+        // Contract required
+        if (!document.getElementById('chkAccept').checked) {
+          setMsg('You must accept the contract before submitting.');
+          return;
+        }
+
+        // Validate required fields
+        let missingCount = 0;
+        for (const f of fields) {
+          const v = valuesMap.get(f.id);
+          const miss = isMissingRequired(f, v);
+          const elBox = document.getElementById(`ans_${f.id}`);
+          if (elBox) {
+            if (miss) elBox.classList.add('missing');
+            else elBox.classList.remove('missing');
+          }
+          if (miss) missingCount++;
+        }
+
+        if (missingCount > 0) {
+          setMsg(`Missing required fields: ${missingCount}. Use “Go Back” to fix them.`);
+          return;
+        }
+
+        showLoader();
+        try {
+          setMsg('Creating submission…');
+          const submissionId = await createOrGetSubmission(fairId, vpaId);
+
+          setMsg('Submitting…');
+          await submitToSupabase(submissionId, fields, valuesMap);
+
+          // Clear draft after success
+          await clearDraftAndFiles(draftKey, fields);
+
+          setMsg('Submitted. Redirecting…');
+          window.location.href = `fair_detail.html?id=${encodeURIComponent(String(fairId))}`;
+
+        } catch (e) {
+          console.error(e);
+          const msg = (e && e.message) ? e.message : String(e);
+          setMsg(`Submit failed: ${msg}`);
+        } finally {
+          hideLoader();
+        }
+      };
+    }
+
+    loadPage();
+  </script>
+</body>
+</html>

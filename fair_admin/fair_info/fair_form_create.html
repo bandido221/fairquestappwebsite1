@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Form | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 { font-family: 'Cinzel', serif; margin-bottom: 10px; }
+
+    .card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 26px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 18px auto;
+      max-width: 800px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+
+    .profile-logo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 60px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn:hover { background-color: #45a049; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 10px 14px;
+      margin-top: 12px;
+      align-items: center;
+    }
+
+    .label { font-weight: bold; }
+
+    select, input[type="text"] {
+      font-size: 15px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.25);
+      box-sizing: border-box;
+    }
+
+    .hint { margin-top: 10px; opacity: 0.9; }
+
+    /* Loader */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <h1 id="pageTitle">Create New Form</h1>
+
+  <div id="loadingOverlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  ">
+    <div style="
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #bb9457;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    "></div>
+  </div>
+
+  <div class="card">
+    <a href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+    </a>
+
+    <h2 style="margin-top:0;">New Form</h2>
+
+    <div class="btn-row">
+      <button class="btn" id="btnBack">⬅ Back to Setup</button>
+      <button class="btn" id="btnCreate">Create</button>
+    </div>
+
+    <div class="grid">
+      <div class="label">Form Type:</div>
+      <div>
+        <select id="selType">
+          <option value="">Select type...</option>
+          <option value="vendor">Vendor</option>
+          <option value="food_vendor">Food Vendor</option>
+          <option value="performer">Performer</option>
+        </select>
+      </div>
+
+      <div class="label">Title:</div>
+      <div>
+        <input id="txtTitle" type="text" placeholder="Example: 2026 Vendor Application" />
+      </div>
+    </div>
+
+    <div class="hint" id="statusMsg"></div>
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    function getFairIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const fairIdRaw = params.get('fair_id');
+      const fairId = Number(fairIdRaw);
+      return Number.isFinite(fairId) ? fairId : null;
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'none';
+    }
+
+    function showLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'flex';
+    }
+
+    function setMsg(text) {
+      document.getElementById('statusMsg').textContent = text || '';
+    }
+
+    async function requireAccess(fairId) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'edit_forms' });
+      if (error) throw error;
+      return data;
+    }
+
+    async function createForm(fairId, formType, title) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_create_form', { p_fair_id: fairId, p_form_type: formType, p_title: title });
+      if (error) throw error;
+      return data; // uuid
+    }
+
+    async function loadPage() {
+      showLoader();
+      setMsg('');
+
+      const fairId = getFairIdFromUrl();
+      if (!fairId) {
+        setMsg('Missing fair_id in URL.');
+        hideLoader();
+        return;
+      }
+
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) {
+        setMsg('Please log in first.');
+        hideLoader();
+        return;
+      }
+
+      try {
+        await requireAccess(fairId);
+      } catch (e) {
+        setMsg('Not authorized.');
+        hideLoader();
+        return;
+      }
+
+      document.getElementById('btnBack').onclick = () => {
+        window.location.href = `fair_application_setup.html?fair_id=${fairId}`;
+      };
+
+      document.getElementById('btnCreate').onclick = async () => {
+        const type = document.getElementById('selType').value;
+        const title = document.getElementById('txtTitle').value || '';
+
+        if (!type) {
+          setMsg('Select a form type.');
+          return;
+        }
+        if (!title.trim()) {
+          setMsg('Enter a title.');
+          return;
+        }
+
+        showLoader();
+        setMsg('Creating...');
+
+        try {
+          const formId = await createForm(fairId, type, title.trim());
+          setMsg('Created.');
+
+          // Next page (we will build this next)
+          window.location.href = `fair_form_edit.html?fair_id=${fairId}&form_id=${formId}`;
+        } catch (e) {
+          console.error(e);
+          setMsg('Create failed. Check console.');
+          hideLoader();
+          return;
+        }
+      };
+
+      hideLoader();
+    }
+
+    loadPage();
+  </script>
+</body>
+</html>

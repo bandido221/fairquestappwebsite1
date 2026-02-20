@@ -276,7 +276,19 @@
       ${perf.website ? `<p><a href="${perf.website}" target="_blank">${perf.website}</a></p>` : ''}
       ${perf.photo_url ? `<p><img src="${perf.photo_url}" width="150"/></p>` : ''}
 
-<button class="update-app" onclick="startUpdate(${perf.id})">Update Application</button>
+<button class="update-app" onclick="startUpdate(${perf.id})">
+  Update Application
+</button>
+
+<button class="start-app"
+        onclick="window.location.href='fair_applications.html?vpa_id=${perf.id}'">
+  🎪 Fair Applications
+</button>
+
+<button class="delete-app"
+        onclick="deleteApplication(${perf.id}, '${safeName}')">
+  🗑️ Delete
+</button>
     Update Application
   </button>
   <button class="delete-app"

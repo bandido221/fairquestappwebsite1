@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fair Applications | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 26px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 18px auto;
+      max-width: 900px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+
+    .profile-logo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 60px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn:hover { background-color: #45a049; }
+
+    .section-title {
+      font-family: 'Cinzel', serif;
+      margin: 6px 0 12px;
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .logo {
+      width: 54px;
+      height: 54px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: rgba(0,0,0,0.08);
+      flex: 0 0 auto;
+    }
+
+    .meta {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .name {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .subline {
+      font-size: 14px;
+      opacity: 0.85;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      background: rgba(0,0,0,0.10);
+    }
+
+    .right-actions {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-small {
+      background-color: #2f2f2f;
+      color: #fff;
+      padding: 8px 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-small:hover { opacity: 0.9; }
+
+    .empty {
+      margin: 10px 0 0;
+      opacity: 0.85;
+    }
+
+    /* Loader */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1 id="pageTitle">Fair Applications</h1>
+
+  <div id="loadingOverlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  ">
+    <div style="
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #bb9457;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    "></div>
+  </div>
+
+  <div class="card">
+    <a href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+    </a>
+
+    <h2 style="margin-top:0;">Applications</h2>
+
+ <div class="btn-row">
+  <button class="btn" id="btnBackToDashboard">⬅ Back to Dashboard</button>
+  <button class="btn" id="btnAppSetup">Application Setup</button>
+  <button class="btn" id="btnRefresh">Refresh</button>
+</div>
+
+    <p style="margin: 14px 0 0; opacity: 0.9;">
+      This page is list-only. Open an application to review and approve/reject.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Vendors</h2>
+    <div id="vendorsList" class="list"></div>
+    <div id="vendorsEmpty" class="empty" style="display:none;">No vendor applications found.</div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Food Vendors</h2>
+    <div id="foodList" class="list"></div>
+    <div id="foodEmpty" class="empty" style="display:none;">No food vendor applications found.</div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Performers</h2>
+    <div id="performersList" class="list"></div>
+    <div id="performersEmpty" class="empty" style="display:none;">No performer applications found.</div>
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    function getFairIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const fairIdRaw = params.get('fair_id');
+      const fairId = Number(fairIdRaw);
+      return Number.isFinite(fairId) ? fairId : null;
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'none';
+    }
+
+    function showLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'flex';
+    }
+
+    function clearLists() {
+      document.getElementById('vendorsList').innerHTML = '';
+      document.getElementById('foodList').innerHTML = '';
+      document.getElementById('performersList').innerHTML = '';
+
+      document.getElementById('vendorsEmpty').style.display = 'none';
+      document.getElementById('foodEmpty').style.display = 'none';
+      document.getElementById('performersEmpty').style.display = 'none';
+    }
+
+    function safeText(v) {
+      return (v === null || v === undefined || v === '') ? 'N/A' : String(v);
+    }
+
+    function formatDate(ts) {
+      try {
+        const d = new Date(ts);
+        if (isNaN(d.getTime())) return 'N/A';
+        return d.toLocaleString();
+      } catch (_) {
+        return 'N/A';
+      }
+    }
+
+    function buildRow(item, fairId) {
+      const row = document.createElement('div');
+      row.className = 'row';
+
+      const img = document.createElement('img');
+      img.className = 'logo';
+      img.alt = 'Logo';
+
+      // If you later make a Storage bucket public or use signed URLs, you can replace this.
+      // For now, show a placeholder when we don't have a direct URL.
+      img.src = '/images/logo.png';
+      row.appendChild(img);
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = item.applicant_name || item.applicant_email || 'Unknown Applicant';
+      meta.appendChild(name);
+
+      const sub = document.createElement('div');
+      sub.className = 'subline';
+
+      const status = document.createElement('span');
+      status.className = 'pill';
+      status.textContent = `Status: ${safeText(item.status)}`;
+      sub.appendChild(status);
+
+      const submitted = document.createElement('span');
+      submitted.className = 'pill';
+      submitted.textContent = `Submitted: ${formatDate(item.submitted_at)}`;
+      sub.appendChild(submitted);
+
+      meta.appendChild(sub);
+      row.appendChild(meta);
+
+      const actions = document.createElement('div');
+      actions.className = 'right-actions';
+
+      const btnView = document.createElement('button');
+      btnView.className = 'btn-small';
+      btnView.textContent = 'Quick View';
+      btnView.onclick = () => {
+        // Detail page next step. Keep this link ready now.
+        window.location.href = `fair_application_detail.html?fair_id=${fairId}&submission_id=${item.submission_id}`;
+      };
+
+      actions.appendChild(btnView);
+      row.appendChild(actions);
+
+      return row;
+    }
+
+    function renderSection(listId, emptyId, rows, fairId) {
+      const listEl = document.getElementById(listId);
+      const emptyEl = document.getElementById(emptyId);
+
+      if (!Array.isArray(rows) || rows.length === 0) {
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      for (const item of rows) {
+        listEl.appendChild(buildRow(item, fairId));
+      }
+    }
+
+    async function requireAccess(fairId) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'read' });
+
+      if (error) throw error;
+      return data;
+    }
+
+    async function listSubmissions(fairId) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_list_submissions', { p_fair_id: fairId });
+
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+
+    async function load() {
+      // Buttons
+      document.getElementById('btnBackToDashboard').onclick = () => {
+        const fairId = getFairIdFromUrl();
+        if (!fairId) {
+          alert('Missing fair_id in the URL.');
+          return;
+        }
+        window.location.href = `fair_dashboard.html?fair_id=${fairId}`;
+      };
+
+document.getElementById('btnAppSetup').onclick = () => {
+  const fairId = getFairIdFromUrl();
+  if (!fairId) {
+    alert('Missing fair_id in the URL.');
+    return;
+  }
+  window.location.href = `fair_application_setup.html?fair_id=${fairId}`;
+};
+
+document.getElementById('btnRefresh').onclick = async () => {
+  await loadPage();
+};
+
+await loadPage();
+
+    }
+
+    async function loadPage() {
+      showLoader();
+      clearLists();
+
+      const fairId = getFairIdFromUrl();
+      if (!fairId) {
+        document.getElementById('pageTitle').textContent = 'Fair Applications — Missing fair_id';
+        hideLoader();
+        return;
+      }
+
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) {
+        document.getElementById('pageTitle').textContent = 'Fair Applications — Please log in';
+        hideLoader();
+        return;
+      }
+
+      try {
+        await requireAccess(fairId);
+      } catch (e) {
+        document.getElementById('pageTitle').textContent = 'Fair Applications — Not authorized';
+        hideLoader();
+        return;
+      }
+
+      document.getElementById('pageTitle').textContent = `Fair Applications — Fair ID ${fairId}`;
+
+      let rows = [];
+      try {
+        rows = await listSubmissions(fairId);
+      } catch (e) {
+        document.getElementById('pageTitle').textContent = `Fair Applications — Error loading applications`;
+        hideLoader();
+        return;
+      }
+
+      const vendors = [];
+      const food = [];
+      const performers = [];
+
+      for (const r of rows) {
+        if (r.form_type === 'performer') performers.push(r);
+        else if (r.form_type === 'food_vendor') food.push(r);
+        else vendors.push(r); // vendor (default)
+      }
+
+      renderSection('vendorsList', 'vendorsEmpty', vendors, fairId);
+      renderSection('foodList', 'foodEmpty', food, fairId);
+      renderSection('performersList', 'performersEmpty', performers, fairId);
+
+      hideLoader();
+    }
+
+    load();
+  </script>
+
+</body>
+</html>

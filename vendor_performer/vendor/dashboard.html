@@ -157,15 +157,21 @@
           }</p>
           ${fairHtml}
           ${v.website?`<p><a href="${v.website}" target="_blank">${v.website}</a></p>`:''}
-${v.photo_url?`<p><img src="${v.photo_url}" width="150" style="border-radius:8px; margin-bottom:10px;"/></p>`:''}
-          <button class="update-app" onclick="startUpdate(${v.id})">
-            Update Application
-          </button>
-          <button class="delete-app"
-                  onclick="deleteApplication(${v.id},'${safeName}')">
-            🗑️ Delete
-          </button>
+$${v.photo_url ? `<p><img src="${v.photo_url}" width="150" style="border-radius:8px; margin-bottom:10px;"/></p>` : ''}
+
+<button class="update-app" onclick="startUpdate(${v.id})">
+  Update Application
+</button>
+
+<button class="start-app" onclick="window.location.href='fair_applications.html?vpa_id=${v.id}'">
+  🎪 Fair Applications
+</button>
+
+<button class="delete-app" onclick="deleteApplication(${v.id},'${safeName}')">
+  🗑️ Delete
+</button>
         `;
+
         container.appendChild(box);
       }
     }
@@ -181,7 +187,7 @@ ${v.photo_url?`<p><img src="${v.photo_url}" width="150" style="border-radius:8px
   .eq('application_id',appId)
   .eq('application_type','vendor');
  // 3) application record
-      await supabase.from('vendor_performer_applications')
+      await supabaseClient.from('vendor_performer_applications')
         .delete().eq('id',appId);
       // 4) admin notification
     await supabaseClient.from('admin_notifications')

@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Form | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 { font-family: 'Cinzel', serif; margin-bottom: 10px; }
+
+    .card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 26px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 18px auto;
+      max-width: 980px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+
+    .profile-logo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 60px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .btn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.btn:hover { background-color: #45a049; }
+
+.btn-dark {
+  background-color: #2f2f2f;
+}
+
+.btn-danger {
+  background-color: #c0392b;
+}
+.btn-danger:hover {
+  background-color: #a93226;
+}
+
+
+    .grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 10px 14px;
+      margin-top: 12px;
+      align-items: center;
+    }
+
+    .label { font-weight: bold; }
+
+    input[type="text"], input[type="number"], select, textarea {
+      font-size: 15px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.25);
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .hint { margin-top: 10px; opacity: 0.9; }
+
+    .divider {
+      margin: 18px 0;
+      height: 1px;
+      background: rgba(0,0,0,0.18);
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 140px 120px 120px 120px;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+   .field-row .small {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* NEW: field preview (read-only) */
+.preview-row {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.10);
+}
+
+.preview-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.preview-control input,
+.preview-control textarea,
+.preview-control select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.25);
+  box-sizing: border-box;
+  font-size: 15px;
+  background: rgba(255,255,255,0.8);
+}
+
+.preview-control textarea {
+  min-height: 70px;
+  resize: none;
+}
+
+.preview-control .preview-file {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.preview-control .preview-file button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.25);
+  background: rgba(255,255,255,0.8);
+  cursor: not-allowed;
+}
+
+
+    .pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      background: rgba(0,0,0,0.10);
+    }
+/* NEW: Address preview layout */
+.preview-address-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 0.7fr;
+  gap: 10px;
+}
+
+.preview-address-grid .full {
+  grid-column: 1 / -1;
+}
+
+    /* Loader */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <h1 id="pageTitle">Edit Form</h1>
+
+  <div id="loadingOverlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  ">
+    <div style="
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #bb9457;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    "></div>
+  </div>
+
+  <div class="card">
+    <a href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+    </a>
+
+    <h2 style="margin-top:0;">Form Builder</h2>
+
+    <div class="btn-row">
+      <button class="btn" id="btnBack">⬅ Back to Setup</button>
+      <button class="btn btn-dark" id="btnSetActive">Set As Active</button>
+    </div>
+
+<div class="grid" style="margin-top:16px;">
+  <div class="label">Fair:</div><div id="txtFairName">—</div>
+  <div class="label">Type:</div><div id="txtFormType">—</div>
+  <div class="label">Form:</div><div id="txtFormTitle">—</div>
+  <div class="label">Version:</div><div id="txtFormVersion">—</div>
+  <div class="label">Status:</div><div><span class="pill" id="txtFormActive">—</span></div>
+</div>
+
+<div class="divider"></div>
+
+<h3 style="margin:0;">Templates</h3>
+<div class="hint" style="margin-top:6px;">
+  Insert a set of common questions for a vendor application. You can delete or edit anything after.
+</div>
+<div class="btn-row">
+  <button class="btn btn-dark" id="btnInsertVendorTemplate">Insert Vendor Template</button>
+  <button class="btn btn-dark" id="btnEditContract">Edit / Add Contract</button>
+</div>
+
+
+<div class="divider" id="afterTemplateDivider"></div>
+
+<div class="hint" id="actionMsg" style="margin-top:0; font-weight:700;"></div>
+
+<div class="divider"></div>
+
+<h3 style="margin:0;">Fields</h3>
+<div class="hint" id="statusMsg"></div>
+<div id="fieldsList"></div>
+<div class="divider"></div>
+
+<h3 style="margin:0;">Required Signature Section</h3>
+<div class="hint" style="margin-top:6px;">
+  These fields are required on every application and cannot be removed.
+</div>
+
+<div id="signaturePreview"></div>
+
+<div class="divider"></div>
+
+<h3 style="margin:0;">Add Field</h3>
+
+<div class="hint" style="margin-top:6px;">
+  Add questions you want applicants to answer on this application form. Use “Type” to pick what kind of answer you want (text, dropdown, file upload, etc.).
+</div>
+
+
+    <div class="grid">
+<div class="label">Question:</div>
+<div>
+  <input id="fLabel" type="text" placeholder="Example: What is your booth name?" />
+  <div class="hint" style="margin-top:6px;">This is what the applicant will see on the form.</div>
+</div>
+
+<div class="label">Type:</div>
+<div>
+<select id="fType">
+  <option value="text">Short Text</option>
+  <option value="textarea">Long Text</option>
+  <option value="number">Number</option>
+  <option value="date">Date</option>
+  <option value="checkbox">Yes / No</option>
+  <option value="select">Dropdown</option>
+  <option value="file">File Upload</option>
+  <option value="address">Address</option>
+</select>
+
+  <div class="hint" style="margin-top:6px;">Choose what kind of answer you want the applicant to give.</div>
+</div>
+
+
+<div class="label">Required:</div>
+<div>
+  <label style="display:flex; align-items:center; gap:10px;">
+    <input type="checkbox" id="fRequired" />
+    Required
+  </label>
+  <div class="hint" style="margin-top:6px;">If checked, applicants must answer this before submitting.</div>
+</div>
+
+
+<div class="label">Sort Order:</div>
+<div>
+  <input id="fSort" type="number" value="1" min="1" />
+  <div class="hint" style="margin-top:6px;">Lower numbers show first (1, 2, 3…).</div>
+</div>
+
+
+<div class="label">Help Text:</div>
+<div>
+  <input id="fHelp" type="text" placeholder="Optional help text..." />
+  <div class="hint" style="margin-top:6px;">Optional instructions shown under the question.</div>
+</div>
+
+<div class="label">Placeholder:</div>
+<div>
+  <input id="fPlaceholder" type="text" placeholder="Optional placeholder..." />
+  <div class="hint" style="margin-top:6px;">Optional example text shown inside the answer box.</div>
+</div>
+
+<div class="label" id="optLabel" style="display:none;">Dropdown options:</div>
+<div id="optWrap" style="display:none;">
+  <textarea id="fOptionsLines" placeholder="One option per line&#10;Example:&#10;Small&#10;Medium&#10;Large"></textarea>
+  <div class="hint" style="margin-top:6px;">Only used for Dropdown type. Put one option per line.</div>
+</div>
+
+
+    </div>
+
+<div class="btn-row">
+  <button class="btn" id="btnAddField">Add Field</button>
+</div>
+
+
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
+      const fairId = Number(params.get('fair_id'));
+      const formId = params.get('form_id');
+      return {
+        fairId: Number.isFinite(fairId) ? fairId : null,
+        formId: formId || null
+      };
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'none';
+    }
+    function showLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'flex';
+    }
+
+   function setMsg(text) {
+  const msg = text || '';
+  const top = document.getElementById('actionMsg');
+  if (top) top.textContent = msg;
+
+  const bottom = document.getElementById('statusMsg');
+  if (bottom) bottom.textContent = msg;
+}
+function templateKey(formId) {
+  return `fq_form_template_vendor_used:${formId}`;
+}
+
+function applyTemplateButtonState(formId) {
+  const btn = document.getElementById('btnInsertVendorTemplate');
+  if (!btn) return;
+
+  const used = localStorage.getItem(templateKey(formId)) === '1';
+  btn.disabled = used;
+  btn.style.opacity = used ? '0.6' : '1';
+  btn.style.cursor = used ? 'not-allowed' : 'pointer';
+  if (used) btn.textContent = 'Vendor Template (Already Inserted)';
+}
+
+
+    async function requireAccess(fairId) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'edit_forms' });
+      if (error) throw error;
+      return data;
+    }
+
+ async function setActiveForm(fairId, formType, formId) {
+  const { error } = await supabaseClient
+    .rpc('fair_man_app_set_active_form', { p_fair_id: fairId, p_form_type: formType, p_form_id: formId });
+  if (error) throw error;
+}
+
+async function loadActiveMapping(fairId, formType) {
+  const { data, error } = await supabaseClient
+    .from('fair_man_app_fair_form_active')
+    .select('active_form_id')
+    .eq('fair_id', fairId)
+    .eq('form_type', formType)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data; // can be null
+}
+
+async function deactivateFormMapping(fairId, formType) {
+  // Deactivate by removing the mapping row
+  const { error } = await supabaseClient
+    .from('fair_man_app_fair_form_active')
+    .delete()
+    .eq('fair_id', fairId)
+    .eq('form_type', formType);
+
+  if (error) throw error;
+}
+
+function applyActiveUi(isMappedActive) {
+  const pill = document.getElementById('txtFormActive');
+  const btn = document.getElementById('btnSetActive');
+
+  if (pill) pill.textContent = isMappedActive ? 'active' : 'inactive';
+
+  if (!btn) return;
+
+  if (isMappedActive) {
+    btn.textContent = 'Deactivate';
+    btn.classList.add('btn-danger');
+    btn.classList.remove('btn-dark');
+  } else {
+    btn.textContent = 'Activate';
+    btn.classList.remove('btn-danger');
+    btn.classList.add('btn-dark');
+  }
+}
+
+
+    async function upsertField(fairId, formId, payload) {
+const args = {
+  p_fair_id: fairId,
+  p_form_id: formId,
+  p_field_key: payload.field_key,
+  p_label: payload.label,
+  p_field_type: payload.field_type,
+  p_is_required: payload.is_required,
+  p_sort_order: payload.sort_order,
+  p_help_text: payload.help_text || null,
+  p_placeholder: payload.placeholder || null,
+  p_config: payload.config ? payload.config : {},
+  p_field_id: null
+};
+
+
+
+      const { data, error } = await supabaseClient.rpc('fair_man_app_upsert_form_field', args);
+      if (error) throw error;
+      return data; // field_id
+    }
+
+    async function deleteField(fairId, formId, fieldId) {
+      const { error } = await supabaseClient.rpc('fair_man_app_delete_form_field', {
+        p_fair_id: fairId,
+        p_form_id: formId,
+        p_field_id: fieldId
+      });
+      if (error) throw error;
+    }
+
+    async function loadFormAndFields(fairId, formId) {
+  // Fair name
+  const { data: fair, error: fairErr } = await supabaseClient
+    .from('renaissance_fairs')
+    .select('name')
+    .eq('id', fairId)
+    .single();
+
+  if (fairErr) throw fairErr;
+
+  // Form row
+  const { data: form, error: formErr } = await supabaseClient
+    .from('fair_man_app_form')
+    .select('id, fair_id, form_type, title, version, is_active, created_at')
+    .eq('id', formId)
+    .eq('fair_id', fairId)
+    .single();
+
+  if (formErr) throw formErr;
+
+  // Fields
+  const { data: fields, error: fieldsErr } = await supabaseClient
+    .from('fair_man_app_form_field')
+    .select('id, field_key, label, field_type, is_required, sort_order, help_text, placeholder, config, is_active, created_at')
+    .eq('form_id', formId)
+    .order('sort_order', { ascending: true });
+
+  if (fieldsErr) throw fieldsErr;
+
+  return { fairName: fair.name, form, fields: Array.isArray(fields) ? fields : [] };
+}
+
+function buildPreviewControl(f) {
+  const t = (f.field_type || '').toLowerCase();
+  const placeholder = (f.placeholder || '').toString();
+
+  // container
+  const wrap = document.createElement('div');
+
+  if (t === 'textarea') {
+    const el = document.createElement('textarea');
+    el.placeholder = placeholder || 'Example answer...';
+    el.disabled = true;
+    wrap.appendChild(el);
+    return wrap;
+  }
+
+  if (t === 'number') {
+    const el = document.createElement('input');
+    el.type = 'number';
+    el.placeholder = placeholder || '123';
+    el.disabled = true;
+    wrap.appendChild(el);
+    return wrap;
+  }
+
+  if (t === 'date') {
+    const el = document.createElement('input');
+    el.type = 'date';
+    el.disabled = true;
+    wrap.appendChild(el);
+    return wrap;
+  }
+
+  if (t === 'checkbox') {
+    const label = document.createElement('label');
+    label.style.display = 'flex';
+    label.style.alignItems = 'center';
+    label.style.gap = '10px';
+
+    const el = document.createElement('input');
+    el.type = 'checkbox';
+    el.disabled = true;
+
+    const txt = document.createElement('span');
+    txt.textContent = 'Yes / No';
+
+    label.appendChild(el);
+    label.appendChild(txt);
+    wrap.appendChild(label);
+    return wrap;
+  }
+
+  if (t === 'select') {
+    const el = document.createElement('select');
+    el.disabled = true;
+
+    const options = (f.config && Array.isArray(f.config.options)) ? f.config.options : [];
+    if (!options.length) {
+      const opt = document.createElement('option');
+      opt.textContent = 'No options yet';
+      el.appendChild(opt);
+    } else {
+      const ph = document.createElement('option');
+      ph.textContent = 'Select...';
+      el.appendChild(ph);
+
+      for (const v of options) {
+        const opt = document.createElement('option');
+        opt.textContent = String(v);
+        el.appendChild(opt);
+      }
+    }
+
+    wrap.appendChild(el);
+    return wrap;
+  }
+
+   if (t === 'file') {
+    const box = document.createElement('div');
+    box.className = 'preview-file';
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.disabled = true;
+    btn.textContent = 'Choose file (disabled preview)';
+
+    const hint = document.createElement('span');
+    hint.textContent = 'No upload in preview';
+
+    box.appendChild(btn);
+    box.appendChild(hint);
+    wrap.appendChild(box);
+    return wrap;
+  }
+
+  // NEW: address preview
+  if (t === 'address') {
+    const grid = document.createElement('div');
+    grid.className = 'preview-address-grid';
+
+    const street = document.createElement('input');
+    street.type = 'text';
+    street.placeholder = 'Street address';
+    street.disabled = true;
+
+    const city = document.createElement('input');
+    city.type = 'text';
+    city.placeholder = 'City';
+    city.disabled = true;
+
+    const state = document.createElement('select');
+    state.disabled = true;
+
+    const stPh = document.createElement('option');
+    stPh.textContent = 'State';
+    state.appendChild(stPh);
+
+    const states = [
+      'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
+      'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
+      'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+      'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+      'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
+    ];
+    for (const s of states) {
+      const opt = document.createElement('option');
+      opt.textContent = s;
+      state.appendChild(opt);
+    }
+
+    const zip = document.createElement('input');
+    zip.type = 'text';
+    zip.placeholder = 'Zip';
+    zip.disabled = true;
+
+    grid.appendChild(street);
+    grid.appendChild(city);
+    grid.appendChild(state);
+    grid.appendChild(zip);
+
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  // default: text
+  const el = document.createElement('input');
+  el.type = 'text';
+  el.placeholder = placeholder || 'Example answer...';
+  el.disabled = true;
+  wrap.appendChild(el);
+  return wrap;
+}
+
+
+    function renderFields(fields, fairId, formId) {
+      const wrap = document.getElementById('fieldsList');
+      wrap.innerHTML = '';
+
+      if (!fields.length) {
+        const p = document.createElement('div');
+        p.className = 'hint';
+        p.textContent = 'No fields yet.';
+        wrap.appendChild(p);
+        return;
+      }
+
+      for (const f of fields) {
+        const row = document.createElement('div');
+        row.className = 'field-row';
+
+  const c1 = document.createElement('div');
+c1.innerHTML = `<div><strong>Order: ${f.sort_order}</strong></div><div class="small">${f.placeholder ? `placeholder: ${f.placeholder}` : ''}</div>`;
+row.appendChild(c1);
+
+
+        const c2 = document.createElement('div');
+        c2.innerHTML = `<div><strong>${f.label}</strong></div><div class="small">${f.help_text ? f.help_text : ''}</div>`;
+        row.appendChild(c2);
+
+        const c3 = document.createElement('div');
+        c3.innerHTML = `<span class="pill">${f.field_type}</span>`;
+        row.appendChild(c3);
+
+        const c4 = document.createElement('div');
+        c4.innerHTML = `<span class="pill">${f.is_required ? 'required' : 'optional'}</span>`;
+        row.appendChild(c4);
+
+        const c5 = document.createElement('div');
+        c5.innerHTML = `<span class="pill">${f.is_active ? 'active' : 'inactive'}</span>`;
+        row.appendChild(c5);
+
+        const c6 = document.createElement('div');
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn btn-dark';
+        btnDel.style.padding = '8px 10px';
+        btnDel.style.fontSize = '14px';
+        btnDel.textContent = 'Delete';
+        btnDel.onclick = async () => {
+          if (!confirm('Delete this field?')) return;
+          showLoader();
+          setMsg('Deleting...');
+          try {
+            await deleteField(fairId, formId, f.id);
+            const res = await loadFormAndFields(fairId, formId);
+            renderFields(res.fields, fairId, formId);
+            setMsg('Deleted.');
+          } catch (e) {
+            console.error(e);
+            setMsg('Delete failed. Check console.');
+          } finally {
+            renderSignaturePreview();
+
+            hideLoader();
+          }
+        };
+  c6.appendChild(btnDel);
+row.appendChild(c6);
+
+/* NEW: preview under each field */
+const preview = document.createElement('div');
+preview.className = 'preview-row';
+
+const labelText = (f.label || 'Field').toString();
+const placeholderText = (f.placeholder || '').toString();
+
+const requiredMark = f.is_required ? ' *' : '';
+preview.innerHTML = `
+  <div class="preview-title">Preview (read-only): ${labelText}${requiredMark}</div>
+  <div class="preview-control" id="pv_${f.id}"></div>
+`;
+
+row.appendChild(preview);
+
+const pv = preview.querySelector(`#pv_${f.id}`);
+pv.appendChild(buildPreviewControl(f));
+
+wrap.appendChild(row);
+
+      }
+    }
+
+ 
+function slugify(s) {
+  return (s || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 48);
+}
+
+function buildOptionsFromLines(raw) {
+  const lines = (raw || '')
+    .split('\n')
+    .map(x => x.trim())
+    .filter(Boolean);
+
+  // de-dupe while keeping order
+  const out = [];
+  const seen = new Set();
+  for (const v of lines) {
+    if (!seen.has(v)) {
+      seen.add(v);
+      out.push(v);
+    }
+  }
+  return out;
+}
+
+function updateSelectOptionsVisibility() {
+  const t = document.getElementById('fType').value;
+
+  // dropdown options only
+  const showOpts = (t === 'select');
+  document.getElementById('optLabel').style.display = showOpts ? '' : 'none';
+  document.getElementById('optWrap').style.display = showOpts ? '' : 'none';
+  if (!showOpts) {
+    document.getElementById('fOptionsLines').value = '';
+  }
+
+  // Address: force required ON + lock checkbox
+  const req = document.getElementById('fRequired');
+  if (t === 'address') {
+    req.checked = true;
+    req.disabled = true;
+  } else {
+    req.disabled = false;
+  }
+}
+
+
+async function addFieldAuto(fairId, formId, q) {
+  // q: { label, type, required, sort, help, placeholder, config }
+  let key = slugify(q.label);
+  if (!key) key = 'field';
+  key = `${key}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,6)}`;
+
+  await upsertField(fairId, formId, {
+    field_key: key,
+    label: q.label,
+    field_type: q.type,
+    is_required: !!q.required,
+    sort_order: Number(q.sort) || 1,
+    help_text: q.help || null,
+    placeholder: q.placeholder || null,
+    config: q.config || null
+  });
+}
+
+    async function loadPage() {
+      showLoader();
+      setMsg('');
+      document.getElementById('fType').addEventListener('change', updateSelectOptionsVisibility);
+      updateSelectOptionsVisibility();
+
+    const { fairId, formId } = getParams();
+if (!fairId || !formId) {
+  setMsg('Missing fair_id or form_id in URL.');
+  hideLoader();
+  return;
+}
+
+// NEW: disable template button if already used for this form
+applyTemplateButtonState(formId);
+
+
+   document.getElementById('btnInsertVendorTemplate').onclick = async () => {
+  // NEW: prevent double insert
+  if (localStorage.getItem(templateKey(formId)) === '1') {
+    setMsg('Vendor template already inserted.');
+    applyTemplateButtonState(formId);
+    return;
+  }
+
+  if (!confirm('Insert common vendor application questions into this form?')) return;
+
+  showLoader();
+  setMsg('Inserting template...');
+  try {
+
+          const template = [
+            { label: 'Contact Name (if different)', type: 'text', required: false, sort: 10, placeholder: 'Optional' },
+            { label: 'Phone Number', type: 'text', required: true, sort: 20, placeholder: 'Example: (555) 555-5555' },
+            { label: 'Mailing Address', type: 'address', required: true, sort: 30, placeholder: '' },
+            { label: 'Website (optional)', type: 'text', required: false, sort: 40, placeholder: 'https://...' },
+            { label: 'Facebook / Social Link (optional)', type: 'text', required: false, sort: 50, placeholder: 'https://...' },
+            { label: 'Description of goods you plan to sell', type: 'textarea', required: true, sort: 60, placeholder: 'Tell us what you sell...' },
+            
+           {
+  label: 'Which weekend(s) are you applying for?',
+  type: 'select',
+  required: true,
+  sort: 70,
+  help: 'Select all weekends you want to attend.',
+  config: { source: 'fair_weekends', mode: 'multi' }
+},
+
+            {
+              label: 'Upload proof of insurance (if required)',
+              type: 'file',
+              required: false,
+              sort: 80,
+              help: 'Upload insurance document if your fair requires it.'
+            },
+            {
+              label: 'I agree to follow the fair rules and policies',
+              type: 'checkbox',
+              required: true,
+              sort: 90,
+              help: 'Applicant must agree before submitting.'
+            }
+          ];
+
+          for (const q of template) {
+            await addFieldAuto(fairId, formId, q);
+          }
+
+          const res = await loadFormAndFields(fairId, formId);
+          renderFields(res.fields, fairId, formId);
+          setMsg('Template inserted. Edit or delete any fields you want.');
+localStorage.setItem(templateKey(formId), '1');
+applyTemplateButtonState(formId);
+        } catch (e) {
+          console.error(e);
+          setMsg('Template insert failed. Check console.');
+        } finally {
+          hideLoader();
+        }
+      };
+
+
+      try {
+        await requireAccess(fairId);
+      } catch (e) {
+        setMsg('Not authorized.');
+        hideLoader();
+        return;
+      }
+
+   document.getElementById('btnBack').onclick = () => {
+  window.location.href = `fair_application_setup.html?fair_id=${fairId}`;
+};
+
+document.getElementById('btnEditContract').onclick = () => {
+  window.location.href = `fair_application_contract_edit.html?fair_id=${fairId}&form_id=${formId}`;
+};
+
+
+      let formType = null;
+
+      try {
+        const res = await loadFormAndFields(fairId, formId);
+
+  document.getElementById('txtFairName').textContent = res.fairName;
+document.getElementById('txtFormType').textContent = res.form.form_type;
+document.getElementById('txtFormTitle').textContent = res.form.title;
+document.getElementById('txtFormVersion').textContent = String(res.form.version);
+// NOTE: UI "active" is based on fair_man_app_fair_form_active mapping, not form.is_active
+let isMappedActive = false;
+try {
+  const mapping = await loadActiveMapping(fairId, res.form.form_type);
+  isMappedActive = !!(mapping && mapping.active_form_id && String(mapping.active_form_id) === String(formId));
+} catch (e) {
+  console.error(e);
+  isMappedActive = false;
+}
+
+applyActiveUi(isMappedActive);
+
+        document.getElementById('pageTitle').textContent = `Edit Form — ${res.form.title}`;
+
+        formType = res.form.form_type;
+
+        renderFields(res.fields, fairId, formId);
+      } catch (e) {
+        console.error(e);
+        setMsg('Error loading form. Check console.');
+        hideLoader();
+        return;
+      }
+
+     document.getElementById('btnSetActive').onclick = async () => {
+  showLoader();
+
+  try {
+    const mapping = await loadActiveMapping(fairId, formType);
+    const isMappedActive = !!(mapping && mapping.active_form_id && String(mapping.active_form_id) === String(formId));
+
+    if (!isMappedActive) {
+      setMsg('Activating...');
+      await setActiveForm(fairId, formType, formId);
+      setMsg('Activated.');
+      applyActiveUi(true);
+    } else {
+      setMsg('Deactivating...');
+      await deactivateFormMapping(fairId, formType);
+      setMsg('Deactivated.');
+      applyActiveUi(false);
+    }
+  } catch (e) {
+    console.error(e);
+    setMsg('Failed. Check console.');
+  } finally {
+    hideLoader();
+  }
+};
+
+
+ document.getElementById('btnAddField').onclick = async () => {
+  const label = (document.getElementById('fLabel').value || '').trim();
+  const fieldType = document.getElementById('fType').value;
+  const isRequired = (fieldType === 'address') ? true : document.getElementById('fRequired').checked;
+  const sortOrder = Number(document.getElementById('fSort').value || '1');
+  const helpText = (document.getElementById('fHelp').value || '').trim();
+  const placeholder = (document.getElementById('fPlaceholder').value || '').trim();
+
+  if (!label) { setMsg('Question is required.'); return; }
+  if (!Number.isFinite(sortOrder) || sortOrder < 1) { setMsg('Sort order must be 1+'); return; }
+
+  // Auto-generate field_key (stable-ish, unique fallback)
+  let key = slugify(label);
+  if (!key) key = 'field';
+  key = `${key}_${Date.now().toString(36)}`;
+
+  let config = null;
+  if (fieldType === 'select') {
+    const opts = buildOptionsFromLines(document.getElementById('fOptionsLines').value || '');
+    if (!opts.length) {
+      setMsg('Dropdown needs at least 1 option.');
+      return;
+    }
+    config = { options: opts };
+  }
+
+  showLoader();
+  setMsg('Adding field...');
+  try {
+    await upsertField(fairId, formId, {
+      field_key: key,
+      label,
+      field_type: fieldType,
+      is_required: isRequired,
+      sort_order: sortOrder,
+      help_text: helpText || null,
+      placeholder: placeholder || null,
+      config: config
+    });
+
+    const res = await loadFormAndFields(fairId, formId);
+    renderFields(res.fields, fairId, formId);
+
+    // Clear inputs
+    document.getElementById('fLabel').value = '';
+    document.getElementById('fRequired').checked = false;
+    document.getElementById('fSort').value = '1';
+    document.getElementById('fHelp').value = '';
+    document.getElementById('fPlaceholder').value = '';
+    document.getElementById('fOptionsLines').value = '';
+    updateSelectOptionsVisibility();
+
+    setMsg('Added.');
+  } catch (e) {
+    console.error(e);
+    setMsg('Add failed. Check console.');
+  } finally {
+    hideLoader();
+  }
+};
+
+
+
+      hideLoader();
+    }
+function renderSignaturePreview() {
+  const wrap = document.getElementById('signaturePreview');
+  if (!wrap) return;
+
+  wrap.innerHTML = '';
+
+  const fields = [
+    { label: 'Full Legal Name', type: 'text' },
+    { label: 'Signature', type: 'signature' },
+    { label: 'Date Signed', type: 'date' }
+  ];
+
+  for (const f of fields) {
+    const row = document.createElement('div');
+    row.className = 'field-row';
+
+    const title = document.createElement('div');
+    title.innerHTML = `<strong>${f.label}</strong>`;
+    row.appendChild(title);
+
+    const preview = document.createElement('div');
+    preview.className = 'preview-row';
+
+    preview.innerHTML = `
+      <div class="preview-title">Preview (read-only): ${f.label}</div>
+      <div class="preview-control"></div>
+    `;
+
+    const control = preview.querySelector('.preview-control');
+
+    if (f.type === 'signature') {
+      control.innerHTML = `
+        <div style="border:1px dashed rgba(0,0,0,0.3); padding:18px; border-radius:8px; text-align:center;">
+          Signature pad will appear here
+        </div>
+      `;
+    } else if (f.type === 'date') {
+      const input = document.createElement('input');
+      input.type = 'date';
+      input.disabled = true;
+      control.appendChild(input);
+    } else {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Example answer...';
+      input.disabled = true;
+      control.appendChild(input);
+    }
+
+    row.appendChild(preview);
+    wrap.appendChild(row);
+  }
+}
+
+    loadPage();
+  </script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fair Dashboard | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 10px;
+    }
+    .card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 26px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 18px auto;
+      max-width: 800px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+    .profile-logo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 60px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 8px 12px;
+      margin-top: 10px;
+    }
+    .label {
+      font-weight: bold;
+    }
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn:hover { background-color: #45a049; }
+
+    a.back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: #bb9457;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    /* Loader */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+        .apps-summary{
+      display:grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+      gap: 8px 12px;
+      margin-top: 10px;
+      align-items:center;
+    }
+    .apps-h{
+      font-weight:bold;
+      text-align:center;
+    }
+    .apps-rh{
+      font-weight:bold;
+      text-align:left;
+    }
+    .apps-summary > div:not(.apps-h):not(.apps-rh){
+      text-align:center;
+      background: rgba(225,209,145,0.75);
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <h1 id="pageTitle">Fair Dashboard</h1>
+
+  <div id="loadingOverlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  ">
+    <div style="
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #bb9457;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    "></div>
+  </div>
+
+  <!-- Fair Info -->
+  <div class="card" id="fairCard">
+    <a href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+    </a>
+    <h2>Fair Info</h2>
+    <div class="grid">
+      <div class="label">Name:</div><div id="fairName">Loading...</div>
+      <div class="label">City/State:</div><div id="fairCityState">Loading...</div>
+      <div class="label">Address:</div><div id="fairAddress">Loading...</div>
+      <div class="label">Website:</div><div id="fairWebsite">Loading...</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="btnBackToAdmin">⬅ Back to Admin Page</button>
+      <button class="btn" id="btnUpdateFair">Update Fair</button>
+      <button class="btn" id="btnApplications">Applications</button>
+    </div>
+  </div>
+
+  <!-- Applications Summary -->
+  <div class="card" id="appsCard">
+    <h2>Applications Summary</h2>
+
+    <div class="apps-summary">
+      <div class="apps-h"></div>
+      <div class="apps-h">Total</div>
+      <div class="apps-h">In Review</div>
+      <div class="apps-h">Approved</div>
+      <div class="apps-h">Declined</div>
+
+      <div class="apps-rh">Vendors</div>
+      <div id="v_total">Loading...</div>
+      <div id="v_review">Loading...</div>
+      <div id="v_approved">Loading...</div>
+      <div id="v_declined">Loading...</div>
+
+      <div class="apps-rh">Food Vendors</div>
+      <div id="f_total">Loading...</div>
+      <div id="f_review">Loading...</div>
+      <div id="f_approved">Loading...</div>
+      <div id="f_declined">Loading...</div>
+
+      <div class="apps-rh">Performers</div>
+      <div id="p_total">Loading...</div>
+      <div id="p_review">Loading...</div>
+      <div id="p_approved">Loading...</div>
+      <div id="p_declined">Loading...</div>
+    </div>
+  </div>
+
+
+  <a href="/index.html" class="back-link">🏡 Back to Home</a>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    function getFairIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const fairIdRaw = params.get('fair_id');
+      const fairId = Number(fairIdRaw);
+      return Number.isFinite(fairId) ? fairId : null;
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'none';
+    }
+
+    function showError(msg) {
+      document.getElementById('fairName').textContent = msg;
+      document.getElementById('fairCityState').textContent = '';
+      document.getElementById('fairAddress').textContent = '';
+      document.getElementById('fairWebsite').textContent = '';
+      document.getElementById('countVendors').textContent = '-';
+      document.getElementById('countFood').textContent = '-';
+      document.getElementById('countPerformers').textContent = '-';
+      document.getElementById('countTotal').textContent = '-';
+      hideLoader();
+    }
+
+    async function requireFairAdmin(userId, fairId) {
+      const { data, error } = await supabaseClient
+        .from('fair_admins')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('fair_id', fairId)
+        .limit(1);
+
+      if (error) return false;
+      return Array.isArray(data) && data.length > 0;
+    }
+
+    async function loadFairInfo(fairId) {
+      const { data, error } = await supabaseClient
+        .from('renaissance_fairs')
+        .select('id, name, address, city, state, website')
+        .eq('id', fairId)
+        .single();
+
+      if (error || !data) return null;
+      return data;
+    }
+
+     async function loadSubmissionStatusCounts(fairId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_submission')
+        .select(`
+          id,
+          status,
+          vendor_performer_applications (
+            application_type,
+            is_food_vendor
+          )
+        `)
+        .eq('fair_id', fairId);
+
+      if (error || !Array.isArray(data)) return null;
+
+      const counts = {
+        vendors:   { total:0, review:0, approved:0, declined:0 },
+        food:      { total:0, review:0, approved:0, declined:0 },
+        performers:{ total:0, review:0, approved:0, declined:0 },
+      };
+
+      function bucket(row) {
+        const v = row.vendor_performer_applications;
+        if (!v) return null;
+
+        if (v.application_type === true) return counts.performers;
+        if (v.is_food_vendor === true) return counts.food;
+        return counts.vendors;
+      }
+
+      function bumpStatus(b, status) {
+        if (!b) return;
+        b.total++;
+
+        if (status === 'in_review') b.review++;
+        else if (status === 'approved') b.approved++;
+        else if (status === 'rejected') b.declined++;
+      }
+
+      for (const row of data) {
+        bumpStatus(bucket(row), row.status);
+      }
+
+      return counts;
+    }
+
+async function load() {
+  // Buttons (wire first so they always work)
+  document.getElementById('btnBackToAdmin').onclick = () => {
+    window.location.href = '../fair_admin.html';
+  };
+
+  document.getElementById('btnUpdateFair').onclick = () => {
+    const fairId = getFairIdFromUrl();
+    if (!fairId) {
+      alert('Missing fair_id in the URL.');
+      return;
+    }
+    window.location.href = `../fair_update.html?fair_id=${fairId}`;
+  };
+
+  document.getElementById('btnApplications').onclick = () => {
+    const fairId = getFairIdFromUrl();
+    if (!fairId) {
+      alert('Missing fair_id in the URL.');
+      return;
+    }
+    window.location.href = `fair_applications.html?fair_id=${fairId}`;
+  };
+
+  const fairId = getFairIdFromUrl();
+  if (!fairId) {
+    showError('⚠️ Missing fair_id in URL.');
+    return;
+  }
+
+  const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+  if (userError || !user) {
+    showError('⚠️ Please log in first.');
+    return;
+  }
+
+  const ok = await requireFairAdmin(user.id, fairId);
+  if (!ok) {
+    showError('⚠️ You are not authorized to view this fair.');
+    return;
+  }
+
+  const fair = await loadFairInfo(fairId);
+  if (!fair) {
+    showError('⚠️ Fair not found.');
+    return;
+  }
+
+  document.getElementById('pageTitle').textContent = `Fair Dashboard — ${fair.name || ''}`.trim();
+  document.getElementById('fairName').textContent = fair.name || 'N/A';
+  document.getElementById('fairCityState').textContent = `${fair.city || 'N/A'}, ${fair.state || 'N/A'}`;
+  document.getElementById('fairAddress').textContent = fair.address || 'N/A';
+
+  if (fair.website) {
+    document.getElementById('fairWebsite').innerHTML =
+      `<a href="${fair.website}" target="_blank" rel="noopener">${fair.website}</a>`;
+  } else {
+    document.getElementById('fairWebsite').textContent = 'N/A';
+  }
+
+   const counts = await loadSubmissionStatusCounts(fairId);
+  if (!counts) {
+    document.getElementById('v_total').textContent = '—';
+    document.getElementById('v_review').textContent = '—';
+    document.getElementById('v_approved').textContent = '—';
+    document.getElementById('v_declined').textContent = '—';
+
+    document.getElementById('f_total').textContent = '—';
+    document.getElementById('f_review').textContent = '—';
+    document.getElementById('f_approved').textContent = '—';
+    document.getElementById('f_declined').textContent = '—';
+
+    document.getElementById('p_total').textContent = '—';
+    document.getElementById('p_review').textContent = '—';
+    document.getElementById('p_approved').textContent = '—';
+    document.getElementById('p_declined').textContent = '—';
+
+    hideLoader();
+    return;
+  }
+
+  document.getElementById('v_total').textContent = counts.vendors.total;
+  document.getElementById('v_review').textContent = counts.vendors.review;
+  document.getElementById('v_approved').textContent = counts.vendors.approved;
+  document.getElementById('v_declined').textContent = counts.vendors.declined;
+
+  document.getElementById('f_total').textContent = counts.food.total;
+  document.getElementById('f_review').textContent = counts.food.review;
+  document.getElementById('f_approved').textContent = counts.food.approved;
+  document.getElementById('f_declined').textContent = counts.food.declined;
+
+  document.getElementById('p_total').textContent = counts.performers.total;
+  document.getElementById('p_review').textContent = counts.performers.review;
+  document.getElementById('p_approved').textContent = counts.performers.approved;
+  document.getElementById('p_declined').textContent = counts.performers.declined;
+
+  hideLoader();
+
+}
+
+
+    load();
+  </script>
+
+</body>
+</html>

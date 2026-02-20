@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Application Setup | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 { font-family: 'Cinzel', serif; margin-bottom: 10px; }
+
+    .card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 26px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 18px auto;
+      max-width: 900px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+
+    .profile-logo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 60px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn:hover { background-color: #45a049; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 10px 14px;
+      margin-top: 12px;
+      align-items: center;
+    }
+    .label { font-weight: bold; }
+
+    select, input[type="checkbox"] {
+      font-size: 15px;
+    }
+
+    select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.25);
+      width: 100%;
+    }
+
+    .hint {
+      margin-top: 10px;
+      opacity: 0.9;
+    }
+
+    .warn {
+      background: rgba(0,0,0,0.08);
+      border: 1px dashed rgba(0,0,0,0.25);
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    /* Loader */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <h1 id="pageTitle">Application Setup</h1>
+
+  <div id="loadingOverlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  ">
+    <div style="
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #bb9457;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    "></div>
+  </div>
+
+  <div class="card">
+    <a href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+    </a>
+
+    <h2 style="margin-top:0;">Setup</h2>
+
+<div class="btn-row">
+  <button class="btn" id="btnBack">⬅ Back to Applications</button>
+  <button class="btn" id="btnCreateForm">Create New Form</button>
+  <button class="btn" id="btnSave">Save</button>
+</div>
+
+
+    <div class="warn">
+      This page only chooses which form is active for each category. Editing questions/fields comes next.
+    </div>
+
+    <div class="grid">
+      <div class="label">Same Vendor + Food form:</div>
+      <div>
+        <label style="display:flex; align-items:center; gap:10px;">
+          <input type="checkbox" id="chkVendorFoodSame" />
+          Use the Vendor application for Food Vendors too
+        </label>
+      </div>
+
+      <div class="label">Active Vendor Form:</div>
+      <div>
+        <select id="selVendor"></select>
+      </div>
+
+      <div class="label" id="lblFood">Active Food Vendor Form:</div>
+      <div id="wrapFood">
+        <select id="selFood"></select>
+      </div>
+
+      <div class="label">Active Performer Form:</div>
+      <div>
+        <select id="selPerformer"></select>
+      </div>
+    </div>
+
+    <div class="hint" id="statusMsg"></div>
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    function getFairIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const fairIdRaw = params.get('fair_id');
+      const fairId = Number(fairIdRaw);
+      return Number.isFinite(fairId) ? fairId : null;
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'none';
+    }
+
+    function showLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'flex';
+    }
+
+    function setMsg(text) {
+      document.getElementById('statusMsg').textContent = text || '';
+    }
+
+    function setVendorFoodSameUI(isSame) {
+  const lblFood = document.getElementById('lblFood');
+  const wrapFood = document.getElementById('wrapFood');
+  const selFood = document.getElementById('selFood');
+
+  if (isSame) {
+    // Hide the entire Food Vendor row
+    lblFood.style.display = 'none';
+    wrapFood.style.display = 'none';
+
+    // Keep value mirrored for Save logic
+    selFood.disabled = true;
+  } else {
+    // Show the Food Vendor row
+    lblFood.style.display = '';
+    wrapFood.style.display = '';
+
+    selFood.disabled = false;
+  }
+}
+
+
+    function fillSelect(selectEl, options, placeholder) {
+      selectEl.innerHTML = '';
+      const ph = document.createElement('option');
+      ph.value = '';
+      ph.textContent = placeholder;
+      selectEl.appendChild(ph);
+
+      for (const o of options) {
+        const opt = document.createElement('option');
+        opt.value = o.form_id;
+        opt.textContent = `${o.title} (v${o.version})`;
+        selectEl.appendChild(opt);
+      }
+    }
+
+    async function requireAccess(fairId) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'edit_forms' });
+      if (error) throw error;
+      return data;
+    }
+
+    async function getSettings(fairId) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_get_settings', { p_fair_id: fairId });
+      if (error) throw error;
+
+      // data can be [] if not set yet
+      if (Array.isArray(data) && data.length > 0) return data[0];
+      return { vendor_food_same: false };
+    }
+
+    async function setSettings(fairId, vendorFoodSame) {
+      const { error } = await supabaseClient
+        .rpc('fair_man_app_set_settings', { p_fair_id: fairId, p_vendor_food_same: vendorFoodSame });
+      if (error) throw error;
+    }
+
+    async function listForms(fairId) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_list_forms', { p_fair_id: fairId });
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+
+    async function getActiveForms(fairId) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_get_active_forms', { p_fair_id: fairId });
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+
+    async function setActiveForm(fairId, formType, formId) {
+      const { error } = await supabaseClient
+        .rpc('fair_man_app_set_active_form', { p_fair_id: fairId, p_form_type: formType, p_form_id: formId });
+      if (error) throw error;
+    }
+
+    function pickActive(activeRows, type) {
+      const row = activeRows.find(r => r.form_type === type);
+      return row ? row.active_form_id : '';
+    }
+
+    async function loadPage() {
+      showLoader();
+      setMsg('');
+
+      const fairId = getFairIdFromUrl();
+      if (!fairId) {
+        setMsg('Missing fair_id in URL.');
+        hideLoader();
+        return;
+      }
+
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) {
+        setMsg('Please log in first.');
+        hideLoader();
+        return;
+      }
+
+      try {
+        await requireAccess(fairId);
+      } catch (e) {
+        setMsg('Not authorized for setup.');
+        hideLoader();
+        return;
+      }
+
+      // Load settings + forms + active picks
+      let settings;
+      let forms;
+      let active;
+
+      try {
+        settings = await getSettings(fairId);
+        forms = await listForms(fairId);
+        active = await getActiveForms(fairId);
+      } catch (e) {
+        setMsg('Error loading setup data.');
+        hideLoader();
+        return;
+      }
+
+      const vendorForms = forms.filter(f => f.form_type === 'vendor');
+      const foodForms = forms.filter(f => f.form_type === 'food_vendor');
+      const performerForms = forms.filter(f => f.form_type === 'performer');
+
+      const selVendor = document.getElementById('selVendor');
+      const selFood = document.getElementById('selFood');
+      const selPerformer = document.getElementById('selPerformer');
+
+      fillSelect(selVendor, vendorForms, 'Select a Vendor form...');
+      fillSelect(selFood, foodForms, 'Select a Food Vendor form...');
+      fillSelect(selPerformer, performerForms, 'Select a Performer form...');
+
+      selVendor.value = pickActive(active, 'vendor');
+      selFood.value = pickActive(active, 'food_vendor');
+      selPerformer.value = pickActive(active, 'performer');
+
+      const chk = document.getElementById('chkVendorFoodSame');
+      chk.checked = !!settings.vendor_food_same;
+      setVendorFoodSameUI(chk.checked);
+
+      // If same is ON and vendor changes, mirror UI (we'll also mirror on Save)
+      selVendor.onchange = () => {
+        if (chk.checked) {
+          selFood.value = selVendor.value;
+        }
+      };
+
+      chk.onchange = () => {
+        setVendorFoodSameUI(chk.checked);
+        if (chk.checked) {
+          selFood.value = selVendor.value;
+        }
+      };
+
+      // Buttons
+ document.getElementById('btnBack').onclick = () => {
+  window.location.href = `fair_applications.html?fair_id=${fairId}`;
+};
+
+document.getElementById('btnCreateForm').onclick = () => {
+  window.location.href = `fair_form_create.html?fair_id=${fairId}`;
+};
+
+document.getElementById('btnSave').onclick = async () => {
+
+        setMsg('Saving...');
+        showLoader();
+
+        const vendorId = selVendor.value;
+        const foodId = selFood.value;
+        const performerId = selPerformer.value;
+        const vendorFoodSame = chk.checked;
+
+        if (!vendorId) {
+          setMsg('Select a Vendor form first.');
+          hideLoader();
+          return;
+        }
+        if (!performerId) {
+          setMsg('Select a Performer form first.');
+          hideLoader();
+          return;
+        }
+        if (!vendorFoodSame && !foodId) {
+          setMsg('Select a Food Vendor form (or enable the same-form option).');
+          hideLoader();
+          return;
+        }
+
+        try {
+          await setSettings(fairId, vendorFoodSame);
+
+          await setActiveForm(fairId, 'vendor', vendorId);
+
+          if (vendorFoodSame) {
+            // We intentionally set food_vendor to the SAME form id as vendor.
+            await setActiveForm(fairId, 'food_vendor', vendorId);
+          } else {
+            await setActiveForm(fairId, 'food_vendor', foodId);
+          }
+
+          await setActiveForm(fairId, 'performer', performerId);
+
+          setMsg('Saved.');
+        } catch (e) {
+          setMsg('Save failed. Check console.');
+          console.error(e);
+        } finally {
+          hideLoader();
+        }
+      };
+
+      hideLoader();
+    }
+
+    loadPage();
+  </script>
+</body>
+</html>

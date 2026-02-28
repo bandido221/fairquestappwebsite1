@@ -117,21 +117,25 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Single global Supabase client, no redeclare crashes
+  window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
 
-    let originalApp, originalFairs = [], allFairs = [], stateMap = {}, fairSearchCount = 0;
-    let removedFairs = [];
+  // Use THIS everywhere in this file
+  const sb = window.supabaseClient;
 
-    async function loadFairs() {
-      const { data } = await supabase.from('renaissance_fairs').select('*');
-      allFairs = data || [];
-      stateMap = { 'iowa':'ia','texas':'tx','california':'ca','florida':'fl','new york':'ny','illinois':'il' };
-    }
+  let originalApp, originalFairs = [], allFairs = [], stateMap = {}, fairSearchCount = 0;
+  let removedFairs = [];
+
+  async function loadFairs() {
+    const { data } = await sb.from('renaissance_fairs').select('*');
+    allFairs = data || [];
+    stateMap = { 'iowa':'ia','texas':'tx','california':'ca','florida':'fl','new york':'ny','illinois':'il' };
+  }
 
     function addFairSearch(prefill = null) {
   // Only enforce limit when user is manually adding, not when loading saved fairs
@@ -224,9 +228,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   let app = JSON.parse(localStorage.getItem('performerProfile'));
 
   if (!app) {
-    const { data: { session } } = await supabase.auth.getSession();
-    const { data } = await supabase
-      .from('vendor_performer_applications')
+  const { data: { session } } = await sb.auth.getSession();
+const { data } = await sb
+  .from('vendor_performer_applications')
       .select('*')
       .eq('user_id', session.user.id)
       .eq('application_type', 'performer')
@@ -269,13 +273,13 @@ window.addEventListener('DOMContentLoaded', async () => {
 }
 
 
-  const { data: rawFairs = [] } = await supabase
-    .from('vendor_application_fairs')
+const { data: rawFairs = [] } = await sb
+  .from('vendor_application_fairs')
     .select('fair_id,start_date,end_date,renaissance_fairs(name)')
     .eq('application_id', app.id);
 
-  const { data: rawManual = [] } = await supabase
-    .from('suggested_fairs')
+const { data: rawManual = [] } = await sb
+  .from('suggested_fairs')
     .select('fair_name,start_date,end_date')
     .eq('application_id', app.id)
     .eq('application_type', true);
@@ -371,28 +375,27 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Update the performer application immediately
-  await supabase.from('vendor_performer_applications')
+   // Update the performer application immediately
+  await sb.from('vendor_performer_applications')
     .update(updatedFields)
     .eq('id', originalApp.id);
 
   // Log changes (if any)
   if (logs.length) {
-    await supabase.from('application_update_log').insert(logs);
+    await sb.from('application_update_log').insert(logs);
   }
 
   // Update fair changes as before
   const { added, removed } = diffFairs();
-// Delete ALL existing fair links first
-await supabase.from('vendor_application_fairs')
-  .delete()
-  .eq('application_id', originalApp.id);
+  // Delete ALL existing fair links first
+  await sb.from('vendor_application_fairs')
+    .delete()
+    .eq('application_id', originalApp.id);
 
-await supabase.from('suggested_fairs')
-  .delete()
-  .eq('application_id', originalApp.id)
-  .eq('application_type', true);
-
+  await sb.from('suggested_fairs')
+    .delete()
+    .eq('application_id', originalApp.id)
+    .eq('application_type', true);
   const curr = getCurrentFairs();
 
 // 🔒 Deduplicate by fair_id + start_date + end_date
@@ -422,18 +425,17 @@ const manual = uniqueFairs.filter(c => c.id.startsWith('manual_')).map(c => ({
 
 
   if (known.length) {
-  for (const fair of known) {
-    await supabase.from('vendor_application_fairs').insert(fair).select();
-
+    for (const fair of known) {
+      await sb.from('vendor_application_fairs').insert(fair).select();
+    }
   }
-}
 
-if (manual.length) {
-  for (const fair of manual) {
-    await supabase.from('suggested_fairs')
-      .upsert(fair, { onConflict: ['application_id', 'fair_name', 'start_date', 'end_date'] });
+  if (manual.length) {
+    for (const fair of manual) {
+      await sb.from('suggested_fairs')
+        .upsert(fair, { onConflict: ['application_id', 'fair_name', 'start_date', 'end_date'] });
+    }
   }
-}
 
 
   document.getElementById('updateMessage').textContent = '✅ Changes submitted — redirecting…';
@@ -498,7 +500,7 @@ async function removeFair(closeBtn) {
   );
 
   if (fairId.startsWith("manual_")) {
-    await supabase.from("suggested_fairs")
+    await sb.from("suggested_fairs")
       .delete()
       .eq("application_id", originalApp.id)
       .eq("fair_name", name)
@@ -506,7 +508,7 @@ async function removeFair(closeBtn) {
       .eq("end_date", end)
       .eq("application_type", true);
   } else {
-    await supabase.from("vendor_application_fairs")
+    await sb.from("vendor_application_fairs")
       .delete()
       .eq("application_id", originalApp.id)
       .eq("fair_id", fairId)

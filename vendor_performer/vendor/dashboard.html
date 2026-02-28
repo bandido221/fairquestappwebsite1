@@ -3,12 +3,13 @@
 <head>
   <link rel="stylesheet" href="/css/style.css" />
 
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Vendor Dashboard | FairQuest</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
-  <!-- Google Analytics (FairQuest Website) -->
+
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -16,6 +17,7 @@
     gtag('js', new Date());
     gtag('config', 'G-HP222J86X0');
   </script>
+
   <style>
     body {
       font-family: 'Domine', serif;
@@ -26,219 +28,233 @@
       margin: 0;
     }
     h1, h2 { font-family: 'Cinzel', serif; }
+
     .top-banner, .logo {
-      display: block; margin: 0 auto 20px; object-fit: contain;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      display:block; margin:0 auto 20px; object-fit:contain;
+      filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
     }
-    .top-banner { max-width: 600px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-    .logo { max-width: 100px; transition: transform 0.3s ease; }
-    .logo:hover { transform: scale(1.05); }
-    .container {
-      max-width: 700px; margin: auto;
-      background: rgba(251,241,200,0.88); padding: 30px 40px;
-      border: 2px solid #aa8425; border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4); color: #3b1f1f;
+    .top-banner { max-width:600px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.3); }
+    .logo { max-width:100px; transition:transform .3s ease; }
+    .logo:hover { transform:scale(1.05); }
+
+    .container{
+      max-width:700px;margin:auto;
+      background:rgba(251,241,200,.88);
+      padding:30px 40px;
+      border:2px solid #aa8425;
+      border-radius:12px;
+      box-shadow:0 4px 15px rgba(0,0,0,.4);
+      color:#3b1f1f;
     }
-    .top-actions { display: flex; justify-content: space-between; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
-    button {
-      padding:12px 20px; font-size:16px; border:none; border-radius:6px; cursor:pointer;
+
+    .top-actions{
+      display:flex;justify-content:space-between;gap:10px;
+      flex-wrap:wrap;margin-bottom:20px;
     }
-    .start-app { background-color:#27ae60; color:white; }
-    .update-app { background-color:#f39c12; color:white; }
-    .logout    { background-color:#c0392b; color:white; }
-    .info {
-      margin-top:20px; padding:20px; border:1px solid #ddd;
-      background:rgba(225,209,145,0.88); border-radius:8px; text-align:left;
+
+    button{
+      padding:12px 20px;
+      font-size:16px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
     }
-    .loading { font-size:18px; color:#090606; }
-    footer { margin-top:40px; font-size:14px; }
-    footer a { color:#aa8452; text-decoration:none; margin:0 8px; }
-    footer a:hover { text-decoration:underline; }
+
+    .start-app{background:#27ae60;color:white;}
+    .update-app{background:#f39c12;color:white;}
+    .logout{background:#c0392b;color:white;}
+    .delete-app{background:#444;color:white;}
+
+    .info{
+      margin-top:20px;
+      padding:20px;
+      border:1px solid #ddd;
+      background:rgba(225,209,145,.88);
+      border-radius:8px;
+      text-align:left;
+    }
+
+    .loading{font-size:18px;color:#090606;}
+
+    footer{margin-top:40px;font-size:14px;}
+    footer a{color:#aa8452;text-decoration:none;margin:0 8px;}
+    footer a:hover{text-decoration:underline;}
+
     @media (max-width:768px){
-      body { padding:20px; }
-      .container { padding:20px; }
-      .top-actions { flex-direction:column; align-items:stretch; }
-      button { width:100%; box-sizing:border-box; }
-      .logo { max-width:80px; }
-      .top-banner { max-width:100%; }
-      h1 { font-size:28px; }
+      body{padding:20px;}
+      .container{padding:20px;}
+      .top-actions{flex-direction:column;align-items:stretch;}
+      button{width:100%;}
+      .logo{max-width:80px;}
+      .top-banner{max-width:100%;}
+      h1{font-size:28px;}
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner"/>
-  <img src="../../images/logo.png"   alt="FairQuest Logo"   class="logo"/>
+<img src="../../images/banner.png" class="top-banner">
+<img src="../../images/logo.png" class="logo">
 
-  <div class="container">
-    <h1>Vendor Dashboard</h1>
-    <div class="top-actions">
-      <button class="logout" onclick="logout()">Log Out</button>
-      <button class="start-app" onclick="window.location.href='/profile/index.html'">My Profile</button>
-      <button id="applyButton" class="start-app" onclick="window.location.href='application.html'">Apply Now</button>
-    </div>
-    
-    <div id="dashboardContent" class="loading">Loading your applications…</div>
+<div class="container">
+  <h1>Vendor Dashboard</h1>
+
+  <div class="top-actions">
+    <button class="logout" onclick="logout()">Log Out</button>
+    <button class="start-app" onclick="window.location.href='/profile/index.html'">My Profile</button>
+    <button class="start-app" onclick="window.location.href='application.html'">Apply Now</button>
   </div>
 
-  <script>
+  <div id="dashboardContent" class="loading">Loading your applications…</div>
+</div>
 
+<script>
+/* ---------- SUPABASE CLIENT ---------- */
+window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+const sb = window.supabaseClient;
 
+/* ---------- INIT ---------- */
+async function initDashboard(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session?.user?.id) loadDashboard(session.user.id);
+  else sb.auth.onAuthStateChange((_, s)=>
+    s?.user?.id
+      ? loadDashboard(s.user.id)
+      : document.getElementById('dashboardContent').innerHTML='<p>Please sign in.</p>');
+}
 
-   const supabaseClient =
-  (typeof supabase !== 'undefined' && supabase?.auth?.getSession)
-    ? supabase
-    : window.supabase.createClient(
-        'https://awtbjuiqgtdydsqzimul.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-      );
+/* ---------- LOAD DASHBOARD ---------- */
+async function loadDashboard(userId){
+  const container = document.getElementById('dashboardContent');
+  container.innerHTML = '';
 
-    async function initDashboard(){
-      const { data:{ session } } = await supabaseClient.auth.getSession();
- if(session?.user?.id) loadDashboard(session.user.id);
-      else supabaseClient.auth.onAuthStateChange((_, s)=> s?.user?.id ? loadDashboard(s.user.id)
-        : document.getElementById('dashboardContent').innerHTML='<p>Please sign in.</p>');
-    }
+  let { data: apps, error } = await sb
+    .from('vendor_performer_applications')
+    .select('*')
+    .eq('user_id',userId)
+    .eq('application_type', false)
+    .order('id',{ascending:false});
 
-    async function loadDashboard(userId){
-      const container = document.getElementById('dashboardContent');
-      container.innerHTML = '';
-      let { data: apps, error } = await supabaseClient
-        .from('vendor_performer_applications')
-        .select('*')
-        .eq('user_id',userId)
-        .eq('application_type', false)
-        .order('id',{ascending:false});
-      if(error) return container.innerHTML=`<p>Error loading dashboard. Try again.</p>`;
-      if(!apps.length) return container.innerHTML=`
-        <div class="info"><p>No vendor applications yet.</p></div>`;
+  if(error) return container.innerHTML=`<p>Error loading dashboard.</p>`;
+  if(!apps.length) return container.innerHTML=`<div class="info"><p>No vendor applications yet.</p></div>`;
 
-      for(let i=0; i<apps.length; i++){
-        let v = apps[i];
-        // load linked fairs
-  let { data: fairs=[] } = await supabaseClient
-  .from('vendor_application_fairs')
-  .select('start_date,end_date,renaissance_fairs(name)')
-  .eq('application_id', v.id);
+  for(let i=0;i<apps.length;i++){
+    const v = apps[i];
 
-      let { data: manual=[] } = await supabaseClient
-  .from('suggested_fairs')
-  .select('fair_name,start_date,end_date')
-  .eq('application_id', v.id)
-  .eq('application_type','vendor');
+    let { data: fairs=[] } = await sb
+      .from('vendor_application_fairs')
+      .select('start_date,end_date,renaissance_fairs(name)')
+      .eq('application_id', v.id);
 
-        let fairHtml = `<p><strong>🎪 Fairs & Dates:</strong></p><ul>`;
-        if(fairs.length||manual.length){
-          fairs.forEach(f=>
-            fairHtml+=`<li>${f.renaissance_fairs.name}: ${f.start_date} to ${f.end_date}</li>`
-          );
-          manual.forEach(m=>
-            fairHtml+=`<li>${m.fair_name} (manual): ${m.start_date} to ${m.end_date}</li>`
-          );
-        } else fairHtml+=`<li>None listed</li>`;
-        fairHtml+=`</ul>`;
+    let { data: manual=[] } = await sb
+      .from('suggested_fairs')
+      .select('fair_name,start_date,end_date')
+      .eq('application_id', v.id)
+      .eq('application_type','vendor');
 
-        const safeName = (v.name || 'Unnamed Vendor').replace(/'/g,"\\'");
-        const box = document.createElement('div');
-        box.className = 'info';
-        box.innerHTML = `
-          <p><strong>Application #${i+1}</strong></p>
-          <p><strong>Name:</strong> ${v.name}</p>
-          <p><strong>Type:</strong> ${v.vendor_type}</p>
-          <p><strong>Bio:</strong> ${v.description}</p>
-          <p><strong>Contact:</strong> ${v.contact_name} (${v.contact_email})</p>
-          <p><strong>Status:</strong> ${
-            v.update_pending
-              ? '🕒 Pending Update Review'
-              : v.approval_status==='approved' ? '✅ Approved'
-              : v.approval_status==='rejected' ? '❌ Rejected'
-              : '⏳ Pending Review'
-          }</p>
-          ${fairHtml}
-          ${v.website?`<p><a href="${v.website}" target="_blank">${v.website}</a></p>`:''}
-$${v.photo_url ? `<p><img src="${v.photo_url}" width="150" style="border-radius:8px; margin-bottom:10px;"/></p>` : ''}
+    let fairHtml = `<p><strong>🎪 Fairs & Dates:</strong></p><ul>`;
+    if(fairs.length||manual.length){
+      fairs.forEach(f=> fairHtml+=`<li>${f.renaissance_fairs.name}: ${f.start_date} to ${f.end_date}</li>`);
+      manual.forEach(m=> fairHtml+=`<li>${m.fair_name} (manual): ${m.start_date} to ${m.end_date}</li>`);
+    } else fairHtml+=`<li>None listed</li>`;
+    fairHtml+=`</ul>`;
 
-<button class="update-app" onclick="startUpdate(${v.id})">
-  Update Application
+    const safeName = (v.name||'Unnamed Vendor').replace(/'/g,"\\'");
+
+    const box=document.createElement('div');
+    box.className='info';
+    box.innerHTML=`
+      <p><strong>Application #${i+1}</strong></p>
+      <p><strong>Name:</strong> ${v.name}</p>
+      <p><strong>Type:</strong> ${v.vendor_type}</p>
+      <p><strong>Bio:</strong> ${v.description}</p>
+      <p><strong>Contact:</strong> ${v.contact_name} (${v.contact_email})</p>
+      <p><strong>Status:</strong> ${
+        v.update_pending ? '🕒 Pending Update Review'
+        : v.approval_status==='approved' ? '✅ Approved'
+: (v.approval_status==='rejected' || v.approval_status==='declined') ? '❌ Declined'
+: '⏳ Pending Review'
+      }</p>
+      ${fairHtml}
+      ${v.website?`<p><a href="${v.website}" target="_blank">${v.website}</a></p>`:''}
+      ${v.photo_url?`<p><img src="${v.photo_url}" width="150" style="border-radius:8px;margin-bottom:10px"/></p>`:''}
+
+   <button class="update-app" onclick="startUpdate(${v.id})">Update Application</button>
+
+${v.approval_status === 'approved' ? `
+<button class="start-app"
+  onclick="window.location.href='/vendor_performer/vendor/vp_vendor_detail.html?vpa_id=${v.id}'">
+  🌐 Create Online Page
 </button>
+` : ''}
 
-<button class="start-app" onclick="window.location.href='fair_applications.html?vpa_id=${v.id}'">
-  🎪 Fair Applications
-</button>
+<button class="start-app" onclick="window.location.href='fair_applications.html?vpa_id=${v.id}'">🎪 Fair Applications</button>
+<button class="delete-app" onclick="deleteApplication(${v.id},'${safeName}')">🗑️ Delete</button>`;
+    container.appendChild(box);
+  }
+}
 
-<button class="delete-app" onclick="deleteApplication(${v.id},'${safeName}')">
-  🗑️ Delete
-</button>
-        `;
+/* ---------- DELETE ---------- */
+async function deleteApplication(appId,appName){
+  if(!confirm(`Delete application “${appName}”?`)) return;
 
-        container.appendChild(box);
-      }
-    }
+  const r1=await sb.from('vendor_application_fairs').delete().eq('application_id',appId);
+  if(r1.error) return alert(r1.error.message);
 
-    async function deleteApplication(appId,appName){
-      if(!confirm(`Delete application “${appName}”?`)) return;
-      // 1) known fairs
-    await supabaseClient.from('vendor_application_fairs')
-  .delete().eq('application_id',appId);
- // 2) manual suggestions
-   await supabaseClient.from('suggested_fairs')
-  .delete()
-  .eq('application_id',appId)
-  .eq('application_type','vendor');
- // 3) application record
-      await supabaseClient.from('vendor_performer_applications')
-        .delete().eq('id',appId);
-      // 4) admin notification
-    await supabaseClient.from('admin_notifications')
-  .insert([{
+  const r2=await sb.from('suggested_fairs')
+    .delete()
+    .eq('application_id',appId)
+    .eq('application_type','vendor');
+  if(r2.error) return alert(r2.error.message);
+
+  const r3=await sb.from('vendor_performer_applications')
+    .delete()
+    .eq('id',appId);
+  if(r3.error) return alert(r3.error.message);
+
+  const r4=await sb.from('admin_notifications').insert([{
     application_id:appId,
     message:`Vendor application "${appName}" was deleted.`,
     category:'application_deleted'
   }]);
+  if(r4.error) return alert(r4.error.message);
 
-      alert('✅ Deleted and admin notified.');
-      const { data:{ session } } = await supabaseClient.auth.getSession();
-      if(session?.user?.id) loadDashboard(session.user.id);
-    }
-
-    async function startUpdate(id) {
-  // Clear any old cached version first
-  localStorage.removeItem('applicationProfile');
-
-  // Fetch full application record fresh
- const { data, error } = await supabaseClient
-  .from('vendor_performer_applications')
-  .select('*')
-  .eq('id', id)
-  .single();
-
-
-  if (error) {
-    alert('❌ Could not load this application.');
-    return;
-  }
-
-  localStorage.setItem('applicationProfile', JSON.stringify(data));
-  window.location.href = 'update_application.html';
+  alert('✅ Deleted.');
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session?.user?.id) loadDashboard(session.user.id);
 }
 
+/* ---------- UPDATE ---------- */
+async function startUpdate(id){
+  localStorage.removeItem('applicationProfile');
+  const { data, error } = await sb.from('vendor_performer_applications').select('*').eq('id',id).single();
+  if(error) return alert('❌ Could not load application.');
+  localStorage.setItem('applicationProfile',JSON.stringify(data));
+  window.location.href='update_application.html';
+}
 
-    async function logout(){
-await supabaseClient.auth.signOut();
-      location.href='index.html';
-    }
+/* ---------- LOGOUT ---------- */
+async function logout(){
+  await sb.auth.signOut();
+  location.href='index.html';
+}
 
-    window.addEventListener('DOMContentLoaded',initDashboard);
-  </script>
+window.addEventListener('DOMContentLoaded',initDashboard);
+</script>
 
-  <footer style="margin-top:40px;font-size:14px;">
-    <a href="/index.html">Home</a> |
-    <a href="/vendor_performer/vendor/info.html">Info</a> |
-    <a href="/terms.html">Terms</a> |
-    <a href="/privacy.html">Privacy</a> |
-    <a href="/faq.html">FAQ</a> |
-    <a href="/contact.html">Contact</a>
-  </footer>
+<footer>
+  <a href="/index.html">Home</a> |
+  <a href="/vendor_performer/vendor/info.html">Info</a> |
+  <a href="/terms.html">Terms</a> |
+  <a href="/privacy.html">Privacy</a> |
+  <a href="/faq.html">FAQ</a> |
+  <a href="/contact.html">Contact</a>
+</footer>
+
 </body>
 </html>

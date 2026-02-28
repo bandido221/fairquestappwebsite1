@@ -92,13 +92,63 @@
       text-decoration: underline;
       cursor: pointer;
     }
+
+    /* TOP NAV BUTTONS */
+    .top-nav {
+      max-width: 700px;
+      margin: 0 auto 16px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .website-btn{
+  display:inline-block;
+  background:#2e7d32;
+  color:#fff !important;
+  padding:8px 16px;
+  border-radius:6px;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.website-btn:hover{
+  background:#1b5e20;
+}
+
+    .top-nav a,
+    .top-nav button {
+      display: inline-block;
+      background-color: #bb9457;
+      color: #000;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      font-family: 'Domine', serif;
+      font-size: 1rem;
+    }
+    .top-nav a:hover,
+    .top-nav button:hover {
+      background-color: #d8c6a5;
+    }
+
   </style>
 </head>
 <body>
   <img src="/images/banner.png" alt="FairQuest Banner" class="top-banner" />
   <img src="/images/logo.png" alt="FairQuest Logo" class="logo" />
-  
-    <h1>Fair Details</h1>
+
+  <div class="top-nav">
+    <button type="button" onclick="history.back()">⬅ Back</button>
+    <a href="/fairs/explore.html">🧭 Explore</a>
+    <a href="/index.html">🏠 Home</a>
+  </div>
+
+  <h1>Fair Details</h1>
+
 
   <!-- Content section for AdSense "publisher-content" signal -->
   <section style="max-width:760px;margin:18px auto 12px;padding:0 18px;text-align:left;">
@@ -183,7 +233,7 @@ document.getElementById('fairCity').textContent = data.city;
 document.getElementById('fairState').textContent = data.state;
 
 document.getElementById('fairWebsite').innerHTML = data.website
-  ? `<a href="${data.website}" target="_blank">${data.website}</a>`
+  ? `<a href="${data.website}" target="_blank" class="website-btn">Visit Website</a>`
   : 'N/A';
 
 let hoursValue = (data.hours ?? '').trim();
@@ -247,12 +297,13 @@ weekendFields.forEach(([startKey, endKey]) => {
 
       if (error) return;
 
-      const { data: fairLinks, err2 } = await supabase
+      const { data: fairLinks, error: err2 } = await supabaseClient
         .from('vendor_application_fairs')
         .select('application_id, fair_id')
         .eq('fair_id', fairId);
 
       if (err2) return;
+
 
       const approvedIds = fairLinks.map(link => link.application_id);
       const vendors = applications.filter(a => a.application_type === false && approvedIds.includes(a.id));
@@ -346,10 +397,10 @@ loadFair = async function() {
   document.getElementById('fairAddress').textContent = data.address;
   document.getElementById('fairCity').textContent = data.city;
   document.getElementById('fairState').textContent = data.state;
+document.getElementById('fairWebsite').innerHTML = data.website
+  ? `<a href="${data.website}" target="_blank" class="website-btn">Visit Website</a>`
+  : 'N/A';
 
-  document.getElementById('fairWebsite').innerHTML = data.website
-    ? `<a href="${data.website}" target="_blank">${data.website}</a>`
-    : 'N/A';
 
   let hoursValue = (data.hours ?? '').trim();
   document.getElementById('fairHours').textContent =

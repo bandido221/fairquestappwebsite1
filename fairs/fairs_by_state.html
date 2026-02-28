@@ -49,6 +49,22 @@
   background-color: #f2e1c1;
   color: #000;
 }
+.website-btn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 8px 14px;
+  background: #2e7d32;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.website-btn:hover {
+  background: #1b5e20;
+}
+
 /* NEW: centered message when there is no image */
 .no-image-msg {
   font-weight: 600;
@@ -157,6 +173,14 @@
 
       displayFairs(data);
     }
+function formatDateMMDDYY(dateStr){
+  if (!dateStr) return '';
+  const parts = String(dateStr).split('-');
+  if (parts.length !== 3) return String(dateStr);
+  const [yyyy, mm, dd] = parts;
+  if (!yyyy || !mm || !dd) return String(dateStr);
+  return `${mm}-${dd}-${yyyy.slice(-2)}`;
+}
 
     function displayFairs(fairs) {
       const container = document.getElementById('fairResults');
@@ -170,34 +194,38 @@
       fairs.forEach(fair => {
         const weekends = [];
 
-        if (fair.start_date && fair.end_date) {
-          weekends.push(`${fair.start_date} to ${fair.end_date}`);
+  if (fair.start_date && fair.end_date) {
+  weekends.push(`${formatDateMMDDYY(fair.start_date)} to ${formatDateMMDDYY(fair.end_date)}`);
+}
+
+for (let i = 2; i <= 10; i++) {
+  const start = fair[`week${i}_start_date`];
+  const end = fair[`week${i}_end_date`];
+  if (start && end) {
+    weekends.push(`${formatDateMMDDYY(start)} to ${formatDateMMDDYY(end)}`);
+  }
+
+
         }
 
-        for (let i = 2; i <= 10; i++) {
-          const start = fair[`week${i}_start_date`];
-          const end = fair[`week${i}_end_date`];
-          if (start && end) {
-            weekends.push(`${start} to ${end}`);
-          }
-        }
-
-       // NEW: build image block with message when missing
-const imgUrl = (fair.image_url || '').trim();
-const imageHtml = imgUrl
-  ? `<img src="${imgUrl}" alt="${fair.name}" />`
-  : `<div class="no-image-msg">Waiting for fair to add image</div>`;
+ const imgUrl = (fair.image_url || '').trim();
 
 container.innerHTML += `
   <div class="card">
-    <div class="card-image">
-      ${imageHtml}
-    </div>
+    ${imgUrl ? `
+      <div class="card-image">
+        <img src="${imgUrl}" alt="${fair.name}" />
+      </div>
+    ` : ''}
     <div class="card-content">
       <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
       <p><span class="badge">${fair.state}</span></p>
       <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
-      ${fair.website ? `<p><strong>🌐 Website:</strong> <a href="${fair.website}" target="_blank">${fair.website}</a></p>` : ''}
+      ${fair.website ? `
+  <div class="fair-actions">
+    <a href="${fair.website}" target="_blank" class="website-btn">Visit Website</a>
+  </div>
+` : ''}
       ${weekends.length > 0 ? `
         <p><strong>📅 Weekends:</strong></p>
         ${weekends.map(date => `<p>${date}</p>`).join('')}
@@ -205,6 +233,7 @@ container.innerHTML += `
     </div>
   </div>
 `;
+
 
       });
     }

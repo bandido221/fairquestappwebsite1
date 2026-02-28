@@ -124,12 +124,14 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabase = createClient(
+  "https://awtbjuiqgtdydsqzimul.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ"
+);
+
 
     let originalApp, originalFairs = [], allFairs = [], stateMap = {}, fairSearchCount = 0;
     let removedFairs = [];
@@ -141,14 +143,14 @@
       stateMap = { 'iowa':'ia','texas':'tx','california':'ca','florida':'fl','new york':'ny','illinois':'il' /*…*/ };
     }
 
-    function addFairSearch(prefill = null) {
-      if (!prefill && fairSearchCount >= 20) return;
-if (!prefill) fairSearchCount++;
+    window.addFairSearch = function (prefill = null) {
+  if (!prefill && fairSearchCount >= 20) return;
+  if (!prefill) fairSearchCount++;
 
-      const container = document.getElementById('fairsList');
-      const block = document.createElement('div');
-      block.className = 'fair-block';
-      block.innerHTML = `<span class="close-btn" onclick="removeFair(this)">×</span>`;
+  const container = document.getElementById('fairsList');
+  const block = document.createElement('div');
+  block.className = 'fair-block';
+  block.innerHTML = `<span class="close-btn" onclick="removeFair(this)">×</span>`;
 
       const input = document.createElement('input');
       input.placeholder = 'Search fair name or state…';
@@ -292,7 +294,7 @@ if (app.photo_url && app.photo_url.trim() !== '') {
         end: m.end_date
       }));
 
-      originalFairs.forEach(f=> addFairSearch(f));
+      originalFairs.forEach(f => window.addFairSearch(f));
     });
 
     function getCurrentFairs(){
@@ -312,7 +314,7 @@ if (app.photo_url && app.photo_url.trim() !== '') {
       return { added, removed };
     }
 
-    function onSave(){
+    window.onSave = function () {
       const { added, removed } = diffFairs();
       const changes = [];
       if (added.length)   changes.push(`Added: ${added.map(f=>`${f.name} (${f.start}→${f.end})`).join(', ')}`);
@@ -331,11 +333,9 @@ if (app.photo_url && app.photo_url.trim() !== '') {
       }
       modal.style.display = 'flex';
     }
-    function closeModal(){
-      document.getElementById('modalBackdrop').style.display = 'none';
-    }
+   
 
-    async function confirmSave() {
+    window.confirmSave = async function () {
   closeModal();
   const photo = document.getElementById('photoUrl').value.trim();
   if (!photo) {
@@ -492,7 +492,7 @@ document.getElementById('photoUpload').addEventListener('change', async function
 });
 
 // Remove image logic
-function removeImage() {
+window.removeImage = function () {
   const confirmDelete = confirm("Are you sure you want to delete the uploaded image?");
   if (!confirmDelete) return;
 
@@ -503,30 +503,13 @@ function removeImage() {
   document.getElementById('photoUpload').disabled = false;
 }
 
-function onSave() {
-  const { added, removed } = diffFairs();
-  const changes = [];
-  if (added.length)   changes.push(`Added: ${added.map(f => `${f.name} (${f.start}→${f.end})`).join(', ')}`);
-  if (removed.length) changes.push(`Removed: ${removed.map(f => `${f.name} (${f.start}→${f.end})`).join(', ')}`);
 
-  const modal = document.getElementById('modalBackdrop');
-  const title = document.getElementById('modalTitle');
-  const body  = document.getElementById('modalBody');
 
-  if (!changes.length) {
-    title.textContent = 'No changes detected';
-    body.innerHTML = `<p>Nothing was changed. Continue anyway?</p>`;
-  } else {
-    title.textContent = 'Confirm Changes';
-    body.innerHTML = `<ul>${changes.map(c => `<li>${c}</li>`).join('')}</ul><p>Submit these changes?</p>`;
-  }
-
-  modal.style.display = 'flex';
-}
-function closeModal() {
+window.closeModal = function () {
   document.getElementById('modalBackdrop').style.display = 'none';
 }
-function removeFair(closeBtn) {
+
+window.removeFair = function (closeBtn) {
   const block = closeBtn.parentElement;
   if (block.dataset.fairId) {
     removedFairs.push({

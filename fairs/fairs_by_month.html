@@ -76,6 +76,32 @@
   background-color: #f2e1c1;
   color: #000;
 }
+.website-btn{
+  display:inline-block;
+  background:#2e7d32;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:6px;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.website-btn:hover{
+  background:#1b5e20;
+}
+.nav-btn{
+  background:#bb9457;
+  color:#000;
+  padding:8px 14px;
+  border-radius:6px;
+  text-decoration:none;
+  font-weight:bold;
+  transition:0.2s;
+}
+
+.nav-btn:hover{
+  background:#f2e1c1;
+}
 
    
     .logo {
@@ -119,13 +145,19 @@
     </p>
   </section>
 
-  <div style="margin-bottom: 20px;">
+  <div style="margin-bottom: 20px; display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center;">
 
-    <label for="stateFilter" style="font-weight:bold;">Filter by State:</label>
-    <select id="stateFilter" onchange="applyStateFilter()" style="margin-left: 10px; padding: 8px; border-radius: 6px;">
-      <option value="">All States</option>
-    </select>
-  </div>
+  <label for="stateFilter" style="font-weight:bold;">Filter by State:</label>
+
+  <select id="stateFilter" onchange="applyStateFilter()" style="padding: 8px; border-radius: 6px;">
+    <option value="">All States</option>
+  </select>
+
+  <a href="/fairs/explore.html" class="nav-btn">Explore</a>
+  <a href="/index.html" class="nav-btn">Home</a>
+
+</div>
+
   
   <div id="fairResults">Loading...</div>
 
@@ -177,6 +209,14 @@ function buildStateDropdown() {
   });
 }
 
+function formatDateMMDDYY(dateStr){
+  if (!dateStr) return '';
+  const parts = String(dateStr).split('-');
+  if (parts.length !== 3) return dateStr;
+
+  const [yyyy, mm, dd] = parts;
+  return `${mm}-${dd}-${yyyy.slice(-2)}`;
+}
 
 function displayFairs(fairs) {
   const container = document.getElementById('fairResults');
@@ -195,17 +235,17 @@ function displayFairs(fairs) {
   filtered.forEach(fair => {
     const weekends = [];
 
-    if (fair.start_date && fair.end_date) {
-      weekends.push(`${fair.start_date} to ${fair.end_date}`);
-    }
+ if (fair.start_date && fair.end_date) {
+  weekends.push(`${formatDateMMDDYY(fair.start_date)} to ${formatDateMMDDYY(fair.end_date)}`);
+}
 
-    for (let i = 2; i <= 10; i++) {
-      const start = fair[`week${i}_start_date`];
-      const end = fair[`week${i}_end_date`];
-      if (start && end) {
-        weekends.push(`${start} to ${end}`);
-      }
-    }
+for (let i = 2; i <= 10; i++) {
+  const start = fair[`week${i}_start_date`];
+  const end = fair[`week${i}_end_date`];
+  if (start && end) {
+    weekends.push(`${formatDateMMDDYY(start)} to ${formatDateMMDDYY(end)}`);
+  }
+}
 
 // NEW: build image block with message when missing
 const imgUrl = (fair.image_url || '').trim();
@@ -222,7 +262,11 @@ container.innerHTML += `
       <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
       <p><span class="badge">${fair.state}</span></p>
       <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
-      ${fair.website ? `<p><strong>🌐 Website:</strong> <a href="${fair.website}" target="_blank">${fair.website}</a></p>` : ''}
+      ${fair.website ? `
+  <p>
+    <a href="${fair.website}" target="_blank" class="website-btn">Visit Website</a>
+  </p>
+` : ''}
       ${weekends.length > 0 ? `
         <p><strong>📅 Weekends:</strong></p>
         ${weekends.map(date => `<p>${date}</p>`).join('')}

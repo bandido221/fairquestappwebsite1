@@ -75,7 +75,7 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    const supabase = window.supabase.createClient(
+    const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
@@ -88,14 +88,11 @@
     }
 
     async function loadPendingFairs() {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('new_fair_addition')
         .select('*, user_id')
         .eq('pending', true);
-        <div style="margin: 10px 0; font-weight: bold;">
-  Submitted by: ${fair.user_id ? 'User' : 'Guest'}
-</div>
-
+     
       const list = document.getElementById('fairList');
       if (error || !data) return list.innerHTML = '<p>Error loading fairs.</p>';
 
@@ -140,7 +137,7 @@
         if (el) values[f.replace('start', 'start_date').replace('end', 'end_date').replace('image', 'image_url')] = el.value;
       });
 
-      const { error: insertError } = await supabase.from('renaissance_fairs').insert([{ ...values }]);
+      const { error: insertError } = await supabaseClient.from('renaissance_fairs').insert([{ ...values }]);
       if (insertError) {
         alert('Error approving fair.');
         return;
@@ -152,13 +149,13 @@
         category: 'fair_approved'
       }]);
 
-      await supabase.from('new_fair_addition').delete().eq('id', id);
+      await supabaseClient.from('new_fair_addition').delete().eq('id', id);
       document.getElementById(`fair-${id}`).remove();
       showToast('👑 Fair approved!');
     }
 
     async function rejectFair(id) {
-      await supabase.from('new_fair_addition').update({ pending: false }).eq('id', id);
+      await supabaseClient.from('new_fair_addition').update({ pending: false }).eq('id', id);
       await supabase.from('admin_notifications').insert([{
         application_id: id,
         message: `Rejected new fair submission with ID ${id}`,

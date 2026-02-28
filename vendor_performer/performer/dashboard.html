@@ -132,7 +132,10 @@
     footer a:hover {
       text-decoration: underline;
     }
-
+.delete-app{
+  background:#7f1d1d;
+  color:#fff;
+}
     @media (max-width: 768px) {
       body {
         padding: 20px;
@@ -165,7 +168,7 @@
       }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -184,17 +187,20 @@
   </div>
 
   <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+   
+if (!window.supabaseClient) {
+  window.supabaseClient = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
+}
+async function initDashboard() {
+  const { data: { session } } = await window.supabaseClient.auth.getSession();
 
-    async function initDashboard() {
-      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.id) {
         loadDashboard(session.user.id);
       } else {
-        supabase.auth.onAuthStateChange((event, session) => {
+        window.supabaseClient.auth.onAuthStateChange((event, session) => {
           if (session?.user?.id) {
             loadDashboard(session.user.id);
           } else {
@@ -208,7 +214,7 @@
     async function loadDashboard(userId) {
   const container = document.getElementById('dashboardContent');
   container.innerHTML = '';
-  const { data: apps, error } = await supabase
+  const { data: apps, error } = await window.supabaseClient
     .from('vendor_performer_applications')
     .select('*')
     .eq('user_id', userId)
@@ -228,12 +234,12 @@
   for (let i = 0; i < apps.length; i++) {
     const perf = apps[i];
     // fetch known fairs
-    const { data: fairs = [] } = await supabase
+    const { data: fairs = [] } = await window.supabaseClient
       .from('vendor_application_fairs')
       .select('start_date,end_date,renaissance_fairs(name)')
       .eq('application_id', perf.id);
     // fetch manual suggestions
-    const { data: manual = [] } = await supabase
+    const { data: manual = [] } = await window.supabaseClient
       .from('suggested_fairs')
       .select('fair_name,start_date,end_date')
       .eq('application_id', perf.id)
@@ -276,9 +282,12 @@
       ${perf.website ? `<p><a href="${perf.website}" target="_blank">${perf.website}</a></p>` : ''}
       ${perf.photo_url ? `<p><img src="${perf.photo_url}" width="150"/></p>` : ''}
 
-<button class="update-app" onclick="startUpdate(${perf.id})">
-  Update Application
+${perf.approval_status === 'approved' ? `
+<button class="start-app"
+  onclick="window.location.href='/vendor_performer/performer/vp_performer_details.html?vpa_id=${perf.id}'">
+  🌐 Create Online Page
 </button>
+` : ''}
 
 <button class="start-app"
         onclick="window.location.href='fair_applications.html?vpa_id=${perf.id}'">
@@ -289,12 +298,6 @@
         onclick="deleteApplication(${perf.id}, '${safeName}')">
   🗑️ Delete
 </button>
-    Update Application
-  </button>
-  <button class="delete-app"
-          onclick="deleteApplication(${perf.id}, '${safeName}')">
-    🗑️ Delete
-  </button>
 `;
 
     container.appendChild(box);
@@ -316,7 +319,7 @@ async function deleteApplication(appId, appName) {
 
   // 1) remove known fairs
   console.log('→ deleting vendor_application_fairs for application_id =', appId);
-  let { data: fairData, error: fairError } = await supabase
+  let { data: fairData, error: fairError } = await window.supabaseClient
     .from('vendor_application_fairs')
     .delete()
     .eq('application_id', appId);
@@ -328,7 +331,7 @@ async function deleteApplication(appId, appName) {
 
   // 2) remove manual suggestions
   console.log('→ deleting suggested_fairs for application_id =', appId);
-  let { data: sugData, error: sugError } = await supabase
+  let { data: sugData, error: sugError } = await window.supabaseClient
     .from('suggested_fairs')
     .delete()
     .eq('application_id', appId)
@@ -341,7 +344,7 @@ async function deleteApplication(appId, appName) {
 
   // 3) delete the application record itself
   console.log('→ deleting vendor_performer_applications id =', appId);
-  let { data: appData, error: appError } = await supabase
+  let { data: appData, error: appError } = await window.supabaseClient
     .from('vendor_performer_applications')
     .delete()
     .eq('id', appId);
@@ -354,7 +357,7 @@ async function deleteApplication(appId, appName) {
   // 4) notify admin
   // 4) notify admin (safe handling)
   console.log('→ inserting admin notification for deletion');
-  const notifRes = await supabase
+  const notifRes = await window.supabaseClient
     .from('admin_notifications')
     .insert([{
       application_id: appId,
@@ -373,7 +376,7 @@ async function deleteApplication(appId, appName) {
   console.log('✔️ Deletion complete, reloading dashboard');
 
   // ✅ Fetch the current session, then reload:
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await window.supabaseClient.auth.getSession();
   if (session?.user?.id) {
     await loadDashboard(session.user.id);
   }
@@ -387,7 +390,7 @@ async function startUpdate(id) {
   localStorage.removeItem('performerProfile');
 
   // Fetch full application record fresh
-  const { data, error } = await supabase
+  const { data, error } = await window.supabaseClient
     .from('vendor_performer_applications')
     .select('*')
     .eq('id', id)
@@ -407,7 +410,7 @@ async function startUpdate(id) {
 
 
     async function logout() {
-      await supabase.auth.signOut();
+      await window.supabaseClient.auth.signOut();
       window.location.href = 'index.html';
     }
 

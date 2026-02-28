@@ -113,26 +113,26 @@
 
   <a href="/admin/admin_dashboard.html" class="back-button">🔙 Back to Admin</a>
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+ <script>
+  const supabaseClient = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
 
-    let vendors = [];
+  let vendors = [];
 
-    async function loadVendors() {
-     const { data, error } = await supabase
-  .from('vendor_performer_applications')
-  .select(`
-    *,
-    vendor_application_fairs (
-      start_date, end_date,
-      renaissance_fairs (name, state)
-    )
-  `)
-  .or('application_type.is.false,application_type.is.null')
-  .order('name', { ascending: true });
+  async function loadVendors() {
+    const { data, error } = await supabaseClient
+      .from('vendor_performer_applications')
+      .select(`
+        *,
+        vendor_application_fairs (
+          start_date, end_date,
+          renaissance_fairs (name, state)
+        )
+      `)
+      .or('application_type.is.false,application_type.is.null')
+      .order('name', { ascending: true });
 
       if (error || !data) {
         document.getElementById('vendorGrid').innerHTML = '<p>⚠️ Failed to load vendors.</p>';

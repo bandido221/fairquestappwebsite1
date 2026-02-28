@@ -136,7 +136,7 @@ async function searchApplications() {
   const query = document.getElementById('searchQuery').value.trim();
   if (!query) return;
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('vendor_performer_applications')
     .select('id, name')
     .ilike('name', `%${query}%`);
@@ -180,7 +180,7 @@ dropdown.addEventListener('change', async () => {
     return;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('vendor_performer_applications')
     .select('name, tier, application_type, photo_url')
     .eq('id', selectedId)
@@ -268,7 +268,7 @@ if (data.photo_url) {
   <button class="logout" onclick="logout()">Logout</button>
 
   <script>
-    const supabase = window.supabase.createClient(
+    const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
@@ -293,7 +293,7 @@ async function savePhotoToApplication() {
   photo_url: photoUrl,
 });
 
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('vendor_performer_applications')
     .update({ photo_url: photoUrl, update_pending: true }, {
       headers: {
@@ -390,45 +390,38 @@ fileInput.addEventListener('change', () => {
 });
 
     async function showPendingCounts() {
-      const { count: vendorCount } = await supabase
-        .from('vendor_performer_applications')
+      const { count: vendorCount } = await supabaseClient        .from('vendor_performer_applications')
         .select('*', { count: 'exact', head: true })
         .eq('approval_status', 'pending')
         .or('application_type.is.false,application_type.is.null');
 
-      const { count: performerCount } = await supabase
-        .from('vendor_performer_applications')
+      const { count: performerCount } = await supabaseClient        .from('vendor_performer_applications')
         .select('*', { count: 'exact', head: true })
         .eq('approval_status', 'pending')
         .eq('application_type', true);
 
-      const { count: fairCount } = await supabase
-        .from('new_fair_addition')
+      const { count: fairCount } = await supabaseClient        .from('new_fair_addition')
         .select('*', { count: 'exact', head: true })
         .eq('pending', true);
 
-      const { count: updateCount } = await supabase
-        .from('fair_update_suggestions')
+      const { count: updateCount } = await supabaseClient        .from('fair_update_suggestions')
         .select('*', { count: 'exact', head: true })
         .neq('approval_status', 'approved');
 
 const today = new Date();
 today.setHours(0, 0, 0, 0); // reset to start of day
 
-const { count: userCount } = await supabase
-  .from('app_users')
+const { count: userCount } = await supabaseClient  .from('app_users')
   .select('*', { count: 'exact', head: true })
   .gte('created_at', today.toISOString());
 
 // 🔥 ADD THIS RIGHT HERE
-const { count: updateApplicationCount } = await supabase
-  .from('vendor_performer_applications')
+const { count: updateApplicationCount } = await supabaseClient  .from('vendor_performer_applications')
   .select('*', { count: 'exact', head: true })
   .eq('update_pending', true);
 
 
-  const { count: updateLogCount } = await supabase
-  .from('application_update_log')
+  const { count: updateLogCount } = await supabaseClient  .from('application_update_log')
   .select('*', { count: 'exact', head: true })
   .eq('seen', false);
 
@@ -445,7 +438,7 @@ document.getElementById('updateApplicationCount').innerText = updateApplicationC
 
    
     async function logout() {
-      await supabase.auth.signOut();
+      await supabaseClient.auth.signOut();
       window.location.href = '/';
     }
     async function saveApplicationEdits() {
@@ -454,8 +447,7 @@ document.getElementById('updateApplicationCount').innerText = updateApplicationC
   const tier = document.getElementById('editTier').value.trim();
   const type = document.getElementById('editType').value;
 
-  const response = await supabase
-  .from('vendor_performer_applications')
+  const response = await supabaseClient  .from('vendor_performer_applications')
   .update({
     photo_url: photoUrl,
     update_pending: true

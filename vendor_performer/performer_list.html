@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Performer List | FairQuest Admin</title>
   <link rel="stylesheet" href="/css/style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@1"></script>
   <style>
     body {
       background-color: #000;
@@ -111,26 +111,26 @@
 
   <a href="admin.html" class="back-button">🔙 Back to Admin</a>
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+ <script>
+  const supabaseClient = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
 
-    let performers = [];
+  let performers = [];
 
-    async function loadPerformers() {
-      const { data, error } = await supabase
-        .from('vendor_performer_applications')
-        .select(`
-  id, name, description, approval_status, photo_url,
-  vendor_application_fairs (
-    start_date, end_date,
-    renaissance_fairs (name, state)
-  )
-`)
+  async function loadPerformers() {
+    const { data, error } = await supabaseClient
+      .from('vendor_performer_applications')
+      .select(`
+        id, name, description, approval_status, photo_url,
+        vendor_application_fairs (
+          start_date, end_date,
+          renaissance_fairs (name, state)
+        )
+      `)
+      .eq('application_type', true); // Only performers
 
-        .eq('application_type', true); // Only performers
 
       if (error || !data) {
         document.getElementById('performerGrid').innerHTML = '<p>⚠️ Failed to load performers.</p>';

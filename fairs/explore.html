@@ -172,6 +172,19 @@ a:hover {
   text-align: center;
   padding: 0 8px;
 }
+.website-btn{
+  display:inline-block;
+  background:#2e7d32;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:6px;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.website-btn:hover{
+  background:#1b5e20;
+}
 
     .nav-home, .nav-add {
       display: inline-block;
@@ -203,7 +216,6 @@ a:hover {
         <option value="">Select a month</option>
       </select>
       <a class="nav-button" href="/index.html">🏠 Home</a>
-      <a class="nav-button" href="/fairs/add_fair.html">➕ Add a Fair</a>
     </div>
     
 
@@ -294,29 +306,39 @@ a:hover {
 
     function renderFairCard(fair) {
       const div = document.createElement('div');
-      const weekends = [];
-      if (fair.start_date && fair.end_date) weekends.push(`${fair.start_date} to ${fair.end_date}`);
-      for (let i = 2; i <= 10; i++) {
-        const start = fair[`week${i}_start_date`];
-        const end = fair[`week${i}_end_date`];
-        if (start && end) weekends.push(`${start} to ${end}`);
-      }
+ const weekends = [];
+if (fair.start_date && fair.end_date) {
+  weekends.push(`${formatDateMMDDYY(fair.start_date)} to ${formatDateMMDDYY(fair.end_date)}`);
+}
+for (let i = 2; i <= 10; i++) {
+  const start = fair[`week${i}_start_date`];
+  const end = fair[`week${i}_end_date`];
+  if (start && end) {
+    weekends.push(`${formatDateMMDDYY(start)} to ${formatDateMMDDYY(end)}`);
+  }
+}
+
 // NEW: show image if present; otherwise show a message
 const imgUrl = (fair.image_url || '').trim();
+
 const imageHtml = imgUrl
-  ? `<img src="${imgUrl}" alt="${fair.name}" />`
-  : `<div class="no-image-msg">Waiting for fair to add image</div>`;
+  ? `<div class="card-image"><img src="${imgUrl}" alt="${fair.name}" /></div>`
+  : '';
+
 
 div.innerHTML = `
-  <div class="card">
-    <div class="card-image">
-      ${imageHtml}
-    </div>
-    <div class="card-content">
+<div class="card">
+  ${imageHtml}
+  <div class="card-content">
+
       <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
       <p><span class="badge">${fair.state}</span></p>
       <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
-      ${fair.website ? `<p><strong>🌐 Website:</strong> <a href="${fair.website}" target="_blank">${fair.website}</a></p>` : ''}
+      ${fair.website ? `
+  <p>
+    <a href="${fair.website}" target="_blank" class="website-btn">Visit Website</a>
+  </p>
+` : ''}
       ${weekends.length > 0 ? `
         <p><strong>📅 Weekends:</strong></p>
         ${weekends.map(date => `<p>${date}</p>`).join('')}
@@ -327,6 +349,14 @@ div.innerHTML = `
 
       return div;
     }
+function formatDateMMDDYY(dateStr){
+  if (!dateStr) return '';
+  const parts = String(dateStr).split('-');
+  if (parts.length !== 3) return dateStr;
+
+  const [yyyy, mm, dd] = parts;
+  return `${mm}-${dd}-${yyyy.slice(-2)}`;
+}
 
     searchInput.addEventListener("input", () => {
       const query = searchInput.value.toLowerCase().trim();
@@ -368,11 +398,7 @@ div.innerHTML = `
       }
     });
   
-    // Track "Add a Fair" click
-    document.querySelector('a.nav-button[href="/fairs/add_fair.html"]')?.addEventListener('click', () => {
-      gtagTrack('fair_add_clicked', 'Add a Fair');
-    });
-  
+     
     // Track clicks on each fair card link
     document.addEventListener('click', function (e) {
       const link = e.target.closest('a.fair-link');

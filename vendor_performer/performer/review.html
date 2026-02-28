@@ -159,7 +159,7 @@
   }
 </style>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
@@ -175,11 +175,12 @@
 
   <div class="message" id="message"></div>
 
-  <script>
-    const supabase = window.supabase.createClient(
+ <script>
+    window.supabaseClient = window.supabaseClient || window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
+    const sb = window.supabaseClient;
     function formatDateShort(isoDate) {
   const [year, month, day] = isoDate.split("-");
   return `${month}-${day}-${year.slice(2)}`;
@@ -229,11 +230,11 @@ ${data.fairs.map(f => `
       const msg = document.getElementById('message');
       msg.textContent = 'Submitting…'; msg.className = '';
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await sb.auth.getUser();
 
       // 1) Insert application
-      const { data: appData, error: appErr } = await supabase
-        .from('vendor_performer_applications')
+  const { data: appData, error: appErr } = await sb
+  .from('vendor_performer_applications')
         .insert([{
           name: data.name,
           description: data.description,
@@ -280,7 +281,7 @@ ${data.fairs.map(f => `
 
       // 3) Link known fairs
       if (fairRows.length) {
-        const { error: linkErr } = await supabase.from('vendor_application_fairs').insert(fairRows);
+        const { error: linkErr } = await sb.from('vendor_application_fairs').insert(fairRows);
         if (linkErr) {
           msg.textContent = '⚠️ Application saved, but couldn’t link fairs: ' + linkErr.message;
           msg.className = 'error';
@@ -290,7 +291,7 @@ ${data.fairs.map(f => `
 
       // 4) Insert manual fairs
       if (manualSuggestions.length) {
-        const { error: suggErr } = await supabase.from('suggested_fairs').insert(manualSuggestions);
+        const { error: suggErr } = await sb.from('suggested_fairs').insert(manualSuggestions);
         if (suggErr) {
           msg.textContent = '⚠️ Saved, but couldn’t save manual fairs: ' + suggErr.message;
           msg.className = 'error';

@@ -60,13 +60,13 @@
       emailjs.init("U-llNKdObkEnLNbo6");
     });
 
-    const supabase = window.supabase.createClient(
+    const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
     async function loadVendorApplications() {
-      const { data: apps, error } = await supabase
+      const { data: apps, error } = await supabaseClient
         .from('vendor_performer_applications')
         .select('*')
         .eq('approval_status', 'pending')
@@ -81,12 +81,12 @@
 
       container.innerHTML = '';
       for (const app of apps) {
-        const { data: fairs = [] } = await supabase
+        const { data: fairs = [] } = await supabaseClient
           .from('vendor_application_fairs')
           .select('start_date, end_date, renaissance_fairs(name, state)')
           .eq('application_id', app.id);
 
-        const { data: manual = [] } = await supabase
+        const { data: manual = [] } = await supabaseClient
           .from('suggested_fairs')
           .select('fair_name, start_date, end_date')
           .eq('application_id', app.id);
@@ -152,13 +152,13 @@
     }
 
     async function approveVendor(id) {
-      const { error } = await supabase.rpc('approve_and_publish_application', { app_id: id });
+      const { error } = await supabaseClient.rpc('approve_and_publish_application', { app_id: id });
       alert(error ? `❌ Failed to approve: ${error.message}` : '✅ Application approved!');
       loadVendorApplications();
     }
 
     async function declineVendor(id) {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('vendor_performer_applications')
         .update({ approval_status: 'declined' })
         .eq('id', id);

@@ -28,13 +28,11 @@
 <div class="box">
   <h1>FairQuest – Fair Admin Access</h1>
 
-  <!-- STEP 1: Ask if they have account -->
   <div id="stepChoose">
     <button onclick="showSignup()">No, I need to create an account</button>
     <button onclick="showLogin()">Yes, I already have an account</button>
   </div>
 
-  <!-- STEP 2: SIGNUP -->
   <div id="stepSignup" class="hidden">
     <h2>Create Your Account</h2>
     <input id="signupEmail" type="email" placeholder="Email">
@@ -44,14 +42,12 @@
     <div id="signupMsg" class="msg hidden"></div>
   </div>
 
-  <!-- STEP 3: TELL THEM TO CHECK EMAIL -->
   <div id="stepCheckEmail" class="hidden">
     <h2>Check Your Email</h2>
     <p>Please verify your email, then come back and log in.</p>
     <button onclick="showLogin()">Go to Login</button>
   </div>
 
-  <!-- STEP 4: LOGIN -->
   <div id="stepLogin" class="hidden">
     <h2>Login</h2>
     <input id="loginEmail" type="email" placeholder="Email">
@@ -61,7 +57,6 @@
     <div id="loginMsg" class="msg hidden"></div>
   </div>
 
-  <!-- STEP 5: PENDING APPLICATIONS -->
   <div id="stepPending" class="hidden">
     <h2>Your Pending Requests</h2>
     <p>
@@ -74,7 +69,6 @@
     <div id="pendingMsg" class="msg hidden"></div>
   </div>
 
-  <!-- STEP 6: FULL FAIR VERIFICATION FORM -->
 <div id="stepFairForm" class="hidden">
  <h2>1. Your Fair Information</h2>
 
@@ -155,16 +149,36 @@
 
 <script>
 const supa = window.supabase.createClient(
-       'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-  
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: "fq_fair_admin_access_auth"
+    }
+  }
 );
-
 function togglePass(id){ 
   let x=document.getElementById(id);
   x.type = x.type==="password" ? "text" : "password";
 }
+function toggleAltEmail(){
+  const wrap = document.getElementById("altEmailWrap");
+  const cb = document.getElementById("useAltEmail");
+  const input = document.getElementById("altEmail");
 
+  if(!wrap || !cb) return;
+
+  if(cb.checked){
+    wrap.classList.remove("hidden");
+    if(input) input.focus();
+  } else {
+    wrap.classList.add("hidden");
+    if(input) input.value = "";
+  }
+}
 function showMsg(el, text, type){
   el.textContent = text;
   el.className = "msg " + (type === "success" ? "success" : "error");
@@ -195,7 +209,6 @@ function friendlyAuthError(error){
     return "Too many attempts. Please wait a minute and try again.";
   }
 
-  // fallback
   return "We couldn’t complete that request. Please double-check your info and try again.";
 }
 
@@ -214,12 +227,10 @@ function friendlyDbError(error){
     return "Connection problem. Please check your internet and try again.";
   }
 
-  // fallback
   return "We couldn’t submit your request. Please try again in a moment.";
 }
 
 
-// UI helpers
 function showSignup(){ stepChoose.classList.add('hidden'); stepSignup.classList.remove('hidden'); }
 function showLogin(){ stepChoose.classList.add('hidden'); stepLogin.classList.remove('hidden'); }
 function showFairForm(){ stepFairForm.classList.remove('hidden'); }
@@ -258,7 +269,6 @@ async function loadPendingApplications(userId){
     .order("submitted_at", { ascending: false });
 
   if(error){
-    // If this fails, do not block them—just let them continue to the form
     renderPendingList([]);
     return { rows: [], error };
   }
@@ -297,11 +307,9 @@ async function deletePendingRequest(id){
 
   showMsg(pendingMsg, "Deleted. Your request was removed.", "success");
 
-  // refresh list
   const { rows } = await loadPendingApplications(user.id);
   renderPendingList(rows);
 
-  // if no pending left, send them to the form
   if(rows.length === 0){
     setTimeout(() => startNewApplication(), 800);
   }
@@ -315,7 +323,6 @@ async function loadFairSuggestions(query){
     return;
   }
 
-  // Search fairs by name (simple prefix-ish search)
   const { data, error } = await supa
     .from("renaissance_fairs")
     .select("id,name,city,state")
@@ -350,7 +357,6 @@ function trySetFairIdFromInput(){
   }
 }
 
-// wire up events once
 fairName.addEventListener("input", async () => {
   clearFairSelection();
   await loadFairSuggestions(fairName.value);
@@ -361,7 +367,6 @@ fairName.addEventListener("change", () => {
 });
 
 
-// SIGNUP
 async function signup(){
   const email = signupEmail.value;
   const pass = signupPass.value;
@@ -395,7 +400,6 @@ async function login(){
 
   stepLogin.classList.add('hidden');
 
-  // show the logged-in account email on the form
   accountEmailDisplay.value = data?.user?.email || email || "";
 
   const userId = data?.user?.id;
@@ -415,7 +419,6 @@ async function login(){
   }
 }
 
-// SUBMIT FAIR INFO TO METADATA
 async function submitFairInfo(){
   const updates = {
     fair_name: fairName.value.trim(),
@@ -442,7 +445,6 @@ async function submitFairInfo(){
   }
 
 
-  // Block duplicate pending request for the same fair (same name + city + state)
   const { data: existingPending, error: existingErr } = await supa
     .from("fair_verification")
     .select("id")
@@ -462,7 +464,6 @@ async function submitFairInfo(){
     return;
   }
 
-  // INSERT INTO fair_verification TABLE
   const { error } = await supa
     .from('fair_verification')
     .insert([
@@ -497,31 +498,91 @@ showSubmitModal();
 }
 function showSubmitModal(){
   submitModal.classList.remove("hidden");
+  submitModal.style.display = "flex";
 }
 
 function confirmAndRedirect(){
 window.location.href = "https://www.fairquestapp.com/";
 }
 
+function addAnotherFairFromModal(){
+submitModal.classList.add("hidden");
+submitModal.style.display = "none";
 
+  stepChoose.classList.add("hidden");
+  stepSignup.classList.add("hidden");
+  stepCheckEmail.classList.add("hidden");
+  stepLogin.classList.add("hidden");
+  stepPending.classList.add("hidden");
+
+  fairName.value = "";
+  fairCity.value = "";
+  fairState.value = "";
+  fairWebsite.value = "";
+  fairRole.value = "";
+  roleDetails.value = "";
+  fairNotes.value = "";
+  contactName.value = "";
+  contactPhone.value = "";
+  authConfirm.checked = false;
+
+  useAltEmail.checked = false;
+  altEmail.value = "";
+  altEmailWrap.classList.add("hidden");
+
+  fairId.value = "";
+  fairSuggestions.innerHTML = "";
+  fairSuggestionMap = new Map();
+
+  fairMsg.classList.add("hidden");
+
+  stepFairForm.classList.remove("hidden");
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const { data } = await supa.auth.getSession();
+  const session = data?.session;
+
+  if(session?.user){
+    stepChoose.classList.add("hidden");
+    stepSignup.classList.add("hidden");
+    stepCheckEmail.classList.add("hidden");
+    stepLogin.classList.add("hidden");
+
+    accountEmailDisplay.value = session.user.email || "";
+
+    const { rows } = await loadPendingApplications(session.user.id);
+    if(rows.length > 0){
+      renderPendingList(rows);
+      stepPending.classList.remove("hidden");
+      stepFairForm.classList.add("hidden");
+    } else {
+      stepPending.classList.add("hidden");
+      stepFairForm.classList.remove("hidden");
+    }
+  }
+});
 </script>
-<!-- Submission Confirmation Modal -->
 <div id="submitModal" class="hidden" style="
   position:fixed; inset:0; background:rgba(0,0,0,0.8);
-  display:flex; align-items:center; justify-content:center; z-index:9999;">
+  align-items:center; justify-content:center; z-index:9999;">
   <div style="
     max-width:520px; background:#111; border:1px solid #444;
     padding:20px; border-radius:10px; text-align:center;">
-    <h2>Request Submitted</h2>
-    <p style="margin-top:10px;">
-      We received your request. We will contact the fair’s official page and/or website
-      to verify authorization.
-    </p>
-    <p style="margin-top:10px;">
-      Once approved, you will receive an email with confirmation and a link to manage
-      the fair’s page on FairQuest.
-    </p>
+  <h2>Request Submitted</h2>
+<p style="margin-top:10px;">
+  We received your request. We will contact the fair’s official page and/or website
+  to verify authorization.
+</p>
+<p style="margin-top:10px;">
+  Once your request is approved, you will receive an email confirmation.
+</p>
+<p style="margin-top:10px;">
+  You can also check your profile. When approved, a new <b>Manage Fair</b> button
+  will appear, allowing you to access and manage your fair’s page.
+</p>
     <button style="margin-top:15px;" onclick="confirmAndRedirect()">OK</button>
+<button style="margin-top:10px;" onclick="addAnotherFairFromModal()">Add Another Fair</button>
   </div>
 </div>
 

@@ -55,6 +55,7 @@
     }
     .approve { background: green; color: white; }
     .reject { background: red; color: white; }
+    .delete { background: #555; color: white; }
     .toast {
       position: fixed;
       top: 20px;
@@ -67,11 +68,31 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       display: none;
     }
+    .topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.home-btn {
+  position: absolute;
+  left: 0;
+  background: #ffffff;
+  color: #000;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
   </style>
 </head>
 <body>
+<div class="topbar">
+  <button class="home-btn" onclick="goHome()">🏠 Home</button>
   <h1>📝 Approve New Fairs</h1>
-  <div id="fairList">Loading...</div>
+</div>  <div id="fairList">Loading...</div>
   <div id="toast" class="toast"></div>
 
   <script>
@@ -80,13 +101,65 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
-    function showToast(message) {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.style.display = 'block';
-      setTimeout(() => toast.style.display = 'none', 3000);
-    }
+   function showToast(message, type = 'ok') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
 
+  // ok = green, error = red, warn = amber-ish
+  toast.style.backgroundColor =
+    type === 'error' ? '#c0392b' :
+    type === 'warn'  ? '#b9770e' :
+                       '#4caf50';
+
+  toast.style.display = 'block';
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => (toast.style.display = 'none'), 3500);
+}
+function goHome() {
+  window.location.href = "admin_dashboard.html";
+}
+function formatApproveError(err, actionLabel = 'Approve') {
+  // Network / fetch failures
+  if (!err) return `${actionLabel} failed: Unknown error.`;
+  if (err instanceof TypeError) {
+    return `${actionLabel} failed: Network error. Check your internet and try again.`;
+  }
+
+  // supabase-js v2 typically gives: { message, details, hint, code, status }
+  const code = String(err.code || '');
+  const status = String(err.status || '');
+  const details = String(err.details || '');
+  const message = String(err.message || '');
+
+  // Duplicate / unique violation (most common cause of 409)
+  // Postgres unique violation is 23505; PostgREST may surface 409 Conflict too.
+  if (code === '23505' || status === '409') {
+    return `Cannot approve: a fair with that name already exists. Change the name or update the existing fair instead.`;
+  }
+
+  // RLS / permission
+  if (code === '42501' || message.toLowerCase().includes('permission denied')) {
+    return `Cannot ${actionLabel.toLowerCase()}: permission denied. You may not have admin access (RLS).`;
+  }
+
+  // Invalid input / type issues
+  if (code === '22P02') {
+    return `Cannot ${actionLabel.toLowerCase()}: invalid value format. Check dates and required fields.`;
+  }
+
+  // Generic fallback (keep it readable)
+  if (details) return `${actionLabel} failed: ${details}`;
+  return `${actionLabel} failed: ${message || 'Unexpected error.'}`;
+}
+
+async function safeOp(actionLabel, fn) {
+  try {
+    return await fn();
+  } catch (e) {
+    showToast(formatApproveError(e, actionLabel), 'error');
+    return null;
+  }
+}
     async function loadPendingFairs() {
       const { data, error } = await supabaseClient
         .from('new_fair_addition')
@@ -120,39 +193,78 @@
           <input value="${fair.website || ''}" id="website-${fair.id}" />
           <label>Image URL</label>
           <input value="${fair.image_url || ''}" id="image-${fair.id}" />
-          <div class="button-group">
-            <button class="approve" onclick="approveFair(${fair.id})">✅ Approve</button>
-            <button class="reject" onclick="rejectFair(${fair.id})">❌ Reject</button>
-          </div>
+         <div class="button-group">
+  <button class="approve" onclick="approveFair(${fair.id})">✅ Approve</button>
+  <button class="reject" onclick="rejectFair(${fair.id})">❌ Reject</button>
+  <button class="delete" onclick="deletePendingFair(${fair.id})">🗑️ Delete</button>
+</div>
         `;
         list.appendChild(card);
       });
     }
 
-    async function approveFair(id) {
-      const fields = ["name", "address", "city", "state", "zip", "start", "end", "website", "image"];
-      const values = {};
-      fields.forEach(f => {
-        const el = document.getElementById(`${f}-${id}`);
-        if (el) values[f.replace('start', 'start_date').replace('end', 'end_date').replace('image', 'image_url')] = el.value;
-      });
+   async function approveFair(id) {
+  await safeOp('Approve', async () => {
+    const fields = ["name", "address", "city", "state", "zip", "start", "end", "website", "image"];
+    const values = {};
 
-      const { error: insertError } = await supabaseClient.from('renaissance_fairs').insert([{ ...values }]);
-      if (insertError) {
-        alert('Error approving fair.');
-        return;
-      }
+    fields.forEach(f => {
+      const el = document.getElementById(`${f}-${id}`);
+      if (!el) return;
 
-      await supabase.from('admin_notifications').insert([{
+      const key = f
+        .replace('start', 'start_date')
+        .replace('end', 'end_date')
+        .replace('image', 'image_url');
+
+      values[key] = (el.value ?? '').trim();
+    });
+
+    // Basic required check (keeps errors user-friendly)
+    if (!values.name) {
+      showToast('Cannot approve: Fair name is required.', 'warn');
+      return;
+    }
+
+    // 1) Insert into main table
+    const { error: insertError } = await supabaseClient
+      .from('renaissance_fairs')
+      .insert([values]);
+
+    if (insertError) {
+      showToast(formatApproveError(insertError, 'Approve'), 'error');
+      return;
+    }
+
+    // 2) Admin notification (use supabaseClient, not supabase)
+    const { error: noteError } = await supabaseClient
+      .from('admin_notifications')
+      .insert([{
         application_id: id,
         message: `Approved new fair: ${values.name || 'Unnamed Fair'}`,
         category: 'fair_approved'
       }]);
 
-      await supabaseClient.from('new_fair_addition').delete().eq('id', id);
-      document.getElementById(`fair-${id}`).remove();
-      showToast('👑 Fair approved!');
+    if (noteError) {
+      // Approval succeeded; notification failed—still show readable error.
+      showToast(`Approved, but notification failed: ${formatApproveError(noteError, 'Notify')}`, 'warn');
     }
+
+    // 3) Remove from pending table
+    const { error: deletePendingError } = await supabaseClient
+      .from('new_fair_addition')
+      .delete()
+      .eq('id', id);
+
+    if (deletePendingError) {
+      showToast(`Approved, but could not remove pending entry: ${formatApproveError(deletePendingError, 'Cleanup')}`, 'warn');
+      return;
+    }
+
+    document.getElementById(`fair-${id}`)?.remove();
+    showToast('👑 Fair approved!', 'ok');
+  });
+}
 
     async function rejectFair(id) {
       await supabaseClient.from('new_fair_addition').update({ pending: false }).eq('id', id);
@@ -164,7 +276,38 @@
       document.getElementById(`fair-${id}`).remove();
       showToast('❌ Fair rejected');
     }
+async function deletePendingFair(id) {
+  const ok = confirm('Delete this pending fair submission permanently? This cannot be undone.');
+  if (!ok) return;
 
+  await safeOp('Delete', async () => {
+    const { error } = await supabaseClient
+      .from('new_fair_addition')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      showToast(formatApproveError(error, 'Delete'), 'error');
+      return;
+    }
+
+    // Optional notification (matches your pattern)
+    const { error: noteError } = await supabaseClient
+      .from('admin_notifications')
+      .insert([{
+        application_id: id,
+        message: `Deleted pending fair submission with ID ${id}`,
+        category: 'fair_deleted'
+      }]);
+
+    if (noteError) {
+      showToast(`Deleted, but notification failed: ${formatApproveError(noteError, 'Notify')}`, 'warn');
+    }
+
+    document.getElementById(`fair-${id}`)?.remove();
+    showToast('🗑️ Pending fair deleted.', 'ok');
+  });
+}
     loadPendingFairs();
   </script>
 </body>

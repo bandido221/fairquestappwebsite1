@@ -3,136 +3,167 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vendor List | FairQuest Admin</title>
+  <title>Vendor List | FairQuest</title>
   <link rel="stylesheet" href="/css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
   <style>
-    body {
-      background-color: #000;
-      color: #f0e6d2;
-      font-family: 'Domine', serif;
-      padding: 20px;
-      text-align: center;
+    body{
+      background-color:#000;
+      color:#f0e6d2;
+      font-family:'Domine', serif;
+      padding:20px;
+      text-align:center;
     }
 
-    h1 {
-      font-family: 'Cinzel', serif;
-      margin-bottom: 20px;
+    h1{
+      font-family:'Cinzel', serif;
+      margin-bottom:12px;
     }
 
-    .filters {
-      margin-bottom: 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
+    .home-button{
+      display:inline-block;
+      padding:10px 18px;
+      background:#bb9457;
+      color:#000;
+      text-decoration:none;
+      border-radius:8px;
+      font-weight:bold;
+      font-family:'Cinzel', serif;
+      margin-bottom:18px;
+    }
+    .home-button:hover{ background:#d4af6a; }
+
+    .filters{
+      margin-bottom:20px;
+      display:flex;
+      justify-content:center;
+    }
+    .filters input{
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.14);
+      font-size:16px;
+      background:rgba(255,255,255,0.08);
+      color:rgba(255,255,255,0.92);
+      min-width:min(520px,92vw);
+      outline:none;
+    }
+    .filters input::placeholder{ color:rgba(255,255,255,0.65); }
+
+    .vendor-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+      gap:20px;
+      max-width:1200px;
+      margin:0 auto;
     }
 
-    .filters input, .filters select {
-      padding: 8px;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
+    .vendor-card{
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.12);
+      color:rgba(255,255,255,0.92);
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 10px 24px rgba(0,0,0,0.35);
     }
 
-    .vendor-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
+    .card-media{
+      width:100%;
+      height:210px;
+      background:rgba(255,255,255,0.05);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .card-media img{
+      max-width:100%;
+      max-height:100%;
+      object-fit:contain; /* no crop */
+      display:block;
     }
 
-   .vendor-card {
-  background-color: #c9a364;
-  color: #3b1f1f;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  text-align: left;
-}
-.vendor-card .vendor-photo{
-  width:100%;
-  max-height:180px;
-  object-fit:cover;
-  border-radius:8px;
-  margin-bottom:10px;
-}
-.muted{opacity:.8;font-size:.9rem}
-
-
-    .status {
-      font-weight: bold;
-      margin-top: 10px;
+    .card-body{
+      padding:16px 16px 18px;
+      text-align:left;
     }
 
-    .approved { color: green; }
-    .pending { color: orange; }
-    .declined { color: red; }
+    .card-title{
+      font-family:'Cinzel', serif;
+      text-align:center;
+      margin:0 0 12px;
+      font-size:22px;
+      line-height:1.1;
+      color:#f0e6d2;
+    }
 
-    a.back-button {
-      display: inline-block;
-      margin-top: 30px;
-      padding: 10px 16px;
-      background: #bb9457;
-      color: black;
-      text-decoration: none;
-      border-radius: 6px;
-      font-weight: bold;
+    .card-actions{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      margin:10px 0 14px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      appearance:none;
+      border:0;
+      border-radius:10px;
+      padding:10px 14px;
+      font-weight:700;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .btn-primary{ background:#bb9457; color:#000; }
+    .btn-disabled{
+      background:rgba(255,255,255,0.10);
+      color:rgba(255,255,255,0.55);
+      cursor:not-allowed;
+    }
+
+    .card-desc{
+      color:rgba(255,255,255,0.82);
+      margin:0;
     }
   </style>
 </head>
 <body>
 
-  <h1>📦 Vendor List</h1>
+  <h1>🛍 Vendor List</h1>
 
-  <!-- Filters and Search -->
+<a href="../index.html" class="home-button">🏠 Return to Main Site</a>
   <div class="filters">
     <input type="text" id="searchInput" placeholder="🔎 Search Vendor Name" />
-    <select id="stateFilter">
-      <option value="">🌎 Filter by State</option>
-    </select>
-    <select id="monthFilter">
-      <option value="">📅 Filter by Month</option>
-      <option value="1">January</option>
-      <option value="2">February</option>
-      <option value="3">March</option>
-      <option value="4">April</option>
-      <option value="5">May</option>
-      <option value="6">June</option>
-      <option value="7">July</option>
-      <option value="8">August</option>
-      <option value="9">September</option>
-      <option value="10">October</option>
-      <option value="11">November</option>
-      <option value="12">December</option>
-    </select>
   </div>
 
   <div class="vendor-grid" id="vendorGrid"></div>
 
-  <a href="/admin/admin_dashboard.html" class="back-button">🔙 Back to Admin</a>
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
 
- <script>
-  const supabaseClient = window.supabase.createClient(
-    'https://awtbjuiqgtdydsqzimul.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-  );
+    let vendors = [];
 
-  let vendors = [];
+    function normalizeUrl(url){
+      if(!url) return null;
+      const trimmed = String(url).trim();
+      if(!trimmed) return null;
+      if(trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+      return 'https://' + trimmed;
+    }
 
-  async function loadVendors() {
-    const { data, error } = await supabaseClient
-      .from('vendor_performer_applications')
-      .select(`
-        *,
-        vendor_application_fairs (
-          start_date, end_date,
-          renaissance_fairs (name, state)
-        )
-      `)
-      .or('application_type.is.false,application_type.is.null')
-      .order('name', { ascending: true });
+    async function loadVendors(){
+      const { data, error } = await supabaseClient
+        .from('vendor_performer_applications')
+        .select('id, name, description, photo_url, website')
+        .or('application_type.is.false,application_type.is.null')
+        .order('name', { ascending: true });
 
       if (error || !data) {
         document.getElementById('vendorGrid').innerHTML = '<p>⚠️ Failed to load vendors.</p>';
@@ -140,100 +171,42 @@
       }
 
       vendors = data;
-      populateStateFilter();
       renderVendors();
     }
 
-    function populateStateFilter() {
-      const stateSet = new Set();
-      vendors.forEach(v => {
-        v.vendor_application_fairs?.forEach(fair => {
-          if (fair.renaissance_fairs?.state) {
-            stateSet.add(fair.renaissance_fairs.state);
-          }
-        });
-      });
-
-      const stateFilter = document.getElementById('stateFilter');
-      [...stateSet].sort().forEach(state => {
-        const option = document.createElement('option');
-        option.value = state;
-        option.textContent = state;
-        stateFilter.appendChild(option);
-      });
-    }
-
-    function renderVendors() {
+    function renderVendors(){
       const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-      const stateFilter = document.getElementById('stateFilter').value;
-      const monthFilter = document.getElementById('monthFilter').value;
       const container = document.getElementById('vendorGrid');
 
       container.innerHTML = '';
 
-      vendors.filter(v => {
-        const matchesSearch = v.name.toLowerCase().includes(searchQuery);
+      vendors
+        .filter(v => (v.name || '').toLowerCase().includes(searchQuery))
+        .forEach(vendor => {
+          const websiteUrl = normalizeUrl(vendor.website);
 
-        let matchesState = true;
-        if (stateFilter) {
-          matchesState = v.vendor_application_fairs?.some(fair => fair.renaissance_fairs?.state === stateFilter);
-        }
+          container.innerHTML += `
+            <div class="vendor-card">
+              <div class="card-media">
+                ${vendor.photo_url ? `<img src="${vendor.photo_url}" alt="${vendor.name}">` : ``}
+              </div>
 
-        let matchesMonth = true;
-        if (monthFilter) {
-          matchesMonth = v.vendor_application_fairs?.some(fair => {
-            const fairDate = new Date(fair.start_date);
-            return fairDate.getMonth() + 1 == monthFilter;
-          });
-        }
+              <div class="card-body">
+                <h2 class="card-title">${vendor.name}</h2>
 
-        return matchesSearch && matchesState && matchesMonth;
-      }).forEach(vendor => {
-        const statusClass = vendor.approval_status === 'approved' ? 'approved'
-                           : vendor.approval_status === 'pending' ? 'pending'
-                           : 'declined';
+                <div class="card-actions">
+                  ${
+                    websiteUrl
+                      ? `<a class="btn btn-primary" href="${websiteUrl}" target="_blank" rel="noopener noreferrer">Website</a>`
+                      : `<span class="btn btn-disabled">Website</span>`
+                  }
+                </div>
 
-       const fairs = (vendor.vendor_application_fairs || []).map(f => {
-  const label = f.renaissance_fairs?.name ? `${f.renaissance_fairs.name} (${f.renaissance_fairs.state||''})` : 'Unknown Fair';
-  const dates = `${f.start_date} → ${f.end_date}`;
-  return `<li>${label}: <span class="muted">${dates}</span></li>`;
-}).join('');
-
-container.innerHTML += `
-  <div class="vendor-card">
-    ${vendor.photo_url ? `<img class="vendor-photo" src="${vendor.photo_url}" alt="${vendor.name}">` : ''}
-    <h2>${vendor.name}</h2>
-
-    <p><strong>Type:</strong> ${vendor.vendor_type || 'N/A'}</p>
-    <p><strong>Description:</strong> ${vendor.description || 'No description'}</p>
-
-    <p><strong>Tier:</strong> ${vendor.tier || 'bronze'}</p>
-    <p><strong>Food Vendor:</strong> ${vendor.is_food_vendor ? 'Yes' : 'No'}</p>
-
-    <p><strong>Contact:</strong> ${vendor.contact_name || ''} ${vendor.contact_email ? `(&lt;${vendor.contact_email}&gt;)` : ''}</p>
-    ${vendor.website ? `<p><strong>Website:</strong> <a href="${vendor.website}" target="_blank">${vendor.website}</a></p>` : ''}
-
-    <p class="status ${statusClass}">Status: ${vendor.approval_status?.toUpperCase() || 'UNKNOWN'}</p>
-    ${vendor.rejection_reason ? `<p><strong>Rejection Reason:</strong> ${vendor.rejection_reason}</p>` : ''}
-
-    <details>
-      <summary><strong>IDs & Flags</strong></summary>
-      <p><strong>Application ID:</strong> ${vendor.id}</p>
-      <p><strong>User ID:</strong> ${vendor.user_id || '—'}</p>
-      <p><strong>Vendor ID:</strong> ${vendor.vendor_id || '—'}</p>
-      <p><strong>Performer ID:</strong> ${vendor.performer_id || '—'}</p>
-      <p><strong>application_type:</strong> ${vendor.application_type === true ? 'performer' : (vendor.application_type === false ? 'vendor' : 'null')}</p>
-      <p><strong>update_pending:</strong> ${vendor.update_pending ? 'true' : 'false'}</p>
-    </details>
-
-    <div class="fairs">
-      <p><strong>Fairs & Dates:</strong></p>
-      ${fairs ? `<ul>${fairs}</ul>` : '<p class="muted">None linked</p>'}
-    </div>
-  </div>
-`;
-
-      });
+                <p class="card-desc"><strong>Description:</strong> ${vendor.description || 'No description'}</p>
+              </div>
+            </div>
+          `;
+        });
 
       if (container.innerHTML.trim() === '') {
         container.innerHTML = '<p>❌ No vendors found.</p>';
@@ -241,8 +214,6 @@ container.innerHTML += `
     }
 
     document.getElementById('searchInput').addEventListener('input', renderVendors);
-    document.getElementById('stateFilter').addEventListener('change', renderVendors);
-    document.getElementById('monthFilter').addEventListener('change', renderVendors);
 
     loadVendors();
   </script>

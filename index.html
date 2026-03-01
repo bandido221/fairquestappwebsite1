@@ -204,7 +204,22 @@ body {
   background-color: #333;
   border: 1px solid #bb9457;
 }
+.button-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 15px;
+}
 
+.primary-buttons .btn {
+  font-size: 1.2rem;
+  background-color: #d4af37;
+}
+
+.primary-buttons .btn:hover {
+  background-color: #e6c85c;
+}
 body {
   padding-top: 75px; 
 }
@@ -214,10 +229,8 @@ body {
 
 <body>
 
-  <!-- FIXED TOP MENU BAR -->
 <div class="top-menu">
 
-  <!-- ROW 1 -->
   <div class="menu-row-1">
     <div class="menu-left">
       <a class="menu-btn" href="/fairs/explore.html">🔍 Fairs</a>
@@ -226,7 +239,6 @@ body {
     <div class="menu-right" id="menuRight"></div>
   </div>
 
-  <!-- ROW 2 EMAIL BAR (JS will fill it) -->
   <div id="menuEmail" class="menu-email-bar"></div>
 
 </div>
@@ -249,20 +261,19 @@ body {
 
     </header>
 
-    <div class="button-group">
-    <!--
-    <a class="btn" href="/dowload_app.html">
-      📲 Download App
-    </a>
-    -->
-    <a class="btn explore-btn" id="exploreBtn" href="/fairs/explore.html" onclick="trackExploreFairs(event)">🎪 Explore Fairs</a>
-    <a class="btn" id="vendorButton" href="#" onclick="requireLoginAndRedirect('vendor_performer/vendor/application.html')">🧺 Apply as Vendor</a>
-    <a class="btn" id="performerButton" href="#" onclick="requireLoginAndRedirect('vendor_performer/performer/application.html')">🎭 Apply as Performer</a>
-    <a class="btn" id="foodVendorButton" href="#" onclick="requireLoginAndRedirect('food_vendor/apply_food_vendor.html')">🍔 Apply as Food Vendor</a>
-    <a class="btn" href="/how_to/help_center.html">❓ Help Center</a>
-   </div>
+<div class="button-row primary-buttons">
+  <a class="btn explore-btn" href="/fairs/explore.html">🎪 Explore</a>
+  <a class="btn" href="/vendor_performer/vendor_list.html">🧺 Vendor List</a>
+  <a class="btn" href="/vendor_performer/performer_list.html">🎭 Performer List</a>
+</div>
 
-<!-- Fairs Around You -->
+<div class="button-row">
+  <a class="btn" id="vendorButton" href="#" onclick="requireLoginAndRedirect('vendor_performer/vendor/application.html')">🧺 Apply Vendor</a>
+  <a class="btn" id="performerButton" href="#" onclick="requireLoginAndRedirect('vendor_performer/performer/application.html')">🎭 Apply Performer</a>
+  <a class="btn" id="foodVendorButton" href="#" onclick="requireLoginAndRedirect('food_vendor/apply_food_vendor.html')">🍔 Food Vendor</a>
+  <a class="btn" href="/how_to/help_center.html">❓ Help Center</a>
+</div>
+
 <div id="nearbyFairsCard"
      style="background:#1b1b1b; border-radius:12px; box-shadow:0 0 12px rgba(0,0,0,0.6);
             margin:20px auto 40px auto; padding:28px; max-width:700px; text-align:center; color:#f0e6d2;">
@@ -279,7 +290,6 @@ body {
 
 
 
-  <!-- Location override form (hidden by default) -->
   <div id="locationForm"
        style="display:none; margin-bottom:18px; background:#111;
               padding:14px; border-radius:10px;">
@@ -364,7 +374,6 @@ function applyManualLocation() {
 
   document.getElementById('locationForm').style.display = 'none';
 
-    // Trigger manual flow (zip OR city/state)
   window.__manualLocation = { zip, city, state };
   loadNearbyFairsCard({ source: "manual" });
 
@@ -372,7 +381,6 @@ function applyManualLocation() {
 </script>
 
 
-<!-- Dynamic Spotlight Card -->
 <div id="spotlightCard"
      style="background:#222; border-radius:12px; box-shadow:0 0 12px rgba(0,0,0,0.6);
             margin:40px auto; padding:28px; max-width:700px; text-align:center; color:#f0e6d2;">
@@ -382,14 +390,6 @@ function applyManualLocation() {
 
 
 
-
-
-
-
-
-
-
-  <!-- About & Value Content (added above ads for AdSense) -->
   <section id="about-fairquest" style="max-width: 760px; margin: 36px auto; padding: 0 18px; text-align: left;">
     <h2 style="font-family:'Cinzel',serif; margin:0 0 12px 0; font-size:1.7rem;">What FairQuest Actually Does</h2>
     <p>
@@ -434,7 +434,6 @@ function applyManualLocation() {
       <a href="/faq.html" class="btn" style="display:inline-block; margin:6px;">FAQ</a>
     </div>
   </section>
-<!-- Featured Fairs Directory Preview -->
 <section style="max-width:760px; margin:40px auto; padding:0 18px; text-align:left;">
   <h2 style="font-family:'Cinzel',serif; margin-bottom:12px; font-size:1.7rem;">Featured Fairs Directory Preview</h2>
   <p>
@@ -466,7 +465,6 @@ function applyManualLocation() {
   </p>
 </section>
 
-  <!-- Google AdSense Banner: HomepageBanner with fallback -->
   <div id="ad-container" style="max-width:700px; margin:0 auto;">
 
     <ins class="adsbygoogle"
@@ -506,7 +504,6 @@ function applyManualLocation() {
     <p>If you're searching for the Fair Quest app — you're in the right place!</p>
   </footer>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <style>
 #resetPasswordModal {
@@ -564,7 +561,6 @@ function applyManualLocation() {
 </div>
 
 <script>
-// TOP MENU UPDATE — shows Login/Signup OR User Name/Profile/Logout
 async function updateMenuBar() {
   const { data: sessionData } = await supabaseClient.auth.getSession();
   const menuRight = document.getElementById("menuRight");
@@ -613,7 +609,6 @@ function milesBetween(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-// Convert coordinates -> "City, ST" (fallback to coords if it fails)
 async function reverseGeocodeCityState(lat, lon) {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
@@ -643,7 +638,6 @@ async function loadNearbyFairsCard(options = {}) {
 
   if (!locationLabelEl || !msgEl || !resultsEl || !radiusSelect) return;
 
-  // cache (so changing miles does not re-fetch from Supabase)
   window.__nearbyFairsCache = window.__nearbyFairsCache || {
     userLat: null,
     userLon: null,
@@ -665,7 +659,6 @@ async function loadNearbyFairsCard(options = {}) {
     resultsEl.innerHTML = "";
 
     if (!cache.withDistances) {
-      // If we don’t have a resolved location, never show fairs
       return;
     }
 
@@ -696,16 +689,13 @@ async function loadNearbyFairsCard(options = {}) {
     }).join("");
   };
 
-  // Only attach once
   if (!radiusSelect.__listenerAttached) {
     radiusSelect.addEventListener("change", () => render(radiusSelect.value));
     radiusSelect.__listenerAttached = true;
   }
 
-  // Ensure default 50 selected (even if HTML gets edited later)
   if (!radiusSelect.value) radiusSelect.value = String(defaultRadius);
 
-  // Load fairs list once (used by both gps + manual)
   const ensureAllFairsLoaded = async () => {
     if (window.__nearbyFairsCache.allFairs) return window.__nearbyFairsCache.allFairs;
 
@@ -721,7 +711,6 @@ async function loadNearbyFairsCard(options = {}) {
     return window.__nearbyFairsCache.allFairs;
   };
 
-  // MANUAL MODE (ZIP or City/State)
   if (options.source === "manual") {
     clearResults();
 
@@ -780,8 +769,6 @@ async function loadNearbyFairsCard(options = {}) {
     return;
   }
 
-  // GPS MODE
-  // If browser has no geolocation support -> DO NOT show fairs
   if (!("geolocation" in navigator)) {
     clearResults();
     locationLabelEl.innerText = "Location unavailable";
@@ -810,7 +797,6 @@ async function loadNearbyFairsCard(options = {}) {
           .filter((f) => Number.isFinite(f._miles))
           .sort((a, b) => a._miles - b._miles);
 
-        // AUTO: show default 50 miles immediately
         radiusSelect.value = String(defaultRadius);
         render(defaultRadius);
       } catch (e) {
@@ -879,7 +865,6 @@ async function loadNearbyFairsCard(options = {}) {
 
 
 
-// ⭐ Start spotlight after Supabase exists
 loadSpotlight();
 </script>
 <script>
@@ -890,7 +875,7 @@ async function loadEarlyTesterCard() {
   const { data: sessionData } = await supabaseClient.auth.getSession();
   const isLoggedIn = sessionData?.session?.user != null;
 
-  let userCount = 50; // Temporary static user count
+  let userCount = 50; 
 
   if (isLoggedIn) {
     card.innerHTML = `
@@ -933,11 +918,9 @@ async function checkIfUserApplied() {
 
   if (applications) {
     if (applications.application_type === true) {
-      // Performer
       document.getElementById('performerButton').innerText = '🎭 Performer Portal';
       document.getElementById('performerButton').href = 'vendor_performer/performer/index.html';
     } else if (applications.application_type === false) {
-      // Vendor
       document.getElementById('vendorButton').innerText = '🧺 Vendor Portal';
       document.getElementById('vendorButton').href = 'vendor_performer/vendor/index.html';
     }
@@ -1002,7 +985,7 @@ function showResetPromptIfFirstLogin() {
 function closeResetPrompt() {
   document.getElementById('resetPromptModal').style.display = 'none';
   window.location.hash = '';
-  setTimeout(() => location.reload(), 200); // Reload after hash cleared
+  setTimeout(() => location.reload(), 200);
 }
 
 showResetPromptIfFirstLogin();
@@ -1014,7 +997,6 @@ supabaseClient.auth.getUser().then(({ data }) => {
   }
 });
 
-// Start everything
 loadEarlyTesterCard();
 checkIfUserApplied();
 updateMenuBar();

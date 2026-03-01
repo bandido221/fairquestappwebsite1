@@ -43,25 +43,85 @@
       margin: 0 auto;
     }
 
-    .performer-card {
-        background-color: #c5a064;
-        color: #3b1f1f;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      text-align: left;
-    }
+  .performer-card{
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.92);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+}
 
-    .status {
-      font-weight: bold;
-      margin-top: 10px;
-    }
-    .performer-card img {
+.card-media{
   width: 100%;
-  max-height: 180px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  height: 210px;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.card-media img{
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* shows full image */
+}
+
+.card-body{
+  padding: 16px 16px 18px;
+  text-align: left;
+}
+
+.card-title{
+  font-family: 'Cinzel', serif;
+  text-align: center;
+  margin: 0 0 12px;
+  font-size: 22px;
+  line-height: 1.1;
+  color: #f0e6d2;
+}
+
+.card-actions{
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 10px 0 14px;
+  flex-wrap: wrap;
+}
+
+.btn{
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary{
+  background: #bb9457;
+  color: #000;
+}
+
+.btn-disabled{
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.55);
+  cursor: not-allowed;
+}
+
+.card-desc{
+  color: rgba(255,255,255,0.82);
+  margin: 0;
+}
+
+.status{
+  font-weight: 800;
+  margin-top: 12px;
 }
 
     .approved { color: green; }
@@ -78,141 +138,198 @@
       border-radius: 6px;
       font-weight: bold;
     }
+    .home-button{
+  display:inline-block;
+  padding:10px 18px;
+  background:#bb9457;
+  color:#000;
+  text-decoration:none;
+  border-radius:8px;
+  font-weight:bold;
+  font-family:'Cinzel', serif;
+}
+
+.home-button:hover{
+  background:#d4af6a;
+}
+.loader{
+  width: 44px;
+  height: 44px;
+  margin: 18px auto 0;
+  border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.18);
+  border-top-color: #bb9457;
+  animation: spin 0.9s linear infinite;
+}
+
+.hidden{ display:none; }
+
+@keyframes spin{
+  to{ transform: rotate(360deg); }
+}
   </style>
 </head>
 <body>
 
   <h1>🎭 Performer List</h1>
+<div style="margin-bottom: 20px;">
+<a href="../index.html" class="home-button">🏠 Return to Main Site</a></div>
+ <div class="filters">
+  <input type="text" id="searchInput" placeholder="🔎 Search Performer Name" />
+</div>
+<div class="performer-grid" id="performerGrid"></div>
 
-  <!-- Filters and Search -->
-  <div class="filters">
-    <input type="text" id="searchInput" placeholder="🔎 Search Performer Name" />
-    <select id="stateFilter">
-      <option value="">🌎 Filter by State</option>
-    </select>
-    <select id="monthFilter">
-      <option value="">📅 Filter by Month</option>
-      <option value="1">January</option>
-      <option value="2">February</option>
-      <option value="3">March</option>
-      <option value="4">April</option>
-      <option value="5">May</option>
-      <option value="6">June</option>
-      <option value="7">July</option>
-      <option value="8">August</option>
-      <option value="9">September</option>
-      <option value="10">October</option>
-      <option value="11">November</option>
-      <option value="12">December</option>
-    </select>
-  </div>
+<div id="loader" class="loader hidden" aria-live="polite" aria-busy="true"></div>
+<div id="sentinel" style="height: 1px;"></div>
 
-  <div class="performer-grid" id="performerGrid"></div>
-
-  <a href="admin.html" class="back-button">🔙 Back to Admin</a>
-
- <script>
+<script>
   const supabaseClient = window.supabase.createClient(
     'https://awtbjuiqgtdydsqzimul.supabase.co',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
   );
 
+  const PAGE_SIZE = 10;
+
   let performers = [];
+  let offset = 0;
+  let isLoading = false;
+  let hasMore = true;
+  let currentSearch = '';
+  let searchTimer = null;
 
-  async function loadPerformers() {
-    const { data, error } = await supabaseClient
+  function normalizeUrl(url) {
+    if (!url) return null;
+    const trimmed = String(url).trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+    return 'https://' + trimmed;
+  }
+
+  function setLoading(on){
+    const el = document.getElementById('loader');
+    if (!el) return;
+    el.classList.toggle('hidden', !on);
+  }
+
+  function escapeHtml(str){
+    return String(str ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function appendPerformers(list){
+    const container = document.getElementById('performerGrid');
+
+    list.forEach(performer => {
+      const websiteUrl = normalizeUrl(performer.website);
+
+      container.innerHTML += `
+        <div class="performer-card">
+          <div class="card-media">
+            ${performer.photo_url ? `<img src="${escapeHtml(performer.photo_url)}" alt="${escapeHtml(performer.name)}">` : ``}
+          </div>
+
+          <div class="card-body">
+            <h2 class="card-title">${escapeHtml(performer.name)}</h2>
+
+            <div class="card-actions">
+              ${
+                websiteUrl
+                  ? `<a class="btn btn-primary" href="${escapeHtml(websiteUrl)}" target="_blank" rel="noopener noreferrer">Website</a>`
+                  : `<span class="btn btn-disabled">Website</span>`
+              }
+            </div>
+
+            <p class="card-desc"><strong>Description:</strong> ${escapeHtml(performer.description || 'No description')}</p>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  async function fetchNextPage(){
+    if (isLoading || !hasMore) return;
+
+    isLoading = true;
+    setLoading(true);
+
+    const container = document.getElementById('performerGrid');
+
+    let q = supabaseClient
       .from('vendor_performer_applications')
-      .select(`
-        id, name, description, approval_status, photo_url,
-        vendor_application_fairs (
-          start_date, end_date,
-          renaissance_fairs (name, state)
-        )
-      `)
-      .eq('application_type', true); // Only performers
+      .select('id, name, description, photo_url, website')
+      .eq('application_type', true)
+      .order('name', { ascending: true });
 
+    const trimmed = (currentSearch || '').trim();
 
-      if (error || !data) {
-        document.getElementById('performerGrid').innerHTML = '<p>⚠️ Failed to load performers.</p>';
-        return;
-      }
-
-      performers = data;
-      populateStateFilter();
-      renderPerformers();
+    if (trimmed.length >= 2) {
+      q = q.ilike('name', `%${trimmed}%`);
     }
 
-    function populateStateFilter() {
-      const stateSet = new Set();
-      performers.forEach(p => {
-        p.vendor_application_fairs?.forEach(fair => {
-          if (fair.renaissance_fairs?.state) {
-            stateSet.add(fair.renaissance_fairs.state);
-          }
-        });
-      });
+    const from = offset;
+    const to = offset + PAGE_SIZE - 1;
 
-      const stateFilter = document.getElementById('stateFilter');
-      [...stateSet].sort().forEach(state => {
-        const option = document.createElement('option');
-        option.value = state;
-        option.textContent = state;
-        stateFilter.appendChild(option);
-      });
+    const { data, error } = await q.range(from, to);
+
+    if (error) {
+      console.error('performer fetch failed:', error);
+      if (offset === 0) container.innerHTML = '<p>⚠️ Failed to load performers.</p>';
+      isLoading = false;
+      setLoading(false);
+      return;
     }
 
-    function renderPerformers() {
-      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-      const stateFilter = document.getElementById('stateFilter').value;
-      const monthFilter = document.getElementById('monthFilter').value;
-      const container = document.getElementById('performerGrid');
+    const rows = data || [];
 
-      container.innerHTML = '';
-
-      performers.filter(p => {
-        const matchesSearch = p.name.toLowerCase().includes(searchQuery);
-
-        let matchesState = true;
-        if (stateFilter) {
-          matchesState = p.vendor_application_fairs?.some(fair => fair.renaissance_fairs?.state === stateFilter);
-        }
-
-        let matchesMonth = true;
-        if (monthFilter) {
-          matchesMonth = p.vendor_application_fairs?.some(fair => {
-            const fairDate = new Date(fair.start_date);
-            return fairDate.getMonth() + 1 == monthFilter;
-          });
-        }
-
-        return matchesSearch && matchesState && matchesMonth;
-      }).forEach(performer => {
-        const statusClass = performer.approval_status === 'approved' ? 'approved'
-                              : performer.approval_status === 'pending' ? 'pending'
-                              : 'declined';
-
-                              container.innerHTML += `
-  <div class="performer-card">
-    <h2>${performer.name}</h2>
-    ${performer.photo_url ? `<img src="${performer.photo_url}" alt="${performer.name}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}
-    <p><strong>Description:</strong> ${performer.description || 'No description'}</p>
-    <p class="status ${statusClass}">Status: ${performer.approval_status.toUpperCase()}</p>
-  </div>
-`;
-
-      });
-
-      if (container.innerHTML.trim() === '') {
-        container.innerHTML = '<p>❌ No performers found.</p>';
-      }
+    if (offset === 0 && rows.length === 0) {
+      container.innerHTML = '<p>❌ No performers found.</p>';
+      hasMore = false;
+      isLoading = false;
+      setLoading(false);
+      return;
     }
 
-    document.getElementById('searchInput').addEventListener('input', renderPerformers);
-    document.getElementById('stateFilter').addEventListener('change', renderPerformers);
-    document.getElementById('monthFilter').addEventListener('change', renderPerformers);
+    performers = performers.concat(rows);
+    appendPerformers(rows);
 
-    loadPerformers();
-  </script>
+    offset += rows.length;
+    if (rows.length < PAGE_SIZE) hasMore = false;
+
+    isLoading = false;
+    setLoading(false);
+  }
+
+  function resetAndReload(){
+    performers = [];
+    offset = 0;
+    hasMore = true;
+    document.getElementById('performerGrid').innerHTML = '';
+    fetchNextPage();
+  }
+
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      currentSearch = e.target.value || '';
+      resetAndReload();
+    }, 350);
+  });
+
+  const sentinel = document.getElementById('sentinel');
+  const io = new IntersectionObserver((entries) => {
+    if (entries.some(en => en.isIntersecting)) {
+      fetchNextPage();
+    }
+  }, { root: null, rootMargin: '300px', threshold: 0.01 });
+
+  io.observe(sentinel);
+
+  fetchNextPage();
+</script>
 
 </body>
 </html>

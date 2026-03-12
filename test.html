@@ -2,112 +2,575 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Fetch Participants (Anon Key Only)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vendor Fair Info Preview | FairQuest</title>
+
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Domine:wght@400;700&display=swap" rel="stylesheet" />
+
   <style>
     body {
-      background: #121212;
-      color: #eee;
-      font-family: sans-serif;
-      padding: 30px;
-    }
-    input, button {
-      font-size: 16px;
-      padding: 8px;
-      margin-top: 10px;
-      width: 300px;
-    }
-    .results {
-      margin-top: 20px;
-      background: #1e1e1e;
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      margin: 0;
       padding: 20px;
+      text-align: center;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Cinzel', serif;
+      margin-top: 0;
+    }
+
+    .top-banner,
+    .logo {
+      display: block;
+      margin: 0 auto 20px auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+
+    .top-banner {
+      width: 100%;
+      max-width: 600px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .logo {
+      max-width: 100px;
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
+    .page-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .container {
+      background: rgba(214, 197, 126, 0.88);
+      color: #2f1a12;
+      border: 2px solid #aa8425;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      padding: 24px;
+      text-align: left;
+    }
+
+    .page-title {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+      justify-content: center;
+    }
+
+    .btn {
+      border: none;
       border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-family: 'Domine', serif;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+      min-width: 160px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
     }
-    .participant {
-      border-bottom: 1px solid #333;
-      padding: 10px 0;
+
+    .btn-primary {
+      background: #27ae60;
+      color: #fff;
     }
-    h2 {
-      margin-top: 30px;
-      color: #ffd700;
+
+    .btn-warning {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #444;
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: #c0392b;
+      color: #fff;
+    }
+
+    .section-card {
+      background: rgba(255, 248, 220, 0.55);
+      border: 1px solid rgba(120, 81, 19, 0.28);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+
+    .section-card h2 {
+      margin-bottom: 14px;
+      color: #4a250f;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .info-item {
+      background: rgba(255,255,255,0.35);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #6a4a1d;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .value {
+      font-size: 16px;
+      color: #2c1710;
+      word-break: break-word;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 8px 0 18px 0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .badge-approved {
+      background: #dff6e7;
+      color: #17643d;
+      border: 1px solid #8fd2ab;
+    }
+
+    .badge-payment {
+      background: #fff0d8;
+      color: #8a5700;
+      border: 1px solid #e7c17a;
+    }
+
+    .badge-docs {
+      background: #e8ecff;
+      color: #354a9f;
+      border: 1px solid #a8b6ef;
+    }
+
+    .note-box {
+      background: rgba(255,255,255,0.35);
+      border-left: 4px solid #aa8425;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .upload-box {
+      border: 2px dashed rgba(120, 81, 19, 0.45);
+      border-radius: 14px;
+      padding: 16px;
+      background: rgba(255,255,255,0.28);
+      margin-bottom: 16px;
+    }
+
+    .upload-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .fake-input,
+    .fake-select {
+      flex: 1 1 220px;
+      background: #fffdf7;
+      border: 1px solid #c9ae66;
+      border-radius: 10px;
+      padding: 12px;
+      color: #6b5a45;
+      font-size: 15px;
+    }
+
+    .fake-file {
+      background: #fffdf7;
+      border: 1px solid #c9ae66;
+      border-radius: 10px;
+      padding: 12px;
+      color: #6b5a45;
+      font-size: 15px;
+    }
+
+    .doc-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .doc-item {
+      background: rgba(255,255,255,0.45);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .doc-left {
+      flex: 1;
+    }
+
+    .doc-title {
+      font-weight: 700;
+      font-size: 16px;
+      color: #2f1a12;
+      margin-bottom: 5px;
+    }
+
+    .doc-meta {
+      font-size: 14px;
+      color: #5a4335;
+      line-height: 1.5;
+    }
+
+    .doc-tag {
+      background: #efe3bb;
+      border: 1px solid #caa656;
+      color: #5a390c;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    .thumb-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .thumb {
+      background: rgba(255,255,255,0.45);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(120, 81, 19, 0.25);
+    }
+
+    .thumb-image {
+      height: 110px;
+      background: linear-gradient(135deg, #ead39d, #c79d55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+    }
+
+    .thumb-caption {
+      padding: 10px;
+      font-size: 14px;
+      color: #4b2c18;
+    }
+
+    .sub-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 14px;
+      }
+
+      .container {
+        padding: 18px;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions,
+      .sub-actions,
+      .upload-row {
+        flex-direction: column;
+      }
+
+      .btn,
+      .fake-input,
+      .fake-select,
+      .fake-file {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .doc-item {
+        flex-direction: column;
+      }
+
+      .logo {
+        max-width: 80px;
+      }
     }
   </style>
 </head>
 <body>
 
-<h1>🎭 Performers & 🛍️ Vendors (Anon Key)</h1>
+  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
 
-<input type="text" id="fairId" placeholder="Enter Fair ID (e.g. 280)" />
-<button onclick="fetchParticipants()">Fetch Participants</button>
+  <div class="page-wrap">
+    <div class="container">
+      <div class="page-title">
+        <h1>Vendor Dashboard Preview</h1>
+        <p>This is only a sample preview for the new fair info section.</p>
+      </div>
 
-<div class="results" id="results"></div>
+      <div class="top-actions">
+        <a href="#" class="btn btn-danger">Log Out</a>
+        <a href="#" class="btn btn-primary">My Profile</a>
+        <a href="#" class="btn btn-primary">Apply Now</a>
+        <a href="#" class="btn btn-warning">Update Profile</a>
+      </div>
 
-<script>
-const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ";
-const baseUrl = "https://awtbjuiqgtdydsqzimul.supabase.co";
+      <div class="section-card">
+        <h2>Application Summary</h2>
 
-async function fetchParticipants() {
-  const fairId = document.getElementById("fairId").value.trim();
-  const resultsDiv = document.getElementById("results");
-  resultsDiv.innerHTML = "⏳ Loading...";
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="label">Vendor Name</div>
+            <div class="value">Golden Oak Leatherworks</div>
+          </div>
 
-  const url = `${baseUrl}/rest/v1/vendor_application_fairs?fair_id=eq.${fairId}&select=application_id,vendor_performer_applications!inner(vendor_id,application_type,approval_status,performer:performer_id(id,name,description,photo_url,website),vendor:vendor_id(id,name,vendor_type,photo_url,website))&vendor_performer_applications.approval_status=eq.approved`;
+          <div class="info-item">
+            <div class="label">Vendor Type</div>
+            <div class="value">Leather Goods</div>
+          </div>
 
-  try {
-    const res = await fetch(url, {
-      headers: {
-        apikey: anonKey,
-        Authorization: `Bearer ${anonKey}`
-      }
-    });
+          <div class="info-item">
+            <div class="label">Contact Name</div>
+            <div class="value">Benjamin Luna</div>
+          </div>
 
-    const data = await res.json();
-    console.log("📦 Raw Response:", data);
-
-    const performers = data
-      .map(entry => entry["vendor_performer_applications"]?.performer)
-      .filter(p => p);
-
-    const vendors = data
-      .map(entry => entry["vendor_performer_applications"]?.vendor)
-      .filter(v => v);
-
-    if (performers.length === 0 && vendors.length === 0) {
-      resultsDiv.innerHTML = "⚠️ No participants found.";
-      return;
-    }
-
-    let output = "";
-
-    if (performers.length > 0) {
-      output += "<h2>🎭 Performers</h2>";
-      output += performers.map(p => `
-        <div class="participant">
-          <strong>${p.name}</strong><br/>
-          ${p.description || "(No description)"}<br/>
-          ${p.website ? `<a href="${p.website}" target="_blank">🌐 Website</a>` : ""}
+          <div class="info-item">
+            <div class="label">Contact Email</div>
+            <div class="value">vendor@example.com</div>
+          </div>
         </div>
-      `).join("");
-    }
 
-    if (vendors.length > 0) {
-      output += "<h2>🛍️ Vendors</h2>";
-      output += vendors.map(v => `
-        <div class="participant">
-          <strong>${v.name}</strong><br/>
-          ${v.vendor_type || "(No type)"}<br/>
-          ${v.website ? `<a href="${v.website}" target="_blank">🌐 Website</a>` : ""}
+        <div class="status-row">
+          <span class="badge badge-approved">Approved</span>
+          <span class="badge badge-payment">Update Pending: No</span>
         </div>
-      `).join("");
-    }
 
-    resultsDiv.innerHTML = output;
+        <div class="sub-actions">
+          <a href="#" class="btn btn-primary">Create Online Page</a>
+          <a href="#" class="btn btn-secondary">Main Page</a>
+          <a href="#" class="btn btn-primary">Fair Applications</a>
+        </div>
+      </div>
 
-  } catch (err) {
-    console.error("❌ Error:", err);
-    resultsDiv.innerHTML = "❌ Failed to fetch participants.";
-  }
-}
-</script>
+      <div class="section-card">
+        <h2>Fair You Are Attending</h2>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="label">Fair Name</div>
+            <div class="value">Iowa Renaissance Festival</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Fair ID</div>
+            <div class="value">89</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Weekend Start</div>
+            <div class="value">2026-05-02</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Weekend End</div>
+            <div class="value">2026-05-03</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Application Approved</div>
+            <div class="value">Yes</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Booth Number</div>
+            <div class="value">B-14</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Weekend Price</div>
+            <div class="value">$225.00</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Payment Due Date</div>
+            <div class="value">2026-04-10</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Payment Status</div>
+            <div class="value">Not Paid Yet</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Amount Paid</div>
+            <div class="value">$0.00</div>
+          </div>
+        </div>
+
+        <div class="status-row">
+          <span class="badge badge-approved">Application Approved</span>
+          <span class="badge badge-payment">Payment Due</span>
+          <span class="badge badge-docs">3 Files Saved</span>
+        </div>
+
+        <div class="note-box">
+          <strong>Fair Notes:</strong><br />
+          Check-in starts Friday at 3:00 PM. Booth vehicle must be moved before opening time. Electric hookup was requested.
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h2>Upload Fair Documents or Pictures</h2>
+
+        <div class="upload-box">
+          <div class="label">Preview Upload Area</div>
+          <div class="upload-row">
+            <div class="fake-select">Document Type: Booth Photo</div>
+            <div class="fake-input">Notes: Front booth picture</div>
+          </div>
+
+          <div class="upload-row">
+            <div class="fake-file">Choose File: booth-front.jpg</div>
+            <button class="btn btn-primary" type="button">Upload File</button>
+          </div>
+        </div>
+
+        <div class="doc-list">
+          <div class="doc-item">
+            <div class="doc-left">
+              <div class="doc-title">Booth Front Photo</div>
+              <div class="doc-meta">
+                File Name: booth-front.jpg<br />
+                Uploaded: 2026-03-09<br />
+                Notes: Main display setup preview
+              </div>
+            </div>
+            <div class="doc-tag">Image</div>
+          </div>
+
+          <div class="doc-item">
+            <div class="doc-left">
+              <div class="doc-title">Insurance Certificate</div>
+              <div class="doc-meta">
+                File Name: insurance-2026.pdf<br />
+                Uploaded: 2026-03-08<br />
+                Notes: Sent for fair approval review
+              </div>
+            </div>
+            <div class="doc-tag">PDF</div>
+          </div>
+
+          <div class="doc-item">
+            <div class="doc-left">
+              <div class="doc-title">Seller Permit</div>
+              <div class="doc-meta">
+                File Name: permit-copy.png<br />
+                Uploaded: 2026-03-08<br />
+                Notes: State permit image copy
+              </div>
+            </div>
+            <div class="doc-tag">Image</div>
+          </div>
+        </div>
+
+        <div class="thumb-list">
+          <div class="thumb">
+            <div class="thumb-image">📷</div>
+            <div class="thumb-caption">Booth Front Photo</div>
+          </div>
+
+          <div class="thumb">
+            <div class="thumb-image">🖼️</div>
+            <div class="thumb-caption">Product Display Photo</div>
+          </div>
+
+          <div class="thumb">
+            <div class="thumb-image">📄</div>
+            <div class="thumb-caption">Insurance PDF</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h2>Another Fair Example</h2>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="label">Fair Name</div>
+            <div class="value">Dragon Moon Faire</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Weekend Dates</div>
+            <div class="value">2026-10-24 to 2026-10-25</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Application Approved</div>
+            <div class="value">Pending</div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Weekend Price</div>
+            <div class="value">$180.00</div>
+          </div>
+        </div>
+
+        <div class="status-row">
+          <span class="badge badge-payment">Pending Review</span>
+          <span class="badge badge-docs">No Files Yet</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>

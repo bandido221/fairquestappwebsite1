@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Performer Profile | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+
+  <!-- Google Analytics (FairQuest Website) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
+
+  <style>
+    body{
+      font-family:'Domine', serif;
+      background:#000;
+      padding:26px;
+      color:#c6a96f;
+      margin:0;
+      text-align:center;
+    }
+    h1,h2,h3{ font-family:'Cinzel', serif; margin:0 0 10px; }
+    .top-banner{
+      width:100%;
+      max-width:760px;
+      height:auto;
+      object-fit:contain;
+      display:block;
+      margin:0 auto 16px auto;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.35);
+    }
+    .logo{
+      max-width:92px;
+      height:auto;
+      margin:0 auto 14px auto;
+      display:block;
+      filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .card{
+      max-width:900px;
+      margin:0 auto;
+      background:#9e8554;
+      border:2px solid #aa8425;
+      border-radius:14px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.45);
+      color:#3b1f1f;
+      text-align:left;
+      padding:20px;
+    }
+    .muted{ opacity:.85; }
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:13px;
+      background:rgba(0,0,0,0.08);
+      margin:0 0 12px;
+    }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; }
+    .col{ flex:1; min-width:260px; }
+    .section{ margin-top:16px; padding-top:14px; border-top:1px solid rgba(0,0,0,0.12); }
+    .kv{ margin:6px 0; }
+    .kv b{ display:inline-block; min-width:120px; }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      margin-top:16px;
+    }
+    button, .btnlink{
+      padding:10px 14px;
+      font-size:15px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-block;
+      text-align:center;
+    }
+    .btn-back{ background:#444; color:#fff; }
+    .btn-refresh{ background:#f39c12; color:#fff; }
+    .btn-login{ background:#111; color:#f0e6d2; border:1px solid rgba(0,0,0,0.25); }
+    .error{ color:#7f1d1d; font-weight:bold; }
+    .ok{ color:#14532d; font-weight:bold; }
+
+    /* Reviews */
+    .reviewBox{
+      background:rgba(0,0,0,0.04);
+      border:1px solid rgba(0,0,0,0.10);
+      border-radius:10px;
+      padding:12px;
+      margin-top:10px;
+    }
+    label{ display:block; font-weight:bold; margin:10px 0 6px; }
+    select, textarea, input{
+      width:100%;
+      box-sizing:border-box;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,0.20);
+      font-family:'Domine', serif;
+      font-size:16px;
+    }
+    textarea{ min-height:90px; resize:vertical; }
+
+    @media (max-width:768px){
+      body{ padding:16px; }
+      .card{ padding:16px; }
+      .actions{ flex-direction:column; }
+      button, .btnlink{ width:100%; }
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+  <div class="card">
+    <div class="pill">Performer Public Profile</div>
+
+    <div id="statusMsg">Loading…</div>
+
+    <div id="content" style="display:none;">
+      <h1 id="titleName">Performer</h1>
+      <div id="taglineLine" class="muted"></div>
+
+      <div class="section">
+        <h3>Basics</h3>
+        <div class="kv"><b>Category:</b> <span id="categoryVal">—</span></div>
+        <div class="kv"><b>Location:</b> <span id="locationVal">—</span></div>
+        <div class="kv" id="addressRow" style="display:none;"><b>Address:</b> <span id="addressVal">—</span></div>
+        <div class="kv" id="websiteRow" style="display:none;"><b>Website:</b> <a id="websiteVal" href="#" target="_blank" rel="noopener">—</a></div>
+        <div class="kv" id="pricingRow" style="display:none;"><b>Pricing:</b> <span id="pricingVal">—</span></div>
+      </div>
+
+      <div class="section" id="aboutSection" style="display:none;">
+        <h3>About</h3>
+        <div id="aboutVal" style="white-space:pre-wrap;"></div>
+      </div>
+
+      <!-- Reviews -->
+      <div class="section">
+        <h3>Reviews</h3>
+        <div class="kv"><b>Average:</b> <span id="avgRating">—</span> <span class="muted" id="reviewCount"></span></div>
+
+        <div id="reviewsList"></div>
+
+        <div class="reviewBox" id="reviewFormBox" style="display:none;">
+          <h3 style="margin-bottom:8px;">Leave a review</h3>
+
+          <label for="rating">Rating</label>
+          <select id="rating">
+            <option value="5">5 - Excellent</option>
+            <option value="4">4 - Good</option>
+            <option value="3">3 - OK</option>
+            <option value="2">2 - Not great</option>
+            <option value="1">1 - Bad</option>
+          </select>
+
+          <label for="reviewText">Comment (optional)</label>
+          <textarea id="reviewText" placeholder="Share what you liked…"></textarea>
+
+          <div class="actions" style="margin-top:10px;">
+            <button class="btn-refresh" type="button" onclick="saveReview()">Save Review</button>
+            <button class="btn-back" type="button" onclick="deleteMyReview()" id="deleteReviewBtn" style="display:none;">Delete My Review</button>
+          </div>
+
+          <div id="reviewMsg" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="reviewBox" id="loginToReviewBox" style="display:none;">
+          <div class="muted">Sign in to leave a review.</div>
+          <div class="actions" style="margin-top:10px;">
+            <a class="btnlink btn-login" href="/login.html">Go to Login</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="btnlink btn-back" href="/vendor_performer/performer_list.html">← Back to Performer List</a>
+        <button class="btn-refresh" type="button" onclick="loadPage()">Refresh</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  /* ---------- SUPABASE CLIENT ---------- */
+  window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
+  const sb = window.supabaseClient;
+
+  const params = new URLSearchParams(window.location.search);
+  const vpaId = params.get('vpa_id');
+
+  let profile = null;
+  let appRow = null;
+  let myUserId = null;
+  let myReviewRow = null;
+
+  function setStatus(html){
+    document.getElementById('statusMsg').innerHTML = html;
+  }
+
+  function safeText(v){
+    return (v === null || v === undefined || String(v).trim() === '') ? null : String(v);
+  }
+
+  function formatAddress(a){
+    const parts = [];
+    if(a?.street_address) parts.push(a.street_address);
+    const line2 = [a?.city, a?.state, a?.zip_code].filter(Boolean).join(', ').replace(', ,', ',');
+    if(line2.trim()) parts.push(line2);
+    return parts.join('<br>');
+  }
+
+  async function getSessionUser(){
+    const { data:{ session } } = await sb.auth.getSession();
+    myUserId = session?.user?.id || null;
+  }
+
+  async function loadProfile(){
+    if(!vpaId){
+      setStatus('<p class="error">Missing vpa_id in URL.</p>');
+      return false;
+    }
+
+    // profile (public reads allowed if published+active per your RLS)
+    const { data: p, error: pErr } = await sb
+      .from('vp_web_profile')
+      .select('*')
+      .eq('vpa_id', Number(vpaId))
+      .maybeSingle();
+
+    if(pErr){
+      setStatus(`<p class="error">Could not load profile: ${pErr.message}</p>`);
+      return false;
+    }
+    if(!p){
+      setStatus('<p class="error">Profile not found (or not published yet).</p>');
+      return false;
+    }
+
+    profile = p;
+
+    // Try to load application basics (may be blocked by RLS; we’ll fall back)
+    const { data: a, error: aErr } = await sb
+      .from('vendor_performer_applications')
+      .select('id,name,description,website,vendor_type,city,state,street_address,zip_code,application_type')
+      .eq('id', Number(vpaId))
+      .maybeSingle();
+
+    if(!aErr && a){
+      appRow = a;
+    } else {
+      appRow = null; // fallback mode
+    }
+
+    return true;
+  }
+
+  function renderProfile(){
+    document.getElementById('content').style.display = 'block';
+    document.getElementById('statusMsg').style.display = 'none';
+
+    const name =
+      safeText(appRow?.name) ||
+      safeText(profile?.display_name) ||
+      'Performer';
+
+    document.getElementById('titleName').textContent = name;
+
+    const tagline = safeText(profile?.tagline);
+    document.getElementById('taglineLine').textContent = tagline ? tagline : '';
+
+    const category =
+      safeText(profile?.primary_category) ||
+      safeText(appRow?.vendor_type) ||
+      '—';
+    document.getElementById('categoryVal').textContent = category;
+
+    const location =
+      safeText(profile?.public_location_text) ||
+      [safeText(appRow?.city), safeText(appRow?.state)].filter(Boolean).join(', ') ||
+      '—';
+    document.getElementById('locationVal').textContent = location;
+
+    // Address only if the profile allows it
+    const showAddr = !!profile?.show_full_address;
+    const addrHtml = showAddr && appRow ? formatAddress(appRow) : null;
+    const addrRow = document.getElementById('addressRow');
+    if(addrHtml){
+      addrRow.style.display = 'block';
+      document.getElementById('addressVal').innerHTML = addrHtml;
+    } else {
+      addrRow.style.display = 'none';
+    }
+
+    // Website
+    const site = safeText(profile?.public_website_url) || safeText(appRow?.website);
+    const wRow = document.getElementById('websiteRow');
+    if(site){
+      wRow.style.display = 'block';
+      const a = document.getElementById('websiteVal');
+      a.href = site;
+      a.textContent = site;
+    } else {
+      wRow.style.display = 'none';
+    }
+
+    // Pricing
+    const pricing = safeText(profile?.pricing_note);
+    const pRow = document.getElementById('pricingRow');
+    if(pricing){
+      pRow.style.display = 'block';
+      document.getElementById('pricingVal').textContent = pricing;
+    } else {
+      pRow.style.display = 'none';
+    }
+
+    // About: prefer profile about_long, then about_short, then application description
+    const about =
+      safeText(profile?.about_long) ||
+      safeText(profile?.about_short) ||
+      safeText(appRow?.description);
+
+    const aboutSection = document.getElementById('aboutSection');
+    if(about){
+      aboutSection.style.display = 'block';
+      document.getElementById('aboutVal').textContent = about;
+    } else {
+      aboutSection.style.display = 'none';
+    }
+  }
+
+  async function loadReviews(){
+    if(!profile?.id) return;
+
+    // Load visible reviews (public)
+    const { data, error } = await sb
+      .from('vp_web_reviews')
+      .select('id, vp_web_profile_id, reviewer_user_id, display_name_snapshot, rating, review_text, created_at, is_visible')
+      .eq('vp_web_profile_id', profile.id)
+      .eq('is_visible', true)
+      .order('created_at', { ascending: false });
+
+    if(error){
+      document.getElementById('reviewsList').innerHTML =
+        `<p class="error">Could not load reviews: ${error.message}</p>`;
+      document.getElementById('avgRating').textContent = '—';
+      document.getElementById('reviewCount').textContent = '';
+      return;
+    }
+
+    const list = Array.isArray(data) ? data : [];
+    const count = list.length;
+
+    if(count === 0){
+      document.getElementById('reviewsList').innerHTML = `<div class="muted">No reviews yet.</div>`;
+      document.getElementById('avgRating').textContent = '—';
+      document.getElementById('reviewCount').textContent = '';
+    } else {
+      const avg = list.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / count;
+      document.getElementById('avgRating').textContent = avg.toFixed(1) + ' / 5';
+      document.getElementById('reviewCount').textContent = `(${count})`;
+
+      document.getElementById('reviewsList').innerHTML = list.map(r => {
+        const who = safeText(r.display_name_snapshot) || 'Anonymous';
+        const text = safeText(r.review_text) || '';
+        const stars = '★'.repeat(Number(r.rating) || 0) + '☆'.repeat(5 - (Number(r.rating) || 0));
+        const when = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
+        return `
+          <div class="reviewBox">
+            <div><b>${stars}</b> <span class="muted">by ${who}${when ? ' • ' + when : ''}</span></div>
+            ${text ? `<div style="margin-top:6px; white-space:pre-wrap;">${text}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Load my review (if logged in)
+    if(myUserId){
+      const mine = list.find(r => r.reviewer_user_id === myUserId) || null;
+      if(mine){
+        myReviewRow = mine;
+        document.getElementById('rating').value = String(mine.rating);
+        document.getElementById('reviewText').value = mine.review_text || '';
+        document.getElementById('deleteReviewBtn').style.display = 'inline-block';
+      } else {
+        myReviewRow = null;
+        document.getElementById('deleteReviewBtn').style.display = 'none';
+      }
+    }
+  }
+
+  async function saveReview(){
+    const msg = document.getElementById('reviewMsg');
+    msg.innerHTML = '';
+
+    if(!myUserId){
+      msg.innerHTML = `<div class="error">Please sign in first.</div>`;
+      return;
+    }
+    if(!profile?.id){
+      msg.innerHTML = `<div class="error">Missing profile.</div>`;
+      return;
+    }
+
+    const rating = Number(document.getElementById('rating').value);
+    const reviewText = document.getElementById('reviewText').value.trim() || null;
+
+    const payload = {
+      vp_web_profile_id: profile.id,
+      reviewer_user_id: myUserId,
+      display_name_snapshot: null,
+      rating: rating,
+      review_text: reviewText,
+      is_visible: true
+    };
+
+    // Upsert behavior: try update if exists else insert
+    if(myReviewRow?.id){
+      const { error } = await sb
+        .from('vp_web_reviews')
+        .update({ rating: payload.rating, review_text: payload.review_text })
+        .eq('id', myReviewRow.id);
+
+      if(error){
+        msg.innerHTML = `<div class="error">Save failed: ${error.message}</div>`;
+        return;
+      }
+    } else {
+      const { error } = await sb
+        .from('vp_web_reviews')
+        .insert([payload]);
+
+      if(error){
+        msg.innerHTML = `<div class="error">Save failed: ${error.message}</div>`;
+        return;
+      }
+    }
+
+    msg.innerHTML = `<div class="ok">Saved.</div>`;
+    await loadReviews();
+  }
+
+  async function deleteMyReview(){
+    const msg = document.getElementById('reviewMsg');
+    msg.innerHTML = '';
+
+    if(!myUserId || !myReviewRow?.id){
+      msg.innerHTML = `<div class="error">No review to delete.</div>`;
+      return;
+    }
+
+    const { error } = await sb
+      .from('vp_web_reviews')
+      .delete()
+      .eq('id', myReviewRow.id);
+
+    if(error){
+      msg.innerHTML = `<div class="error">Delete failed: ${error.message}</div>`;
+      return;
+    }
+
+    myReviewRow = null;
+    document.getElementById('reviewText').value = '';
+    document.getElementById('deleteReviewBtn').style.display = 'none';
+    msg.innerHTML = `<div class="ok">Deleted.</div>`;
+    await loadReviews();
+  }
+
+  async function loadPage(){
+    document.getElementById('content').style.display = 'none';
+    document.getElementById('statusMsg').style.display = 'block';
+    setStatus('Loading…');
+
+    await getSessionUser();
+
+    const ok = await loadProfile();
+    if(!ok) return;
+
+    renderProfile();
+
+    // Review UI: show form if logged in, else show login prompt
+    if(myUserId){
+      document.getElementById('reviewFormBox').style.display = 'block';
+      document.getElementById('loginToReviewBox').style.display = 'none';
+    } else {
+      document.getElementById('reviewFormBox').style.display = 'none';
+      document.getElementById('loginToReviewBox').style.display = 'block';
+    }
+
+    await loadReviews();
+  }
+
+  window.addEventListener('DOMContentLoaded', loadPage);
+</script>
+
+</body>
+</html>

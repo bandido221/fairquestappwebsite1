@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Form Preview | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Cinzel', serif;
+      margin: 10px 0;
+    }
+
+    .card {
+      position: relative;
+      background: rgba(214, 197, 126, 0.88);
+      padding: 26px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 18px auto;
+      max-width: 980px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+
+    .profile-logo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 60px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+
+    .btn-dark {
+      background-color: #2f2f2f;
+    }
+
+    .btn-dark:hover {
+      background-color: #222;
+    }
+
+    .divider {
+      margin: 18px 0;
+      height: 1px;
+      background: rgba(0,0,0,0.18);
+    }
+
+    .hint {
+      margin-top: 10px;
+      opacity: 0.9;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 10px 14px;
+      margin-top: 12px;
+      align-items: center;
+    }
+
+    .label {
+      font-weight: bold;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      background: rgba(0,0,0,0.10);
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 140px 120px 120px 120px;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .field-row .small {
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    .preview-row {
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.06);
+      border: 1px solid rgba(0,0,0,0.10);
+    }
+
+    .preview-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .preview-control input,
+    .preview-control textarea,
+    .preview-control select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.25);
+      box-sizing: border-box;
+      font-size: 15px;
+      background: rgba(255,255,255,0.8);
+    }
+
+    .preview-control textarea {
+      min-height: 70px;
+      resize: none;
+    }
+
+    .preview-control .preview-file {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .preview-control .preview-file button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.25);
+      background: rgba(255,255,255,0.8);
+      cursor: not-allowed;
+    }
+
+    .preview-address-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 0.7fr;
+      gap: 10px;
+    }
+
+    .contractBox {
+      background: rgba(255,255,255,0.65);
+      border: 1px solid rgba(0,0,0,0.18);
+      border-radius: 10px;
+      padding: 14px;
+      max-height: 320px;
+      overflow: auto;
+      color: #111;
+      white-space: pre-wrap;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <h1 id="pageTitle">Form Preview</h1>
+
+  <div id="loadingOverlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  ">
+    <div style="
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #bb9457;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    "></div>
+  </div>
+
+  <div class="card">
+    <a href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+    </a>
+
+    <h2 style="margin-top:0;">Application Preview</h2>
+
+    <div class="btn-row">
+      <button class="btn btn-dark" id="btnBack" type="button">⬅ Back to Setup</button>
+      <button class="btn" id="btnEdit" type="button">Edit Application</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="grid" style="margin-top:16px;">
+      <div class="label">Fair:</div><div id="txtFairName">—</div>
+      <div class="label">Type:</div><div id="txtFormType">—</div>
+      <div class="label">Form:</div><div id="txtFormTitle">—</div>
+      <div class="label">Version:</div><div id="txtFormVersion">—</div>
+      <div class="label">Status:</div><div><span class="pill" id="txtFormActive">—</span></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3 style="margin:0;">Fields</h3>
+    <div class="hint" id="statusMsg" style="margin-top:6px;"></div>
+    <div id="fieldsList"></div>
+
+    <div class="divider"></div>
+
+    <h3 style="margin:0;">Required Signature Section</h3>
+    <div class="hint" style="margin-top:6px;">
+      These fields are required on every application and cannot be removed.
+    </div>
+    <div id="signaturePreview"></div>
+
+    <div class="divider"></div>
+
+    <h3 style="margin:0;">Contract</h3>
+    <div class="hint" style="margin-top:6px;">
+      Applicants must accept this contract before submitting.
+    </div>
+    <div id="contractBox" class="contractBox">Loading contract…</div>
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
+      const fairId = Number(params.get('fair_id'));
+      const formId = params.get('form_id');
+
+      return {
+        fairId: Number.isFinite(fairId) ? fairId : null,
+        formId: formId || null
+      };
+    }
+
+    function showLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'flex';
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'none';
+    }
+
+    function setMsg(text) {
+      const el = document.getElementById('statusMsg');
+      if (el) el.textContent = text || '';
+    }
+
+    async function requireAccess(fairId) {
+      const { data, error } = await supabaseClient
+        .rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'edit_forms' });
+
+      if (error) throw error;
+      return data;
+    }
+
+    async function loadActiveMapping(fairId, formType) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_fair_form_active')
+        .select('active_form_id')
+        .eq('fair_id', fairId)
+        .eq('form_type', formType)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    }
+
+    async function loadFormAndFields(fairId, formId) {
+      const { data: fair, error: fairErr } = await supabaseClient
+        .from('renaissance_fairs')
+        .select('name')
+        .eq('id', fairId)
+        .single();
+
+      if (fairErr) throw fairErr;
+
+      const { data: form, error: formErr } = await supabaseClient
+        .from('fair_man_app_form')
+        .select('id, fair_id, form_type, title, version, is_active, contract_text, created_at')
+        .eq('id', formId)
+        .eq('fair_id', fairId)
+        .single();
+
+      if (formErr) throw formErr;
+
+      const { data: fields, error: fieldsErr } = await supabaseClient
+        .from('fair_man_app_form_field')
+        .select('id, field_key, label, field_type, is_required, sort_order, help_text, placeholder, config, is_active, created_at')
+        .eq('form_id', formId)
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (fieldsErr) throw fieldsErr;
+
+      return {
+        fairName: fair.name,
+        form,
+        fields: Array.isArray(fields) ? fields : []
+      };
+    }
+
+    function buildPreviewControl(f) {
+      const t = (f.field_type || '').toLowerCase();
+      const placeholder = (f.placeholder || '').toString();
+      const wrap = document.createElement('div');
+
+      if (t === 'textarea') {
+        const el = document.createElement('textarea');
+        el.placeholder = placeholder || 'Example answer...';
+        el.disabled = true;
+        wrap.appendChild(el);
+        return wrap;
+      }
+
+      if (t === 'number') {
+        const el = document.createElement('input');
+        el.type = 'number';
+        el.placeholder = placeholder || '123';
+        el.disabled = true;
+        wrap.appendChild(el);
+        return wrap;
+      }
+
+      if (t === 'date') {
+        const el = document.createElement('input');
+        el.type = 'date';
+        el.disabled = true;
+        wrap.appendChild(el);
+        return wrap;
+      }
+
+      if (t === 'checkbox') {
+        const label = document.createElement('label');
+        label.style.display = 'flex';
+        label.style.alignItems = 'center';
+        label.style.gap = '10px';
+
+        const el = document.createElement('input');
+        el.type = 'checkbox';
+        el.disabled = true;
+
+        const txt = document.createElement('span');
+        txt.textContent = 'Yes / No';
+
+        label.appendChild(el);
+        label.appendChild(txt);
+        wrap.appendChild(label);
+        return wrap;
+      }
+
+      if (t === 'select') {
+        const el = document.createElement('select');
+        el.disabled = true;
+
+        const options = (f.config && Array.isArray(f.config.options)) ? f.config.options : [];
+        if (!options.length) {
+          const opt = document.createElement('option');
+          opt.textContent = 'No options yet';
+          el.appendChild(opt);
+        } else {
+          const ph = document.createElement('option');
+          ph.textContent = 'Select...';
+          el.appendChild(ph);
+
+          for (const v of options) {
+            const opt = document.createElement('option');
+            opt.textContent = String(v);
+            el.appendChild(opt);
+          }
+        }
+
+        wrap.appendChild(el);
+        return wrap;
+      }
+
+      if (t === 'file') {
+        const box = document.createElement('div');
+        box.className = 'preview-file';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.disabled = true;
+        btn.textContent = 'Choose file (disabled preview)';
+
+        const hint = document.createElement('span');
+        hint.textContent = 'No upload in preview';
+
+        box.appendChild(btn);
+        box.appendChild(hint);
+        wrap.appendChild(box);
+        return wrap;
+      }
+
+      if (t === 'address') {
+        const grid = document.createElement('div');
+        grid.className = 'preview-address-grid';
+
+        const street = document.createElement('input');
+        street.type = 'text';
+        street.placeholder = 'Street address';
+        street.disabled = true;
+
+        const city = document.createElement('input');
+        city.type = 'text';
+        city.placeholder = 'City';
+        city.disabled = true;
+
+        const state = document.createElement('select');
+        state.disabled = true;
+
+        const stPh = document.createElement('option');
+        stPh.textContent = 'State';
+        state.appendChild(stPh);
+
+        const states = [
+          'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
+          'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
+          'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+          'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+          'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
+        ];
+
+        for (const s of states) {
+          const opt = document.createElement('option');
+          opt.textContent = s;
+          state.appendChild(opt);
+        }
+
+        const zip = document.createElement('input');
+        zip.type = 'text';
+        zip.placeholder = 'Zip';
+        zip.disabled = true;
+
+        grid.appendChild(street);
+        grid.appendChild(city);
+        grid.appendChild(state);
+        grid.appendChild(zip);
+
+        wrap.appendChild(grid);
+        return wrap;
+      }
+
+      const el = document.createElement('input');
+      el.type = 'text';
+      el.placeholder = placeholder || 'Example answer...';
+      el.disabled = true;
+      wrap.appendChild(el);
+      return wrap;
+    }
+
+    function renderFields(fields) {
+      const wrap = document.getElementById('fieldsList');
+      wrap.innerHTML = '';
+
+      if (!fields.length) {
+        const p = document.createElement('div');
+        p.className = 'hint';
+        p.textContent = 'No fields created for this form yet.';
+        wrap.appendChild(p);
+        return;
+      }
+
+      for (const f of fields) {
+        const row = document.createElement('div');
+        row.className = 'field-row';
+
+        const c1 = document.createElement('div');
+        c1.innerHTML = `<div><strong>Order: ${f.sort_order}</strong></div><div class="small">${f.placeholder ? `placeholder: ${f.placeholder}` : ''}</div>`;
+        row.appendChild(c1);
+
+        const c2 = document.createElement('div');
+        c2.innerHTML = `<div><strong>${f.label}</strong></div><div class="small">${f.help_text ? f.help_text : ''}</div>`;
+        row.appendChild(c2);
+
+        const c3 = document.createElement('div');
+        c3.innerHTML = `<span class="pill">${f.field_type}</span>`;
+        row.appendChild(c3);
+
+        const c4 = document.createElement('div');
+        c4.innerHTML = `<span class="pill">${f.is_required ? 'required' : 'optional'}</span>`;
+        row.appendChild(c4);
+
+        const c5 = document.createElement('div');
+        c5.innerHTML = `<span class="pill">${f.is_active ? 'active' : 'inactive'}</span>`;
+        row.appendChild(c5);
+
+        const c6 = document.createElement('div');
+        c6.innerHTML = `<span class="pill">preview</span>`;
+        row.appendChild(c6);
+
+        const preview = document.createElement('div');
+        preview.className = 'preview-row';
+
+        const labelText = (f.label || 'Field').toString();
+        const requiredMark = f.is_required ? ' *' : '';
+
+        preview.innerHTML = `
+          <div class="preview-title">Preview (read-only): ${labelText}${requiredMark}</div>
+          <div class="preview-control" id="pv_${f.id}"></div>
+        `;
+
+        row.appendChild(preview);
+
+        const pv = preview.querySelector(`#pv_${f.id}`);
+        pv.appendChild(buildPreviewControl(f));
+
+        wrap.appendChild(row);
+      }
+    }
+
+    function renderSignaturePreview() {
+      const wrap = document.getElementById('signaturePreview');
+      if (!wrap) return;
+
+      wrap.innerHTML = '';
+
+      const fields = [
+        { label: 'Full Legal Name', type: 'text' },
+        { label: 'Signature', type: 'signature' },
+        { label: 'Date Signed', type: 'date' }
+      ];
+
+      for (const f of fields) {
+        const row = document.createElement('div');
+        row.className = 'field-row';
+
+        const title = document.createElement('div');
+        title.innerHTML = `<strong>${f.label}</strong>`;
+        row.appendChild(title);
+
+        const preview = document.createElement('div');
+        preview.className = 'preview-row';
+
+        preview.innerHTML = `
+          <div class="preview-title">Preview (read-only): ${f.label}</div>
+          <div class="preview-control"></div>
+        `;
+
+        const control = preview.querySelector('.preview-control');
+
+        if (f.type === 'signature') {
+          control.innerHTML = `
+            <div style="border:1px dashed rgba(0,0,0,0.3); padding:18px; border-radius:8px; text-align:center;">
+              Signature pad will appear here
+            </div>
+          `;
+        } else if (f.type === 'date') {
+          const input = document.createElement('input');
+          input.type = 'date';
+          input.disabled = true;
+          control.appendChild(input);
+        } else {
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = 'Example answer...';
+          input.disabled = true;
+          control.appendChild(input);
+        }
+
+        row.appendChild(preview);
+        wrap.appendChild(row);
+      }
+    }
+
+    async function loadPage() {
+      showLoader();
+      setMsg('');
+
+      const { fairId, formId } = getParams();
+      if (!fairId || !formId) {
+        setMsg('Missing fair_id or form_id in URL.');
+        hideLoader();
+        return;
+      }
+
+      document.getElementById('btnBack').onclick = () => {
+        window.location.href = `fair_application_setup.html?fair_id=${fairId}`;
+      };
+
+      document.getElementById('btnEdit').onclick = () => {
+        window.location.href = `fair_form_edit.html?fair_id=${fairId}&form_id=${formId}`;
+      };
+
+      try {
+        await requireAccess(fairId);
+
+        const res = await loadFormAndFields(fairId, formId);
+
+        document.getElementById('txtFairName').textContent = res.fairName;
+        document.getElementById('txtFormType').textContent = res.form.form_type;
+        document.getElementById('txtFormTitle').textContent = res.form.title;
+        document.getElementById('txtFormVersion').textContent = String(res.form.version);
+        document.getElementById('pageTitle').textContent = `Form Preview — ${res.form.title}`;
+
+        let isMappedActive = false;
+        try {
+          const mapping = await loadActiveMapping(fairId, res.form.form_type);
+          isMappedActive = !!(mapping && mapping.active_form_id && String(mapping.active_form_id) === String(formId));
+        } catch (e) {
+          console.error(e);
+          isMappedActive = false;
+        }
+
+        document.getElementById('txtFormActive').textContent = isMappedActive ? 'active' : 'inactive';
+        document.getElementById('contractBox').textContent =
+          (res.form.contract_text && String(res.form.contract_text).trim())
+            ? String(res.form.contract_text)
+            : 'No contract text found for this form.';
+
+        renderFields(res.fields);
+        renderSignaturePreview();
+
+        if (!res.fields.length) {
+          setMsg('No fields created for this form yet.');
+        }
+
+      } catch (e) {
+        console.error(e);
+        setMsg('Error loading preview page. Check console.');
+      } finally {
+        hideLoader();
+      }
+    }
+
+    loadPage();
+  </script>
+</body>
+</html>

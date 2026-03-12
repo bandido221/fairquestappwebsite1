@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
   <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vendor Online Page Setup | FairQuest</title>
+  <title>Vendor Profile | FairQuest</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
 
-  <!-- Google Analytics -->
+  <!-- Google Analytics (FairQuest Website) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -18,193 +19,180 @@
   </script>
 
   <style>
-    body {
-      font-family: 'Domine', serif;
+    body{
+      font-family:'Domine', serif;
       background:#000;
-      padding:40px;
-      text-align:center;
+      padding:26px;
       color:#f0e6d2;
       margin:0;
+      text-align:center;
     }
-    h1, h2 { font-family:'Cinzel', serif; }
-    .top-banner {
+    h1,h2,h3{ font-family:'Cinzel', serif; margin:0 0 10px; }
+    .top-banner{
       width:100%;
-      max-width:600px;
+      max-width:760px;
       height:auto;
       object-fit:contain;
       display:block;
-      margin:0 auto 20px auto;
+      margin:0 auto 16px auto;
       border-radius:12px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.3);
+      box-shadow:0 4px 12px rgba(0,0,0,0.35);
     }
-    .logo {
-      max-width:100px;
+    .logo{
+      max-width:92px;
       height:auto;
-      margin:0 auto 20px auto;
+      margin:0 auto 14px auto;
       display:block;
       filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
     }
-    .container{
-      max-width:800px;
-      margin:auto;
-      background:rgba(251,241,200,0.88);
-      padding:30px 40px;
-      border-radius:12px;
+    .card{
+      max-width:900px;
+      margin:0 auto;
+      background:rgba(251,241,200,0.90);
       border:2px solid #aa8425;
-      box-shadow:0 4px 15px rgba(0,0,0,0.4);
+      border-radius:14px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.45);
       color:#3b1f1f;
       text-align:left;
+      padding:20px;
     }
-    .row { display:flex; gap:12px; flex-wrap:wrap; }
-    .field { flex:1; min-width:240px; }
-    label { display:block; font-weight:bold; margin:12px 0 6px; }
-    input, textarea {
-      width:100%;
-      box-sizing:border-box;
-      padding:10px;
-      border-radius:8px;
-      border:1px solid #c9b27a;
-      font-family:'Domine', serif;
-      font-size:16px;
-    }
-    textarea { min-height:90px; resize:vertical; }
-    .actions {
-      display:flex;
-      gap:10px;
-      justify-content:space-between;
-      flex-wrap:wrap;
-      margin-top:20px;
-    }
-    button{
-      padding:12px 20px;
-      font-size:16px;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-    }
-    .btn-back{ background:#444; color:#fff; }
-    .btn-save{ background:#f39c12; color:#fff; }
-    .btn-next{ background:#27ae60; color:#fff; }
-    .pill {
+    .muted{ opacity:.85; }
+    .pill{
       display:inline-block;
       padding:6px 10px;
       border-radius:999px;
       font-size:13px;
       background:rgba(0,0,0,0.08);
-      margin-bottom:12px;
+      margin:0 0 12px;
     }
-    .error { color:#7f1d1d; font-weight:bold; margin-top:10px; }
-    .ok { color:#14532d; font-weight:bold; margin-top:10px; }
+    .section{ margin-top:16px; padding-top:14px; border-top:1px solid rgba(0,0,0,0.12); }
+    .kv{ margin:6px 0; }
+    .kv b{ display:inline-block; min-width:120px; }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      margin-top:16px;
+    }
+    button, .btnlink{
+      padding:10px 14px;
+      font-size:15px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-block;
+      text-align:center;
+    }
+    .btn-back{ background:#444; color:#fff; }
+    .btn-refresh{ background:#f39c12; color:#fff; }
+    .btn-login{ background:#111; color:#f0e6d2; border:1px solid rgba(0,0,0,0.25); }
+    .error{ color:#7f1d1d; font-weight:bold; }
+    .ok{ color:#14532d; font-weight:bold; }
+
+    /* Reviews */
+    .reviewBox{
+      background:rgba(0,0,0,0.04);
+      border:1px solid rgba(0,0,0,0.10);
+      border-radius:10px;
+      padding:12px;
+      margin-top:10px;
+    }
+    label{ display:block; font-weight:bold; margin:10px 0 6px; }
+    select, textarea{
+      width:100%;
+      box-sizing:border-box;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,0.20);
+      font-family:'Domine', serif;
+      font-size:16px;
+    }
+    textarea{ min-height:90px; resize:vertical; }
+
     @media (max-width:768px){
-      body{ padding:20px; }
-      .container{ padding:20px; }
-      button{ width:100%; }
+      body{ padding:16px; }
+      .card{ padding:16px; }
       .actions{ flex-direction:column; }
+      button, .btnlink{ width:100%; }
     }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
+  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
 
-<img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
-<img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+  <div class="card">
+    <div class="pill">Vendor Public Profile</div>
 
-<div class="container">
-  <div class="pill">Wizard • Step 1 of 6 • Basics</div>
-  <h1>Vendor Online Page Setup</h1>
+    <div id="statusMsg">Loading…</div>
 
-  <div id="statusMsg" class="loading">Loading…</div>
+    <div id="content" style="display:none;">
+      <h1 id="titleName">Vendor</h1>
+      <div id="taglineLine" class="muted"></div>
 
-  <div id="formWrap" style="display:none;">
-<div class="row">
-  <div class="field">
-    <label>Display Name</label>
-    <input id="app_display_name" type="text" disabled />
+      <div class="section">
+        <h3>Basics</h3>
+        <div class="kv"><b>Category:</b> <span id="categoryVal">—</span></div>
+        <div class="kv"><b>Location:</b> <span id="locationVal">—</span></div>
+        <div class="kv" id="addressRow" style="display:none;"><b>Address:</b> <span id="addressVal">—</span></div>
+        <div class="kv" id="websiteRow" style="display:none;"><b>Website:</b> <a id="websiteVal" href="#" target="_blank" rel="noopener">—</a></div>
+        <div class="kv" id="pricingRow" style="display:none;"><b>Pricing:</b> <span id="pricingVal">—</span></div>
+      </div>
 
-    <!-- ADDRESS DISPLAY -->
-    <div id="wizardAddress" style="margin-top:6px; font-size:14px; opacity:.9;"></div>
+      <div class="section" id="aboutSection" style="display:none;">
+        <h3>About</h3>
+        <div id="aboutVal" style="white-space:pre-wrap;"></div>
+      </div>
 
-    <!-- ADDRESS INPUT (shows only if missing) -->
-    <div id="addressFields" style="display:none; margin-top:10px;">
-      <label for="street_address">Street Address</label>
-      <input id="street_address" type="text" placeholder="123 Main St" />
+      <!-- Reviews -->
+      <div class="section">
+        <h3>Reviews</h3>
+        <div class="kv"><b>Average:</b> <span id="avgRating">—</span> <span class="muted" id="reviewCount"></span></div>
 
-      <div class="row" style="margin-top:8px;">
-        <div class="field">
-          <label for="city">City</label>
-          <input id="city" type="text" placeholder="Des Moines" />
-        </div>
+        <div id="reviewsList"></div>
 
-        <div class="field">
-          <label for="state">State</label>
-          <select id="state">
-            <option value="">Select…</option>
-            <option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option><option value="AR">Arkansas</option>
-            <option value="CA">California</option><option value="CO">Colorado</option><option value="CT">Connecticut</option><option value="DE">Delaware</option>
-            <option value="FL">Florida</option><option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
-            <option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option><option value="KS">Kansas</option>
-            <option value="KY">Kentucky</option><option value="LA">Louisiana</option><option value="ME">Maine</option><option value="MD">Maryland</option>
-            <option value="MA">Massachusetts</option><option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
-            <option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option><option value="NV">Nevada</option>
-            <option value="NH">New Hampshire</option><option value="NJ">New Jersey</option><option value="NM">New Mexico</option><option value="NY">New York</option>
-            <option value="NC">North Carolina</option><option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
-            <option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option><option value="SC">South Carolina</option>
-            <option value="SD">South Dakota</option><option value="TN">Tennessee</option><option value="TX">Texas</option><option value="UT">Utah</option>
-            <option value="VT">Vermont</option><option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
-            <option value="WI">Wisconsin</option><option value="WY">Wyoming</option>
+        <div class="reviewBox" id="reviewFormBox" style="display:none;">
+          <h3 style="margin-bottom:8px;">Leave a review</h3>
+
+          <label for="rating">Rating</label>
+          <select id="rating">
+            <option value="5">5 - Excellent</option>
+            <option value="4">4 - Good</option>
+            <option value="3">3 - OK</option>
+            <option value="2">2 - Not great</option>
+            <option value="1">1 - Bad</option>
           </select>
+
+          <label for="reviewText">Comment (optional)</label>
+          <textarea id="reviewText" placeholder="Share what you liked…"></textarea>
+
+          <div class="actions" style="margin-top:10px;">
+            <button class="btn-refresh" type="button" onclick="saveReview()">Save Review</button>
+            <button class="btn-back" type="button" onclick="deleteMyReview()" id="deleteReviewBtn" style="display:none;">Delete My Review</button>
+          </div>
+
+          <div id="reviewMsg" style="margin-top:10px;"></div>
         </div>
 
-        <div class="field">
-          <label for="zip_code">Zip Code</label>
-          <input id="zip_code" type="text" placeholder="12345" />
+        <div class="reviewBox" id="loginToReviewBox" style="display:none;">
+          <div class="muted">Sign in to leave a review.</div>
+          <div class="actions" style="margin-top:10px;">
+            <a class="btnlink btn-login" href="/login.html">Go to Login</a>
+          </div>
         </div>
       </div>
+
+      <div class="actions">
+        <a class="btnlink btn-back" href="/vendor_performer/vendor_list.html">← Back to Vendor List</a>
+        <button class="btn-refresh" type="button" onclick="loadPage()">Refresh</button>
+      </div>
     </div>
-<button
-  id="saveAddressBtn"
-  type="button"
-  onclick="saveAddressOnly()"
-  style="display:none; margin-top:10px; background:#27ae60; color:#fff; padding:10px 14px; border-radius:6px; border:none; cursor:pointer;">
-  Save Address
-</button>
-    <!-- CHECKBOX -->
-    <label style="margin-top:12px;">
-      <input id="show_full_address" type="checkbox" style="width:auto; margin-right:8px;" />
-      Show full address on my public page
-    </label>
-
-    <div id="addressInfo" style="margin-top:6px;"></div>
-
   </div>
-
-  <div class="field">
-    <label for="tagline">Tagline</label>
-    <input id="tagline" type="text" placeholder="Short sentence about what you do" />
-  </div>
-</div>
-
-<div class="row">
-  <div class="field">
-    <label for="pricing_note">Pricing Note (optional)</label>
-    <input id="pricing_note" type="text" placeholder="Example: Items $10–$200, custom quotes available" />
-  </div>
-</div>
-
-
-
-
-
-    <div class="actions">
-      <button class="btn-back" onclick="goBack()">← Back to Dashboard</button>
-      <button class="btn-save" onclick="saveStep()">Save</button>
-      <button class="btn-next" onclick="nextStep()">Next →</button>
-    </div>
-
-    <div id="saveMsg"></div>
-  </div>
-</div>
 
 <script>
   /* ---------- SUPABASE CLIENT ---------- */
@@ -217,243 +205,303 @@
   const params = new URLSearchParams(window.location.search);
   const vpaId = params.get('vpa_id');
 
-  let vpRow = null;
-let vpaRow = null;
+  let profile = null;
+  let appRow = null;
+  let myUserId = null;
+  let myReviewRow = null;
 
-  function goBack(){
-    window.location.href = '/vendor_performer/vendor/dashboard.html';
+  function setStatus(html){
+    document.getElementById('statusMsg').innerHTML = html;
   }
 
-  function nextStep(){
-    // placeholder for now - we will create step 2 next
-    alert('Next step not built yet. Step 2 coming next.');
+  function safeText(v){
+    return (v === null || v === undefined || String(v).trim() === '') ? null : String(v);
   }
 
-  async function ensureLoggedIn(){
+  function formatAddress(a){
+    const parts = [];
+    if(a?.street_address) parts.push(a.street_address);
+    const line2 = [a?.city, a?.state, a?.zip_code].filter(Boolean).join(', ').replace(', ,', ',');
+    if(line2.trim()) parts.push(line2);
+    return parts.join('<br>');
+  }
+
+  async function getSessionUser(){
     const { data:{ session } } = await sb.auth.getSession();
-    if(session?.user?.id) return session;
-
-    return new Promise((resolve) => {
-      sb.auth.onAuthStateChange((_, s) => resolve(s));
-    });
+    myUserId = session?.user?.id || null;
   }
 
-  async function loadOrCreateVpWeb(){
+  async function loadProfile(){
     if(!vpaId){
-      document.getElementById('statusMsg').innerHTML = '<p class="error">Missing vpa_id in URL.</p>';
-      return;
+      setStatus('<p class="error">Missing vpa_id in URL.</p>');
+      return false;
     }
 
-    const session = await ensureLoggedIn();
-    if(!session?.user?.id){
-      document.getElementById('statusMsg').innerHTML = '<p class="error">Please sign in to continue.</p>';
-      return;
-    }
-// Load application (for display name + address)
-const { data: appRow, error: appErr } = await sb
-  .from('vendor_performer_applications')
-  .select('id,name,street_address,city,state,zip_code')
-  .eq('id', vpaId)
-  .single();
-
-if(appErr || !appRow){
-  document.getElementById('statusMsg').innerHTML = `<p class="error">Failed to load application.</p>`;
-  return;
-}
-vpaRow = appRow;
-document.getElementById('app_display_name').value = vpaRow.name || '';
-    // Try load vp_web
-    const { data: existing, error: selErr } = await sb
-      .from('vp_web')
+    const { data: p, error: pErr } = await sb
+      .from('vp_web_profile')
       .select('*')
-      .eq('vpa_id', vpaId)
+      .eq('vpa_id', Number(vpaId))
       .maybeSingle();
 
-    if(selErr){
-      document.getElementById('statusMsg').innerHTML = `<p class="error">Failed to load vp_web: ${selErr.message}</p>`;
-      return;
+    if(pErr){
+      setStatus(`<p class="error">Could not load profile: ${pErr.message}</p>`);
+      return false;
+    }
+    if(!p){
+      setStatus('<p class="error">Profile not found (or not published yet).</p>');
+      return false;
     }
 
-    if(existing){
-      vpRow = existing;
+    profile = p;
+
+    // Try to load application basics (may be blocked by RLS; we’ll fall back)
+    const { data: a, error: aErr } = await sb
+      .from('vendor_performer_applications')
+      .select('id,name,description,website,vendor_type,city,state,street_address,zip_code,application_type')
+      .eq('id', Number(vpaId))
+      .maybeSingle();
+
+    if(!aErr && a){
+      appRow = a;
     } else {
-      // Create draft row (RLS requires approved + owner)
-      const { data: created, error: insErr } = await sb
-        .from('vp_web')
-        .insert([{ vpa_id: Number(vpaId), editor_mode: 'wizard', is_published: false, is_active: true }])
-        .select('*')
-        .single();
-
-      if(insErr){
-        document.getElementById('statusMsg').innerHTML =
-          `<p class="error">Could not create vp_web row. Make sure your application is approved.</p>`;
-        return;
-      }
-      vpRow = created;
+      appRow = null;
     }
 
-    // Fill form
-document.getElementById('tagline').value = vpRow.tagline || '';
-document.getElementById('pricing_note').value = vpRow.pricing_note || '';
+    return true;
+  }
 
-document.getElementById('show_full_address').checked = !!vpRow.show_full_address;
-wireAddressUI();
+  function renderProfile(){
+    document.getElementById('content').style.display = 'block';
     document.getElementById('statusMsg').style.display = 'none';
-    document.getElementById('formWrap').style.display = 'block';
-  }
 
-  async function saveStep(){
-    if(!vpRow?.id){
-      document.getElementById('saveMsg').innerHTML = '<p class="error">Cannot save: missing vp_web row.</p>';
-      return;
+    const name =
+      safeText(appRow?.name) ||
+      safeText(profile?.display_name) ||
+      'Vendor';
+
+    document.getElementById('titleName').textContent = name;
+
+    const tagline = safeText(profile?.tagline);
+    document.getElementById('taglineLine').textContent = tagline ? tagline : '';
+
+    const category =
+      safeText(profile?.primary_category) ||
+      safeText(appRow?.vendor_type) ||
+      '—';
+    document.getElementById('categoryVal').textContent = category;
+
+    const location =
+      safeText(profile?.public_location_text) ||
+      [safeText(appRow?.city), safeText(appRow?.state)].filter(Boolean).join(', ') ||
+      '—';
+    document.getElementById('locationVal').textContent = location;
+
+    // Address only if the profile allows it
+    const showAddr = !!profile?.show_full_address;
+    const addrHtml = showAddr && appRow ? formatAddress(appRow) : null;
+    const addrRow = document.getElementById('addressRow');
+    if(addrHtml){
+      addrRow.style.display = 'block';
+      document.getElementById('addressVal').innerHTML = addrHtml;
+    } else {
+      addrRow.style.display = 'none';
     }
 
-const showAddr = document.getElementById('show_full_address').checked;
+    // Website
+    const site = safeText(profile?.public_website_url) || safeText(appRow?.website);
+    const wRow = document.getElementById('websiteRow');
+    if(site){
+      wRow.style.display = 'block';
+      const a = document.getElementById('websiteVal');
+      a.href = site;
+      a.textContent = site;
+    } else {
+      wRow.style.display = 'none';
+    }
 
-const payload = {
-  editor_mode: 'wizard',
-  show_full_address: showAddr,
-  tagline: document.getElementById('tagline').value.trim() || null,
-  pricing_note: document.getElementById('pricing_note').value.trim() || null
-};
+    // Pricing
+    const pricing = safeText(profile?.pricing_note);
+    const pRow = document.getElementById('pricingRow');
+    if(pricing){
+      pRow.style.display = 'block';
+      document.getElementById('pricingVal').textContent = pricing;
+    } else {
+      pRow.style.display = 'none';
+    }
 
-// If user wants to show address AND application address is null -> save address into application table
-if(showAddr && isAddressNull(vpaRow)){
-  const street = document.getElementById('street_address').value.trim();
-  const city = document.getElementById('city').value.trim();
-  const state = document.getElementById('state').value;
-  const zip = document.getElementById('zip_code').value.trim();
+    // About: prefer profile about_long, then about_short, then application description
+    const about =
+      safeText(profile?.about_long) ||
+      safeText(profile?.about_short) ||
+      safeText(appRow?.description);
 
-  if(!street || !city || !state || !zip){
-    document.getElementById('saveMsg').innerHTML = `<p class="error">Please fill Street, City, State, and Zip.</p>`;
-    return;
+    const aboutSection = document.getElementById('aboutSection');
+    if(about){
+      aboutSection.style.display = 'block';
+      document.getElementById('aboutVal').textContent = about;
+    } else {
+      aboutSection.style.display = 'none';
+    }
   }
 
-  const { data: updatedApp, error: appUpErr } = await sb
-    .from('vendor_performer_applications')
-    .update({
-      street_address: street,
-      city: city,
-      state: state,
-      zip_code: zip
-    })
-    .eq('id', Number(vpaId))
-    .select('id,name,street_address,city,state,zip_code')
-    .single();
-
-  if(appUpErr){
-    document.getElementById('saveMsg').innerHTML = `<p class="error">Address save failed: ${appUpErr.message}</p>`;
-    return;
-  }
-
-  vpaRow = updatedApp;
-}
+  async function loadReviews(){
+    if(!profile?.id) return;
 
     const { data, error } = await sb
-      .from('vp_web')
-      .update(payload)
-      .eq('id', vpRow.id)
-      .select('*')
-      .single();
+      .from('vp_web_reviews')
+      .select('id, vp_web_profile_id, reviewer_user_id, display_name_snapshot, rating, review_text, created_at, is_visible')
+      .eq('vp_web_profile_id', profile.id)
+      .eq('is_visible', true)
+      .order('created_at', { ascending: false });
 
     if(error){
-      document.getElementById('saveMsg').innerHTML = `<p class="error">Save failed: ${error.message}</p>`;
+      document.getElementById('reviewsList').innerHTML =
+        `<p class="error">Could not load reviews: ${error.message}</p>`;
+      document.getElementById('avgRating').textContent = '—';
+      document.getElementById('reviewCount').textContent = '';
       return;
     }
 
-    vpRow = data;
-    document.getElementById('saveMsg').innerHTML = '<p class="ok">Saved.</p>';
+    const list = Array.isArray(data) ? data : [];
+    const count = list.length;
+
+    if(count === 0){
+      document.getElementById('reviewsList').innerHTML = `<div class="muted">No reviews yet.</div>`;
+      document.getElementById('avgRating').textContent = '—';
+      document.getElementById('reviewCount').textContent = '';
+    } else {
+      const avg = list.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / count;
+      document.getElementById('avgRating').textContent = avg.toFixed(1) + ' / 5';
+      document.getElementById('reviewCount').textContent = `(${count})`;
+
+      document.getElementById('reviewsList').innerHTML = list.map(r => {
+        const who = safeText(r.display_name_snapshot) || 'Anonymous';
+        const text = safeText(r.review_text) || '';
+        const stars = '★'.repeat(Number(r.rating) || 0) + '☆'.repeat(5 - (Number(r.rating) || 0));
+        const when = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
+        return `
+          <div class="reviewBox">
+            <div><b>${stars}</b> <span class="muted">by ${who}${when ? ' • ' + when : ''}</span></div>
+            ${text ? `<div style="margin-top:6px; white-space:pre-wrap;">${text}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    if(myUserId){
+      const mine = list.find(r => r.reviewer_user_id === myUserId) || null;
+      if(mine){
+        myReviewRow = mine;
+        document.getElementById('rating').value = String(mine.rating);
+        document.getElementById('reviewText').value = mine.review_text || '';
+        document.getElementById('deleteReviewBtn').style.display = 'inline-block';
+      } else {
+        myReviewRow = null;
+        document.getElementById('deleteReviewBtn').style.display = 'none';
+      }
+    }
   }
-  async function saveAddressOnly(){
-  const street = document.getElementById('street_address').value.trim();
-  const city = document.getElementById('city').value.trim();
-  const state = document.getElementById('state').value;
-  const zip = document.getElementById('zip_code').value.trim();
 
-  if(!street || !city || !state || !zip){
-    alert('Please fill Street, City, State, and Zip.');
-    return;
-  }
+  async function saveReview(){
+    const msg = document.getElementById('reviewMsg');
+    msg.innerHTML = '';
 
-  const { error } = await sb
-    .from('vendor_performer_applications')
-    .update({
-      street_address: street,
-      city: city,
-      state: state,
-      zip_code: zip
-    })
-    .eq('id', Number(vpaId));
-
-  if(error){
-    alert('Address save failed: ' + error.message);
-    return;
-  }
-
-  location.reload();
-}
-function isAddressNull(a){
-  const s = (a?.street_address || '').trim();
-  const c = (a?.city || '').trim();
-  const st = (a?.state || '').trim();
-  const z = (a?.zip_code || '').trim();
-  return !s && !c && !st && !z;
-}
-
-function formatAddress(a){
-  const parts = [];
-  if(a?.street_address) parts.push(a.street_address);
-  const line2 = [a?.city, a?.state, a?.zip_code].filter(Boolean).join(', ').replace(', ,', ',');
-  if(line2.trim()) parts.push(line2);
-  return parts.join('<br>');
-}
-
-function wireAddressUI(){
-  const cb = document.getElementById('show_full_address');
-  const info = document.getElementById('addressInfo');
-  const fields = document.getElementById('addressFields');
-  const wizardAddr = document.getElementById('wizardAddress');
-  const saveBtn = document.getElementById('saveAddressBtn');
-
-  const addrMissing = isAddressNull(vpaRow);
-
-  // ALWAYS show address in wizard
-  if(addrMissing){
-    wizardAddr.innerHTML =
-      `<span style="color:#7f1d1d;">Address not set.</span>`;
-    saveBtn.style.display = 'inline-block';
-  } else {
-    wizardAddr.innerHTML =
-      `<strong>${formatAddress(vpaRow)}</strong>`;
-    saveBtn.style.display = 'none';
-  }
-  
-  function refresh(){
-    const checked = cb.checked;
-
-    if(addrMissing){
-      info.innerHTML =
-        `<span style="opacity:.85;">Address required for public display. Please enter below.</span>`;
-      fields.style.display = 'block';
+    if(!myUserId){
+      msg.innerHTML = `<div class="error">Please sign in first.</div>`;
+      return;
+    }
+    if(!profile?.id){
+      msg.innerHTML = `<div class="error">Missing profile.</div>`;
       return;
     }
 
-    if(!checked){
-      info.innerHTML =
-        `<span style="opacity:.85;">Address hidden on public page.</span>`;
-      fields.style.display = 'none';
+    const rating = Number(document.getElementById('rating').value);
+    const reviewText = document.getElementById('reviewText').value.trim() || null;
+
+    const payload = {
+      vp_web_profile_id: profile.id,
+      reviewer_user_id: myUserId,
+      display_name_snapshot: null,
+      rating: rating,
+      review_text: reviewText,
+      is_visible: true
+    };
+
+    if(myReviewRow?.id){
+      const { error } = await sb
+        .from('vp_web_reviews')
+        .update({ rating: payload.rating, review_text: payload.review_text })
+        .eq('id', myReviewRow.id);
+
+      if(error){
+        msg.innerHTML = `<div class="error">Save failed: ${error.message}</div>`;
+        return;
+      }
+    } else {
+      const { error } = await sb
+        .from('vp_web_reviews')
+        .insert([payload]);
+
+      if(error){
+        msg.innerHTML = `<div class="error">Save failed: ${error.message}</div>`;
+        return;
+      }
+    }
+
+    msg.innerHTML = `<div class="ok">Saved.</div>`;
+    await loadReviews();
+  }
+
+  async function deleteMyReview(){
+    const msg = document.getElementById('reviewMsg');
+    msg.innerHTML = '';
+
+    if(!myUserId || !myReviewRow?.id){
+      msg.innerHTML = `<div class="error">No review to delete.</div>`;
       return;
     }
 
-    info.innerHTML =
-      `<span style="opacity:.85;">Address will be shown on public page.</span>`;
-    fields.style.display = 'none';
+    const { error } = await sb
+      .from('vp_web_reviews')
+      .delete()
+      .eq('id', myReviewRow.id);
+
+    if(error){
+      msg.innerHTML = `<div class="error">Delete failed: ${error.message}</div>`;
+      return;
+    }
+
+    myReviewRow = null;
+    document.getElementById('reviewText').value = '';
+    document.getElementById('deleteReviewBtn').style.display = 'none';
+    msg.innerHTML = `<div class="ok">Deleted.</div>`;
+    await loadReviews();
   }
 
-  cb.addEventListener('change', refresh);
-  refresh();
-}
-  window.addEventListener('DOMContentLoaded', loadOrCreateVpWeb);
+  async function loadPage(){
+    document.getElementById('content').style.display = 'none';
+    document.getElementById('statusMsg').style.display = 'block';
+    setStatus('Loading…');
+
+    await getSessionUser();
+
+    const ok = await loadProfile();
+    if(!ok) return;
+
+    renderProfile();
+
+    if(myUserId){
+      document.getElementById('reviewFormBox').style.display = 'block';
+      document.getElementById('loginToReviewBox').style.display = 'none';
+    } else {
+      document.getElementById('reviewFormBox').style.display = 'none';
+      document.getElementById('loginToReviewBox').style.display = 'block';
+    }
+
+    await loadReviews();
+  }
+
+  window.addEventListener('DOMContentLoaded', loadPage);
 </script>
 
 </body>

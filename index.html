@@ -143,14 +143,18 @@ body {
   left: 0;
   width: 100%;
   background: #111;
-  padding: 10px 12px;
   display: flex;
-  flex-direction: column;   /* ⭐ FORCE 2 ROWS ALWAYS */
-  align-items: center;
+  justify-content: center;
   z-index: 9999;
   border-bottom: 2px solid #bb9457;
 }
-
+.menu-inner {
+  width: 100%;
+  max-width: 760px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+}
 .menu-row-1 {
   width: 100%;
   display: flex;
@@ -220,9 +224,7 @@ body {
 .primary-buttons .btn:hover {
   background-color: #e6c85c;
 }
-body {
-  padding-top: 75px; 
-}
+
 
   </style>
 </head>
@@ -230,6 +232,7 @@ body {
 <body>
 
 <div class="top-menu">
+  <div class="menu-inner">
 
   <div class="menu-row-1">
     <div class="menu-left">
@@ -241,10 +244,10 @@ body {
 
   <div id="menuEmail" class="menu-email-bar"></div>
 
+  </div>
 </div>
 
   <img src="images/banner.png" alt="FairQuest Banner" class="top-banner" />
-
   <header>
     <img src="images/logo.png" alt="FairQuest Logo" class="logo" />
     <h1>Welcome to FairQuest</h1>
@@ -275,15 +278,14 @@ body {
 </div>
 
 <div id="nearbyFairsCard"
-     style="background:#1b1b1b; border-radius:12px; box-shadow:0 0 12px rgba(0,0,0,0.6);
-            margin:20px auto 40px auto; padding:28px; max-width:700px; text-align:center; color:#f0e6d2;">
-
-  <h2 style="font-family:'Cinzel',serif; font-size:1.6rem; margin:0 0 6px 0;">
+     style="background:rgba(214,197,126,0.88); border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.3);
+            margin:20px auto 40px auto; padding:26px; max-width:700px; text-align:center; color:#000;">
+            <h2 style="font-family:'Cinzel',serif; font-size:1.6rem; margin:0 0 6px 0;">
     📍 Fairs Around You
   </h2>
 
 <div id="locationStatus"
-     style="font-size:0.95rem; color:#d4af37; margin-bottom:14px;">
+     style="font-size:0.95rem; color:#000; margin-bottom:14px;">
   <span style="font-weight:bold;">Near:</span>
   <span id="locationLabel">Detecting…</span>
 </div>
@@ -325,7 +327,7 @@ body {
     </div>
   </div>
 
-  <div style="margin:0 0 8px 0; color:#aaa;">
+  <div style="margin:0 0 8px 0; color:#000;">
   <label for="radiusSelect" style="margin-right:8px;">Distance:</label>
 <select id="radiusSelect"
         style="padding:8px 10px; border-radius:8px; border:none; font-weight:bold;">
@@ -380,11 +382,10 @@ function applyManualLocation() {
 }
 </script>
 
-
 <div id="spotlightCard"
-     style="background:#222; border-radius:12px; box-shadow:0 0 12px rgba(0,0,0,0.6);
-            margin:40px auto; padding:28px; max-width:700px; text-align:center; color:#f0e6d2;">
-  Loading featured vendor/performer...
+     style="background:rgba(214,197,126,0.88); border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.3);
+            margin:40px auto; padding:26px; max-width:700px; text-align:center; color:#000;">
+              Loading featured vendor/performer...
 </div>
 
 
@@ -483,7 +484,7 @@ function applyManualLocation() {
 
 
 
-  <div id="earlyTesterCard" style="margin: 40px auto; padding: 30px; background: #bdaa64; color: #3b1f1f; max-width: 700px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center;">
+  <div id="earlyTesterCard" style="margin: 40px auto; padding: 26px; background: rgba(214,197,126,0.88); color: #3b1f1f; max-width: 700px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center;">
     Loading rewards...
   </div>
 
@@ -629,6 +630,14 @@ async function reverseGeocodeCityState(lat, lon) {
   }
 }
 
+function formatNearbyFairDate(dateStr) {
+  if (!dateStr) return "";
+  const parts = String(dateStr).split("-");
+  if (parts.length !== 3) return dateStr;
+
+  const [year, month, day] = parts;
+  return `${month}-${day}-${year.slice(-2)}`;
+}
 
 async function loadNearbyFairsCard(options = {}) {
   const locationLabelEl = document.getElementById("locationLabel");
@@ -674,18 +683,23 @@ async function loadNearbyFairsCard(options = {}) {
 
     resultsEl.innerHTML = within.map((f) => {
       const miles = Math.round(f._miles);
-      const dateLine = (f.start_date && f.end_date) ? `${f.start_date} – ${f.end_date}` : "";
-      return `
-        <div style="text-align:left; padding:12px 14px; background:#111; border:1px solid #333; border-radius:10px; margin:10px 0;">
-          <a href="/fairs/fair_detail.html?id=${f.id}" style="color:#d4af37; font-weight:bold; text-decoration:none;">
-            ${f.name}
-          </a>
-          <div style="margin-top:6px; color:#f0e6d2;">
-            ${f.city}, ${f.state} · <strong>${miles} mi</strong>
-            ${dateLine ? `<div style="margin-top:6px; color:#aaa;">${dateLine}</div>` : ``}
-          </div>
-        </div>
-      `;
+      const startDate = formatNearbyFairDate(f.start_date);
+      const endDate = formatNearbyFairDate(f.end_date);
+      const dateLine = (startDate && endDate) ? `${startDate} – ${endDate}` : "";
+ return `
+<div style="text-align:left; padding:14px 16px; background:rgba(214,197,126,0.88); border-radius:10px; margin:10px 0; color:#000;">
+  <a href="/fairs/fair_detail.html?id=${f.id}" style="color:#000; font-weight:bold; text-decoration:none;">
+    ${f.name}
+  </a>
+
+  <div style="margin-top:6px; color:#000;">
+    ${f.city}, ${f.state} · <strong>${miles} mi</strong>
+  </div>
+
+  ${dateLine ? `<div style="margin-top:6px; color:#000;">${dateLine}</div>` : ``}
+
+</div>
+`;
     }).join("");
   };
 
@@ -840,9 +854,9 @@ async function loadNearbyFairsCard(options = {}) {
       🎉 Featured Vendor / Performer
     </h2>
 
-    <p style="font-size:1.2rem; margin-bottom:12px; color:#d4af37; font-weight:bold;">
-      ${item.name}
-    </p>
+ <p style="font-size:1.2rem; margin-bottom:12px; color:#000; font-weight:bold;">
+  ${item.name}
+</p>
 
     <img src="${item.photo_url}"
          alt="${item.name}"

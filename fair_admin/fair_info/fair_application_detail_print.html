@@ -7,6 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -126,19 +127,27 @@
       margin-top: 8px;
     }
 
-    /* Print rules */
-    @media print {
-      body { background: #fff; padding: 0; }
-      .toolbar { display: none !important; }
-      .sheet {
-        border: none;
-        border-radius: 0;
-        padding: 0;
-        max-width: none;
-        margin: 0;
-      }
-      a { color: #000; text-decoration: none; }
-    }
+ @media print {
+  body { background: #fff; padding: 0; }
+  .toolbar { display: none !important; }
+
+  .sheet {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+  }
+
+  .section,
+  .field,
+  .file-row,
+  .contract-box {
+    page-break-inside: avoid;
+  }
+
+  a { color: #000; text-decoration: none; }
+}
   </style>
 </head>
 
@@ -287,11 +296,10 @@
       const sub = await subRes.json();
       if (!sub) throw new Error('Submission not found');
 
-      // form (includes contract_text)
-      const formUrl =
-        `${base}/fair_man_app_form` +
-        `?select=id,title,contract_text,version` +
-        `&id=eq.${encodeURIComponent(String(sub.form_id))}`;
+ const formUrl =
+  `${base}/fair_man_app_form` +
+  `?select=id,title,form_type,contract_text,version` +
+  `&id=eq.${encodeURIComponent(String(sub.form_id))}`;
 
       const formRes = await fetch(formUrl, {
         method: 'GET',

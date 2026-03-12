@@ -54,6 +54,7 @@ h1 {
 }
 .pending { background:#b58900; color:#000; }
 .approved { background:#2ecc71; color:#000; }
+.newfair { background:#e67e22; color:#000; margin-left:8px; }
 
 button.action {
   margin-top:10px;
@@ -126,22 +127,25 @@ button.action {
     list.innerHTML = 'Loading…';
 
     if(mode === 'pending'){
-      var resp = await supabase
-        .from('fair_verification')
-        .select(`
-          id,
-          user_id,
-          user_email,
-          fair_name,
-          fair_state,
-          contact_name,
-          fair_role,
-          fair_notes,
-          submitted_at,
-          approved
-        `)
-        .is('approved', null)
-        .order('submitted_at', { ascending:false });
+     var resp = await supabase
+  .from('fair_verification')
+ .select(`
+  id,
+  user_id,
+  user_email,
+  fair_id,
+  fair_name,
+  fair_city,
+  fair_state,
+  contact_name,
+  fair_role,
+  fair_notes,
+  submitted_at,
+  approved
+`)
+  .eq('approved', false)
+.eq('rejected', false)
+  .order('submitted_at', { ascending:false });
 
       if(resp.error){
         console.error(resp.error);
@@ -184,18 +188,35 @@ button.action {
     rows.forEach(function(r){
       var div = document.createElement('div');
       div.className='card';
-      div.innerHTML=`
-        <span class="badge pending">PENDING</span>
-        <h3>${r.fair_name} (${r.fair_state})</h3>
+  const newFairBadge = (!r.fair_id) ? `<span class="badge newfair">NEW FAIR</span>` : ``;
+
+div.innerHTML=`
+  <span class="badge pending">PENDING</span>
+  ${newFairBadge}
+  <h3>${r.fair_name} (${r.fair_state})</h3>
         <p><b>Applicant:</b> ${r.contact_name}</p>
         <p><b>Email:</b> ${r.user_email}</p>
         <p><b>Role:</b> ${r.fair_role}</p>
-        <p><b>Notes:</b> ${r.fair_notes || '—'}</p>
-        <p><b>Submitted:</b> ${new Date(r.submitted_at).toLocaleString()}</p>
+<p><b>Notes:</b> ${r.fair_notes || '—'}</p>
 
-        <button class="action approve" onclick="approve('${r.id}','${r.user_id}','${escapeQuotes(r.fair_name)}')">
-          Approve & Assign Admin
-        </button>
+${!r.fair_id ? `
+<div style="margin-top:10px; padding:10px; background:#3b2a12; border-radius:6px;">
+<b>⚠ New Fair:</b> This fair does not exist in the system yet.<br>
+Add it to the <b>renaissance_fairs</b> table before approving.
+</div>
+` : ``}
+
+<p><b>Submitted:</b> ${new Date(r.submitted_at).toLocaleString()}</p>
+
+${r.fair_id ? `
+<button class="action approve" onclick="approve('${r.id}','${r.user_id}','${r.fair_id}','${escapeQuotes(r.fair_name)}')">
+  Approve & Assign Admin
+</button>
+` : `
+<button class="action approve" onclick="createFair('${r.id}','${escapeQuotes(r.fair_name)}','${escapeQuotes(r.fair_city)}','${escapeQuotes(r.fair_state)}')">
+  Create Fair
+</button>
+`}
         <button class="action reject" onclick="rejectReq('${r.id}')">
           Reject
         </button>
@@ -232,66 +253,112 @@ button.action {
   function escapeQuotes(s){
     return String(s || '').replace(/'/g, "\\'");
   }
+async function createFair(verificationId, fairName, fairCity, fairState){
 
-  async function approve(verificationId, userId, fairName){
-    var ok = await requireAdminLogin();
-    if (!ok) return;
+  var ok = await requireAdminLogin();
+  if (!ok) return;
 
-    if(!confirm(`Approve and assign admin for ${fairName}?`)) return;
+  if(!confirm(`Create new fair "${fairName}" in ${fairCity}, ${fairState}?`)) return;
 
-    var fairResp = await supabase
-      .from('renaissance_fairs')
-      .select('id')
-      .eq('name', fairName)
-      .single();
+  var insertFair = await supabase
+    .from('renaissance_fairs')
+    .insert({
+      name: fairName,
+      city: fairCity,
+      state: fairState,
+      address: fairCity + ', ' + fairState
+    })
+    .select('id')
+    .single();
 
-    if(fairResp.error || !fairResp.data){
-      alert('Fair not found (by name).');
-      return;
-    }
-
-    var insertResp = await supabase.from('fair_admins').insert({
-      user_id: userId,
-      fair_id: fairResp.data.id
-    });
-
-    if(insertResp.error){
-      console.error(insertResp.error);
-      alert('Error assigning admin.');
-      return;
-    }
-
-    var updateResp = await supabase.from('fair_verification')
-      .update({ approved:true, approved_at: new Date().toISOString() })
-      .eq('id', verificationId);
-
-    if(updateResp.error){
-      console.error(updateResp.error);
-      alert('Error updating verification.');
-      return;
-    }
-
-    load();
+  if(insertFair.error){
+    console.error(insertFair.error);
+    alert('Error creating fair.');
+    return;
   }
 
-  async function rejectReq(id){
-    var ok = await requireAdminLogin();
-    if (!ok) return;
+  var newFairId = insertFair.data.id;
 
-    if(!confirm('Reject this application?')) return;
+  var updateVerification = await supabase
+    .from('fair_verification')
+    .update({ fair_id: newFairId })
+    .eq('id', verificationId);
 
-    var r = await supabase.from('fair_verification')
-      .update({ approved:false })
-      .eq('id', id);
-
-    if(r.error){
-      console.error(r.error);
-      alert('Error rejecting application.');
-      return;
-    }
-
-    load();
+  if(updateVerification.error){
+    console.error(updateVerification.error);
+    alert('Fair created but verification update failed.');
+    return;
   }
+
+  alert('Fair created successfully. You can now approve the request.');
+
+  load();
+}
+async function approve(verificationId, userId, fairId, fairName){
+  var ok = await requireAdminLogin();
+  if (!ok) return;
+
+  if(!confirm(`Approve and assign admin for ${fairName}?`)) return;
+
+  var finalFairId = parseInt(fairId, 10);
+  if(!finalFairId){
+    alert('This request was submitted without selecting an existing fair from the list. Open the request and resubmit with a selected fair, or create the fair in renaissance_fairs first.');
+    return;
+  }
+
+  var insertResp = await supabase.from('fair_admins').insert({
+    user_id: userId,
+    fair_id: finalFairId
+  });
+
+  if(insertResp.error){
+    console.error(insertResp.error);
+    alert('Error assigning admin.');
+    return;
+  }
+
+  var updateResp = await supabase.from('fair_verification')
+    .update({ approved:true, approved_at: new Date().toISOString() })
+    .eq('id', verificationId);
+
+  if(updateResp.error){
+    console.error(updateResp.error);
+    alert('Error updating verification.');
+    return;
+  }
+
+  load();
+}
+
+ async function rejectReq(id){
+  var ok = await requireAdminLogin();
+  if (!ok) return;
+
+  var reason = prompt("Enter rejection reason to send to applicant:");
+
+  if(!reason || !reason.trim()){
+    alert("Rejection reason is required.");
+    return;
+  }
+
+  var r = await supabase.from('fair_verification')
+    .update({
+      rejected: true,
+      rejection_reason: reason,
+      rejected_at: new Date().toISOString()
+    })
+    .eq('id', id);
+
+  if(r.error){
+    console.error(r.error);
+    alert('Error rejecting application.');
+    return;
+  }
+
+  alert("Application rejected.");
+
+  load();
+}
 
   async function logout(){
     await supabase.auth.signOut();

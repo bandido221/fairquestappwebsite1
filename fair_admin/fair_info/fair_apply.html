@@ -7,6 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
@@ -118,38 +119,67 @@
 </div>
 
 
-    <div class="divider"></div>
 
-    <h3 style="margin:0;">Choose your profile</h3>
+
+     <div class="divider"></div>
+
+    <h3 style="margin:0;">Contract</h3>
     <div class="hint" style="margin-top:6px;">
-      If you have more than one approved Vendor/Performer profile, pick the one you want to use for this application.
+      Please read the contract before continuing with this application.
     </div>
 
-    <div class="grid" style="margin-top:12px;">
-      <div class="label">Profile:</div>
-      <div>
-        <select id="vpaSelect" style="display:none;"></select>
-        <div id="vpaSingle" style="display:none;"></div>
+    <div id="contractBox" style="
+      margin-top:12px;
+      background: rgba(255,255,255,0.65);
+      border: 1px solid rgba(0,0,0,0.18);
+      border-radius: 10px;
+      padding: 14px;
+      max-height: 320px;
+      overflow: auto;
+      color: #111;
+      white-space: pre-wrap;
+    ">Loading contract…</div>
+
+    <div style="margin-top:12px; display:flex; align-items:center; gap:10px;">
+      <input type="checkbox" id="chkAcceptContract" />
+      <label for="chkAcceptContract" style="font-weight:700;">
+        I have read, understand, and accept the contract
+      </label>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="lockedApplicationArea" style="opacity:0.55; pointer-events:none;">
+      <h3 style="margin:0;">Choose your profile</h3>
+      <div class="hint" style="margin-top:6px;">
+        If you have more than one approved Vendor/Performer profile, pick the one you want to use for this application.
       </div>
 
-      <div class="label">Type:</div><div id="vpaType">—</div>
-      <div class="label">Food Vendor:</div><div id="vpaFood">—</div>
-      <div class="label">Email:</div><div id="vpaEmail">—</div>
-      <div class="label">Contact Name:</div><div id="vpaContact">—</div>
-      <div class="label">Application Form:</div><div id="activeFormInfo">—</div>
+      <div class="grid" style="margin-top:12px;">
+        <div class="label">Profile:</div>
+        <div>
+          <select id="vpaSelect" style="display:none;"></select>
+          <div id="vpaSingle" style="display:none;"></div>
+        </div>
+
+        <div class="label">Type:</div><div id="vpaType">—</div>
+        <div class="label">Food Vendor:</div><div id="vpaFood">—</div>
+        <div class="label">Email:</div><div id="vpaEmail">—</div>
+        <div class="label">Contact Name:</div><div id="vpaContact">—</div>
+        <div class="label">Application Form:</div><div id="activeFormInfo">—</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h3 style="margin:0;">Application</h3>
+      <div class="hint" id="formHint" style="margin-top:6px;"></div>
+      <div id="appFormFields"></div>
     </div>
-
-    <div class="divider"></div>
-
-    <h3 style="margin:0;">Application</h3>
-    <div class="hint" id="formHint" style="margin-top:6px;"></div>
-    <div id="appFormFields"></div>
 
     <div class="btn-row">
       <button class="btn btn-dark" id="btnBack">⬅ Back to Fair</button>
       <button class="btn" id="btnReview" disabled>Review</button>
     </div>
-
     <div class="hint" id="statusMsg"></div>
   </div>
 
@@ -320,7 +350,16 @@ async function findExistingSubmission(fairId, vpaId) {
       if (error) throw error;
       return Array.isArray(data) ? data : [];
     }
+async function loadFormRow(formId) {
+  const { data, error } = await supabaseClient
+    .from('fair_man_app_form')
+    .select('id, title, version, contract_text')
+    .eq('id', formId)
+    .single();
 
+  if (error) throw error;
+  return data;
+}
     // -------------------------
     // LOCAL DRAFT (localStorage)
     // -------------------------
@@ -525,7 +564,24 @@ async function findExistingSubmission(fairId, vpaId) {
 
       modal.style.display = 'flex';
     }
+function setApplicationLocked(isLocked) {
+  const area = document.getElementById('lockedApplicationArea');
+  const btnReview = document.getElementById('btnReview');
+  const formHint = document.getElementById('formHint');
 
+  if (area) {
+    area.style.opacity = isLocked ? '0.55' : '1';
+    area.style.pointerEvents = isLocked ? 'none' : 'auto';
+  }
+
+  if (btnReview) {
+    btnReview.disabled = isLocked;
+  }
+
+  if (formHint && isLocked) {
+    formHint.textContent = 'You must accept the contract before filling out this application.';
+  }
+}
     async function renderFieldsInto(container, fields, valuesMap, onChange, fairWeekendOptions, fileKeyBase) {
       container.innerHTML = '';
 
@@ -825,7 +881,27 @@ async function findExistingSubmission(fairId, vpaId) {
       const fieldsWrap = document.getElementById('appFormFields');
       const formHint = document.getElementById('formHint');
       const btnReview = document.getElementById('btnReview');
+const chkAcceptContract = document.getElementById('chkAcceptContract');
+const contractBox = document.getElementById('contractBox');
 
+setApplicationLocked(true);
+
+chkAcceptContract.checked = false;
+chkAcceptContract.onchange = () => {
+  setApplicationLocked(!chkAcceptContract.checked);
+
+  if (chkAcceptContract.checked) {
+    if (currentFields.length === 0) {
+      setMsg('');
+    } else {
+      btnReview.disabled = false;
+      setMsg('Saved locally.');
+    }
+  } else {
+    btnReview.disabled = true;
+    setMsg('');
+  }
+};
       let currentFormId = null;
       let currentDraftKey = null;
       let valuesMap = new Map();
@@ -854,52 +930,63 @@ async function findExistingSubmission(fairId, vpaId) {
             return;
           }
 
-          document.getElementById('activeFormInfo').textContent =
+           document.getElementById('activeFormInfo').textContent =
             `${active.fair_man_app_form.title} (v${active.fair_man_app_form.version})`;
 
-        currentFormId = active.fair_man_app_form.id;
-currentDraftKey = draftKey(fairId, String(selected.id), currentFormId);
+          currentFormId = active.fair_man_app_form.id;
+          currentDraftKey = draftKey(fairId, String(selected.id), currentFormId);
 
-// ✅ If they already submitted (not pending), block applying again
-hideApplyMsgBox();
+          const formRow = await loadFormRow(currentFormId);
+          contractBox.textContent =
+            (formRow.contract_text && String(formRow.contract_text).trim() !== '')
+              ? String(formRow.contract_text)
+              : 'No contract text found for this application form.';
 
-const existingSub = await findExistingSubmission(fairId, selected.id);
-if (existingSub && String(existingSub.status || '').toLowerCase() !== 'pending') {
-  const human = prettySubmitStatus(existingSub.status);
-  showApplyMsgBox(
-    `You already applied to this fair with this profile.`,
-    `Current status: ${human}. If you need changes, use your dashboard to manage this application.`
-  );
+          chkAcceptContract.checked = false;
+          setApplicationLocked(true);
 
-  btnReview.disabled = true;
-  formHint.textContent = 'This application is already submitted.';
-  fieldsWrap.innerHTML = '';
-  setMsg('');
-  hideLoader();
-  return;
-}
+          // ✅ If they already submitted (not pending), block applying again
+          hideApplyMsgBox();
 
-// Load draft from localStorage
-valuesMap = loadDraftMap(currentDraftKey);
+          const existingSub = await findExistingSubmission(fairId, selected.id);
+          if (existingSub && String(existingSub.status || '').toLowerCase() !== 'pending') {
+            const human = prettySubmitStatus(existingSub.status);
+            showApplyMsgBox(
+              `You already applied to this fair with this profile.`,
+              `Current status: ${human}. If you need changes, use your dashboard to manage this application.`
+            );
 
-const fields = await loadFormFields(currentFormId);
+            btnReview.disabled = true;
+            formHint.textContent = 'This application is already submitted.';
+            fieldsWrap.innerHTML = '';
+            setMsg('');
+            hideLoader();
+            return;
+          }
 
-formHint.textContent = 'Fill out the application below. Your answers save locally (not submitted yet).';
-const fairWeekendOptions = buildFairWeekendOptions(fairRow);
-const fileKeyBase = currentDraftKey;
+          // Load draft from localStorage
+          valuesMap = loadDraftMap(currentDraftKey);
 
-await renderFieldsInto(fieldsWrap, fields, valuesMap, (field, value) => {
-  // Save local draft (debounced)
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    valuesMap.set(field.id, value);
-    saveDraftMap(currentDraftKey, valuesMap);
-    setMsg('Saved locally.');
-  }, 150);
-}, fairWeekendOptions, fileKeyBase);
+          const fields = await loadFormFields(currentFormId);
+          currentFields = fields;
 
-btnReview.disabled = false;
-setMsg('Saved locally.');
+          formHint.textContent = 'You must accept the contract before filling out this application.';
+          const fairWeekendOptions = buildFairWeekendOptions(fairRow);
+          const fileKeyBase = currentDraftKey;
+
+          await renderFieldsInto(fieldsWrap, fields, valuesMap, (field, value) => {
+            if (saveTimer) clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+              valuesMap.set(field.id, value);
+              saveDraftMap(currentDraftKey, valuesMap);
+              if (chkAcceptContract.checked) {
+                setMsg('Saved locally.');
+              }
+            }, 150);
+          }, fairWeekendOptions, fileKeyBase);
+
+          btnReview.disabled = true;
+          setMsg('');
 
         } catch (e) {
           console.error(e);

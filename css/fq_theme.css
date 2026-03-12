@@ -1,0 +1,36 @@
+:root{
+  --fq-card-bg: rgba(214, 197, 126, 0.88);
+  --fq-card-border: #aa8425;
+  --fq-card-text: #3b1f1f;
+  --fq-card-media-bg: rgba(214, 197, 126, 0.55);
+}
+
+/* List cards (vendor/performer list) */
+.vendor-card,
+.performer-card{
+  background: var(--fq-card-bg) !important;
+  border: 2px solid var(--fq-card-border) !important;
+  color: var(--fq-card-text) !important;
+}
+
+.vendor-card .card-media,
+.performer-card .card-media{
+  background: var(--fq-card-media-bg) !important;
+}
+
+.vendor-card .card-title,
+.performer-card .card-title{
+  color: var(--fq-card-text) !important;
+}
+
+.vendor-card .card-desc,
+.performer-card .card-desc{
+  color: rgba(59, 31, 31, 0.92) !important;
+}
+
+/* Reusable card classes used in other VP pages */
+.card,
+.review-card{
+  background: var(--fq-card-bg) !important;
+  color: var(--fq-card-text) !important;
+}

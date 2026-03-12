@@ -7,6 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
@@ -217,7 +218,6 @@
       }
     }
 
-    // IndexedDB (same as apply) — so we can show file name is still there
     const FILE_DB_NAME = 'fairapp_files_v1';
     const FILE_STORE = 'files';
 
@@ -279,7 +279,6 @@
     }
 
     async function loadVpa(vpaId) {
-      // Using current user's approved profile
       const { data: { user }, error: userErr } = await supabaseClient.auth.getUser();
       if (userErr || !user) throw new Error('not_logged_in');
 
@@ -355,7 +354,6 @@
 
       if (t === 'address') {
         if (!value || typeof value !== 'object') return true;
-        // minimal required for address: street + city + state + zip
         return !(value.street && value.city && value.state && value.zip);
       }
 
@@ -424,7 +422,6 @@
         return;
       }
 
-      // Buttons
       document.getElementById('btnBack').onclick = () => {
         window.location.href = `fair_apply.html?fair_id=${encodeURIComponent(String(fairId))}&vpa_id=${encodeURIComponent(String(vpaId))}`;
       };
@@ -432,7 +429,6 @@
       document.getElementById('btnCancel').onclick = async () => {
         if (!confirm('Cancel this application? This will clear your saved draft.')) return;
         try {
-          // need fields list to delete file keys
           const fields = await loadFields(formId);
           await clearDraftAndFiles(draftKey, fields);
         } catch (e) {
@@ -441,7 +437,6 @@
         window.location.href = `fair_detail.html?id=${encodeURIComponent(String(fairId))}`;
       };
 
-      // Load content
       let fairRow, vpaRow, formRow, fields;
       let valuesMap;
 
@@ -482,14 +477,12 @@
 
         answersWrap.innerHTML = '';
 
-        // Render answers
         for (const f of fields) {
           const v = valuesMap.get(f.id);
 
           const box = el('div', { className: 'answerCard', id: `ans_${f.id}` });
           box.appendChild(el('div', { className: 'answerTitle', text: f.label + (f.is_required ? ' *' : '') }));
 
-          // For file fields, also check IndexedDB to confirm it persisted
           if (String(f.field_type || '').toLowerCase() === 'file') {
             const fileKey = `${draftKey}:file:${f.id}`;
             let fileLabel = '';
@@ -497,10 +490,8 @@
               const saved = await idbGetFile(fileKey);
               if (saved && saved.meta && saved.meta.name) {
                 fileLabel = `Selected: ${saved.meta.name}`;
-                // sync marker if draft missing
                 if (!v || !v.name) {
                   valuesMap.set(f.id, { name: saved.meta.name, size: saved.meta.size, type: saved.meta.type, persisted: true });
-                  // keep draft updated so submit payload includes file marker
                   try {
                     const obj = JSON.parse(localStorage.getItem(draftKey) || '{}');
                     obj[f.id] = valuesMap.get(f.id);
@@ -536,17 +527,14 @@
         hideLoader();
       }
 
-      // Submit
       document.getElementById('btnSubmit').onclick = async () => {
         setMsg('');
 
-        // Contract required
         if (!document.getElementById('chkAccept').checked) {
           setMsg('You must accept the contract before submitting.');
           return;
         }
 
-        // Validate required fields
         let missingCount = 0;
         for (const f of fields) {
           const v = valuesMap.get(f.id);
@@ -575,9 +563,8 @@
           // Clear draft after success
           await clearDraftAndFiles(draftKey, fields);
 
-          setMsg('Submitted. Redirecting…');
-          window.location.href = `fair_detail.html?id=${encodeURIComponent(String(fairId))}`;
-
+                 setMsg('Submitted. Redirecting…');
+          window.location.href = `/profile/index.html`;
         } catch (e) {
           console.error(e);
           const msg = (e && e.message) ? e.message : String(e);

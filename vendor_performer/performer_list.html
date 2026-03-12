@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Performer List | FairQuest Admin</title>
   <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://unpkg.com/@supabase/supabase-js@1"></script>
   <style>
     body {
@@ -219,7 +220,9 @@
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&#039;');
   }
-
+function goToPerformerLivePage(vpaId){
+  window.location.href = `/vendor_performer/performer/vp_performer_live_page.html?vpa_id=${encodeURIComponent(vpaId)}`;
+}
   function appendPerformers(list){
     const container = document.getElementById('performerGrid');
 
@@ -228,12 +231,21 @@
 
       container.innerHTML += `
         <div class="performer-card">
-          <div class="card-media">
-            ${performer.photo_url ? `<img src="${escapeHtml(performer.photo_url)}" alt="${escapeHtml(performer.name)}">` : ``}
-          </div>
+      <div class="card-media" role="button" tabindex="0"
+  onclick="goToPerformerLivePage('${escapeHtml(performer.id)}')"
+  onkeydown="if(event.key==='Enter'||event.key===' '){ goToPerformerLivePage('${escapeHtml(performer.id)}'); }"
+  style="cursor:pointer;">
+  ${performer.photo_url ? `<img src="${escapeHtml(performer.photo_url)}" alt="${escapeHtml(performer.name)}">` : ``}
+</div>
 
-          <div class="card-body">
-            <h2 class="card-title">${escapeHtml(performer.name)}</h2>
+<div class="card-body">
+  <h2 class="card-title"
+    role="button" tabindex="0"
+    onclick="goToPerformerLivePage('${escapeHtml(performer.id)}')"
+    onkeydown="if(event.key==='Enter'||event.key===' '){ goToPerformerLivePage('${escapeHtml(performer.id)}'); }"
+    style="cursor:pointer;">
+    ${escapeHtml(performer.name)}
+  </h2>
 
             <div class="card-actions">
               ${
@@ -258,17 +270,19 @@
 
     const container = document.getElementById('performerGrid');
 
-    let q = supabaseClient
-      .from('vendor_performer_applications')
-      .select('id, name, description, photo_url, website')
-      .eq('application_type', true)
-      .order('name', { ascending: true });
+let q = supabaseClient
+  .from('vendor_performer_applications')
+  .select('id, name, vendor_type, description, photo_url, website')
+  .eq('application_type', true)
+  .order('name', { ascending: true });
 
-    const trimmed = (currentSearch || '').trim();
+const trimmedRaw = (currentSearch || '').trim();
 
-    if (trimmed.length >= 2) {
-      q = q.ilike('name', `%${trimmed}%`);
-    }
+const trimmed = trimmedRaw.replace(/[(),]/g, ' ').replace(/\s+/g, ' ').trim();
+
+if (trimmed.length >= 2) {
+  q = q.or(`name.ilike.*${trimmed}*,vendor_type.ilike.*${trimmed}*`);
+}
 
     const from = offset;
     const to = offset + PAGE_SIZE - 1;

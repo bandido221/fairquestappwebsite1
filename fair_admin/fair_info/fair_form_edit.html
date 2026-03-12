@@ -7,6 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
@@ -219,11 +220,36 @@
 
     <h2 style="margin-top:0;">Form Builder</h2>
 
-    <div class="btn-row">
-      <button class="btn" id="btnBack">⬅ Back to Setup</button>
-      <button class="btn btn-dark" id="btnSetActive">Set As Active</button>
-    </div>
+   <div class="btn-row">
+  <button class="btn" id="btnBack">⬅ Back to Setup</button>
 
+  <button class="btn btn-dark" id="btnSaveForm" type="button">Save</button>
+  <button class="btn btn-dark" id="btnPreview" type="button">Preview</button>
+
+  <button class="btn btn-dark" id="btnSetActive">Set As Active</button>
+</div>
+<div class="divider"></div>
+<div id="formPreviewPane" style="display:none;">
+  <h3 style="margin:0;">Preview (Read-Only)</h3>
+  <div class="hint" style="margin-top:6px;">
+    This is how the application will look to an applicant (layout preview only).
+  </div>
+
+  <div class="divider"></div>
+
+  <h3 style="margin:0;">Fields</h3>
+  <div id="formPreviewFields"></div>
+
+  <div class="divider"></div>
+
+  <h3 style="margin:0;">Contract</h3>
+  <div class="hint" style="margin-top:6px;">
+    Applicants must accept this contract before submitting.
+  </div>
+  <div id="formPreviewContract" class="preview-row" style="max-height:320px; overflow:auto; white-space:pre-wrap;"></div>
+
+  <div class="divider"></div>
+</div>
 <div class="grid" style="margin-top:16px;">
   <div class="label">Fair:</div><div id="txtFairName">—</div>
   <div class="label">Type:</div><div id="txtFormType">—</div>
@@ -442,7 +468,88 @@ function applyActiveUi(isMappedActive) {
     btn.classList.add('btn-dark');
   }
 }
+async function saveFormRow(_fairId, _formId) {
+  return true;
+}
 
+async function loadContractText(fairId, formId) {
+  const { data, error } = await supabaseClient
+    .from('fair_man_app_form')
+    .select('contract_text')
+    .eq('id', formId)
+    .eq('fair_id', fairId)
+    .single();
+
+  if (error) throw error;
+  return (data && data.contract_text) ? String(data.contract_text) : '';
+}
+
+function buildPreviewFieldCard(field) {
+  const row = document.createElement('div');
+  row.className = 'field-row';
+
+  const left = document.createElement('div');
+  left.innerHTML = `<div><strong>Order: ${field.sort_order}</strong></div>`;
+  row.appendChild(left);
+
+  const mid = document.createElement('div');
+  mid.innerHTML = `<div><strong>${field.label}${field.is_required ? ' *' : ''}</strong></div>
+                   <div class="small">${field.help_text ? field.help_text : ''}</div>`;
+  row.appendChild(mid);
+
+  const type = document.createElement('div');
+  type.innerHTML = `<span class="pill">${field.field_type}</span>`;
+  row.appendChild(type);
+
+  const req = document.createElement('div');
+  req.innerHTML = `<span class="pill">${field.is_required ? 'required' : 'optional'}</span>`;
+  row.appendChild(req);
+
+  const act = document.createElement('div');
+  act.innerHTML = `<span class="pill">${field.is_active ? 'active' : 'inactive'}</span>`;
+  row.appendChild(act);
+
+  const spacer = document.createElement('div');
+  spacer.innerHTML = `<span class="pill">preview</span>`;
+  row.appendChild(spacer);
+
+  const preview = document.createElement('div');
+  preview.className = 'preview-row';
+  preview.innerHTML = `
+    <div class="preview-title">Preview (read-only): ${field.label}${field.is_required ? ' *' : ''}</div>
+    <div class="preview-control"></div>
+  `;
+  const pv = preview.querySelector('.preview-control');
+  pv.appendChild(buildPreviewControl(field));
+
+  row.appendChild(preview);
+  return row;
+}
+
+async function openPreviewPane(fairId, formId) {
+  // Reload latest fields + contract from DB so preview reflects reality
+  const res = await loadFormAndFields(fairId, formId);
+  const contractText = await loadContractText(fairId, formId);
+
+  const pane = document.getElementById('formPreviewPane');
+  const fieldsWrap = document.getElementById('formPreviewFields');
+  const contractWrap = document.getElementById('formPreviewContract');
+
+  if (!pane || !fieldsWrap || !contractWrap) return;
+
+  fieldsWrap.innerHTML = '';
+  for (const f of res.fields) {
+    if (f.is_active === false) continue;
+    fieldsWrap.appendChild(buildPreviewFieldCard(f));
+  }
+
+  contractWrap.textContent = contractText && contractText.trim()
+    ? contractText
+    : 'No contract text found for this form.';
+
+  pane.style.display = '';
+  pane.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
     async function upsertField(fairId, formId, payload) {
 const args = {
@@ -908,7 +1015,33 @@ applyTemplateButtonState(formId);
    document.getElementById('btnBack').onclick = () => {
   window.location.href = `fair_application_setup.html?fair_id=${fairId}`;
 };
+document.getElementById('btnSaveForm').onclick = async () => {
+  showLoader();
+  setMsg('Saving...');
+  try {
+    await saveFormRow(fairId, formId);
+    setMsg('Saved.');
+  } catch (e) {
+    console.error(e);
+    setMsg('Save failed. Check console.');
+  } finally {
+    hideLoader();
+  }
+};
 
+document.getElementById('btnPreview').onclick = async () => {
+  showLoader();
+  setMsg('Loading preview...');
+  try {
+    await openPreviewPane(fairId, formId);
+    setMsg('');
+  } catch (e) {
+    console.error(e);
+    setMsg('Preview failed. Check console.');
+  } finally {
+    hideLoader();
+  }
+};
 document.getElementById('btnEditContract').onclick = () => {
   window.location.href = `fair_application_contract_edit.html?fair_id=${fairId}&form_id=${formId}`;
 };

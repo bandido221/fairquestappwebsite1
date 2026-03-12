@@ -7,6 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
@@ -282,24 +283,23 @@
         return;
       }
 
-      document.getElementById('btnSave').onclick = async () => {
-        const contractText = document.getElementById('contractText').value || '';
+document.getElementById('btnSave').onclick = async () => {
+  const contractText = document.getElementById('contractText').value || '';
 
-        showLoader();
-        setMsg('Saving...');
-        try {
-          await saveContract(fairId, formId, contractText);
-          const form = await loadFormRow(fairId, formId);
-          document.getElementById('txtContractUpdatedAt').textContent = fmtTs(form.contract_updated_at);
-          document.getElementById('txtContractUpdatedBy').textContent = form.contract_updated_by || '—';
-          setMsg('Saved.');
-        } catch (e) {
-          console.error(e);
-          setMsg('Save failed. Check console.');
-        } finally {
-          hideLoader();
-        }
-      };
+  showLoader();
+  setMsg('Saving...');
+  try {
+    await saveContract(fairId, formId, contractText);
+
+    // go back to Edit Form after successful save
+    window.location.href = `fair_form_edit.html?fair_id=${fairId}&form_id=${formId}`;
+
+  } catch (e) {
+    console.error(e);
+    setMsg('Save failed. Check console.');
+    hideLoader();
+  }
+};
 
       hideLoader();
     }

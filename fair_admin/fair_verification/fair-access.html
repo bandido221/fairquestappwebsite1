@@ -242,17 +242,26 @@ function renderPendingList(rows){
 
   const items = rows.map(r => {
     const cityState = `${r.fair_city || ""}${r.fair_city && r.fair_state ? ", " : ""}${r.fair_state || ""}`;
-    const isPending = (r.approved === false || r.approved === null) && !r.approved_at;
+    const isPending = (r.approved === false || r.approved === null) && !r.rejected;
+const isRejected = r.rejected === true;
 
     return `<div style="border:1px solid #333; border-radius:8px; padding:10px; margin-top:10px;">
-      <b>${r.fair_name || "Unknown fair"}</b><br/>
-      <span>${cityState}</span>
-      ${isPending ? `
-        <button style="margin-top:10px; background:#7a2e2e; color:#fff;"
-          onclick="deletePendingRequest('${r.id}')">
-          Delete this request
-        </button>
-      ` : ``}
+   <b>${r.fair_name || "Unknown fair"}</b><br/>
+<span>${cityState}</span>
+
+${isRejected ? `
+<div style="margin-top:8px;padding:8px;background:#3b1212;border-radius:6px;">
+<b>Application Rejected</b><br>
+Reason: ${r.rejection_reason || "No reason provided"}<br><br>
+Please review the note above and submit a new application with the corrected information.
+</div>
+` : ``}
+    ${isPending || isRejected ? `
+<button style="margin-top:10px; background:#7a2e2e; color:#fff;"
+  onclick="deletePendingRequest('${r.id}')">
+  Delete this request
+</button>
+` : ``}
     </div>`;
   }).join("");
 
@@ -263,9 +272,10 @@ function renderPendingList(rows){
 async function loadPendingApplications(userId){
   const { data, error } = await supa
     .from("fair_verification")
-    .select("id,fair_name,fair_city,fair_state,approved,approved_at,submitted_at")
+    .select("id,fair_name,fair_city,fair_state,approved,approved_at,rejected,rejection_reason,user_reset,submitted_at")
     .eq("user_id", userId)
     .eq("approved", false)
+.eq("user_reset", false)
     .order("submitted_at", { ascending: false });
 
   if(error){
@@ -282,37 +292,35 @@ function startNewApplication(){
 }
 let fairSuggestionMap = new Map();
 async function deletePendingRequest(id){
-  const ok = confirm("Delete this pending request? This cannot be undone.");
+
+  const ok = confirm("Reset this rejected application so you can apply again?");
   if(!ok) return;
 
   const { data: userData } = await supa.auth.getUser();
   const user = userData.user;
 
   if(!user){
-    showMsg(pendingMsg, "You must be logged in to delete a request.", "error");
+    showMsg(pendingMsg, "You must be logged in.", "error");
     return;
   }
 
   const { error } = await supa
     .from("fair_verification")
-    .delete()
+   .update({
+  user_reset: true,
+  user_reset_at: new Date().toISOString()
+})
     .eq("id", id)
-    .eq("user_id", user.id)
-    .eq("approved", false);
+    .eq("user_id", user.id);
 
   if(error){
     showMsg(pendingMsg, friendlyDbError(error), "error");
     return;
   }
 
-  showMsg(pendingMsg, "Deleted. Your request was removed.", "success");
+  showMsg(pendingMsg, "You may now submit a new request.", "success");
 
-  const { rows } = await loadPendingApplications(user.id);
-  renderPendingList(rows);
-
-  if(rows.length === 0){
-    setTimeout(() => startNewApplication(), 800);
-  }
+  setTimeout(() => startNewApplication(), 800);
 }
 
 async function loadFairSuggestions(query){

@@ -2,54 +2,54 @@
 <html lang="en">
 <head>
   <link rel="stylesheet" href="/css/style.css" />
-
+  <link rel="stylesheet" href="/css/fq_theme.css" />
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Performer Dashboard | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
 
-
   <!-- Google Analytics (FairQuest Website) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-HP222J86X0');
-</script>
- 
- <style>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
+
+  <style>
     body {
       font-family: 'Domine', serif;
-      background-color: #000;
-      padding: 40px;
-      text-align: center;
+      background: #000;
       color: #f0e6d2;
       margin: 0;
+      padding: 20px;
+      text-align: center;
     }
 
-    h1, h2 {
+    h1, h2, h3 {
       font-family: 'Cinzel', serif;
+      margin-top: 0;
+    }
+
+    .top-banner,
+    .logo {
+      display: block;
+      margin: 0 auto 20px auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
     }
 
     .top-banner {
       width: 100%;
       max-width: 600px;
-      height: auto;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto 20px auto;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .logo {
       max-width: 100px;
-      height: auto;
-      margin: 0 auto 20px auto;
-      display: block;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
       transition: transform 0.3s ease;
     }
 
@@ -58,69 +58,251 @@
     }
 
     .container {
-      max-width: 700px;
-      margin: auto;
-      background: rgba(251, 241, 200, 0.88);
-      padding: 30px 40px;
-      border-radius: 12px;
+      max-width: 900px;
+      margin: 0 auto;
+      background: rgba(214, 197, 126, 0.88);
+      color: #2f1a12;
       border: 2px solid #aa8425;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-      color: #3b1f1f;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      padding: 24px;
+      text-align: left;
     }
 
-    h1 {
+    .container h1 {
       text-align: center;
-      color: #1f2e3d;
+      margin-bottom: 24px;
+      font-size: 28px;
+      color: #4a250f;
     }
 
     .top-actions {
       display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
+      margin-bottom: 24px;
+      justify-content: center;
     }
 
     button {
-      padding: 12px 20px;
-      font-size: 16px;
       border: none;
-      border-radius: 6px;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-family: 'Domine', serif;
       cursor: pointer;
+      text-align: center;
+      min-width: 160px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
     }
 
     .start-app {
-      background-color: #27ae60;
-      color: white;
+      background: #27ae60;
+      color: #fff;
     }
 
     .update-app {
-      background-color: #f39c12;
-      color: white;
+      background: #27ae60;
+      color: #fff;
     }
 
     .logout {
-      background-color: #c0392b;
-      color: white;
+      background: #c0392b;
+      color: #fff;
+    }
+
+    .delete-app {
+      background: #444;
+      color: #fff;
     }
 
     .info {
-      margin-top: 20px;
-      padding: 20px;
-      border: 1px solid #ddd;
-      background: rgba(225, 209, 145, 0.88);
-      border-radius: 8px;
+      background: rgba(255, 248, 220, 0.55);
+      border: 1px solid rgba(120, 81, 19, 0.28);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+      text-align: left;
     }
 
     .loading {
-      text-align: center;
       font-size: 18px;
-      color: #090606;
+      color: #2f1a12;
+      text-align: center;
+      padding: 30px 10px;
+    }
+
+    .summary-title {
+      margin-bottom: 14px;
+      color: #4a250f;
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .info-item {
+      background: rgba(255,255,255,0.35);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .center-item {
+      text-align: center;
+    }
+
+    .top-photo {
+      text-align: center;
+    }
+
+    .top-photo img {
+      max-width: 180px;
+      width: 100%;
+      border-radius: 10px;
+      margin-top: 6px;
+    }
+
+    .label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #6a4a1d;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .value {
+      font-size: 16px;
+      color: #2c1710;
+      word-break: break-word;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 8px 0 18px 0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .badge-approved {
+      background: #dff6e7;
+      color: #17643d;
+      border: 1px solid #8fd2ab;
+    }
+
+    .badge-pending {
+      background: #fff0d8;
+      color: #8a5700;
+      border: 1px solid #e7c17a;
+    }
+
+    .badge-declined {
+      background: #ffe0e0;
+      color: #8f1f1f;
+      border: 1px solid #e19a9a;
+    }
+
+    .fair-cards-wrap {
+      margin-top: 18px;
+    }
+
+    .fair-cards-title {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      color: #4a250f;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .fair-cards-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .fair-card {
+      background: rgba(255,255,255,0.35);
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid rgba(120, 81, 19, 0.20);
+      text-align: left;
+    }
+
+    .fair-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .fair-card-name {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      color: #4a250f;
+    }
+
+    .fair-card-date {
+      color: #5a4335;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .fair-card button {
+      min-width: 180px;
+    }
+
+     .sub-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .gold-tier-card {
+      margin-top: 18px;
+      background: rgba(255, 248, 220, 0.72);
+      border: 2px solid #aa8425;
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .gold-tier-title {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      color: #4a250f;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .gold-tier-note {
+      text-align: center;
+      font-size: 14px;
+      color: #5a4335;
+      margin-bottom: 14px;
     }
 
     footer {
       margin-top: 40px;
       font-size: 14px;
+      text-align: center;
     }
 
     footer a {
@@ -132,27 +314,39 @@
     footer a:hover {
       text-decoration: underline;
     }
-.delete-app{
-  background:#7f1d1d;
-  color:#fff;
-}
+
     @media (max-width: 768px) {
       body {
-        padding: 20px;
+        padding: 14px;
       }
 
       .container {
-        padding: 20px;
+        padding: 18px;
       }
 
-      .top-actions {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions,
+      .sub-actions {
         flex-direction: column;
-        align-items: stretch;
       }
 
       button {
         width: 100%;
+        min-width: 0;
         box-sizing: border-box;
+      }
+
+      .fair-card-top {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .fair-card button {
+        width: 100%;
+        min-width: 0;
       }
 
       .logo {
@@ -163,11 +357,12 @@
         max-width: 100%;
       }
 
-      h1 {
+      .container h1 {
         font-size: 28px;
       }
     }
   </style>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -177,25 +372,43 @@
 
   <div class="container">
     <h1>Performer Dashboard</h1>
+
     <div class="top-actions">
       <button class="logout" onclick="logout()">Log Out</button>
       <button class="start-app" onclick="window.location.href='/profile/index.html'">My Profile</button>
-      <button id="applyButton" class="start-app" onclick="window.location.href='application.html'">Apply Now</button>
+      <button id="applyButton" class="start-app" onclick="handleAddNewPerformerAccount()">Add New Performer Account</button>
     </div>
-    
+
     <div id="dashboardContent" class="loading">Loading your information...</div>
   </div>
 
   <script>
-   
-if (!window.supabaseClient) {
-  window.supabaseClient = window.supabase.createClient(
-    'https://awtbjuiqgtdydsqzimul.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-  );
+    if (!window.supabaseClient) {
+      window.supabaseClient = window.supabase.createClient(
+        'https://awtbjuiqgtdydsqzimul.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+      );
+    }
+window.currentUserIsGoldTier = false;
+    function getYearFromDate(dateValue) {
+      if (!dateValue) return '';
+      return new Date(dateValue).getFullYear();
+    }
+function handleAddNewPerformerAccount() {
+  const isGold = window.currentUserIsGoldTier === true;
+
+  if (!isGold) {
+    alert(
+      "Additional performer accounts are available for Gold Tier members.\n\n" +
+      "If you need to create another performer name or business profile, please upgrade to Gold Tier to unlock this feature."
+    );
+    return;
+  }
+
+  window.location.href = "application.html";
 }
-async function initDashboard() {
-  const { data: { session } } = await window.supabaseClient.auth.getSession();
+    async function initDashboard() {
+      const { data: { session } } = await window.supabaseClient.auth.getSession();
 
       if (session?.user?.id) {
         loadDashboard(session.user.id);
@@ -214,6 +427,7 @@ async function initDashboard() {
     async function loadDashboard(userId) {
   const container = document.getElementById('dashboardContent');
   container.innerHTML = '';
+
   const { data: apps, error } = await window.supabaseClient
     .from('vendor_performer_applications')
     .select('*')
@@ -221,193 +435,298 @@ async function initDashboard() {
     .eq('application_type', true)
     .order('id', { ascending: false });
 
-  if (error) {
-    container.innerHTML = `<p>Error loading dashboard. Please try again.</p>`;
-    return;
-  }
+  window.currentUserIsGoldTier = (apps || []).some(app =>
+    app.approval_status === 'approved' &&
+    (app.tier || '').toLowerCase() === 'gold'
+  );
 
-  if (!apps.length) {
-    container.innerHTML = `<div class="info"><p>You haven’t submitted any performer applications yet.</p></div>`;
-    return;
-  }
+      if (error) {
+        container.innerHTML = `<p>Error loading dashboard. Please try again.</p>`;
+        return;
+      }
 
-  for (let i = 0; i < apps.length; i++) {
-    const perf = apps[i];
-    // fetch known fairs
-    const { data: fairs = [] } = await window.supabaseClient
-      .from('vendor_application_fairs')
-      .select('start_date,end_date,renaissance_fairs(name)')
-      .eq('application_id', perf.id);
-    // fetch manual suggestions
-    const { data: manual = [] } = await window.supabaseClient
-      .from('suggested_fairs')
-      .select('fair_name,start_date,end_date')
-      .eq('application_id', perf.id)
-      .eq('application_type', 'performer');
+      if (!apps.length) {
+        container.innerHTML = `<div class="info"><p>You haven’t submitted any performer applications yet.</p></div>`;
+        return;
+      }
 
-    // build fair list HTML
-    let fairHtml = '<p><strong>🎪 Fairs & Dates:</strong></p><ul>';
-    if (fairs.length || manual.length) {
-      fairs.forEach(f => {
-        fairHtml += `<li>${f.renaissance_fairs.name}: ${f.start_date} to ${f.end_date}</li>`;
-      });
-      manual.forEach(m => {
-        fairHtml += `<li>${m.fair_name} (manual): ${m.start_date} to ${m.end_date}</li>`;
-      });
-    } else {
-      fairHtml += '<li>None listed</li>';
+      for (let i = 0; i < apps.length; i++) {
+        const perf = apps[i];
+
+        const { data: fairs = [] } = await window.supabaseClient
+          .from('vendor_application_fairs')
+          .select('start_date,end_date,renaissance_fairs(name)')
+          .eq('application_id', perf.id);
+
+        const { data: manual = [] } = await window.supabaseClient
+          .from('suggested_fairs')
+          .select('fair_name,start_date,end_date')
+          .eq('application_id', perf.id)
+          .eq('application_type', 'performer');
+
+        const isGoldApproved =
+          perf.approval_status === 'approved' &&
+          (perf.tier || '').toLowerCase() === 'gold';
+
+        let fairHtml = '';
+        if (fairs.length || manual.length) {
+          fairHtml += `<div class="fair-cards-wrap">`;
+          fairHtml += `<div class="fair-cards-title">Your Fairs</div>`;
+          fairHtml += `<div class="fair-cards-list">`;
+
+          const shownFairs = new Set();
+          const fairInfoButtonLabel = isGoldApproved
+            ? 'View Fair Info'
+            : 'View Fair Info Gold Preview';
+
+          fairs.forEach(f => {
+            const fairName = (f.renaissance_fairs?.name || 'Unnamed Fair').trim();
+            const fairYear = getYearFromDate(f.start_date);
+            const uniqueKey = `known:${fairName}:${fairYear}`;
+            if (shownFairs.has(uniqueKey)) return;
+            shownFairs.add(uniqueKey);
+
+            const fairInfoUrl = isGoldApproved
+              ? `performer_fair_information_preview.html?vpa_id=${perf.id}&fair_name=${encodeURIComponent(fairName)}&season_year=${encodeURIComponent(fairYear || '')}`
+              : `/vendor_performer/fair_info_gold_card_preview.html?vpa_id=${perf.id}&fair_name=${encodeURIComponent(fairName)}&season_year=${encodeURIComponent(fairYear || '')}`;
+
+            fairHtml += `
+              <div class="fair-card">
+                <div class="fair-card-top">
+                  <div>
+                    <div class="fair-card-name">${fairName}</div>
+                    <div class="fair-card-date">${fairYear || ''}</div>
+                  </div>
+                  <button class="start-app"
+                    onclick="window.location.href='${fairInfoUrl}'">
+                    ${fairInfoButtonLabel}
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+
+          manual.forEach(m => {
+            const fairName = (m.fair_name || 'Unnamed Fair').trim();
+            const fairYear = getYearFromDate(m.start_date);
+            const uniqueKey = `manual:${fairName}:${fairYear}`;
+            if (shownFairs.has(uniqueKey)) return;
+            shownFairs.add(uniqueKey);
+
+            const fairInfoUrl = isGoldApproved
+              ? `performer_fair_information_preview.html?vpa_id=${perf.id}&fair_name=${encodeURIComponent(fairName)}&season_year=${encodeURIComponent(fairYear || '')}`
+              : `/vendor_performer/fair_info_gold_card_preview.html?vpa_id=${perf.id}&fair_name=${encodeURIComponent(fairName)}&season_year=${encodeURIComponent(fairYear || '')}`;
+
+            fairHtml += `
+              <div class="fair-card">
+                <div class="fair-card-top">
+                  <div>
+                    <div class="fair-card-name">${fairName}</div>
+                    <div class="fair-card-date">${fairYear || ''}</div>
+                  </div>
+                  <button class="start-app"
+                    onclick="window.location.href='${fairInfoUrl}'">
+                    ${fairInfoButtonLabel}
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+
+          fairHtml += `</div></div>`;
+        } else {
+          fairHtml = `
+            <div class="fair-cards-wrap">
+              <div class="fair-cards-title">Your Fairs</div>
+              <div class="fair-cards-list">
+                <div class="fair-card">
+                  <div class="fair-card-name">No fairs listed yet</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        const box = document.createElement('div');
+        box.className = 'info';
+        const safeName = (perf.name || 'Unnamed Performer').replace(/'/g, "\\'");
+
+        let statusBadge = '';
+        if (perf.approval_status === 'approved') {
+          statusBadge = `<span class="badge badge-approved">Approved</span>`;
+        } else if (perf.approval_status === 'rejected' || perf.approval_status === 'declined') {
+          statusBadge = `<span class="badge badge-declined">Declined</span>`;
+        } else {
+          statusBadge = `<span class="badge badge-pending">Pending Review</span>`;
+        }
+
+        box.innerHTML = `
+          <div class="summary-title">Application Summary</div>
+
+          <div class="info-grid">
+            ${perf.photo_url ? `
+            <div class="info-item full-width top-photo">
+              <div class="label">Photo</div>
+              <div class="value"><img src="${perf.photo_url}" alt="Performer Photo" /></div>
+            </div>
+            ` : ''}
+
+            <div class="info-item">
+              <div class="label">Application #</div>
+              <div class="value">${i + 1}</div>
+            </div>
+
+            <div class="info-item">
+              <div class="label">Name</div>
+              <div class="value">${perf.name || ''}</div>
+            </div>
+
+            <div class="info-item">
+              <div class="label">Type</div>
+              <div class="value">${perf.vendor_type || ''}</div>
+            </div>
+
+            <div class="info-item">
+              <div class="label">Contact Name</div>
+              <div class="value">${perf.contact_name || ''}</div>
+            </div>
+
+            <div class="info-item">
+              <div class="label">Contact Email</div>
+              <div class="value">${perf.contact_email || ''}</div>
+            </div>
+
+            <div class="info-item">
+              <div class="label">Description</div>
+              <div class="value">${perf.description || ''}</div>
+            </div>
+
+            ${perf.website ? `
+            <div class="info-item full-width">
+              <div class="label">Website</div>
+              <div class="value"><a href="${perf.website}" target="_blank">${perf.website}</a></div>
+            </div>
+            ` : ''}
+          </div>
+
+            <div class="status-row">
+            ${statusBadge}
+          </div>
+
+          ${fairHtml}
+
+          <div class="sub-actions">
+            <button class="update-app" onclick="startUpdate(${perf.id})">Update Profile</button>
+            <button class="delete-app" onclick="goToMainPage(${perf.id})">Main Page</button>
+            <button class="delete-app" onclick="deleteApplication(${perf.id}, '${safeName}')">Delete</button>
+          </div>
+
+          ${
+            perf.approval_status === 'approved' && (perf.tier || '').toLowerCase() === 'gold'
+            ? `
+            <div class="gold-tier-card">
+              <div class="gold-tier-title">Gold Tier Tools</div>
+              <div class="gold-tier-note">These features are available only for approved Gold tier performers.</div>
+
+              <div class="sub-actions">
+                <button class="start-app"
+                  onclick="window.location.href='/vendor_performer/performer/vp_performer_detail_wizard.html?vpa_id=${perf.id}'">
+                  Create Online Page
+                </button>
+
+                <button class="start-app"
+                  onclick="window.location.href='fair_applications.html?vpa_id=${perf.id}'">
+                  Fair Applications
+                </button>
+              </div>
+            </div>
+            `
+            : ''
+          }
+        `;
+
+        container.appendChild(box);
+      }
     }
-    fairHtml += '</ul>';
 
-    const box = document.createElement('div');
-    box.className = 'info';
-    const safeName = perf.name.replace(/'/g, "\\'");
+    function goToMainPage(vpaId) {
+      if (!vpaId) return;
+      window.location.href = `/vendor_performer/performer/vp_performer_main_page.html?vpa_id=${encodeURIComponent(vpaId)}`;
+    }
 
-    box.innerHTML = `
-      <p><strong>Application #${i+1}</strong></p>
-      <p><strong>Name:</strong> ${perf.name}</p>
-      <p><strong>Type:</strong> ${perf.vendor_type}</p>
-      <p><strong>Description:</strong> ${perf.description}</p>
-      <p><strong>Contact:</strong> ${perf.contact_name} (${perf.contact_email})</p>
-      <p><strong>Status:</strong> ${
-        perf.update_pending
-          ? '🕒 Pending Update Review'
-          : perf.approval_status==='approved' ? '✅ Approved'
-          : perf.approval_status==='rejected' ? '❌ Rejected'
-          : '⏳ Pending Review'
-      }</p>
+    async function deleteApplication(appId, appName) {
+      if (!confirm(`Are you sure you want to delete your application “${appName}”?`)) {
+        return;
+      }
 
-      ${fairHtml}
+      let { error: fairError } = await window.supabaseClient
+        .from('vendor_application_fairs')
+        .delete()
+        .eq('application_id', appId);
 
-      ${perf.website ? `<p><a href="${perf.website}" target="_blank">${perf.website}</a></p>` : ''}
-      ${perf.photo_url ? `<p><img src="${perf.photo_url}" width="150"/></p>` : ''}
+      if (fairError) {
+        alert(`❌ Failed to delete linked fairs: ${fairError.message}`);
+        return;
+      }
 
-${perf.approval_status === 'approved' ? `
-<button class="start-app"
-  onclick="window.location.href='/vendor_performer/performer/vp_performer_details.html?vpa_id=${perf.id}'">
-  🌐 Create Online Page
-</button>
-` : ''}
+      let { error: sugError } = await window.supabaseClient
+        .from('suggested_fairs')
+        .delete()
+        .eq('application_id', appId)
+        .eq('application_type', 'performer');
 
-<button class="start-app"
-        onclick="window.location.href='fair_applications.html?vpa_id=${perf.id}'">
-  🎪 Fair Applications
-</button>
+      if (sugError) {
+        alert(`❌ Failed to delete manual suggestions: ${sugError.message}`);
+        return;
+      }
 
-<button class="delete-app"
-        onclick="deleteApplication(${perf.id}, '${safeName}')">
-  🗑️ Delete
-</button>
-`;
+      let { error: appError } = await window.supabaseClient
+        .from('vendor_performer_applications')
+        .delete()
+        .eq('id', appId);
 
-    container.appendChild(box);
-  }
-}
+      if (appError) {
+        alert(`❌ Failed to delete application: ${appError.message}`);
+        return;
+      }
 
-// call loadDashboard once you have the user ID, as before…
+      const notifRes = await window.supabaseClient
+        .from('admin_notifications')
+        .insert([{
+          application_id: appId,
+          message: `Performer application "${appName}" was deleted by the user.`,
+          category: 'application_deleted'
+        }]);
 
-// now add this deleteApplication helper:
-async function deleteApplication(appId, appName) {
-  console.log('⚠️ deleteApplication called:', { appId, appName });
+      if (notifRes.error) {
+        console.warn('⚠️ Failed to notify admin:', notifRes.error);
+      }
 
-  if (!confirm(`Are you sure you want to delete your application “${appName}”?`)) {
-    console.log('⏹️ Deletion cancelled by user');
-    return;
-  }
+      alert('✅ Your application has been deleted and the admin has been notified.');
 
-  console.log('🗑️ User confirmed deletion, starting removal of related records');
+      const { data: { session } } = await window.supabaseClient.auth.getSession();
+      if (session?.user?.id) {
+        await loadDashboard(session.user.id);
+      }
+    }
 
-  // 1) remove known fairs
-  console.log('→ deleting vendor_application_fairs for application_id =', appId);
-  let { data: fairData, error: fairError } = await window.supabaseClient
-    .from('vendor_application_fairs')
-    .delete()
-    .eq('application_id', appId);
-  console.log('   → vendor_application_fairs response:', { fairData, fairError });
-  if (fairError) {
-    alert(`❌ Failed to delete linked fairs: ${fairError.message}`);
-    return;
-  }
+    async function startUpdate(id) {
+      localStorage.removeItem('performerProfile');
 
-  // 2) remove manual suggestions
-  console.log('→ deleting suggested_fairs for application_id =', appId);
-  let { data: sugData, error: sugError } = await window.supabaseClient
-    .from('suggested_fairs')
-    .delete()
-    .eq('application_id', appId)
-    .eq('application_type', 'performer');
-  console.log('   → suggested_fairs response:', { sugData, sugError });
-  if (sugError) {
-    alert(`❌ Failed to delete manual suggestions: ${sugError.message}`);
-    return;
-  }
+      const { data, error } = await window.supabaseClient
+        .from('vendor_performer_applications')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-  // 3) delete the application record itself
-  console.log('→ deleting vendor_performer_applications id =', appId);
-  let { data: appData, error: appError } = await window.supabaseClient
-    .from('vendor_performer_applications')
-    .delete()
-    .eq('id', appId);
-  console.log('   → vendor_performer_applications response:', { appData, appError });
-  if (appError) {
-    alert(`❌ Failed to delete application: ${appError.message}`);
-    return;
-  }
+      if (error) {
+        alert('❌ Could not load this application.');
+        return;
+      }
 
-  // 4) notify admin
-  // 4) notify admin (safe handling)
-  console.log('→ inserting admin notification for deletion');
-  const notifRes = await window.supabaseClient
-    .from('admin_notifications')
-    .insert([{
-      application_id: appId,
-      message: `Performer application "${appName}" was deleted by the user.`,
-      category: 'application_deleted'
-    }]);
-
-  console.log('   → admin_notifications response:', notifRes);
-  if (notifRes.error) {
-    console.warn('⚠️ Failed to notify admin:', notifRes.error);
-  }
-
-
-   // …
-   alert('✅ Your application has been deleted and the admin has been notified.');
-  console.log('✔️ Deletion complete, reloading dashboard');
-
-  // ✅ Fetch the current session, then reload:
-  const { data: { session } } = await window.supabaseClient.auth.getSession();
-  if (session?.user?.id) {
-    await loadDashboard(session.user.id);
-  }
-
-}
-
-
-
-async function startUpdate(id) {
-  // Clear any old cached version first
-  localStorage.removeItem('performerProfile');
-
-  // Fetch full application record fresh
-  const { data, error } = await window.supabaseClient
-    .from('vendor_performer_applications')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (error) {
-    alert('❌ Could not load this application.');
-    return;
-  }
-
-  // ✅ Save using the performer-specific key
-  localStorage.setItem('performerProfile', JSON.stringify(data));
-  window.location.href = 'update_application.html';
-}
-
-
-
+      localStorage.setItem('performerProfile', JSON.stringify(data));
+      window.location.href = 'update_application.html';
+    }
 
     async function logout() {
       await window.supabaseClient.auth.signOut();
@@ -415,10 +734,9 @@ async function startUpdate(id) {
     }
 
     window.addEventListener('DOMContentLoaded', initDashboard);
-    
   </script>
 
-<footer style="margin-top: 40px; font-size: 14px;">
+  <footer style="margin-top: 40px; font-size: 14px;">
     <a href="/index.html" style="color: #aa8452;">Home</a> |
     <a href="/vendor_performer/performer/info.html" style="color: #aa8452;">Info</a> |
     <a href="/terms.html" style="color: #aa8452;">Terms</a> |
@@ -426,7 +744,6 @@ async function startUpdate(id) {
     <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
     <a href="/contact.html" style="color: #aa8452;">Contact</a>
   </footer>
-  
-  
+
 </body>
 </html>

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Performer | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      font-family:'Domine', serif;
+      background:#000;
+      padding:40px;
+      text-align:center;
+      color:#f0e6d2;
+      margin:0;
+    }
+    h1,h2,h3{ font-family:'Cinzel', serif; }
+    .top-banner{
+      width:100%;
+      max-width:600px;
+      height:auto;
+      object-fit:contain;
+      display:block;
+      margin:0 auto 20px auto;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    }
+    .logo{
+      max-width:100px;
+      height:auto;
+      margin:0 auto 20px auto;
+      display:block;
+      filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .container{
+      max-width:920px;
+      margin:auto;
+      background:rgba(251,241,200,0.88);
+      padding:30px 40px;
+      border-radius:12px;
+      border:2px solid #aa8425;
+      box-shadow:0 4px 15px rgba(0,0,0,0.4);
+      color:#3b1f1f;
+      text-align:left;
+    }
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:13px;
+      background:rgba(0,0,0,0.08);
+      margin-bottom:12px;
+    }
+
+    .card{
+      background: rgba(214, 197, 126, 0.88);
+      border:1px solid rgba(0,0,0,0.18);
+      border-radius:12px;
+      padding:14px;
+      margin-top:14px;
+    }
+
+    .muted{ opacity:.85; }
+    .error{ color:#7f1d1d; font-weight:bold; margin-top:10px; }
+    .kv{ margin:6px 0; }
+    .kv b{ display:inline-block; min-width:170px; }
+    .listItem{ margin:6px 0; }
+
+    .hero{
+      display:flex;
+      gap:16px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .heroPhoto{
+      width:160px;
+      height:160px;
+      object-fit:cover;
+      border-radius:12px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.25);
+      background:rgba(0,0,0,0.08);
+    }
+    .heroRight{
+      flex:1;
+      min-width:220px;
+    }
+    .heroName{
+      margin:0 0 6px 0;
+      font-size:28px;
+      line-height:1.15;
+    }
+    .heroTagline{
+      margin:0 0 10px 0;
+      font-size:16px;
+    }
+
+    .review-card{
+      display:inline-block;
+      background: rgba(214, 197, 126, 0.88);
+      border: 1px solid rgba(0,0,0,0.16);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin: 10px 0 6px 0;
+      max-width: 340px;
+    }
+    .review-title{
+      font-family:'Cinzel', serif;
+      font-size: 13px;
+      margin: 0 0 4px 0;
+    }
+    .review-status{
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+     a{ color:#1f4b99; }
+    a:hover{ opacity:.85; }
+
+    .top-actions{
+      max-width:920px;
+      margin:0 auto 18px auto;
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .action-btn{
+      display:inline-block;
+      padding:12px 18px;
+      border-radius:10px;
+      border:2px solid #aa8425;
+      background:rgba(214, 197, 126, 0.88);
+      color:#3b1f1f;
+      font-family:'Cinzel', serif;
+      font-size:15px;
+      text-decoration:none;
+      cursor:pointer;
+      box-shadow:0 4px 12px rgba(0,0,0,0.25);
+    }
+    .action-btn:hover{
+      opacity:.92;
+    }
+
+    @media (max-width:768px){
+      body{ padding:20px; }
+      .container{ padding:20px; }
+      .kv b{ min-width:auto; display:block; margin-bottom:3px; }
+      .heroPhoto{ width:140px; height:140px; }
+      .heroName{ font-size:24px; }
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+<img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+<div class="top-actions">
+  <button type="button" class="action-btn" onclick="goBack()">← Back</button>
+  <a href="/index.html" class="action-btn">🏠 Home</a>
+</div>
+
+<div class="container">
+  <div class="pill">Performer</div>
+
+  <div id="reviewCard" class="review-card" style="display:none;">
+    <div class="review-title">Reviews</div>
+    <div id="reviewStatus" class="review-status muted">Loading reviews…</div>
+  </div>
+
+  <div id="statusMsg" class="muted">Loading…</div>
+
+  <div id="wrap" style="display:none;">
+
+    <div class="card">
+      <div class="hero">
+        <div id="heroPhotoWrap" style="flex:0 0 auto;">
+          <img id="heroPhoto" class="heroPhoto" src="" alt="Performer image" style="display:none;">
+          <div id="heroPhotoNA" class="muted" style="width:160px; padding:10px 0;">N/A</div>
+        </div>
+
+        <div class="heroRight">
+          <h1 id="heroName" class="heroName">—</h1>
+          <div id="heroTagline" class="heroTagline muted"></div>
+
+          <div id="heroAddress" class="muted" style="margin-top:6px;"></div>
+          <div id="heroPricing" class="muted" style="margin-top:6px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Details</h2>
+      <div id="detailsBox"></div>
+      <div id="detailsEmpty" class="muted" style="display:none;">No public details yet.</div>
+    </div>
+
+    <div class="card">
+      <h2>Offerings</h2>
+      <div id="offeringsBox"></div>
+      <div id="offeringsEmpty" class="muted" style="display:none;">No offerings listed yet.</div>
+    </div>
+
+    <div class="card">
+      <h2>Schedule</h2>
+      <div class="muted">Blank for now.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
+  const sb = window.supabaseClient;
+
+  const params = new URLSearchParams(window.location.search);
+  const slug = (params.get('slug') || '').trim();
+  const vpaId = (params.get('vpa_id') || '').trim();
+  const profileId = (params.get('id') || '').trim();
+
+  function escapeHtml(s){
+    return String(s ?? '')
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;');
+  }
+
+  function isAddressNull(a){
+    const s = (a?.street_address || '').trim();
+    const c = (a?.city || '').trim();
+    const st = (a?.state || '').trim();
+    const z = (a?.zip_code || '').trim();
+    return !s && !c && !st && !z;
+  }
+
+  function formatAddressHtml(a){
+    if(isAddressNull(a)) return '';
+    const parts = [];
+    if(a?.street_address) parts.push(escapeHtml(a.street_address));
+    const line2 = [a?.city, a?.state, a?.zip_code].filter(Boolean).map(escapeHtml).join(', ');
+    if(line2.trim()) parts.push(line2);
+    return parts.join('<br>');
+  }
+
+  function normalizeVisibility(row){
+    const cand =
+      row?.visibility ||
+      row?.field_visibility ||
+      row?.public_visibility ||
+      row?.vis ||
+      null;
+
+    if(cand && typeof cand === 'object') return cand;
+
+    return {
+      public_location_text: true,
+      primary_category: true,
+      tags: true,
+      slug: true,
+      about_short: true,
+      about_long: true,
+      public_contact_email: true,
+      public_contact_phone: true,
+      public_website_url: true,
+      facebook_url: true,
+      instagram_url: true,
+      tiktok_url: true,
+      youtube_url: true,
+      logo_url: true,
+      banner_url: true,
+      offerings: true
+    };
+  }
+
+  function pickVisible(vis, key, value){
+    if(!vis?.[key]) return null;
+    const s = (value ?? '').toString().trim();
+    return s ? s : null;
+  }
+
+  function addKV(out, label, htmlValue){
+    if(!htmlValue) return;
+    out.push(`<div class="kv"><b>${escapeHtml(label)}</b> ${htmlValue}</div>`);
+  }
+
+  function linkIfUrl(url){
+    const u = (url || '').trim();
+    if(!u) return null;
+    const safe = escapeHtml(u);
+    return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
+  }
+
+  function starsText(avg){
+    const full = Math.floor(avg);
+    const half = (avg - full) >= 0.5 ? 1 : 0;
+    const empty = 5 - full - half;
+    return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
+  }
+
+  function goBack(){
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = '/index.html';
+    }
+  }
+
+  async function loadReviewStatus(vpWebProfileId){
+    const card = document.getElementById('reviewCard');
+    const status = document.getElementById('reviewStatus');
+
+    card.style.display = 'inline-block';
+    status.textContent = 'Loading reviews…';
+
+    const { data, error } = await sb
+      .from('vp_web_reviews')
+      .select('rating')
+      .eq('vp_web_profile_id', vpWebProfileId)
+      .eq('is_visible', true)
+      .not('rating', 'is', null)
+      .limit(200);
+
+    if(error){
+      status.innerHTML = `<span class="error">Failed to load reviews: ${escapeHtml(error.message)}</span>`;
+      return;
+    }
+
+    const ratings = (data || []).map(r => Number(r.rating)).filter(n => Number.isFinite(n));
+    if(!ratings.length){
+      status.textContent = 'No reviews yet';
+      return;
+    }
+
+    const sum = ratings.reduce((a,b)=>a+b, 0);
+    const avg = sum / ratings.length;
+    status.textContent = `${starsText(avg)} ${avg.toFixed(1)}/5 (${ratings.length})`;
+  }
+
+  async function fetchProfile(){
+    let q = sb
+      .from('vp_web_profile')
+      .select('*')
+      .eq('is_published', true)
+      .eq('is_active', true)
+      .limit(1);
+
+    if(slug){
+      q = q.eq('slug', slug);
+    }else if(profileId){
+      q = q.eq('id', profileId);
+    }else if(vpaId){
+      q = q.eq('vpa_id', Number(vpaId));
+    }else{
+      return { row: null, error: { message: 'Missing slug, id, or vpa_id in URL.' } };
+    }
+
+    const { data, error } = await q.maybeSingle();
+    return { row: data || null, error };
+  }
+
+  async function fetchApp(vpaIdNum){
+    const { data, error } = await sb
+      .from('vendor_performer_applications')
+      .select('id,name,street_address,city,state,zip_code,photo_url')
+      .eq('id', vpaIdNum)
+      .single();
+
+    return { row: data || null, error };
+  }
+
+  function renderHero(appRow, profileRow){
+    const heroName = document.getElementById('heroName');
+    const heroTagline = document.getElementById('heroTagline');
+    const heroAddress = document.getElementById('heroAddress');
+    const heroPricing = document.getElementById('heroPricing');
+
+    heroName.textContent = appRow?.name || '—';
+
+    const tl = (profileRow?.tagline || '').trim();
+    heroTagline.textContent = tl ? tl : '';
+
+    const addr = formatAddressHtml(appRow);
+    heroAddress.innerHTML = addr ? addr : '';
+
+    const pricing = (profileRow?.pricing_note || '').trim();
+    heroPricing.innerHTML = pricing ? `<b>Pricing Note</b> ${escapeHtml(pricing)}` : '';
+
+    const img = document.getElementById('heroPhoto');
+    const na = document.getElementById('heroPhotoNA');
+    const url = (appRow?.photo_url || '').trim();
+
+    if(url){
+      img.src = url;
+      img.style.display = 'block';
+      na.style.display = 'none';
+    }else{
+      img.removeAttribute('src');
+      img.style.display = 'none';
+      na.style.display = 'block';
+    }
+  }
+
+  function renderDetails(profileRow){
+    const vis = normalizeVisibility(profileRow);
+    const out = [];
+
+    const publicLocation = pickVisible(vis, 'public_location_text', profileRow?.public_location_text);
+    addKV(out, 'Public Location', publicLocation ? escapeHtml(publicLocation) : null);
+
+    const cat = pickVisible(vis, 'primary_category', profileRow?.primary_category);
+    addKV(out, 'Primary Category', cat ? escapeHtml(cat) : null);
+
+    const tags = (vis?.tags && Array.isArray(profileRow?.tags) && profileRow.tags.length)
+      ? escapeHtml(profileRow.tags.join(', '))
+      : null;
+    addKV(out, 'Tags', tags);
+
+    const s = pickVisible(vis, 'slug', profileRow?.slug);
+    addKV(out, 'Slug', s ? escapeHtml(s) : null);
+
+    const aboutS = pickVisible(vis, 'about_short', profileRow?.about_short);
+    addKV(out, 'About (Short)', aboutS ? escapeHtml(aboutS) : null);
+
+    const aboutL = pickVisible(vis, 'about_long', profileRow?.about_long);
+    addKV(out, 'About (Long)', aboutL ? escapeHtml(aboutL) : null);
+
+    const email = pickVisible(vis, 'public_contact_email', profileRow?.public_contact_email);
+    addKV(out, 'Public Email', email ? escapeHtml(email) : null);
+
+    const phone = pickVisible(vis, 'public_contact_phone', profileRow?.public_contact_phone);
+    addKV(out, 'Public Phone', phone ? escapeHtml(phone) : null);
+
+    const website = (vis?.public_website_url) ? linkIfUrl(profileRow?.public_website_url) : null;
+    addKV(out, 'Website', website);
+
+    const fb = (vis?.facebook_url) ? linkIfUrl(profileRow?.facebook_url) : null;
+    addKV(out, 'Facebook', fb);
+
+    const ig = (vis?.instagram_url) ? linkIfUrl(profileRow?.instagram_url) : null;
+    addKV(out, 'Instagram', ig);
+
+    const tt = (vis?.tiktok_url) ? linkIfUrl(profileRow?.tiktok_url) : null;
+    addKV(out, 'TikTok', tt);
+
+    const yt = (vis?.youtube_url) ? linkIfUrl(profileRow?.youtube_url) : null;
+    addKV(out, 'YouTube', yt);
+
+    const logoUrl = pickVisible(vis, 'logo_url', profileRow?.logo_url);
+    addKV(out, 'Logo URL', logoUrl ? escapeHtml(logoUrl) : null);
+
+    const bannerUrl = pickVisible(vis, 'banner_url', profileRow?.banner_url);
+    addKV(out, 'Banner URL', bannerUrl ? escapeHtml(bannerUrl) : null);
+
+    const box = document.getElementById('detailsBox');
+    const empty = document.getElementById('detailsEmpty');
+
+    if(out.length){
+      box.innerHTML = out.join('');
+      empty.style.display = 'none';
+    }else{
+      box.innerHTML = '';
+      empty.style.display = 'block';
+    }
+  }
+
+  function renderOfferings(profileRow){
+    const vis = normalizeVisibility(profileRow);
+
+    const box = document.getElementById('offeringsBox');
+    const empty = document.getElementById('offeringsEmpty');
+
+    if(!vis?.offerings){
+      box.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+
+    const arr = Array.isArray(profileRow?.offerings) ? profileRow.offerings : [];
+    const lines = arr
+      .map(x => (typeof x === 'string' ? x : (x?.text ?? '')))
+      .map(s => (s ?? '').toString().trim())
+      .filter(Boolean);
+
+    if(!lines.length){
+      box.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+
+    box.innerHTML = lines.map(t => `<div class="listItem">• ${escapeHtml(t)}</div>`).join('');
+    empty.style.display = 'none';
+  }
+
+  async function load(){
+    const { row: profileRow, error: profErr } = await fetchProfile();
+
+    if(profErr){
+      document.getElementById('statusMsg').innerHTML =
+        `<div class="error">Database error loading performer page: ${escapeHtml(profErr.message)}</div>`;
+      return;
+    }
+
+    if(!profileRow){
+      document.getElementById('statusMsg').innerHTML =
+        `<div class="error">This performer page has not been created yet.</div>`;
+      return;
+    }
+
+    if(!profileRow.is_published){
+      document.getElementById('statusMsg').innerHTML =
+        `<div class="error">This performer page exists but has not been published yet.</div>`;
+      return;
+    }
+
+    const { row: appRow, error: appErr } = await fetchApp(Number(profileRow.vpa_id));
+    if(appErr || !appRow){
+      document.getElementById('statusMsg').innerHTML =
+        `<div class="error">Loaded profile but failed to load performer basics. ${escapeHtml(appErr?.message || '')}</div>`;
+      return;
+    }
+
+    renderHero(appRow, profileRow);
+    renderDetails(profileRow);
+    renderOfferings(profileRow);
+
+    await loadReviewStatus(profileRow.id);
+
+    document.getElementById('statusMsg').style.display = 'none';
+    document.getElementById('wrap').style.display = 'block';
+
+    const name = (appRow?.name || '').trim();
+    if(name) document.title = `${name} | FairQuest`;
+  }
+
+  window.addEventListener('DOMContentLoaded', load);
+</script>
+
+</body>
+</html>

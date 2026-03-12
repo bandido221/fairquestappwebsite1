@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
 
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
@@ -176,9 +177,7 @@
 <ul id="weekendsList"></ul>
 
 
-    <button class="update-btn" onclick="goToUpdatePage()">🛠️ Update This Fair</button>
-
-<button class="update-btn" id="applyBtn" style="display:none; margin-left:10px;">
+  <button class="update-btn" id="applyBtn" style="display:none;">
   📄 Apply To This Fair
 </button>
 
@@ -305,7 +304,7 @@ weekendFields.forEach(([startKey, endKey]) => {
       if (err2) return;
 
 
-      const approvedIds = fairLinks.map(link => link.application_id);
+      const approvedIds = fairLinks.map(link => Number(link.application_id));
       const vendors = applications.filter(a => a.application_type === false && approvedIds.includes(a.id));
       const performers = applications.filter(a => a.application_type === true && approvedIds.includes(a.id));
 
@@ -314,13 +313,13 @@ weekendFields.forEach(([startKey, endKey]) => {
 
       vendors.forEach(v => {
         const li = document.createElement('li');
-        li.innerHTML = `<a class="link" href="/fairs/vendor_performer_detail.html?id=${v.id}&type=vendor">${v.name}</a> — ${v.vendor_type || ''}`;
+        li.innerHTML = `<a class="link" href="/vendor_performer/vendor/vp_vendor_live_page.html?vpa_id=${v.id}">${v.name}</a> — ${v.vendor_type || ''}`;
         vlist.appendChild(li);
       });
 
       performers.forEach(p => {
         const li = document.createElement('li');
-        li.innerHTML = `<a class="link" href="/fairs/vendor_performer_detail.html?id=${p.id}&type=performer">${p.name}</a>`;
+        li.innerHTML = `<a class="link" href="/vendor_performer/performer/vp_performer_live_page.html?vpa_id=${p.id}">${p.name}</a>`;
         plist.appendChild(li);
       });
 
@@ -328,9 +327,7 @@ weekendFields.forEach(([startKey, endKey]) => {
       if (performers.length) document.getElementById('performersCard').style.display = 'block';
     }
 
-    function goToUpdatePage() {
-      window.location.href = `update_fair.html?id=${fairId}`;
-    }
+    
 
   async function setupApplyButton(fairRow) {
   const applyBtn = document.getElementById('applyBtn');

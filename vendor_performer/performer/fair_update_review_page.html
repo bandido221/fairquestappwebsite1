@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Update Application | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      text-align: center;
+      padding: 16px;
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.5;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Cinzel', serif;
+      margin: 10px 0;
+      line-height: 1.2;
+    }
+
+    h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      font-size: clamp(24px, 4vw, 36px);
+    }
+
+    h3 {
+      font-size: clamp(21px, 3.5vw, 28px);
+    }
+
+    .card {
+      position: relative;
+      background: rgba(214, 197, 126, 0.88);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 16px auto;
+      max-width: 1040px;
+      color: #3b1f1f;
+      text-align: left;
+    }
+
+    .profile-logo {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 64px;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 14px 18px;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      min-height: 50px;
+    }
+
+    .btn:hover { background-color: #45a049; }
+
+    .btn-dark {
+      background-color: #2f2f2f;
+    }
+
+    .btn-dark:hover {
+      background-color: #222;
+    }
+
+    .btn-red {
+      background-color: #a12828;
+    }
+
+    .btn-red:hover {
+      background-color: #8c1f1f;
+    }
+
+    .btn[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .divider {
+      margin: 20px 0;
+      height: 1px;
+      background: rgba(0,0,0,0.18);
+    }
+
+    .hint {
+      margin-top: 10px;
+      opacity: 0.95;
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 12px 16px;
+      margin-top: 12px;
+      align-items: start;
+    }
+
+    .label {
+      font-weight: bold;
+      font-size: 19px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: bold;
+      background: rgba(0,0,0,0.10);
+    }
+
+    .field-card {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(0,0,0,0.12);
+    }
+
+    .field-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 22px;
+      line-height: 1.3;
+    }
+
+    .field-help {
+      font-size: 17px;
+      margin-bottom: 12px;
+      opacity: 0.95;
+    }
+
+    .missing {
+      outline: 2px solid rgba(161,40,40,0.55);
+      border-radius: 12px;
+    }
+
+    .contractBox {
+      background: rgba(255,255,255,0.65);
+      border: 1px solid rgba(0,0,0,0.18);
+      border-radius: 12px;
+      padding: 18px;
+      max-height: 360px;
+      overflow: auto;
+      color: #111;
+      white-space: pre-wrap;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      font-size: 18px;
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.25);
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.95);
+      color: #111;
+      min-height: 52px;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .file-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .address-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 0.7fr;
+      gap: 12px;
+    }
+
+    .readonly-note {
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.18);
+      margin-top: 12px;
+      font-size: 18px;
+    }
+
+    .view-value {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 18px;
+      line-height: 1.6;
+      min-height: 24px;
+      color: #111;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .checklist-view {
+      display: grid;
+      gap: 10px;
+    }
+
+    .checklist-item {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 18px;
+      color: #111;
+    }
+
+    .checkbox-view {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      color: #111;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+        font-size: 18px;
+      }
+
+      .card {
+        padding: 18px;
+        border-radius: 14px;
+      }
+
+      .profile-logo {
+        width: 54px;
+        top: 12px;
+        right: 12px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .address-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-row {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .field-title {
+        font-size: 20px;
+      }
+
+      .hint,
+      .label,
+      .field-help,
+      .contractBox,
+      .view-value,
+      .readonly-note {
+        font-size: 17px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1 id="pageTitle">Update Application</h1>
+
+  <div id="loadingOverlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  ">
+    <div style="
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #bb9457;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    "></div>
+  </div>
+
+  <div class="card">
+    <a href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+    </a>
+
+    <h2 style="margin-top:0;">Application Update</h2>
+
+    <div class="btn-row">
+      <button class="btn btn-dark" id="btnBack" type="button">⬅ Back</button>
+      <button class="btn" id="btnSave" type="button">Save Changes</button>
+    </div>
+
+    <div class="hint" id="statusMsg"></div>
+    <div id="readonlyNote" class="readonly-note" style="display:none;"></div>
+
+    <div class="divider"></div>
+
+    <div class="grid">
+      <div class="label">Fair:</div><div id="txtFairName">—</div>
+      <div class="label">Profile:</div><div id="txtVpaName">—</div>
+      <div class="label">Type:</div><div id="txtVpaType">—</div>
+      <div class="label">Food Vendor:</div><div id="txtVpaFood">—</div>
+      <div class="label">Email:</div><div id="txtVpaEmail">—</div>
+      <div class="label">Contact Name:</div><div id="txtVpaContact">—</div>
+      <div class="label">Form:</div><div id="txtFormInfo">—</div>
+      <div class="label">Status:</div><div><span class="pill" id="txtStatus">—</span></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3 style="margin:0;">Contract</h3>
+    <div class="hint" style="margin-top:6px;">
+      This is the current contract attached to the form.
+    </div>
+    <div class="grid" style="margin-top:12px;">
+      <div class="label">Contract Status:</div><div id="txtContractAccepted">—</div>
+      <div class="label">Agreed At:</div><div id="txtContractAcceptedAt">—</div>
+    </div>
+    <div id="contractBox" class="contractBox">Loading contract…</div>
+
+    <div class="divider"></div>
+
+    <h3 style="margin:0;">Application Answers</h3>
+    <div class="hint" id="answersHint" style="margin-top:6px;"></div>
+    <div id="fieldsWrap"></div>
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    const FILE_DB_NAME = 'fairapp_files_v1';
+    const FILE_STORE = 'files';
+
+    let pageState = {
+      fairId: null,
+      submissionId: null,
+      submission: null,
+      fields: [],
+      valuesMap: new Map(),
+      canEdit: false
+    };
+
+    function showLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'flex';
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'none';
+    }
+
+    function setMsg(text) {
+      const el = document.getElementById('statusMsg');
+      if (el) el.textContent = text || '';
+    }
+
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
+      const fairId = Number(params.get('fair_id'));
+      return {
+        fairId: Number.isFinite(fairId) ? fairId : null,
+        submissionId: params.get('submission_id') ? String(params.get('submission_id')) : null
+      };
+    }
+
+    function safeText(v) {
+      return (v === null || v === undefined || v === '') ? '—' : String(v);
+    }
+
+    function prettyStatus(v) {
+      const s = String(v || '').toLowerCase();
+      if (s === 'pending') return 'Pending';
+      if (s === 'in_review') return 'In Review';
+      if (s === 'approved') return 'Approved';
+      if (s === 'rejected') return 'Rejected';
+      if (s === 'closed') return 'Closed';
+      return safeText(v);
+    }
+
+    function normalizeConfig(cfg) {
+      let c = cfg;
+      if (typeof c === 'string') {
+        try { c = JSON.parse(c); } catch (_) { c = null; }
+      }
+      return (c && typeof c === 'object') ? c : null;
+    }
+
+    function isMissingRequired(field, value) {
+      if (!field.is_required) return false;
+
+      const t = String(field.field_type || '').toLowerCase();
+      const cfg = normalizeConfig(field.config);
+      const source = cfg ? cfg.source : null;
+      const mode = cfg ? cfg.mode : null;
+      const labelLooksLikeWeekends = /weekend/i.test(String(field.label || ''));
+      const isFairWeekendsMulti =
+        (t === 'select' && source === 'fair_weekends' && mode === 'multi') ||
+        (t === 'select' && labelLooksLikeWeekends);
+
+      if (t === 'checkbox') return value !== true;
+
+      if (t === 'file') {
+        return !(value && typeof value === 'object' && value.name);
+      }
+
+      if (t === 'address') {
+        if (!value || typeof value !== 'object') return true;
+        return !(value.street && value.city && value.state && value.zip);
+      }
+
+      if (isFairWeekendsMulti) {
+        if (Array.isArray(value)) return value.length === 0;
+        return true;
+      }
+
+      if (Array.isArray(value)) return value.length === 0;
+      if (value === null || value === undefined) return true;
+      if (typeof value === 'string' && value.trim() === '') return true;
+
+      return false;
+    }
+
+    function openFileDb() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(FILE_DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(FILE_STORE)) {
+            db.createObjectStore(FILE_STORE, { keyPath: 'key' });
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function idbPutFile(key, blob, meta) {
+      const db = await openFileDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(FILE_STORE, 'readwrite');
+        tx.objectStore(FILE_STORE).put({ key, blob, meta, saved_at: new Date().toISOString() });
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    function el(tag, attrs = {}, children = []) {
+      const n = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        if (k === 'className') n.className = v;
+        else if (k === 'text') n.textContent = v;
+        else if (k === 'html') n.innerHTML = v;
+        else if (k === 'style') n.style.cssText = v;
+        else n.setAttribute(k, v);
+      }
+      for (const c of children) n.appendChild(c);
+      return n;
+    }
+
+    async function loadSubmission(submissionId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_submission')
+        .select(`
+          id,
+          fair_id,
+          form_id,
+          status,
+          submitted_at,
+          updated_at,
+          vendor_performer_application_id,
+          applicant_email,
+          applicant_name,
+          contract_accepted_at
+        `)
+        .eq('id', submissionId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+
+    async function loadFair(fairId) {
+      const { data, error } = await supabaseClient
+        .from('renaissance_fairs')
+        .select('id, name')
+        .eq('id', fairId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+
+    async function loadVpa(vpaId) {
+      const { data: { user }, error: userErr } = await supabaseClient.auth.getUser();
+      if (userErr || !user) throw new Error('not_logged_in');
+
+      const { data, error } = await supabaseClient
+        .from('vendor_performer_applications')
+        .select('id, name, contact_name, contact_email, application_type, is_food_vendor, approval_status, user_id')
+        .eq('id', vpaId)
+        .single();
+
+      if (error) throw error;
+      if (!data || data.user_id !== user.id) throw new Error('not_owner_of_vpa');
+      return data;
+    }
+
+    async function loadForm(formId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_form')
+        .select('id, title, version, form_type, contract_text')
+        .eq('id', formId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+
+    async function loadFields(formId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_form_field')
+        .select('id, field_key, label, field_type, is_required, sort_order, help_text, placeholder, config, is_active')
+        .eq('form_id', formId)
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      return Array.isArray(data) ? data : [];
+    }
+
+    async function loadSubmissionValuesMap(submissionId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_submission_value')
+        .select('field_id, value')
+        .eq('submission_id', submissionId);
+
+      if (error) throw error;
+
+      const m = new Map();
+      for (const row of (Array.isArray(data) ? data : [])) {
+        m.set(row.field_id, row.value);
+      }
+      return m;
+    }
+
+    async function loadFairWeekendOptions(fairId) {
+      const { data, error } = await supabaseClient
+        .from('renaissance_fairs')
+        .select(`
+          start_date, end_date,
+          week2_start_date, week2_end_date,
+          week3_start_date, week3_end_date,
+          week4_start_date, week4_end_date,
+          week5_start_date, week5_end_date,
+          week6_start_date, week6_end_date,
+          week7_start_date, week7_end_date,
+          week8_start_date, week8_end_date,
+          week9_start_date, week9_end_date,
+          week10_start_date, week10_end_date
+        `)
+        .eq('id', fairId)
+        .single();
+
+      if (error) throw error;
+
+      function fmtDate(d) {
+        if (!d) return '';
+        const dt = new Date(d + 'T00:00:00');
+        return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+
+      const out = [];
+      if (data.start_date && data.end_date) {
+        out.push({ value: 'weekend_1', label: `Weekend 1: ${fmtDate(data.start_date)} — ${fmtDate(data.end_date)}` });
+      }
+
+      for (let i = 2; i <= 10; i++) {
+        const s = data[`week${i}_start_date`];
+        const e = data[`week${i}_end_date`];
+        if (s && e) {
+          out.push({ value: `weekend_${i}`, label: `Weekend ${i}: ${fmtDate(s)} — ${fmtDate(e)}` });
+        }
+      }
+
+      return out;
+    }
+
+    function renderReadonlyState(canEdit) {
+      const note = document.getElementById('readonlyNote');
+      const saveBtn = document.getElementById('btnSave');
+
+      if (canEdit) {
+        note.style.display = 'none';
+        saveBtn.style.display = '';
+        saveBtn.disabled = false;
+        return;
+      }
+
+      note.style.display = 'block';
+      note.textContent = `This application cannot be updated because it has already been approved.`;
+      saveBtn.style.display = 'none';
+      saveBtn.disabled = true;
+    }
+
+    function setFieldValue(fieldId, value) {
+      pageState.valuesMap.set(fieldId, value);
+      const card = document.getElementById(`field_${fieldId}`);
+      const field = pageState.fields.find(f => String(f.id) === String(fieldId));
+      if (card && field) {
+        if (isMissingRequired(field, value)) card.classList.add('missing');
+        else card.classList.remove('missing');
+      }
+    }
+
+    function buildReadonlyValue(field, existing, fairWeekendOptions) {
+      const t = String(field.field_type || '').toLowerCase();
+      const cfg = normalizeConfig(field.config);
+      const source = cfg ? cfg.source : null;
+      const mode = cfg ? cfg.mode : null;
+      const labelLooksLikeWeekends = /weekend/i.test(String(field.label || ''));
+      const isFairWeekendsMulti =
+        (t === 'select' && source === 'fair_weekends' && mode === 'multi') ||
+        (t === 'select' && labelLooksLikeWeekends);
+
+      if (isFairWeekendsMulti) {
+        const selected = Array.isArray(existing) ? existing : [];
+        if (!selected.length) return el('div', { className: 'view-value', text: '—' });
+
+        const box = el('div', { className: 'checklist-view' });
+        for (const val of selected) {
+          const match = (Array.isArray(fairWeekendOptions) ? fairWeekendOptions : []).find(x => String(x.value) === String(val));
+          box.appendChild(el('div', {
+            className: 'checklist-item',
+            text: match ? match.label : String(val)
+          }));
+        }
+        return box;
+      }
+
+      if (t === 'checkbox') {
+        const row = el('div', { className: 'checkbox-view' });
+        row.appendChild(el('span', { text: existing === true ? '☑ Yes' : '☐ No' }));
+        return row;
+      }
+
+      if (t === 'address') {
+        if (!existing || typeof existing !== 'object') {
+          return el('div', { className: 'view-value', text: '—' });
+        }
+        const parts = [existing.street, existing.city, existing.state, existing.zip].filter(Boolean);
+        return el('div', { className: 'view-value', text: parts.length ? parts.join(', ') : '—' });
+      }
+
+      if (t === 'file') {
+        const text = (existing && typeof existing === 'object' && existing.name) ? `Selected: ${existing.name}` : 'No file selected.';
+        return el('div', { className: 'view-value', text });
+      }
+
+      if (Array.isArray(existing)) {
+        return el('div', { className: 'view-value', text: existing.length ? existing.join(', ') : '—' });
+      }
+
+      if (existing === null || existing === undefined || existing === '') {
+        return el('div', { className: 'view-value', text: '—' });
+      }
+
+      return el('div', { className: 'view-value', text: String(existing) });
+    }
+
+    async function renderFields(fairWeekendOptions) {
+      const wrap = document.getElementById('fieldsWrap');
+      wrap.innerHTML = '';
+
+      if (!pageState.fields.length) {
+        wrap.appendChild(el('div', { className: 'hint', text: 'No fields found for this form.' }));
+        return;
+      }
+
+      for (const f of pageState.fields) {
+        const card = el('div', { className: 'field-card', id: `field_${f.id}` });
+
+        card.appendChild(el('div', { className: 'field-title', text: `${f.label}${f.is_required ? ' *' : ''}` }));
+
+        if (f.help_text) {
+          card.appendChild(el('div', { className: 'field-help', text: f.help_text }));
+        }
+
+        const t = String(f.field_type || '').toLowerCase();
+        const existing = pageState.valuesMap.get(f.id);
+        const cfg = normalizeConfig(f.config);
+        const source = cfg ? cfg.source : null;
+        const mode = cfg ? cfg.mode : null;
+        const labelLooksLikeWeekends = /weekend/i.test(String(f.label || ''));
+        const isFairWeekendsMulti =
+          (t === 'select' && source === 'fair_weekends' && mode === 'multi') ||
+          (t === 'select' && labelLooksLikeWeekends);
+
+        let control = null;
+
+        if (!pageState.canEdit) {
+          control = buildReadonlyValue(f, existing, fairWeekendOptions);
+          card.appendChild(control);
+          wrap.appendChild(card);
+          continue;
+        }
+
+        if (isFairWeekendsMulti) {
+          const selected = Array.isArray(existing) ? existing : [];
+          const selectedSet = new Set(selected.map(String));
+          const box = el('div', { style: 'display:grid; gap:10px;' });
+
+          if (!Array.isArray(fairWeekendOptions) || fairWeekendOptions.length === 0) {
+            box.appendChild(el('div', {
+              className: 'hint',
+              style: 'margin-top:0; color:#3b1f1f;',
+              text: 'No weekend dates configured for this fair.'
+            }));
+          } else {
+            for (const opt of fairWeekendOptions) {
+              const row = el('label', { style: 'display:flex; align-items:center; gap:12px; font-size:18px;' });
+              const cb = el('input', { type: 'checkbox' });
+              cb.checked = selectedSet.has(String(opt.value));
+              cb.disabled = !pageState.canEdit;
+
+              cb.addEventListener('change', () => {
+                if (cb.checked) selectedSet.add(String(opt.value));
+                else selectedSet.delete(String(opt.value));
+                setFieldValue(f.id, Array.from(selectedSet));
+              });
+
+              row.appendChild(cb);
+              row.appendChild(el('span', { text: opt.label }));
+              box.appendChild(row);
+            }
+          }
+
+          control = box;
+        } else if (t === 'textarea') {
+          const input = el('textarea', { placeholder: f.placeholder || '' });
+          input.value = typeof existing === 'string' ? existing : '';
+          input.disabled = !pageState.canEdit;
+          input.addEventListener('input', () => setFieldValue(f.id, input.value));
+          control = input;
+        } else if (t === 'number') {
+          const input = el('input', { type: 'number', placeholder: f.placeholder || '' });
+          input.value = (existing === null || existing === undefined) ? '' : String(existing);
+          input.disabled = !pageState.canEdit;
+          input.addEventListener('input', () => setFieldValue(f.id, input.value === '' ? null : Number(input.value)));
+          control = input;
+        } else if (t === 'date') {
+          const input = el('input', { type: 'date' });
+          input.value = typeof existing === 'string' ? existing : '';
+          input.disabled = !pageState.canEdit;
+          input.addEventListener('change', () => setFieldValue(f.id, input.value || null));
+          control = input;
+        } else if (t === 'checkbox') {
+          const row = el('label', { style: 'display:flex; align-items:center; gap:12px; font-size:18px;' });
+          const cb = el('input', { type: 'checkbox' });
+          cb.checked = existing === true;
+          cb.disabled = !pageState.canEdit;
+          cb.addEventListener('change', () => setFieldValue(f.id, cb.checked));
+          row.appendChild(cb);
+          row.appendChild(el('span', { text: 'Yes / No' }));
+          control = row;
+        } else if (t === 'select') {
+          const sel = el('select');
+          sel.disabled = !pageState.canEdit;
+
+          const options = (cfg && Array.isArray(cfg.options)) ? cfg.options : [];
+          sel.appendChild(el('option', { value: '', text: 'Select...' }));
+          for (const optVal of options) {
+            sel.appendChild(el('option', { value: String(optVal), text: String(optVal) }));
+          }
+
+          sel.value = typeof existing === 'string' ? existing : '';
+          sel.addEventListener('change', () => setFieldValue(f.id, sel.value || null));
+          control = sel;
+        } else if (t === 'address') {
+          const addr = (existing && typeof existing === 'object') ? existing : {};
+          const grid = el('div', { className: 'address-grid' });
+
+          const street = el('input', { type: 'text', placeholder: 'Street address' });
+          const city = el('input', { type: 'text', placeholder: 'City' });
+          const state = el('input', { type: 'text', placeholder: 'State' });
+          const zip = el('input', { type: 'text', placeholder: 'Zip' });
+
+          street.value = addr.street || '';
+          city.value = addr.city || '';
+          state.value = addr.state || '';
+          zip.value = addr.zip || '';
+
+          street.disabled = !pageState.canEdit;
+          city.disabled = !pageState.canEdit;
+          state.disabled = !pageState.canEdit;
+          zip.disabled = !pageState.canEdit;
+
+          const push = () => {
+            setFieldValue(f.id, {
+              street: street.value || null,
+              city: city.value || null,
+              state: state.value || null,
+              zip: zip.value || null
+            });
+          };
+
+          street.addEventListener('input', push);
+          city.addEventListener('input', push);
+          state.addEventListener('input', push);
+          zip.addEventListener('input', push);
+
+          grid.appendChild(street);
+          grid.appendChild(city);
+          grid.appendChild(state);
+          grid.appendChild(zip);
+          control = grid;
+        } else if (t === 'file') {
+          const fileRow = el('div', { className: 'file-row' });
+          const input = el('input', { type: 'file' });
+          const label = el('div', { className: 'hint', style: 'margin-top:0; color:#3b1f1f;' });
+          input.disabled = !pageState.canEdit;
+
+          if (existing && typeof existing === 'object' && existing.name) {
+            label.textContent = `Selected: ${existing.name}`;
+          } else {
+            label.textContent = 'No file selected.';
+          }
+
+          input.addEventListener('change', async () => {
+            const file = input.files && input.files[0] ? input.files[0] : null;
+            if (!file) {
+              label.textContent = 'No file selected.';
+              setFieldValue(f.id, null);
+              return;
+            }
+
+            const fileKey = `fairapp_files_v1:${pageState.submissionId}:file:${f.id}`;
+            try {
+              await idbPutFile(fileKey, file, { name: file.name, size: file.size, type: file.type });
+              label.textContent = `Selected: ${file.name}`;
+              setFieldValue(f.id, { name: file.name, size: file.size, type: file.type, persisted: true });
+            } catch (e) {
+              console.error(e);
+              label.textContent = `Selected: ${file.name}`;
+              setFieldValue(f.id, { name: file.name, size: file.size, type: file.type, persisted: false });
+            }
+          });
+
+          fileRow.appendChild(input);
+          fileRow.appendChild(label);
+          control = fileRow;
+        } else {
+          const input = el('input', { type: 'text', placeholder: f.placeholder || '' });
+          input.value = typeof existing === 'string' ? existing : '';
+          input.disabled = !pageState.canEdit;
+          input.addEventListener('input', () => setFieldValue(f.id, input.value));
+          control = input;
+        }
+
+        card.appendChild(control);
+
+        if (isMissingRequired(f, existing)) {
+          card.classList.add('missing');
+        }
+
+        wrap.appendChild(card);
+      }
+    }
+
+    async function saveChanges() {
+      setMsg('');
+
+      if (!pageState.canEdit) {
+        setMsg('This application cannot be updated.');
+        return;
+      }
+
+      let missingCount = 0;
+      for (const f of pageState.fields) {
+        const v = pageState.valuesMap.get(f.id);
+        const miss = isMissingRequired(f, v);
+        const box = document.getElementById(`field_${f.id}`);
+        if (box) {
+          if (miss) box.classList.add('missing');
+          else box.classList.remove('missing');
+        }
+        if (miss) missingCount++;
+      }
+
+      if (missingCount > 0) {
+        setMsg(`Missing required fields: ${missingCount}.`);
+        return;
+      }
+
+      showLoader();
+      try {
+        const payload = [];
+        for (const f of pageState.fields) {
+          payload.push({
+            submission_id: pageState.submissionId,
+            field_id: f.id,
+            value: pageState.valuesMap.has(f.id) ? pageState.valuesMap.get(f.id) : null
+          });
+        }
+
+        const { error } = await supabaseClient
+          .from('fair_man_app_submission_value')
+          .upsert(payload, { onConflict: 'submission_id,field_id' });
+
+        if (error) throw error;
+
+        const { error: subError } = await supabaseClient
+          .from('fair_man_app_submission')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', pageState.submissionId)
+          .neq('status', 'approved');
+
+        if (subError) throw subError;
+
+        setMsg('Changes saved.');
+        const vpaId = pageState.submission?.vendor_performer_application_id;
+        window.location.href = `/vendor_performer/performer/fair_applications.html?vpa_id=${encodeURIComponent(vpaId)}`;
+      } catch (e) {
+        console.error(e);
+        setMsg(`Save failed: ${e.message || String(e)}`);
+      } finally {
+        hideLoader();
+      }
+    }
+
+    async function loadPage() {
+      showLoader();
+      setMsg('');
+
+      const { fairId, submissionId } = getParams();
+      pageState.fairId = fairId;
+      pageState.submissionId = submissionId;
+
+      if (!fairId || !submissionId) {
+        setMsg('Missing fair_id or submission_id in URL.');
+        hideLoader();
+        return;
+      }
+
+      document.getElementById('btnBack').onclick = () => {
+        const vpaId = pageState.submission?.vendor_performer_application_id;
+        if (vpaId) {
+          window.location.href = `/vendor_performer/performer/fair_applications.html?vpa_id=${encodeURIComponent(vpaId)}`;
+          return;
+        }
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          window.location.href = `/vendor_performer/performer/fair_applications.html`;
+        }
+      };
+
+      document.getElementById('btnSave').onclick = saveChanges;
+
+      try {
+        const submission = await loadSubmission(submissionId);
+        if (String(submission.fair_id) !== String(fairId)) {
+          throw new Error('submission_fair_mismatch');
+        }
+
+        const fairRow = await loadFair(fairId);
+        const vpaRow = await loadVpa(submission.vendor_performer_application_id);
+        const formRow = await loadForm(submission.form_id);
+        const fields = await loadFields(submission.form_id);
+        const valuesMap = await loadSubmissionValuesMap(submissionId);
+        const fairWeekendOptions = await loadFairWeekendOptions(fairId);
+
+        pageState.submission = submission;
+        pageState.fields = fields;
+        pageState.valuesMap = valuesMap;
+        pageState.canEdit = String(submission.status || '').toLowerCase() !== 'approved';
+
+        document.getElementById('pageTitle').textContent = `Update Application — ${fairRow.name}`;
+        document.getElementById('txtFairName').textContent = fairRow.name || '—';
+        document.getElementById('txtVpaName').textContent = vpaRow.name || '—';
+        document.getElementById('txtVpaType').textContent = vpaRow.application_type === true ? 'Performer' : 'Vendor';
+        document.getElementById('txtVpaFood').textContent = vpaRow.is_food_vendor === true ? 'Yes' : 'No';
+        document.getElementById('txtVpaEmail').textContent = vpaRow.contact_email || '—';
+        document.getElementById('txtVpaContact').textContent = vpaRow.contact_name || '—';
+        document.getElementById('txtFormInfo').textContent = `${formRow.title} (v${formRow.version})`;
+        document.getElementById('txtStatus').textContent = prettyStatus(submission.status);
+        document.getElementById('txtContractAccepted').textContent = submission.contract_accepted_at ? 'Agreed' : 'Not recorded';
+        document.getElementById('txtContractAcceptedAt').textContent = submission.contract_accepted_at
+          ? new Date(submission.contract_accepted_at).toLocaleString()
+          : '—';
+        document.getElementById('contractBox').textContent =
+          (formRow.contract_text && String(formRow.contract_text).trim())
+            ? String(formRow.contract_text)
+            : 'No contract text found for this form.';
+        document.getElementById('answersHint').textContent = pageState.canEdit
+          ? 'Review and update your saved answers.'
+          : 'This application is read-only.';
+
+        renderReadonlyState(pageState.canEdit);
+        await renderFields(fairWeekendOptions);
+      } catch (e) {
+        console.error(e);
+        setMsg(`Error loading application: ${e.message || String(e)}`);
+      } finally {
+        hideLoader();
+      }
+    }
+
+    loadPage();
+  </script>
+</body>
+</html>

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vendor Page Setup | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
+
+  <style>
+    body{
+      font-family:'Domine', serif;
+      background:#000;
+      padding:40px;
+      text-align:center;
+      color:#f0e6d2;
+      margin:0;
+    }
+    h1,h2{ font-family:'Cinzel', serif; }
+    .top-banner{
+      width:100%;
+      max-width:600px;
+      height:auto;
+      object-fit:contain;
+      display:block;
+      margin:0 auto 20px auto;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    }
+    .logo{
+      max-width:100px;
+      height:auto;
+      margin:0 auto 20px auto;
+      display:block;
+      filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .container{
+      max-width:920px;
+      margin:auto;
+      background:rgba(251,241,200,0.88);
+      padding:30px 40px;
+      border-radius:12px;
+      border:2px solid #aa8425;
+      box-shadow:0 4px 15px rgba(0,0,0,0.4);
+      color:#3b1f1f;
+      text-align:left;
+    }
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:13px;
+      background:rgba(0,0,0,0.08);
+      margin-bottom:12px;
+    }
+
+    /* darker card like your screenshot */
+    .card{
+      background:rgba(0,0,0,0.10);
+      border:1px solid rgba(0,0,0,0.18);
+      border-radius:12px;
+      padding:14px;
+      margin-top:14px;
+    }
+    .card h2{
+      margin:0 0 8px 0;
+      font-size:18px;
+    }
+    .muted{ opacity:.85; }
+
+    .row{ display:flex; gap:12px; flex-wrap:wrap; }
+    .field{ flex:1; min-width:260px; }
+    label{ display:block; font-weight:bold; margin:10px 0 6px; }
+    input, textarea, select{
+      width:100%;
+      box-sizing:border-box;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #c9b27a;
+      font-family:'Domine', serif;
+      font-size:16px;
+      background:#fff;
+      color:#000;
+    }
+    textarea{ min-height:90px; resize:vertical; }
+
+    .toggleRow{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-top:6px;
+      font-size:14px;
+    }
+    .toggleRow input[type="checkbox"]{ width:auto; }
+
+    .readonlyBox{
+      background:rgba(255,255,255,0.65);
+      border:1px solid rgba(0,0,0,0.18);
+      border-radius:10px;
+      padding:10px;
+      margin-top:10px;
+    }
+    .readonlyGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .readonlyItem{
+      padding:10px;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,0.10);
+      background:rgba(255,255,255,0.60);
+    }
+    .readonlyItem b{ display:block; margin-bottom:4px; }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-top:18px;
+    }
+    button{
+      padding:12px 20px;
+      font-size:16px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+    }
+    .btn-cancel{ background:#444; color:#fff; }
+    .btn-preview{ background:#27ae60; color:#fff; }
+    .error{ color:#7f1d1d; font-weight:bold; margin-top:10px; }
+    .ok{ color:#14532d; font-weight:bold; margin-top:10px; }
+
+    @media (max-width:768px){
+      body{ padding:20px; }
+      .container{ padding:20px; }
+      button{ width:100%; }
+      .actions{ flex-direction:column; }
+      .readonlyGrid{ grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+<img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+<div class="container">
+  <div class="pill">Setup • Vendor • (Draft stored in browser until Publish)</div>
+  <h1>Vendor Page Setup</h1>
+
+  <div id="statusMsg" class="muted">Loading…</div>
+
+  <div id="wrap" style="display:none;">
+
+    <div class="card">
+      <h2>Wizard Info (read-only)</h2>
+      <div class="readonlyBox">
+        <div class="readonlyGrid">
+            <div class="readonlyItem">
+  <b>Image</b>
+  <div id="ro_photo">
+    <img id="ro_photo_img" src="" alt="Application Image" style="max-width:120px;border-radius:8px;display:none;">
+    <div id="ro_photo_na">N/A</div>
+  </div>
+</div>
+          <div class="readonlyItem">
+            <b>Display Name</b>
+            <div id="ro_display_name">—</div>
+          </div>
+          <div class="readonlyItem">
+            <b>Address</b>
+            <div id="ro_address">—</div>
+          </div>
+          <div class="readonlyItem">
+            <b>Tagline</b>
+            <div id="ro_tagline">—</div>
+          </div>
+          <div class="readonlyItem">
+            <b>Pricing Note</b>
+            <div id="ro_pricing">—</div>
+          </div>
+          <div class="readonlyItem">
+            <b>Show Full Address</b>
+            <div id="ro_show_addr">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="muted" style="margin-top:10px;">
+        To change those fields, use the Wizard page. Everything below is edited here and only saved to Supabase when you Publish.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Public Details</h2>
+      <div class="row">
+        <div class="field">
+          <label for="public_location_text">Public Location Text</label>
+          <input id="public_location_text" type="text" placeholder="Example: Based in Des Moines, IA" />
+          <div class="toggleRow">
+            <input id="vis_public_location_text" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="primary_category">Primary Category</label>
+          <input id="primary_category" type="text" placeholder="Example: Leatherwork, Pottery, Jewelry" />
+          <div class="toggleRow">
+            <input id="vis_primary_category" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="tags">Tags (comma separated)</label>
+          <input id="tags" type="text" placeholder="Example: handmade, fantasy, gifts" />
+          <div class="toggleRow">
+            <input id="vis_tags" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="slug">Public URL Slug</label>
+          <input id="slug" type="text" placeholder="Example: dragons-den-leather" />
+          <div class="toggleRow">
+            <input id="vis_slug" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="about_short">About (Short)</label>
+          <textarea id="about_short" placeholder="1–2 sentences"></textarea>
+          <div class="toggleRow">
+            <input id="vis_about_short" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="about_long">About (Long)</label>
+          <textarea id="about_long" placeholder="Full story / longer bio"></textarea>
+          <div class="toggleRow">
+            <input id="vis_about_long" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Public Contact</h2>
+      <div class="row">
+        <div class="field">
+          <label for="public_contact_email">Public Email</label>
+          <input id="public_contact_email" type="email" placeholder="Example: hello@myshop.com" />
+          <div class="toggleRow">
+            <input id="vis_public_contact_email" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="public_contact_phone">Public Phone</label>
+          <input id="public_contact_phone" type="text" placeholder="Example: (555) 555-5555" />
+          <div class="toggleRow">
+            <input id="vis_public_contact_phone" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="public_website_url">Website</label>
+          <input id="public_website_url" type="text" placeholder="https://…" />
+          <div class="toggleRow">
+            <input id="vis_public_website_url" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="facebook_url">Facebook</label>
+          <input id="facebook_url" type="text" placeholder="https://facebook.com/…" />
+          <div class="toggleRow">
+            <input id="vis_facebook_url" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="instagram_url">Instagram</label>
+          <input id="instagram_url" type="text" placeholder="https://instagram.com/…" />
+          <div class="toggleRow">
+            <input id="vis_instagram_url" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="tiktok_url">TikTok</label>
+          <input id="tiktok_url" type="text" placeholder="https://tiktok.com/@…" />
+          <div class="toggleRow">
+            <input id="vis_tiktok_url" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="youtube_url">YouTube</label>
+          <input id="youtube_url" type="text" placeholder="https://youtube.com/…" />
+          <div class="toggleRow">
+            <input id="vis_youtube_url" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Brand Images (URLs for now)</h2>
+      <div class="row">
+        <div class="field">
+          <label for="logo_url">Logo URL</label>
+          <input id="logo_url" type="text" placeholder="https://…" />
+          <div class="toggleRow">
+            <input id="vis_logo_url" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="banner_url">Banner URL</label>
+          <input id="banner_url" type="text" placeholder="https://…" />
+          <div class="toggleRow">
+            <input id="vis_banner_url" type="checkbox" checked />
+            <span>Visible on public page</span>
+          </div>
+        </div>
+      </div>
+      <div class="muted">We will hook this to Supabase Storage or Cloudinary later.</div>
+    </div>
+
+    <div class="card">
+      <h2>Offerings (simple list)</h2>
+      <label for="offerings">One per line</label>
+      <textarea id="offerings" placeholder="Example:
+Handmade leather belts
+Custom armor commissions
+Fantasy-themed gifts"></textarea>
+      <div class="toggleRow">
+        <input id="vis_offerings" type="checkbox" checked />
+        <span>Visible on public page</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Schedule</h2>
+      <div class="muted">Blank for now (we will use another table later).</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-cancel" onclick="cancelSetup()">Cancel</button>
+      <button class="btn-preview" onclick="goPreview()">Preview</button>
+    </div>
+
+    <div id="msg"></div>
+  </div>
+</div>
+
+<script>
+  /* ---------- CONFIG ---------- */
+  const TYPE = 'vendor';
+  const DASHBOARD_PATH = '/vendor_performer/vendor/dashboard.html';
+  const PREVIEW_PATH = './vp_vendor_preview_page.html';
+
+  const DRAFT_KEY = (vpaId) => `vp_web_draft:${TYPE}:${vpaId}`;
+
+  /* ---------- SUPABASE CLIENT ---------- */
+  window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
+  const sb = window.supabaseClient;
+
+  const params = new URLSearchParams(window.location.search);
+  const vpaId = params.get('vpa_id');
+
+  let vpRow = null;
+  let vpaRow = null;
+
+  function cancelSetup(){
+    window.location.href = DASHBOARD_PATH;
+  }
+
+  async function ensureLoggedIn(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session?.user?.id) return session;
+    return new Promise((resolve) => {
+      sb.auth.onAuthStateChange((_, s) => resolve(s));
+    });
+  }
+
+  function isAddressNull(a){
+    const s = (a?.street_address || '').trim();
+    const c = (a?.city || '').trim();
+    const st = (a?.state || '').trim();
+    const z = (a?.zip_code || '').trim();
+    return !s && !c && !st && !z;
+  }
+
+  function formatAddress(a){
+    if(isAddressNull(a)) return 'N/A';
+    const parts = [];
+    if(a?.street_address) parts.push(a.street_address);
+    const line2 = [a?.city, a?.state, a?.zip_code].filter(Boolean).join(', ').replace(', ,', ',');
+    if(line2.trim()) parts.push(line2);
+    return parts.join('<br>');
+  }
+
+  function defaultVisibility(){
+    return {
+      public_location_text: true,
+      primary_category: true,
+      tags: true,
+      slug: true,
+      about_short: true,
+      about_long: true,
+      public_contact_email: true,
+      public_contact_phone: true,
+      public_website_url: true,
+      facebook_url: true,
+      instagram_url: true,
+      tiktok_url: true,
+      youtube_url: true,
+      logo_url: true,
+      banner_url: true,
+      offerings: true
+    };
+  }
+
+  function readDraftFromStorage(){
+    try{
+      const raw = localStorage.getItem(DRAFT_KEY(vpaId));
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(e){
+      return null;
+    }
+  }
+
+  function writeDraftToStorage(draft){
+    localStorage.setItem(DRAFT_KEY(vpaId), JSON.stringify(draft));
+  }
+
+  function setCheckbox(id, val){
+    const el = document.getElementById(id);
+    if(el) el.checked = !!val;
+  }
+  function getCheckbox(id){
+    const el = document.getElementById(id);
+    return !!el?.checked;
+  }
+  function setValue(id, val){
+    const el = document.getElementById(id);
+    if(el) el.value = val ?? '';
+  }
+  function getValue(id){
+    const el = document.getElementById(id);
+    return (el?.value ?? '').trim();
+  }
+
+  function offeringsToJson(lines){
+    const arr = lines
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(text => ({ text }));
+    return arr;
+  }
+
+  function offeringsFromJson(jsonVal){
+    try{
+      if(Array.isArray(jsonVal)){
+        return jsonVal.map(x => (typeof x === 'string' ? x : (x?.text ?? ''))).filter(Boolean).join('\n');
+      }
+      return '';
+    }catch(e){
+      return '';
+    }
+  }
+
+function fillReadOnly(){
+  document.getElementById('ro_display_name').innerText = vpaRow?.name ?? '—';
+  document.getElementById('ro_address').innerHTML = formatAddress(vpaRow);
+  document.getElementById('ro_tagline').innerText = vpRow?.tagline ?? '—';
+  document.getElementById('ro_pricing').innerText = vpRow?.pricing_note ?? '—';
+  document.getElementById('ro_show_addr').innerText = vpRow?.show_full_address ? 'Yes' : 'No';
+
+  const img = document.getElementById('ro_photo_img');
+  const na = document.getElementById('ro_photo_na');
+  const url = (vpaRow?.photo_url || '').trim();
+
+  if(url){
+    img.src = url;
+    img.style.display = 'block';
+    na.style.display = 'none';
+  }else{
+    img.removeAttribute('src');
+    img.style.display = 'none';
+    na.style.display = 'block';
+  }
+}
+  function fillEditableFromRow(){
+    setValue('public_location_text', vpRow?.public_location_text);
+    setValue('primary_category', vpRow?.primary_category);
+    setValue('tags', Array.isArray(vpRow?.tags) ? vpRow.tags.join(', ') : '');
+    setValue('slug', vpRow?.slug);
+
+    setValue('about_short', vpRow?.about_short);
+    setValue('about_long', vpRow?.about_long);
+
+    setValue('public_contact_email', vpRow?.public_contact_email);
+    setValue('public_contact_phone', vpRow?.public_contact_phone);
+    setValue('public_website_url', vpRow?.public_website_url);
+
+    setValue('facebook_url', vpRow?.facebook_url);
+    setValue('instagram_url', vpRow?.instagram_url);
+    setValue('tiktok_url', vpRow?.tiktok_url);
+    setValue('youtube_url', vpRow?.youtube_url);
+
+    setValue('logo_url', vpRow?.logo_url);
+    setValue('banner_url', vpRow?.banner_url);
+
+    setValue('offerings', offeringsFromJson(vpRow?.offerings));
+  }
+
+  function fillVisibility(vis){
+    setCheckbox('vis_public_location_text', vis.public_location_text);
+    setCheckbox('vis_primary_category', vis.primary_category);
+    setCheckbox('vis_tags', vis.tags);
+    setCheckbox('vis_slug', vis.slug);
+    setCheckbox('vis_about_short', vis.about_short);
+    setCheckbox('vis_about_long', vis.about_long);
+    setCheckbox('vis_public_contact_email', vis.public_contact_email);
+    setCheckbox('vis_public_contact_phone', vis.public_contact_phone);
+    setCheckbox('vis_public_website_url', vis.public_website_url);
+    setCheckbox('vis_facebook_url', vis.facebook_url);
+    setCheckbox('vis_instagram_url', vis.instagram_url);
+    setCheckbox('vis_tiktok_url', vis.tiktok_url);
+    setCheckbox('vis_youtube_url', vis.youtube_url);
+    setCheckbox('vis_logo_url', vis.logo_url);
+    setCheckbox('vis_banner_url', vis.banner_url);
+    setCheckbox('vis_offerings', vis.offerings);
+  }
+
+  function collectDraft(){
+    const visibility = {
+      public_location_text: getCheckbox('vis_public_location_text'),
+      primary_category: getCheckbox('vis_primary_category'),
+      tags: getCheckbox('vis_tags'),
+      slug: getCheckbox('vis_slug'),
+      about_short: getCheckbox('vis_about_short'),
+      about_long: getCheckbox('vis_about_long'),
+      public_contact_email: getCheckbox('vis_public_contact_email'),
+      public_contact_phone: getCheckbox('vis_public_contact_phone'),
+      public_website_url: getCheckbox('vis_public_website_url'),
+      facebook_url: getCheckbox('vis_facebook_url'),
+      instagram_url: getCheckbox('vis_instagram_url'),
+      tiktok_url: getCheckbox('vis_tiktok_url'),
+      youtube_url: getCheckbox('vis_youtube_url'),
+      logo_url: getCheckbox('vis_logo_url'),
+      banner_url: getCheckbox('vis_banner_url'),
+      offerings: getCheckbox('vis_offerings')
+    };
+
+    const tagsArr = getValue('tags')
+      ? getValue('tags').split(',').map(s => s.trim()).filter(Boolean)
+      : null;
+
+    const profilePatch = {
+      public_location_text: getValue('public_location_text') || null,
+      primary_category: getValue('primary_category') || null,
+      tags: tagsArr,
+      slug: getValue('slug') || null,
+
+      about_short: getValue('about_short') || null,
+      about_long: getValue('about_long') || null,
+
+      public_contact_email: getValue('public_contact_email') || null,
+      public_contact_phone: getValue('public_contact_phone') || null,
+      public_website_url: getValue('public_website_url') || null,
+
+      facebook_url: getValue('facebook_url') || null,
+      instagram_url: getValue('instagram_url') || null,
+      tiktok_url: getValue('tiktok_url') || null,
+      youtube_url: getValue('youtube_url') || null,
+
+      logo_url: getValue('logo_url') || null,
+      banner_url: getValue('banner_url') || null,
+
+      offerings: offeringsToJson(getValue('offerings'))
+    };
+
+    return {
+      type: TYPE,
+      vpa_id: Number(vpaId),
+      vp_web_profile_id: vpRow?.id || null,
+      wizard_readonly_snapshot: {
+        display_name: vpaRow?.name ?? null,
+        address_html: formatAddress(vpaRow),
+        tagline: vpRow?.tagline ?? null,
+        pricing_note: vpRow?.pricing_note ?? null,
+        show_full_address: !!vpRow?.show_full_address
+      },
+      visibility,
+      profilePatch,
+      updated_at_local: new Date().toISOString()
+    };
+  }
+
+  function goPreview(){
+    if(!vpaId){
+      document.getElementById('msg').innerHTML = '<div class="error">Missing vpa_id.</div>';
+      return;
+    }
+    const draft = collectDraft();
+    writeDraftToStorage(draft);
+    window.location.href = `${PREVIEW_PATH}?vpa_id=${encodeURIComponent(vpaId)}`;
+  }
+
+  async function load(){
+    if(!vpaId){
+      document.getElementById('statusMsg').innerHTML = '<div class="error">Missing vpa_id.</div>';
+      return;
+    }
+
+    const session = await ensureLoggedIn();
+    if(!session?.user?.id){
+      document.getElementById('statusMsg').innerHTML = '<div class="error">Please sign in to continue.</div>';
+      return;
+    }
+const { data: appRow, error: appErr } = await sb
+  .from('vendor_performer_applications')
+  .select('id,name,street_address,city,state,zip_code,photo_url')
+  .eq('id', vpaId)
+  .single();
+
+    if(appErr || !appRow){
+      document.getElementById('statusMsg').innerHTML = '<div class="error">Failed to load application.</div>';
+      return;
+    }
+    vpaRow = appRow;
+
+    const { data: existing, error: selErr } = await sb
+      .from('vp_web_profile')
+      .select('*')
+      .eq('vpa_id', vpaId)
+      .maybeSingle();
+
+    if(selErr){
+      document.getElementById('statusMsg').innerHTML = `<div class="error">Failed to load vp_web_profile: ${selErr.message}</div>`;
+      return;
+    }
+    if(existing){
+      vpRow = existing;
+    }else{
+      // If it doesn't exist yet, create draft row so Publish can update it later.
+      const { data: created, error: insErr } = await sb
+        .from('vp_web_profile')
+        .insert([{ vpa_id: Number(vpaId), editor_mode: 'setup', is_published: false, is_active: true }])
+        .select('*')
+        .single();
+
+      if(insErr){
+        document.getElementById('statusMsg').innerHTML =
+          `<div class="error">Could not create vp_web_profile row. Make sure your application is approved.</div>`;
+        return;
+      }
+      vpRow = created;
+    }
+
+    fillReadOnly();
+
+    // Draft restore (browser)
+    const draft = readDraftFromStorage();
+    if(draft?.profilePatch){
+      // Fill from draft instead of DB
+      setValue('public_location_text', draft.profilePatch.public_location_text);
+      setValue('primary_category', draft.profilePatch.primary_category);
+      setValue('tags', Array.isArray(draft.profilePatch.tags) ? draft.profilePatch.tags.join(', ') : '');
+      setValue('slug', draft.profilePatch.slug);
+      setValue('about_short', draft.profilePatch.about_short);
+      setValue('about_long', draft.profilePatch.about_long);
+      setValue('public_contact_email', draft.profilePatch.public_contact_email);
+      setValue('public_contact_phone', draft.profilePatch.public_contact_phone);
+      setValue('public_website_url', draft.profilePatch.public_website_url);
+      setValue('facebook_url', draft.profilePatch.facebook_url);
+      setValue('instagram_url', draft.profilePatch.instagram_url);
+      setValue('tiktok_url', draft.profilePatch.tiktok_url);
+      setValue('youtube_url', draft.profilePatch.youtube_url);
+      setValue('logo_url', draft.profilePatch.logo_url);
+      setValue('banner_url', draft.profilePatch.banner_url);
+      setValue('offerings', offeringsFromJson(draft.profilePatch.offerings));
+
+      fillVisibility(draft.visibility || defaultVisibility());
+    } else {
+      fillEditableFromRow();
+      fillVisibility(defaultVisibility());
+    }
+
+    document.getElementById('statusMsg').style.display = 'none';
+    document.getElementById('wrap').style.display = 'block';
+  }
+
+  window.addEventListener('DOMContentLoaded', load);
+</script>
+
+</body>
+</html>

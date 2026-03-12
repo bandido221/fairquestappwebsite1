@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vendor List | FairQuest</title>
   <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
@@ -34,23 +35,26 @@
     }
     .home-button:hover{ background:#d4af6a; }
 
-    .filters{
-      margin-bottom:20px;
-      display:flex;
-      justify-content:center;
-    }
-    .filters input{
-      padding:10px 12px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,0.14);
-      font-size:16px;
-      background:rgba(255,255,255,0.08);
-      color:rgba(255,255,255,0.92);
-      min-width:min(520px,92vw);
-      outline:none;
-    }
-    .filters input::placeholder{ color:rgba(255,255,255,0.65); }
-
+ .filters{
+  margin-bottom:20px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+}
+.filters input{
+  padding:8px;
+  border-radius:6px;
+  border:none;
+  font-size:16px;
+  background:#fff;
+  color:#000;
+  min-width:min(520px,92vw);
+  outline:none;
+}
+.filters input::placeholder{
+  color:#555;
+}
     .vendor-grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
@@ -59,19 +63,19 @@
       margin:0 auto;
     }
 
-    .vendor-card{
-      background:rgba(255,255,255,0.06);
-      border:1px solid rgba(255,255,255,0.12);
-      color:rgba(255,255,255,0.92);
-      border-radius:16px;
-      overflow:hidden;
-      box-shadow:0 10px 24px rgba(0,0,0,0.35);
-    }
+.vendor-card{
+  background:rgba(214,197,126,0.88);
+  border:2px solid #aa8425;
+  color:#3b1f1f;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 10px 24px rgba(0,0,0,0.35);
+}
 
-    .card-media{
-      width:100%;
-      height:210px;
-      background:rgba(255,255,255,0.05);
+   .card-media{
+  width:100%;
+  height:210px;
+  background:rgba(214,197,126,0.55);
       display:flex;
       align-items:center;
       justify-content:center;
@@ -90,13 +94,13 @@
     }
 
     .card-title{
-      font-family:'Cinzel', serif;
-      text-align:center;
-      margin:0 0 12px;
-      font-size:22px;
-      line-height:1.1;
-      color:#f0e6d2;
-    }
+  font-family:'Cinzel', serif;
+  text-align:center;
+  margin:0 0 12px;
+  font-size:22px;
+  line-height:1.1;
+  color:#3b1f1f;
+}
 
     .card-actions{
       display:flex;
@@ -124,11 +128,39 @@
       color:rgba(255,255,255,0.55);
       cursor:not-allowed;
     }
+  .card-link{
+    display:block;
+    color:inherit;
+    text-decoration:none;
+    cursor:pointer;
+  }
+  .card-link:focus{
+    outline:2px solid #bb9457;
+    outline-offset:3px;
+    border-radius:12px;
+  }
+  .card-media .card-link{ height:100%; }
+  .card-media .card-link img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+  }
+ .loader{
+  width: 44px;
+  height: 44px;
+  margin: 18px auto 0;
+  border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.18);
+  border-top-color: #bb9457;
+  animation: spin 0.9s linear infinite;
+}
 
-    .card-desc{
-      color:rgba(255,255,255,0.82);
-      margin:0;
-    }
+.hidden{ display:none; }
+
+@keyframes spin{
+  to{ transform: rotate(360deg); }
+}
   </style>
 </head>
 <body>
@@ -142,81 +174,174 @@
 
   <div class="vendor-grid" id="vendorGrid"></div>
 
-  <script>
-    const supabaseClient = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+<div id="loader" class="loader hidden" aria-live="polite" aria-busy="true"></div>
+<div id="sentinel" style="height: 1px;"></div>
 
-    let vendors = [];
+ <script>
+  const supabaseClient = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
 
-    function normalizeUrl(url){
-      if(!url) return null;
-      const trimmed = String(url).trim();
-      if(!trimmed) return null;
-      if(trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
-      return 'https://' + trimmed;
-    }
+  const PAGE_SIZE = 10;
 
-    async function loadVendors(){
-      const { data, error } = await supabaseClient
-        .from('vendor_performer_applications')
-        .select('id, name, description, photo_url, website')
-        .or('application_type.is.false,application_type.is.null')
-        .order('name', { ascending: true });
+  let vendors = [];
+  let offset = 0;
+  let isLoading = false;
+  let hasMore = true;
+  let currentSearch = '';
+  let searchTimer = null;
 
-      if (error || !data) {
-        document.getElementById('vendorGrid').innerHTML = '<p>⚠️ Failed to load vendors.</p>';
-        return;
-      }
+  function normalizeUrl(url){
+    if(!url) return null;
+    const trimmed = String(url).trim();
+    if(!trimmed) return null;
+    if(trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+    return 'https://' + trimmed;
+  }
 
-      vendors = data;
-      renderVendors();
-    }
+  function setLoading(on){
+    const el = document.getElementById('loader');
+    if (!el) return;
+    el.classList.toggle('hidden', !on);
+  }
 
-    function renderVendors(){
-      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-      const container = document.getElementById('vendorGrid');
+  function escapeHtml(str){
+    return String(str ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
 
-      container.innerHTML = '';
+  function appendVendors(list){
+    const container = document.getElementById('vendorGrid');
 
-      vendors
-        .filter(v => (v.name || '').toLowerCase().includes(searchQuery))
-        .forEach(vendor => {
-          const websiteUrl = normalizeUrl(vendor.website);
+    list.forEach(vendor => {
+      const websiteUrl = normalizeUrl(vendor.website);
 
-          container.innerHTML += `
-            <div class="vendor-card">
-              <div class="card-media">
-                ${vendor.photo_url ? `<img src="${vendor.photo_url}" alt="${vendor.name}">` : ``}
-              </div>
+        const liveUrl = `vendor/vp_vendor_live_page.html?vpa_id=${encodeURIComponent(vendor.id)}`;
 
-              <div class="card-body">
-                <h2 class="card-title">${vendor.name}</h2>
+      container.innerHTML += `
+        <div class="vendor-card">
+          <div class="card-media">
+            <a class="card-link" href="${escapeHtml(liveUrl)}" aria-label="Open ${escapeHtml(vendor.name)}">
+              ${
+                vendor.photo_url
+                  ? `<img src="${escapeHtml(vendor.photo_url)}" alt="${escapeHtml(vendor.name)}">`
+                  : `<div class="muted">No image</div>`
+              }
+            </a>
+          </div>
 
-                <div class="card-actions">
-                  ${
-                    websiteUrl
-                      ? `<a class="btn btn-primary" href="${websiteUrl}" target="_blank" rel="noopener noreferrer">Website</a>`
-                      : `<span class="btn btn-disabled">Website</span>`
-                  }
-                </div>
+          <div class="card-body">
+            <a class="card-link" href="${escapeHtml(liveUrl)}">
+              <h2 class="card-title">${escapeHtml(vendor.name)}</h2>
+            </a>
 
-                <p class="card-desc"><strong>Description:</strong> ${vendor.description || 'No description'}</p>
-              </div>
+            <div class="card-actions">
+              ${
+                websiteUrl
+                  ? `<a class="btn btn-primary" href="${escapeHtml(websiteUrl)}" target="_blank" rel="noopener noreferrer">Website</a>`
+                  : `<span class="btn btn-disabled">Website</span>`
+              }
             </div>
-          `;
-        });
 
-      if (container.innerHTML.trim() === '') {
-        container.innerHTML = '<p>❌ No vendors found.</p>';
-      }
+            <p class="card-desc"><strong>Description:</strong> ${escapeHtml(vendor.description || 'No description')}</p>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  async function fetchNextPage(){
+    if (isLoading || !hasMore) return;
+
+    isLoading = true;
+    setLoading(true);
+
+    const container = document.getElementById('vendorGrid');
+
+const baseOr = 'application_type.is.false,application_type.is.null';
+
+let q = supabaseClient
+  .from('vendor_performer_applications')
+  .select('id, name, description, photo_url, website')
+  .order('name', { ascending: true });
+
+const trimmedRaw = (currentSearch || '').trim();
+
+const trimmed = trimmedRaw.replace(/[(),]/g, ' ').replace(/\s+/g, ' ').trim();
+
+if (trimmed.length >= 2) {
+  q = q.or(
+    `and(or(${baseOr}),or(name.ilike.*${trimmed}*,vendor_type.ilike.*${trimmed}*))`
+  );
+} else {
+  q = q.or(baseOr);
+}
+
+    const from = offset;
+    const to = offset + PAGE_SIZE - 1;
+
+    const { data, error } = await q.range(from, to);
+
+    if (error) {
+      console.error('vendor fetch failed:', error);
+      if (offset === 0) container.innerHTML = '<p>⚠️ Failed to load vendors.</p>';
+      isLoading = false;
+      setLoading(false);
+      return;
     }
 
-    document.getElementById('searchInput').addEventListener('input', renderVendors);
+    const rows = data || [];
 
-    loadVendors();
-  </script>
+    if (offset === 0 && rows.length === 0) {
+      container.innerHTML = '<p>❌ No vendors found.</p>';
+      hasMore = false;
+      isLoading = false;
+      setLoading(false);
+      return;
+    }
+
+    vendors = vendors.concat(rows);
+    appendVendors(rows);
+
+    offset += rows.length;
+    if (rows.length < PAGE_SIZE) hasMore = false;
+
+    isLoading = false;
+    setLoading(false);
+  }
+
+  function resetAndReload(){
+    vendors = [];
+    offset = 0;
+    hasMore = true;
+    document.getElementById('vendorGrid').innerHTML = '';
+    fetchNextPage();
+  }
+
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      currentSearch = e.target.value || '';
+      resetAndReload();
+    }, 350);
+  });
+
+  const sentinel = document.getElementById('sentinel');
+  const io = new IntersectionObserver((entries) => {
+    if (entries.some(en => en.isIntersecting)) {
+      fetchNextPage();
+    }
+  }, { root: null, rootMargin: '300px', threshold: 0.01 });
+
+  io.observe(sentinel);
+
+  fetchNextPage();
+</script>
 
 </body>
 </html>

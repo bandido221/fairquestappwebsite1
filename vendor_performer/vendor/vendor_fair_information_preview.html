@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vendor Fair Information | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Domine:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Cinzel', serif;
+      margin-top: 0;
+    }
+
+    .top-banner,
+    .logo {
+      display: block;
+      margin: 0 auto 20px auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+
+    .top-banner {
+      width: 100%;
+      max-width: 600px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .logo {
+      max-width: 100px;
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      background: rgba(214, 197, 126, 0.88);
+      color: #2f1a12;
+      border: 2px solid #aa8425;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      padding: 24px;
+      text-align: left;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .page-header h1 {
+      color: #4a250f;
+      margin-bottom: 8px;
+      font-size: 30px;
+    }
+
+    .page-header p {
+      margin: 0;
+      color: #5f3d24;
+      font-size: 16px;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-family: 'Domine', serif;
+      cursor: pointer;
+      text-align: center;
+      min-width: 160px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+
+    .btn-green {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .btn-red {
+      background: #c0392b;
+      color: #fff;
+    }
+
+    .btn-dark {
+      background: #444;
+      color: #fff;
+    }
+
+    .btn-gold {
+      background: #8a5a12;
+      color: #fff;
+    }
+
+    .btn-disabled {
+      background: #777;
+      color: #fff;
+      cursor: not-allowed;
+      opacity: 0.75;
+    }
+
+    .section-card {
+      background: rgba(255, 248, 220, 0.55);
+      border: 1px solid rgba(120, 81, 19, 0.28);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+
+    .section-title {
+      color: #4a250f;
+      margin-bottom: 14px;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    .loading {
+      text-align: center;
+      font-size: 18px;
+      color: #2f1a12;
+      padding: 30px 10px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .summary-item {
+      background: rgba(255,255,255,0.40);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #6a4a1d;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .value {
+      font-size: 16px;
+      color: #2c1710;
+      word-break: break-word;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .badge-active {
+      background: #dff6e7;
+      color: #17643d;
+      border: 1px solid #8fd2ab;
+    }
+
+    .badge-archived {
+      background: #ececec;
+      color: #444;
+      border: 1px solid #bbb;
+    }
+
+    .weekend-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .weekend-row {
+      background: rgba(255,255,255,0.40);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .weekend-left {
+      flex: 1;
+    }
+
+    .weekend-name {
+      font-weight: 700;
+      color: #2f1a12;
+      margin-bottom: 6px;
+      font-size: 17px;
+    }
+
+    .weekend-meta {
+      color: #5a4335;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .weekend-right {
+      min-width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .price-row,
+    .note-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .price-input,
+    .note-input {
+      width: 100%;
+      border: 1px solid #b9913a;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 15px;
+      font-family: 'Domine', serif;
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.92);
+      color: #2f1a12;
+    }
+
+    .weekend-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .total-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .total-box {
+      background: rgba(255,255,255,0.40);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .empty-box {
+      background: rgba(255,255,255,0.40);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      color: #5a4335;
+    }
+
+    .error-box {
+      background: rgba(192, 57, 43, 0.18);
+      border: 1px solid rgba(192, 57, 43, 0.40);
+      border-radius: 12px;
+      padding: 16px;
+      color: #5a1d16;
+      text-align: center;
+    }
+
+    .success-box {
+      background: rgba(39, 174, 96, 0.18);
+      border: 1px solid rgba(39, 174, 96, 0.40);
+      border-radius: 12px;
+      padding: 14px;
+      color: #155936;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .muted-box {
+      background: rgba(255,255,255,0.35);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      color: #5a4335;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    footer a {
+      color: #aa8452;
+      text-decoration: none;
+      margin: 0 8px;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 14px;
+      }
+
+      .container {
+        padding: 18px;
+      }
+
+      .summary-grid,
+      .total-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions,
+      .weekend-actions {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+      }
+
+      .weekend-row {
+        flex-direction: column;
+      }
+
+      .weekend-right {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .logo {
+        max-width: 80px;
+      }
+
+      .top-banner {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+  <div class="container">
+    <div class="page-header">
+      <h1 id="pageTitle">Vendor Fair Information</h1>
+      <p id="pageSubTitle">Loading fair information…</p>
+    </div>
+
+    <div class="top-actions">
+      <button class="btn-dark" type="button" onclick="goBackToDashboard()">Back to Dashboard</button>
+      <button class="btn-green" type="button" onclick="loadPage()">Refresh</button>
+      <button id="archiveBtn" class="btn-dark" type="button" onclick="toggleArchive()">Archive This Fair</button>
+      <button class="btn-disabled" type="button">Documents Page Next</button>
+    </div>
+
+    <div id="pageContent" class="loading">Loading fair information…</div>
+  </div>
+
+  <script>
+    window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+    const sb = window.supabaseClient;
+
+    let currentFairRows = [];
+    let currentFairName = '';
+    let currentSeasonYear = '';
+
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        vpaId: params.get('vpa_id'),
+        fairName: params.get('fair_name'),
+        seasonYear: params.get('season_year')
+      };
+    }
+
+    function formatMoney(amount) {
+      return `$${Number(amount || 0).toFixed(2)}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getSeasonYearFromDate(dateValue) {
+      if (!dateValue) return '';
+      return String(new Date(dateValue).getFullYear());
+    }
+
+    function getTotalDue(rows) {
+      return rows.reduce((sum, row) => sum + Number(row.weekend_price || 0), 0);
+    }
+
+    function getTotalUnpaid(rows) {
+      return rows
+        .filter(row => !row.is_paid)
+        .reduce((sum, row) => sum + Number(row.weekend_price || 0), 0);
+    }
+
+    function isArchivedFair(rows) {
+      return rows.length > 0 && rows.every(row => row.is_archived === true);
+    }
+
+    function archiveBadge(rows) {
+      return isArchivedFair(rows)
+        ? `<span class="badge badge-archived">Archived</span>`
+        : `<span class="badge badge-active">Active</span>`;
+    }
+
+    function renderWeekendRows(rows) {
+      if (!rows.length) {
+        return `<div class="empty-box">No weekends found for this fair.</div>`;
+      }
+
+      return rows.map(row => `
+        <div class="weekend-row">
+          <div class="weekend-left">
+            <div class="weekend-name">${escapeHtml(row.weekend_start_date)} to ${escapeHtml(row.weekend_end_date)}</div>
+            <div class="weekend-meta">Saved weekend record ID: ${escapeHtml(row.id)}</div>
+          </div>
+
+          <div class="weekend-right">
+            <div class="price-row">
+              <div class="label">Weekend Price</div>
+              <input
+                id="price-${row.id}"
+                class="price-input"
+                type="number"
+                min="0"
+                step="0.01"
+                value="${row.weekend_price ?? ''}"
+                placeholder="Enter weekend price"
+              />
+            </div>
+
+            <div class="note-row">
+              <div class="label">Notes</div>
+              <textarea
+                id="note-${row.id}"
+                class="note-input"
+                rows="2"
+                placeholder="Optional note"
+              >${escapeHtml(row.notes || '')}</textarea>
+            </div>
+
+            <div class="weekend-actions">
+              <button class="btn-gold" type="button" onclick="saveWeekend('${row.id}')">Save</button>
+              <button class="${row.is_paid ? 'btn-dark' : 'btn-green'}" type="button" onclick="togglePaid('${row.id}', ${row.is_paid ? 'true' : 'false'})">
+                ${row.is_paid ? 'Paid' : 'Not Paid'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPage(rows) {
+      const totalDue = getTotalDue(rows);
+      const totalUnpaid = getTotalUnpaid(rows);
+      const seasonYear = currentSeasonYear || '';
+      const fairName = currentFairName || 'Fair';
+
+      document.getElementById('pageTitle').textContent = `${fairName}${seasonYear ? ' — ' + seasonYear : ''}`;
+      document.getElementById('pageSubTitle').textContent = 'Weekend prices and paid status are now reading from vp_fair_info_weekend.';
+      document.getElementById('archiveBtn').textContent = isArchivedFair(rows) ? 'Unarchive This Fair' : 'Archive This Fair';
+
+      document.getElementById('pageContent').innerHTML = `
+        <div id="messageBox"></div>
+
+        <div class="section-card">
+          <h2 class="section-title">Fair Summary</h2>
+
+          <div class="summary-grid">
+            <div class="summary-item">
+              <div class="label">Fair</div>
+              <div class="value">${escapeHtml(fairName)}</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">Season</div>
+              <div class="value">${escapeHtml(seasonYear || 'Not set')}</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">Weekends</div>
+              <div class="value">${rows.length}</div>
+            </div>
+          </div>
+
+          <div class="badge-row">
+            ${archiveBadge(rows)}
+          </div>
+        </div>
+
+        <div class="section-card">
+          <h2 class="section-title">Weekend Payments</h2>
+          <div class="weekend-list">
+            ${renderWeekendRows(rows)}
+          </div>
+
+          <div class="total-grid">
+            <div class="total-box">
+              <div class="label">Total of All Weekends</div>
+              <div class="value">${formatMoney(totalDue)}</div>
+            </div>
+            <div class="total-box">
+              <div class="label">Total Unpaid</div>
+              <div class="value">${formatMoney(totalUnpaid)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <h2 class="section-title">Documents / Images</h2>
+          <div class="muted-box">This page is ready for the weekend table. The document table page can be connected after vp_fair_info_document is created.</div>        </div>
+      `;
+    }
+
+    function showError(message) {
+      document.getElementById('pageContent').innerHTML = `<div class="error-box">${escapeHtml(message)}</div>`;
+    }
+
+    function showMessage(message) {
+      const box = document.getElementById('messageBox');
+      if (!box) return;
+      box.innerHTML = `<div class="success-box">${escapeHtml(message)}</div>`;
+    }
+
+    function goBackToDashboard() {
+      const { vpaId } = getParams();
+    const url = vpaId
+  ? `/vendor_performer/vendor/dashboard.html?vpa_id=${encodeURIComponent(vpaId)}`
+  : `/vendor_performer/vendor/dashboard.html`;
+      window.location.href = url;
+    }
+
+    async function loadPage() {
+      const { vpaId, fairName, seasonYear } = getParams();
+
+      if (!vpaId || !fairName) {
+        showError('Missing vpa_id or fair_name in the URL.');
+        return;
+      }
+
+      document.getElementById('pageContent').innerHTML = `<div class="loading">Loading fair information…</div>`;
+
+      const res = await sb
+        .from('vp_fair_info_weekend')
+        .select('id, vpa_id, fair_id, fair_name_snapshot, weekend_start_date, weekend_end_date, weekend_price, is_paid, paid_at, is_archived, archived_at, notes, created_at, updated_at')
+        .eq('vpa_id', vpaId)
+        .eq('fair_name_snapshot', fairName)
+        .order('weekend_start_date', { ascending: true });
+
+      if (res.error) {
+        showError(`Could not load weekend records: ${res.error.message}`);
+        return;
+      }
+
+      const allRows = res.data || [];
+      if (!allRows.length) {
+        showError('No saved weekend rows were found for this fair.');
+        return;
+      }
+
+      let filteredRows = allRows;
+      if (seasonYear) {
+        filteredRows = allRows.filter(row => getSeasonYearFromDate(row.weekend_start_date) === String(seasonYear));
+      } else {
+        const years = [...new Set(allRows.map(row => getSeasonYearFromDate(row.weekend_start_date)).filter(Boolean))].sort();
+        const latestYear = years[years.length - 1];
+        if (latestYear) {
+          filteredRows = allRows.filter(row => getSeasonYearFromDate(row.weekend_start_date) === latestYear);
+        }
+      }
+
+      currentFairRows = filteredRows;
+      currentFairName = fairName;
+      currentSeasonYear = filteredRows.length ? getSeasonYearFromDate(filteredRows[0].weekend_start_date) : '';
+
+      renderPage(currentFairRows);
+    }
+
+    async function saveWeekend(rowId) {
+      const priceInput = document.getElementById(`price-${rowId}`);
+      const noteInput = document.getElementById(`note-${rowId}`);
+
+      const rawPrice = priceInput ? priceInput.value.trim() : '';
+      const noteValue = noteInput ? noteInput.value.trim() : '';
+
+      let priceValue = null;
+      if (rawPrice !== '') {
+        const parsed = Number(rawPrice);
+        if (Number.isNaN(parsed) || parsed < 0) {
+          alert('Weekend price must be empty or a valid number 0 or higher.');
+          return;
+        }
+        priceValue = parsed;
+      }
+
+      const res = await sb
+        .from('vp_fair_info_weekend')
+        .update({
+          weekend_price: priceValue,
+          notes: noteValue === '' ? null : noteValue
+        })
+        .eq('id', rowId)
+        .select('id')
+        .single();
+
+      if (res.error) {
+        alert(`Could not save weekend: ${res.error.message}`);
+        return;
+      }
+
+      await loadPage();
+      showMessage('Weekend saved.');
+    }
+
+    async function togglePaid(rowId, currentlyPaid) {
+      const nextPaid = !currentlyPaid;
+
+      const res = await sb
+        .from('vp_fair_info_weekend')
+        .update({
+          is_paid: nextPaid,
+          paid_at: nextPaid ? new Date().toISOString() : null
+        })
+        .eq('id', rowId)
+        .select('id')
+        .single();
+
+      if (res.error) {
+        alert(`Could not update paid status: ${res.error.message}`);
+        return;
+      }
+
+      await loadPage();
+      showMessage(nextPaid ? 'Weekend marked as paid.' : 'Weekend marked as not paid.');
+    }
+
+    async function toggleArchive() {
+      if (!currentFairRows.length) return;
+
+      const nextArchived = !isArchivedFair(currentFairRows);
+      const rowIds = currentFairRows.map(row => row.id);
+
+      const res = await sb
+        .from('vp_fair_info_weekend')
+        .update({
+          is_archived: nextArchived,
+          archived_at: nextArchived ? new Date().toISOString() : null
+        })
+        .in('id', rowIds)
+        .select('id');
+
+      if (res.error) {
+        alert(`Could not update archive status: ${res.error.message}`);
+        return;
+      }
+
+      await loadPage();
+      showMessage(nextArchived ? 'Fair archived.' : 'Fair unarchived.');
+    }
+
+    window.addEventListener('DOMContentLoaded', loadPage);
+  </script>
+
+  <footer>
+    <a href="/index.html">Home</a> |
+    <a href="/vendor_performer/vendor/info.html">Info</a> |
+    <a href="/terms.html">Terms</a> |
+    <a href="/privacy.html">Privacy</a> |
+    <a href="/faq.html">FAQ</a> |
+    <a href="/contact.html">Contact</a>
+  </footer>
+
+</body>
+</html>

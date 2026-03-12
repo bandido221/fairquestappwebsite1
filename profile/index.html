@@ -6,6 +6,7 @@
   <title>User Profile | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
@@ -16,21 +17,23 @@
       padding: 20px;
       margin: 0;
     }
-    h1 {
-      font-family: 'Cinzel', serif;
-      margin-bottom: 20px;
-    }
+  h1 {
+  font-family: 'Cinzel', serif;
+  margin-bottom: 20px;
+  font-size: 32px;
+}
     .profile-card {
-      position: relative;
-      background: rgba(241, 223, 153, 0.88);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      margin: 20px auto;
-      max-width: 700px;
-      color: #3b1f1f;
-      text-align: left;
-    }
+  position: relative;
+  background: rgba(214, 197, 126, 0.88);
+  padding: 26px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  margin: 20px auto;
+  max-width: 700px;
+  color: #3b1f1f;
+  text-align: left;
+  width: 95%;
+}
     .profile-logo {
       position: absolute;
       top: 10px;
@@ -50,15 +53,15 @@
       margin: 8px 0;
     }
     .settings-button {
-      margin-top: 20px;
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-    }
+  margin-top: 20px;
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 22px;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+}
     .settings-button:hover {
       background-color: #45a049;
     }
@@ -76,14 +79,14 @@
       margin-right: auto;
       text-align: left;
     }
-    .update-item {
-      background: #d2be75;
-      color: #3b1f1f;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    }
+.update-item {
+  background: rgba(214, 197, 126, 0.88);
+  color: #3b1f1f;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
   </style>
 </head>
 <body>

@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fair Applications</title>
+<title>Fair Applications | FairQuest</title>
 <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -14,38 +15,162 @@ body{
   background:#000;
   color:#f0e6d2;
   text-align:center;
-  padding:40px;
+  padding:16px;
+  margin:0;
+  font-size:19px;
+  line-height:1.5;
 }
 .container{
-  max-width:700px;
-  margin:auto;
-  background:rgba(251,241,200,0.9);
+  max-width:1040px;
+  margin:16px auto;
+  background:rgba(214,197,126,0.88);
   color:#3b1f1f;
-  padding:30px;
-  border-radius:12px;
-  border:2px solid #aa8425;
+  padding:24px;
+  border-radius:16px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.3);
+}
+h2{
+  font-family:'Cinzel',serif;
+  margin:10px 0 14px 0;
+  line-height:1.2;
+  font-size:clamp(28px,5vw,48px);
 }
 .card{
-  background:rgba(225,209,145,0.9);
-  padding:15px;
-  border-radius:8px;
-  margin-top:15px;
+  background:rgba(255,255,255,0.55);
+  padding:18px;
+  border-radius:12px;
+  margin-top:16px;
   text-align:left;
+  border:1px solid rgba(0,0,0,0.12);
 }
 button{
-  padding:10px 16px;
+  padding:14px 18px;
   border:none;
-  border-radius:6px;
+  border-radius:10px;
   cursor:pointer;
   margin-top:10px;
+  min-height:50px;
+  font-size:18px;
+  font-family:'Domine',serif;
 }
 .back-btn{
-  background:#3b1f1f;
+  background:#2f2f2f;
   color:#f0e6d2;
   margin-bottom:15px;
 }
+.back-btn:hover{
+  background:#222;
+}
+.edit{
+  background:#f39c12;
+  color:white;
+}
+.edit:hover{
+  background:#d68910;
+}
 
-.edit{ background:#f39c12; color:white; }
+.notice-card{
+  background:rgba(225,209,145,0.9);
+  padding:18px;
+  border-radius:12px;
+  margin:18px 0 20px 0;
+  text-align:left;
+}
+.notice-card h3{
+  margin:0 0 10px 0;
+  font-family:'Cinzel',serif;
+}
+.notice-text{
+  font-size:18px;
+  line-height:1.6;
+}
+.notice-link-btn{
+  display:inline-block;
+  margin-top:14px;
+  background:#2f2f2f;
+  color:#f0e6d2;
+  text-decoration:none;
+  padding:14px 18px;
+  border-radius:10px;
+  min-height:50px;
+  box-sizing:border-box;
+}
+.notice-link-btn:hover{
+  background:#222;
+}
+
+.search-card{
+  background:rgba(225,209,145,0.9);
+  padding:18px;
+  border-radius:12px;
+  margin:18px 0 20px 0;
+  text-align:left;
+}
+.search-card h3{
+  margin:0 0 12px 0;
+  font-family:'Cinzel',serif;
+}
+.search-input{
+  width:100%;
+  box-sizing:border-box;
+  padding:14px 16px;
+  border-radius:10px;
+  border:1px solid #aa8425;
+  font-size:18px;
+  font-family:'Domine',serif;
+}
+.search-results{
+  margin-top:12px;
+  display:grid;
+  gap:10px;
+}
+.search-result-item{
+  display:block;
+  background:rgba(251,241,200,0.95);
+  color:#3b1f1f;
+  text-decoration:none;
+  padding:14px 16px;
+  border-radius:10px;
+  border:1px solid rgba(170,132,37,0.6);
+  font-size:18px;
+  font-weight:bold;
+}
+.search-result-item:hover{
+  background:rgba(255,248,220,1);
+}
+.search-empty{
+  background:rgba(251,241,200,0.95);
+  color:#3b1f1f;
+  padding:14px 16px;
+  border-radius:10px;
+  border:1px solid rgba(170,132,37,0.6);
+  font-size:17px;
+}
+
+@media (max-width: 768px){
+  body{
+    padding:10px;
+    font-size:18px;
+  }
+  .container{
+    max-width:100%;
+    padding:18px;
+    border-radius:14px;
+    margin:10px auto;
+  }
+  .card{
+    padding:16px;
+    border-radius:12px;
+  }
+  button{
+    width:100%;
+  }
+  .search-input,
+  .search-result-item,
+  .search-empty{
+    font-size:18px;
+  }
+}
 </style>
 </head>
 <body>
@@ -56,6 +181,30 @@ button{
 <button class="back-btn" onclick="location.href='dashboard.html'">
   ⬅ Back to Dashboard
 </button>
+
+<div class="notice-card">
+  <h3 id="activeAppsTitle">Performer Applications</h3>
+  <div id="activeAppsMessage" class="notice-text">
+    Loading active fair count...
+  </div>
+  <a class="notice-link-btn" href="/vendor_performer/performer/fair_active_applications_list.html">
+    View All Fairs With Applications
+  </a>
+</div>
+
+<div class="search-card">
+
+<div class="search-card">
+  <h3>Find a Fair</h3>
+  <input
+    type="text"
+    id="fairSearch"
+    class="search-input"
+    placeholder="Search fair name..."
+    autocomplete="off"
+  />
+  <div id="searchResults" class="search-results" style="display:none;"></div>
+</div>
 
 <div id="list">Loading...</div>
 
@@ -70,12 +219,107 @@ const supabaseClient = window.supabase.createClient(
 const params = new URLSearchParams(window.location.search);
 const vpaId = params.get('vpa_id');
 
+let fairSearchTimer = null;
+const SEARCH_FORM_TYPE = 'performer';
+const ACTIVE_APPS_LABEL = 'performer';
+
+async function searchFairsByName(searchText) {
+  const resultsEl = document.getElementById('searchResults');
+  const term = String(searchText || '').trim();
+
+  if (!term) {
+    resultsEl.innerHTML = '';
+    resultsEl.style.display = 'none';
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from('fair_man_app_fair_form_active')
+    .select(`
+      fair_id,
+      form_type,
+      renaissance_fairs!inner(
+        id,
+        name
+      )
+    `)
+    .eq('form_type', SEARCH_FORM_TYPE)
+    .ilike('renaissance_fairs.name', `%${term}%`)
+    .order('fair_id', { ascending: true })
+    .limit(10);
+
+  if (error) {
+    resultsEl.innerHTML = `<div class="search-empty">Error searching fairs.</div>`;
+    resultsEl.style.display = 'block';
+    return;
+  }
+
+  if (!data || !data.length) {
+    resultsEl.innerHTML = `<div class="search-empty">No fairs with applications found.</div>`;
+    resultsEl.style.display = 'block';
+    return;
+  }
+
+  resultsEl.innerHTML = data.map(row => {
+    const fair = Array.isArray(row.renaissance_fairs)
+      ? row.renaissance_fairs[0]
+      : row.renaissance_fairs;
+
+    return `
+      <a class="search-result-item" href="/fairs/fair_detail.html?id=${encodeURIComponent(String(fair.id))}">
+        ${fair?.name ?? 'Fair'}
+      </a>
+    `;
+  }).join('');
+
+  resultsEl.style.display = 'block';
+}
+
+async function loadActiveFairCount() {
+  const messageEl = document.getElementById('activeAppsMessage');
+  if (!messageEl) return;
+
+  const { count, error } = await supabaseClient
+    .from('fair_man_app_fair_form_active')
+    .select('fair_id', { count: 'exact', head: true })
+    .eq('form_type', SEARCH_FORM_TYPE);
+
+  if (error) {
+    messageEl.textContent = 'At this time, we could not load the current fair application count.';
+    return;
+  }
+
+  messageEl.textContent = `At this time, we only have ${count ?? 0} fairs accepting ${ACTIVE_APPS_LABEL} applications. If your fair would like to have applications here, please ask the fair to contact us.`;
+}
+
+function wireFairSearch() {
+  const input = document.getElementById('fairSearch');
+  const resultsEl = document.getElementById('searchResults');
+  if (!input || !resultsEl) return;
+
+  input.addEventListener('input', () => {
+    clearTimeout(fairSearchTimer);
+    fairSearchTimer = setTimeout(() => {
+      searchFairsByName(input.value);
+    }, 250);
+  });
+
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      input.value = '';
+      resultsEl.innerHTML = '';
+      resultsEl.style.display = 'none';
+    }
+  });
+}
+
 async function load() {
 
   const { data, error } = await supabaseClient
     .from('fair_man_app_submission')
     .select(`
       id,
+      fair_id,
       status,
       submitted_at,
       renaissance_fairs(name)
@@ -109,7 +353,7 @@ async function load() {
         Submitted: ${new Date(row.submitted_at).toLocaleDateString()}
         ${row.status==='in_review' ? `
           <br><button class="edit"
-            onclick="location.href='review.html?submission_id=${row.id}'">
+            onclick="location.href='/vendor_performer/performer/fair_update_review_page.html?fair_id=${encodeURIComponent(String(row.fair_id))}&submission_id=${encodeURIComponent(String(row.id))}'">
             Edit Application
           </button>` : ''}
       </div>
@@ -119,6 +363,8 @@ async function load() {
   document.getElementById('list').innerHTML=html;
 }
 
+loadActiveFairCount();
+wireFairSearch();
 load();
 </script>
 </body>

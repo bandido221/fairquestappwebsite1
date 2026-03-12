@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Performer Online Page Setup | FairQuest</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
 
-  <!-- Google Analytics (FairQuest Website) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -110,6 +110,15 @@
 <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
 <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
 
+<div style="max-width:800px; margin:0 auto 14px auto; text-align:left;">
+  <button
+    type="button"
+    onclick="goBack()"
+    style="background:#444; color:#fff; padding:12px 18px; border-radius:6px; border:none; cursor:pointer;">
+    ← Back to Dashboard
+  </button>
+</div>
+
 <div class="container">
   <div class="pill">Wizard • Step 1 of 6 • Basics</div>
   <h1>Performer Online Page Setup</h1>
@@ -119,13 +128,52 @@
   <div id="formWrap" style="display:none;">
     <div class="row">
       <div class="field">
-        <label>Display Name</label>
-        <input id="app_display_name" type="text" disabled />
+     <label>Display Name</label>
+<input id="app_display_name" type="text" disabled />
 
-        <!-- ADDRESS DISPLAY -->
-        <div id="wizardAddress" style="margin-top:6px; font-size:14px; opacity:.9;"></div>
+<div style="text-align:center; margin-top:12px;">
+  <img id="app_photo_img"
+       src=""
+       alt="Application Image"
+       style="max-width:220px; border-radius:12px; display:none; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
 
-        <!-- ADDRESS INPUT (shows only if missing) -->
+  <div id="app_photo_na" style="opacity:.7;">No image uploaded yet.</div>
+</div>
+
+<div style="margin-top:16px; text-align:center;">
+  <input type="file" id="photoUpload" accept="image/*" style="display:none;" />
+
+  <div id="newPhotoWrap" style="display:none; margin-top:12px;">
+    <div style="font-weight:bold; margin-bottom:8px;">New Image Preview</div>
+    <img
+      id="new_photo_img"
+      src=""
+      alt="New Image Preview"
+      style="max-width:220px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.3);"
+    />
+  </div>
+
+  <button
+    id="uploadPhotoBtn"
+    type="button"
+    onclick="document.getElementById('photoUpload').click()"
+    style="margin-top:12px; background:#27ae60; color:#fff; padding:12px 18px; border-radius:6px; border:none; cursor:pointer;">
+    Choose New Image
+  </button>
+
+  <button
+    id="saveNewPhotoBtn"
+    type="button"
+    onclick="saveNewPhoto()"
+    disabled
+    style="margin-top:10px; background:#f39c12; color:#fff; padding:12px 18px; border-radius:6px; border:none; cursor:pointer; opacity:.6;">
+    Save New Image
+  </button>
+
+  <div id="photoUploadMsg" style="margin-top:10px;"></div>
+</div>
+
+<div id="wizardAddress" style="margin-top:6px; font-size:14px; opacity:.9;"></div>
         <div id="addressFields" style="display:none; margin-top:10px;">
           <label for="street_address">Street Address</label>
           <input id="street_address" type="text" placeholder="123 Main St" />
@@ -171,7 +219,6 @@
           Save Address
         </button>
 
-        <!-- CHECKBOX -->
         <label style="margin-top:12px;">
           <input id="show_full_address" type="checkbox" style="width:auto; margin-right:8px;" />
           Show full address on my public page
@@ -186,25 +233,19 @@
       </div>
     </div>
 
-    <div class="row">
-      <div class="field">
-        <label for="pricing_note">Pricing Note (optional)</label>
-        <input id="pricing_note" type="text" placeholder="Example: Items $10–$200, custom quotes available" />
-      </div>
-    </div>
+   
 
-    <div class="actions">
+     <div class="actions">
       <button class="btn-back" onclick="goBack()">← Back to Dashboard</button>
       <button class="btn-save" onclick="saveStep()">Save</button>
-      <button class="btn-next" onclick="nextStep()">Next →</button>
     </div>
+
 
     <div id="saveMsg"></div>
   </div>
 </div>
 
 <script>
-  /* ---------- SUPABASE CLIENT ---------- */
   window.supabaseClient = window.supabaseClient || window.supabase.createClient(
     'https://awtbjuiqgtdydsqzimul.supabase.co',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
@@ -217,12 +258,14 @@
 let vpRow = null;
 let vpaRow = null;
 
+let pendingPhotoBlob = null;
+let pendingPhotoObjectUrl = null;
+
   function goBack(){
     window.location.href = '/vendor_performer/performer/dashboard.html';
   }
 
   function nextStep(){
-    // placeholder for now - we will create step 2 next
     alert('Next step not built yet. Step 2 coming next.');
   }
 
@@ -246,10 +289,9 @@ let vpaRow = null;
       document.getElementById('statusMsg').innerHTML = '<p class="error">Please sign in to continue.</p>';
       return;
     }
-// Load application (for display name + address)
 const { data: appRow, error: appErr } = await sb
   .from('vendor_performer_applications')
-  .select('id,name,street_address,city,state,zip_code')
+  .select('id,name,street_address,city,state,zip_code,photo_url')
   .eq('id', vpaId)
   .single();
 
@@ -259,40 +301,52 @@ if(appErr || !appRow){
 }
 vpaRow = appRow;
 document.getElementById('app_display_name').value = vpaRow.name || '';
-    // Try load vp_web
+
+const img = document.getElementById('app_photo_img');
+const na = document.getElementById('app_photo_na');
+const url = (vpaRow.photo_url || '').trim();
+
+
+if(url){
+  img.src = url;
+  img.style.display = 'block';
+  na.style.display = 'none';
+} else {
+  img.removeAttribute('src');
+  img.style.display = 'none';
+  na.style.display = 'block';
+}
     const { data: existing, error: selErr } = await sb
-      .from('vp_web')
+      .from('vp_web_profile')
       .select('*')
       .eq('vpa_id', vpaId)
       .maybeSingle();
 
     if(selErr){
-      document.getElementById('statusMsg').innerHTML = `<p class="error">Failed to load vp_web: ${selErr.message}</p>`;
+      document.getElementById('statusMsg').innerHTML = `<p class="error">Failed to load vp_web_profile: ${selErr.message}</p>`;
       return;
     }
 
     if(existing){
       vpRow = existing;
     } else {
-      // Create draft row (RLS requires approved + owner)
       const { data: created, error: insErr } = await sb
-        .from('vp_web')
+        .from('vp_web_profile')
         .insert([{ vpa_id: Number(vpaId), editor_mode: 'wizard', is_published: false, is_active: true }])
         .select('*')
         .single();
 
       if(insErr){
         document.getElementById('statusMsg').innerHTML =
-          `<p class="error">Could not create vp_web row. Make sure your application is approved.</p>`;
+          `<p class="error">Could not create vp_web_profile row. Make sure your application is approved.</p>`;
         return;
       }
       vpRow = created;
     }
 
-    // Fill form
 document.getElementById('tagline').value = vpRow.tagline || '';
 
-document.getElementById('pricing_note').value = vpRow.pricing_note || '';
+
 
 document.getElementById('show_full_address').checked = !!vpRow.show_full_address;
 wireAddressUI();
@@ -302,7 +356,7 @@ wireAddressUI();
 
   async function saveStep(){
     if(!vpRow?.id){
-      document.getElementById('saveMsg').innerHTML = '<p class="error">Cannot save: missing vp_web row.</p>';
+      document.getElementById('saveMsg').innerHTML = '<p class="error">Cannot save: missing vp_web_profile row.</p>';
       return;
     }
 
@@ -311,12 +365,9 @@ wireAddressUI();
 const payload = {
   editor_mode: 'wizard',
   show_full_address: showAddr,
-  tagline: document.getElementById('tagline').value.trim() || null,
-  
-  pricing_note: document.getElementById('pricing_note').value.trim() || null
+  tagline: document.getElementById('tagline').value.trim() || null
 };
 
-// If user wants to show address AND application address is null -> save address into application table
 if(showAddr && isAddressNull(vpaRow)){
   const street = document.getElementById('street_address').value.trim();
   const city = document.getElementById('city').value.trim();
@@ -349,7 +400,7 @@ if(showAddr && isAddressNull(vpaRow)){
 }
 
     const { data, error } = await sb
-      .from('vp_web')
+      .from('vp_web_profile')
       .update(payload)
       .eq('id', vpRow.id)
       .select('*')
@@ -360,38 +411,220 @@ if(showAddr && isAddressNull(vpaRow)){
       return;
     }
 
-     vpRow = data;
-    document.getElementById('saveMsg').innerHTML = '<p class="ok">Saved.</p>';
+    vpRow = data;
+    document.getElementById('saveMsg').innerHTML = '<p class="ok">Saved. Redirecting…</p>';
+    window.location.href = `/vendor_performer/performer/vp_performer_page_setup.html?vpa_id=${encodeURIComponent(vpaId)}`;
   }
 
-  async function saveAddressOnly(){
-    const street = document.getElementById('street_address').value.trim();
-    const city = document.getElementById('city').value.trim();
-    const state = document.getElementById('state').value;
-    const zip = document.getElementById('zip_code').value.trim();
+ async function saveAddressOnly(){
+  const street = document.getElementById('street_address').value.trim();
+  const city = document.getElementById('city').value.trim();
+  const state = document.getElementById('state').value;
+  const zip = document.getElementById('zip_code').value.trim();
 
-    if(!street || !city || !state || !zip){
-      alert('Please fill Street, City, State, and Zip.');
+  if(!street || !city || !state || !zip){
+    alert('Please fill Street, City, State, and Zip.');
+    return;
+  }
+
+  const { error } = await sb
+    .from('vendor_performer_applications')
+    .update({
+      street_address: street,
+      city: city,
+      state: state,
+      zip_code: zip
+    })
+    .eq('id', Number(vpaId));
+
+  if(error){
+    alert('Address save failed: ' + error.message);
+    return;
+  }
+
+  location.reload();
+}
+
+
+
+function setPhotoUploadMsg(html){
+  const el = document.getElementById('photoUploadMsg');
+  if(el) el.innerHTML = html || '';
+}
+
+function setCurrentPhotoPreview(url){
+  const img = document.getElementById('app_photo_img');
+  const na = document.getElementById('app_photo_na');
+  const u = (url || '').trim();
+
+  if(u){
+    img.src = u;
+    img.style.display = 'block';
+    na.style.display = 'none';
+  } else {
+    img.removeAttribute('src');
+    img.style.display = 'none';
+    na.style.display = 'block';
+  }
+}
+function setSaveNewPhotoEnabled(on){
+  const btn = document.getElementById('saveNewPhotoBtn');
+  if(!btn) return;
+  btn.disabled = !on;
+  btn.style.opacity = on ? '1' : '.6';
+}
+
+function clearPendingPhoto(){
+  pendingPhotoBlob = null;
+
+  if(pendingPhotoObjectUrl){
+    URL.revokeObjectURL(pendingPhotoObjectUrl);
+    pendingPhotoObjectUrl = null;
+  }
+
+  const wrap = document.getElementById('newPhotoWrap');
+  const img = document.getElementById('new_photo_img');
+  if(img) img.removeAttribute('src');
+  if(wrap) wrap.style.display = 'none';
+
+  setSaveNewPhotoEnabled(false);
+
+  const input = document.getElementById('photoUpload');
+  if(input) input.value = '';
+}
+async function compressImageToJpeg(file, maxDim = 1200, quality = 0.82){
+  const img = new Image();
+  const objectUrl = URL.createObjectURL(file);
+
+  try{
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = () => reject(new Error('Could not read image.'));
+      img.src = objectUrl;
+    });
+
+    let { width, height } = img;
+    if(!width || !height) throw new Error('Invalid image size.');
+
+    // scale down (preserve aspect)
+    const scale = Math.min(1, maxDim / Math.max(width, height));
+    const w = Math.max(1, Math.round(width * scale));
+    const h = Math.max(1, Math.round(height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+
+    const ctx = canvas.getContext('2d', { alpha: false });
+    // draw with a white background so transparent PNGs don’t turn black
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob((b) => resolve(b), 'image/jpeg', quality);
+    });
+
+    if(!blob) throw new Error('Compression failed.');
+
+    return blob;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+async function stageNewPhotoFromPicker(){
+  const input = document.getElementById('photoUpload');
+  const file = input?.files?.[0];
+  if(!file){
+    clearPendingPhoto();
+    return;
+  }
+
+  setPhotoUploadMsg('<span class="muted">Preparing preview…</span>');
+  setSaveNewPhotoEnabled(false);
+
+  let compressed;
+  try{
+    compressed = await compressImageToJpeg(file, 1200, 0.82);
+  }catch(err){
+    setPhotoUploadMsg('');
+    clearPendingPhoto();
+    alert('Compression error: ' + err.message);
+    return;
+  }
+
+  pendingPhotoBlob = compressed;
+
+  if(pendingPhotoObjectUrl){
+    URL.revokeObjectURL(pendingPhotoObjectUrl);
+    pendingPhotoObjectUrl = null;
+  }
+  pendingPhotoObjectUrl = URL.createObjectURL(compressed);
+
+  const wrap = document.getElementById('newPhotoWrap');
+  const img = document.getElementById('new_photo_img');
+  if(img) img.src = pendingPhotoObjectUrl;
+  if(wrap) wrap.style.display = 'block';
+
+  setPhotoUploadMsg('<span class="muted">Preview ready. Click “Save New Image” to replace.</span>');
+  setSaveNewPhotoEnabled(true);
+}
+
+async function saveNewPhoto(){
+  if(!pendingPhotoBlob){
+    alert('Please choose a new image first.');
+    return;
+  }
+
+  setPhotoUploadMsg('<span class="muted">Uploading…</span>');
+  setSaveNewPhotoEnabled(false);
+
+  try{
+    const formData = new FormData();
+    formData.append('file', pendingPhotoBlob, `performer_${crypto.randomUUID()}.jpg`);
+    formData.append('upload_preset', 'vendor_upload');
+
+    const resp = await fetch('https://api.cloudinary.com/v1_1/dft7xclvh/image/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await resp.json();
+
+    if(!result?.secure_url){
+      setPhotoUploadMsg('');
+      setSaveNewPhotoEnabled(true);
+      alert('Upload failed:\n' + JSON.stringify(result, null, 2));
       return;
     }
 
+    const publicUrl = result.secure_url;
+
+    setPhotoUploadMsg('<span class="muted">Saving…</span>');
     const { error } = await sb
       .from('vendor_performer_applications')
-      .update({
-        street_address: street,
-        city: city,
-        state: state,
-        zip_code: zip
-      })
+      .update({ photo_url: publicUrl })
       .eq('id', Number(vpaId));
 
     if(error){
-      alert('Address save failed: ' + error.message);
+      setPhotoUploadMsg('');
+      setSaveNewPhotoEnabled(true);
+      alert('Supabase update failed: ' + error.message);
       return;
     }
 
-    location.reload();
+    setCurrentPhotoPreview(publicUrl);
+
+    setPhotoUploadMsg('<span class="ok">Saved.</span>');
+    clearPendingPhoto();
+    setTimeout(() => location.reload(), 600);
+  }catch(err){
+    setPhotoUploadMsg('');
+    setSaveNewPhotoEnabled(true);
+    alert('Unexpected upload error: ' + err.message);
   }
+}
 
 function isAddressNull(a){
   const s = (a?.street_address || '').trim();
@@ -418,7 +651,6 @@ function wireAddressUI(){
 
   const addrMissing = isAddressNull(vpaRow);
 
-  // address display + save button visibility
   if(addrMissing){
     wizardAddr.innerHTML =
       `<span style="color:#7f1d1d;">Address not set.</span>`;
@@ -432,7 +664,6 @@ function wireAddressUI(){
   }
 
   function refresh(){
-    // If address missing: force fields visible, and the checkbox can't change visibility
     if(addrMissing){
       info.innerHTML = `<span style="opacity:.85;">Address required for public display. Please enter below.</span>`;
       fields.style.display = 'block';
@@ -440,7 +671,6 @@ function wireAddressUI(){
       return;
     }
 
-    // Address exists: fields hidden always, checkbox only affects the info text
     fields.style.display = 'none';
     saveBtn.style.display = 'none';
 
@@ -454,7 +684,16 @@ function wireAddressUI(){
   cb.addEventListener('change', refresh);
   refresh();
 }
-  window.addEventListener('DOMContentLoaded', loadOrCreateVpWeb);
+  window.addEventListener('DOMContentLoaded', () => {
+  loadOrCreateVpWeb();
+
+  const input = document.getElementById('photoUpload');
+  if(input){
+    input.addEventListener('change', () => {
+      stageNewPhotoFromPicker();
+    });
+  }
+});
 </script>
 
 </body>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/fq_theme.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vendor Page Preview | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      font-family:'Domine', serif;
+      background:#000;
+      padding:40px;
+      text-align:center;
+      color:#f0e6d2;
+      margin:0;
+    }
+    h1,h2,h3{ font-family:'Cinzel', serif; }
+    .top-banner{
+      width:100%;
+      max-width:600px;
+      height:auto;
+      object-fit:contain;
+      display:block;
+      margin:0 auto 20px auto;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    }
+    .logo{
+      max-width:100px;
+      height:auto;
+      margin:0 auto 20px auto;
+      display:block;
+      filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .container{
+      max-width:920px;
+      margin:auto;
+      background:rgba(251,241,200,0.88);
+      padding:30px 40px;
+      border-radius:12px;
+      border:2px solid #aa8425;
+      box-shadow:0 4px 15px rgba(0,0,0,0.4);
+      color:#3b1f1f;
+      text-align:left;
+    }
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:13px;
+      background:rgba(0,0,0,0.08);
+      margin-bottom:12px;
+    }
+ .card{
+  background: rgba(214, 197, 126, 0.88);
+  border:1px solid rgba(0,0,0,0.18);
+  border-radius:12px;
+  padding:14px;
+  margin-top:14px;
+}
+    .muted{ opacity:.85; }
+    .actions{
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-top:18px;
+    }
+    button{
+      padding:12px 20px;
+      font-size:16px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+    }
+    .btn-back{ background:#444; color:#fff; }
+    .btn-publish{ background:#f39c12; color:#fff; }
+    .error{ color:#7f1d1d; font-weight:bold; margin-top:10px; }
+    .ok{ color:#14532d; font-weight:bold; margin-top:10px; }
+    .kv{ margin:6px 0; }
+    .kv b{ display:inline-block; min-width:170px; }
+    .listItem{ margin:6px 0; }
+    @media (max-width:768px){
+      body{ padding:20px; }
+      .container{ padding:20px; }
+      button{ width:100%; }
+      .actions{ flex-direction:column; }
+      .kv b{ min-width:auto; display:block; margin-bottom:3px; }
+    }
+    .review-card{
+  display:inline-block;
+  background: rgba(214, 197, 126, 0.88);
+  border: 1px solid rgba(0,0,0,0.16);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 10px 0 6px 0;
+  max-width: 340px;
+}
+.review-title{
+  font-family:'Cinzel', serif;
+  font-size: 13px;
+  margin: 0 0 4px 0;
+}
+.review-status{
+  font-size: 14px;
+  line-height: 1.25;
+}
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+<img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+<div class="container">
+  <div class="pill">Preview • Vendor • Publish will save to Supabase</div>
+  <h1>Vendor Page Preview</h1>
+
+  <div id="reviewCard" class="review-card" style="display:none;">
+    <div class="review-title">Reviews</div>
+    <div id="reviewStatus" class="review-status muted">Loading reviews…</div>
+  </div>
+
+  <div id="statusMsg" class="muted">Loading…</div>
+
+  <div id="wrap" style="display:none;">
+    <div class="card">
+  <h2 id="wizardTitle"></h2>
+  <div id="wizardBox"></div>
+</div>
+
+    <div class="card">
+      <h2>Public Preview</h2>
+      <div id="previewBox"></div>
+      <div class="muted" style="margin-top:10px;">
+        Only fields marked Visible in Setup are shown here.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Schedule</h2>
+      <div class="muted">Blank for now.</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-back" onclick="backToEdit()">Back to Edit</button>
+      <button class="btn-publish" onclick="publishNow()">Publish</button>
+    </div>
+
+    <div id="msg"></div>
+  </div>
+</div>
+
+<script>
+  const TYPE = 'vendor';
+  const EDIT_PATH = 'vp_vendor_page_setup.html';
+
+  const params = new URLSearchParams(window.location.search);
+  const vpaId = params.get('vpa_id');
+
+  const DRAFT_KEY = (vpaId) => `vp_web_draft:${TYPE}:${vpaId}`;
+
+  window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
+  const sb = window.supabaseClient;
+
+  function backToEdit(){
+    window.location.href = `${EDIT_PATH}?vpa_id=${encodeURIComponent(vpaId)}`;
+  }
+
+  async function ensureLoggedIn(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session?.user?.id) return session;
+    return new Promise((resolve) => {
+      sb.auth.onAuthStateChange((_, s) => resolve(s));
+    });
+  }
+
+  function readDraft(){
+    try{
+      const raw = localStorage.getItem(DRAFT_KEY(vpaId));
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(e){
+      return null;
+    }
+  }
+
+  function escapeHtml(s){
+    return String(s ?? '')
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;');
+  }
+
+ function showWizard(draft, appPhotoUrl){
+  const w = draft?.wizard_readonly_snapshot || {};
+  const photo = (appPhotoUrl || '').trim();
+
+const imgHtml = photo
+  ? `<img src="${escapeHtml(photo)}" alt="Application Image" style="width:160px;height:160px;object-fit:cover;border-radius:12px;">`
+  : `<div class="muted">N/A</div>`;
+
+const addressBlock = w.address_html ? w.address_html : '—';
+
+const html = `
+  <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+    <div style="flex:0 0 160px;">
+      ${imgHtml}
+    </div>
+
+    <div style="flex:1; min-width:220px;">
+      <div style="margin-bottom:10px;">${addressBlock}</div>
+      <div class="kv"><b>Tagline</b> ${escapeHtml(w.tagline || '—')}</div>
+      <div class="kv"><b>Pricing Note</b> ${escapeHtml(w.pricing_note || '—')}</div>
+    </div>
+  </div>
+`;
+document.getElementById('wizardBox').innerHTML = html;
+}
+
+  function buildPreview(draft){
+    const vis = draft?.visibility || {};
+    const p = draft?.profilePatch || {};
+
+    const out = [];
+
+    function add(label, key, valueHtml){
+      if(!vis[key]) return;
+      if(!valueHtml) return;
+      out.push(`<div class="kv"><b>${escapeHtml(label)}</b> ${valueHtml}</div>`);
+    }
+
+    add('Public Location', 'public_location_text', escapeHtml(p.public_location_text));
+    add('Primary Category', 'primary_category', escapeHtml(p.primary_category));
+    add('Tags', 'tags', Array.isArray(p.tags) && p.tags.length ? escapeHtml(p.tags.join(', ')) : '');
+    add('Slug', 'slug', escapeHtml(p.slug));
+
+    add('About (Short)', 'about_short', escapeHtml(p.about_short));
+    add('About (Long)', 'about_long', escapeHtml(p.about_long));
+
+    add('Public Email', 'public_contact_email', escapeHtml(p.public_contact_email));
+    add('Public Phone', 'public_contact_phone', escapeHtml(p.public_contact_phone));
+    add('Website', 'public_website_url', p.public_website_url ? `<a href="${escapeHtml(p.public_website_url)}" target="_blank">${escapeHtml(p.public_website_url)}</a>` : '');
+
+    add('Facebook', 'facebook_url', p.facebook_url ? `<a href="${escapeHtml(p.facebook_url)}" target="_blank">${escapeHtml(p.facebook_url)}</a>` : '');
+    add('Instagram', 'instagram_url', p.instagram_url ? `<a href="${escapeHtml(p.instagram_url)}" target="_blank">${escapeHtml(p.instagram_url)}</a>` : '');
+    add('TikTok', 'tiktok_url', p.tiktok_url ? `<a href="${escapeHtml(p.tiktok_url)}" target="_blank">${escapeHtml(p.tiktok_url)}</a>` : '');
+    add('YouTube', 'youtube_url', p.youtube_url ? `<a href="${escapeHtml(p.youtube_url)}" target="_blank">${escapeHtml(p.youtube_url)}</a>` : '');
+
+    add('Logo URL', 'logo_url', escapeHtml(p.logo_url));
+    add('Banner URL', 'banner_url', escapeHtml(p.banner_url));
+
+    if(vis.offerings && Array.isArray(p.offerings) && p.offerings.length){
+      const li = p.offerings.map(x => `<div class="listItem">• ${escapeHtml(typeof x === 'string' ? x : (x?.text ?? ''))}</div>`).join('');
+      out.push(`<div style="margin-top:10px;"><b>Offerings</b><div style="margin-top:6px;">${li}</div></div>`);
+    }
+
+    document.getElementById('previewBox').innerHTML = out.length ? out.join('') : '<div class="muted">Nothing selected as visible yet.</div>';
+  }
+function starsText(avg){
+  const full = Math.floor(avg);
+  const half = (avg - full) >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
+}
+
+async function loadReviewStatus(vpWebProfileId){
+  const card = document.getElementById('reviewCard');
+  const status = document.getElementById('reviewStatus');
+
+  card.style.display = 'inline-block';
+  status.textContent = 'Loading reviews…';
+
+  const { data, error } = await sb
+    .from('vp_web_reviews')
+    .select('rating')
+    .eq('vp_web_profile_id', vpWebProfileId)
+    .eq('is_visible', true)
+    .not('rating', 'is', null)
+    .limit(200);
+
+  if(error){
+    status.innerHTML = `<span class="error">Failed to load reviews: ${escapeHtml(error.message)}</span>`;
+    return;
+  }
+
+  const ratings = (data || []).map(r => Number(r.rating)).filter(n => Number.isFinite(n));
+  if(!ratings.length){
+    status.textContent = 'No reviews yet';
+    return;
+  }
+
+  const sum = ratings.reduce((a,b)=>a+b, 0);
+  const avg = sum / ratings.length;
+  const avgStr = avg.toFixed(1);
+
+  status.textContent = `${starsText(avg)} ${avgStr}/5 (${ratings.length})`;
+}
+  async function publishNow(){
+    document.getElementById('msg').innerHTML = '<div class="muted">Publishing…</div>';
+
+    const session = await ensureLoggedIn();
+    if(!session?.user?.id){
+      document.getElementById('msg').innerHTML = '<div class="error">Please sign in to publish.</div>';
+      return;
+    }
+
+    const draft = readDraft();
+    if(!draft?.vp_web_profile_id){
+      document.getElementById('msg').innerHTML = '<div class="error">Missing draft vp_web_profile_id. Go back to Setup.</div>';
+      return;
+    }
+
+       const payload = {
+      editor_mode: 'setup',
+      public_location_text: draft.profilePatch.public_location_text,
+      primary_category: draft.profilePatch.primary_category,
+      tags: draft.profilePatch.tags,
+      slug: draft.profilePatch.slug,
+
+      about_short: draft.profilePatch.about_short,
+      about_long: draft.profilePatch.about_long,
+
+      public_contact_email: draft.profilePatch.public_contact_email,
+      public_contact_phone: draft.profilePatch.public_contact_phone,
+      public_website_url: draft.profilePatch.public_website_url,
+
+      facebook_url: draft.profilePatch.facebook_url,
+      instagram_url: draft.profilePatch.instagram_url,
+      tiktok_url: draft.profilePatch.tiktok_url,
+      youtube_url: draft.profilePatch.youtube_url,
+
+      logo_url: draft.profilePatch.logo_url,
+      banner_url: draft.profilePatch.banner_url,
+
+      offerings: draft.profilePatch.offerings,
+
+      is_published: true,
+      published_at: new Date().toISOString()
+    };
+
+    const { error } = await sb
+      .from('vp_web_profile')
+      .update(payload)
+      .eq('id', draft.vp_web_profile_id);
+
+    if(error){
+      document.getElementById('msg').innerHTML = `<div class="error">Publish failed: ${escapeHtml(error.message)}</div>`;
+      return;
+    }
+
+    localStorage.removeItem(DRAFT_KEY(vpaId));
+
+    document.getElementById('msg').innerHTML = '<div class="ok">Published (saved to Supabase).</div>';
+
+    window.location.href = 'dashboard.html'; }
+
+async function load(){
+  if(!vpaId){
+    document.getElementById('statusMsg').innerHTML = '<div class="error">Missing vpa_id.</div>';
+    return;
+  }
+
+  const session = await ensureLoggedIn();
+  if(!session?.user?.id){
+    document.getElementById('statusMsg').innerHTML = '<div class="error">Please sign in to continue.</div>';
+    return;
+  }
+
+  const draft = readDraft();
+  if(!draft){
+    document.getElementById('statusMsg').innerHTML = '<div class="error">No draft found. Go back to Setup.</div>';
+    return;
+  }
+
+  const { data: appRow, error: appErr } = await sb
+    .from('vendor_performer_applications')
+    .select('photo_url')
+    .eq('id', vpaId)
+    .single();
+
+  if(appErr){
+    document.getElementById('statusMsg').innerHTML = `<div class="error">Failed to load application image: ${escapeHtml(appErr.message)}</div>`;
+    return;
+  }
+
+  showWizard(draft, appRow?.photo_url);
+  buildPreview(draft);
+
+  await loadReviewStatus(draft.vp_web_profile_id);
+
+  document.getElementById('statusMsg').style.display = 'none';
+  document.getElementById('wrap').style.display = 'block';
+}
+
+  window.addEventListener('DOMContentLoaded', load);
+</script>
+
+</body>
+</html>

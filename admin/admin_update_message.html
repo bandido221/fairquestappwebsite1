@@ -94,10 +94,8 @@
     let editingId = null;
 
     async function loadUpdates() {
-      const { data, error } = await supabase
-        .from('website_updates')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const { data, error } = await supabase
+  .rpc('get_website_updates');
 
       const list = document.getElementById('updatesList');
       list.innerHTML = '';
@@ -135,11 +133,11 @@
   }
 
   if (editingId) {
-    // Update existing
-    const { error } = await supabase
-      .from('website_updates')
-      .update({ title: title, message: message })
-      .eq('id', editingId);
+ const { error } = await supabase.rpc('update_website_update', {
+  p_id: editingId,
+  p_title: title,
+  p_message: message
+});
 
     if (error) {
       alert('❌ Error updating message.');
@@ -147,16 +145,10 @@
       alert('✅ Update saved.');
     }
   } else {
-    // Insert new
-    const { error } = await supabase
-      .from('website_updates')
-      .insert([
-        {
-          title: title,
-          message: message,
-          created_at: new Date().toISOString()
-        }
-      ]);
+  const { error } = await supabase.rpc('insert_website_update', {
+  p_title: title,
+  p_message: message
+});
 
     if (error) {
       console.error(error);
@@ -181,10 +173,9 @@
       const confirmDelete = confirm('⚠️ Are you sure you want to delete this update?');
       if (!confirmDelete) return;
 
-      const { error } = await supabase
-        .from('website_updates')
-        .delete()
-        .eq('id', editingId);
+    const { error } = await supabase.rpc('delete_website_update', {
+  p_id: editingId
+});
 
       if (error) {
         alert('❌ Error deleting message.');

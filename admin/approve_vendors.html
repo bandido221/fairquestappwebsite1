@@ -67,12 +67,8 @@
     );
 
     async function loadVendorApplications() {
-      const { data: apps, error } = await supabaseClient
-        .from('vendor_performer_applications')
-        .select('*')
-        .eq('approval_status', 'pending')
-        .eq('application_type', false)
-        .order('id', { ascending: false });
+  const { data: apps, error } = await supabaseClient
+  .rpc('get_pending_vendor_applications');
 
       const container = document.getElementById('applicationList');
       if (error || !apps || apps.length === 0) {
@@ -82,20 +78,20 @@
 
       container.innerHTML = '';
       for (const app of apps) {
-        const { data: fairs = [] } = await supabaseClient
-          .from('vendor_application_fairs')
-          .select('start_date, end_date, renaissance_fairs(name, state)')
-          .eq('application_id', app.id);
+const { data: fairs = [] } = await supabaseClient.rpc(
+  'get_application_fairs',
+  { p_application_id: app.id }
+);
 
-        const { data: manual = [] } = await supabaseClient
-          .from('suggested_fairs')
-          .select('fair_name, start_date, end_date')
-          .eq('application_id', app.id);
+      const { data: manual = [] } = await supabaseClient.rpc(
+  'get_application_manual_fairs',
+  { p_application_id: app.id }
+);
 
         const allFairs = [];
         fairs.forEach(f => {
           allFairs.push({
-            label: `${f.renaissance_fairs.name} (${f.renaissance_fairs.state})`,
+            label: `${f.fair_name} (${f.fair_state})`,
             dates: `${f.start_date} to ${f.end_date}`
           });
         });
@@ -159,19 +155,28 @@
     }
 
     async function declineVendor(id) {
-      const { error } = await supabaseClient
-        .from('vendor_performer_applications')
-        .update({ approval_status: 'declined' })
-        .eq('id', id);
+const { error } = await supabaseClient.rpc(
+  'decline_performer_application',
+  { p_id: id }
+);
       alert(error ? `❌ Failed to decline: ${error.message}` : '❌ Vendor declined.');
       loadVendorApplications();
     }
 
     async function deleteApplication(id) {
       if (!confirm("Delete application and all linked fair info?")) return;
-      await supabase.from('suggested_fairs').delete().eq('application_id', id);
-      await supabase.from('vendor_application_fairs').delete().eq('application_id', id);
-      await supabase.from('vendor_performer_applications').delete().eq('id', id);
+      await supabaseClient.rpc(
+  'delete_suggested_fairs_for_application',
+  { p_application_id: id }
+);
+      await supabaseClient.rpc(
+  'delete_vendor_application_fairs_for_application',
+  { p_application_id: id }
+);
+      await supabaseClient.rpc(
+  'delete_vendor_performer_application',
+  { p_id: id }
+);
       alert('✅ Application deleted.');
       loadVendorApplications();
     }

@@ -916,28 +916,21 @@ async function checkIfUserApplied() {
   const isLoggedIn = sessionData?.session?.user != null;
   if (!isLoggedIn) return;
 
-  const userId = sessionData.session.user.id;
-
-  const { data: applications, error } = await supabaseClient
-  .from('vendor_performer_applications')
- .select('application_type')
-    .eq('user_id', userId)
-    .eq('approval_status', 'approved')
-    .maybeSingle();
+  const { data, error } = await supabaseClient.rpc('get_my_application_portal_flags');
 
   if (error) {
-    console.error('Error checking application:', error);
+    console.error('Error checking application flags:', error);
     return;
   }
 
-  if (applications) {
-    if (applications.application_type === true) {
-      document.getElementById('performerButton').innerText = '🎭 Performer Portal';
-      document.getElementById('performerButton').href = 'vendor_performer/performer/index.html';
-    } else if (applications.application_type === false) {
-      document.getElementById('vendorButton').innerText = '🧺 Vendor Portal';
-      document.getElementById('vendorButton').href = 'vendor_performer/vendor/index.html';
-    }
+  if (data?.has_performer_approved) {
+    document.getElementById('performerButton').innerText = '🎭 Performer Portal';
+    document.getElementById('performerButton').href = 'vendor_performer/performer/index.html';
+  }
+
+  if (data?.has_vendor_approved) {
+    document.getElementById('vendorButton').innerText = '🧺 Vendor Portal';
+    document.getElementById('vendorButton').href = 'vendor_performer/vendor/index.html';
   }
 }
 

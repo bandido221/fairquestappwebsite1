@@ -280,12 +280,9 @@
         return;
       }
 
-       const { data: adminRow, error: adminErr } = await window.supabaseClient
-        .from('admins')
-
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
+  const { data: adminRow, error: adminErr } = await window.supabaseClient
+  .rpc('is_admin_by_email', { p_email: email })
+  .maybeSingle();
 
       if (adminErr) {
         openErrorModal(

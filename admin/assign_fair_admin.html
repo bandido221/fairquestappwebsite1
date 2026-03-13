@@ -127,25 +127,8 @@ button.action {
     list.innerHTML = 'Loading…';
 
     if(mode === 'pending'){
-     var resp = await supabase
-  .from('fair_verification')
- .select(`
-  id,
-  user_id,
-  user_email,
-  fair_id,
-  fair_name,
-  fair_city,
-  fair_state,
-  contact_name,
-  fair_role,
-  fair_notes,
-  submitted_at,
-  approved
-`)
-  .eq('approved', false)
-.eq('rejected', false)
-  .order('submitted_at', { ascending:false });
+ var resp = await supabase
+  .rpc('get_pending_fair_verifications');
 
       if(resp.error){
         console.error(resp.error);
@@ -154,18 +137,8 @@ button.action {
       }
       renderPending(resp.data || []);
     } else {
-      var resp2 = await supabase
-        .from('fair_admins')
-        .select(`
-          email,
-          admin_level,
-          created_at,
-          renaissance_fairs (
-            name,
-            state
-          )
-        `)
-        .order('created_at', { ascending:false });
+   var resp2 = await supabase
+  .rpc('get_fair_admins');
 
       if(resp2.error){
         console.error(resp2.error);
@@ -237,9 +210,9 @@ ${r.fair_id ? `
     rows.forEach(function(r){
       var div=document.createElement('div');
       div.className='card';
-      var fairName = (r.renaissance_fairs && r.renaissance_fairs.name) ? r.renaissance_fairs.name : '(Unknown fair)';
-      var fairState = (r.renaissance_fairs && r.renaissance_fairs.state) ? r.renaissance_fairs.state : '';
-      div.innerHTML=`
+var fairName = r.fair_name || '(Unknown fair)';
+var fairState = r.fair_state || '';
+     div.innerHTML=`
         <span class="badge approved">APPROVED</span>
         <h3>${fairName} ${fairState ? `(${fairState})` : ''}</h3>
         <p><b>Admin Email:</b> ${r.email}</p>
@@ -260,16 +233,12 @@ async function createFair(verificationId, fairName, fairCity, fairState){
 
   if(!confirm(`Create new fair "${fairName}" in ${fairCity}, ${fairState}?`)) return;
 
-  var insertFair = await supabase
-    .from('renaissance_fairs')
-    .insert({
-      name: fairName,
-      city: fairCity,
-      state: fairState,
-      address: fairCity + ', ' + fairState
-    })
-    .select('id')
-    .single();
+var insertFair = await supabase
+  .rpc('create_renaissance_fair', {
+    p_name: fairName,
+    p_city: fairCity,
+    p_state: fairState
+  });
 
   if(insertFair.error){
     console.error(insertFair.error);
@@ -277,12 +246,15 @@ async function createFair(verificationId, fairName, fairCity, fairState){
     return;
   }
 
-  var newFairId = insertFair.data.id;
+  var newFairId = insertFair.data;
 
-  var updateVerification = await supabase
-    .from('fair_verification')
-    .update({ fair_id: newFairId })
-    .eq('id', verificationId);
+ var updateVerification = await supabase.rpc(
+  'update_verification_fair_id',
+  {
+    p_verification_id: verificationId,
+    p_fair_id: newFairId
+  }
+);
 
   if(updateVerification.error){
     console.error(updateVerification.error);
@@ -306,10 +278,13 @@ async function approve(verificationId, userId, fairId, fairName){
     return;
   }
 
-  var insertResp = await supabase.from('fair_admins').insert({
-    user_id: userId,
-    fair_id: finalFairId
-  });
+  var insertResp = await supabase.rpc(
+  'assign_fair_admin',
+  {
+    p_user_id: userId,
+    p_fair_id: finalFairId
+  }
+);
 
   if(insertResp.error){
     console.error(insertResp.error);
@@ -317,9 +292,10 @@ async function approve(verificationId, userId, fairId, fairName){
     return;
   }
 
-  var updateResp = await supabase.from('fair_verification')
-    .update({ approved:true, approved_at: new Date().toISOString() })
-    .eq('id', verificationId);
+ var updateResp = await supabase.rpc(
+  'approve_fair_verification',
+  { p_verification_id: verificationId }
+);
 
   if(updateResp.error){
     console.error(updateResp.error);
@@ -341,13 +317,13 @@ async function approve(verificationId, userId, fairId, fairName){
     return;
   }
 
-  var r = await supabase.from('fair_verification')
-    .update({
-      rejected: true,
-      rejection_reason: reason,
-      rejected_at: new Date().toISOString()
-    })
-    .eq('id', id);
+var r = await supabase.rpc(
+  'reject_fair_verification',
+  {
+    p_verification_id: id,
+    p_reason: reason
+  }
+);
 
   if(r.error){
     console.error(r.error);

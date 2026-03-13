@@ -61,25 +61,21 @@
       text-decoration: none;
     }
 
-    /* Single column layout for fields */
     .fair-info-card .fair-info {
       display: block;
       margin-bottom: 20px;
     }
 
-    /* Styling for Labels */
     .fair-info-card .fair-info label {
       font-weight: bold;
       margin-bottom: 10px;
       display: block;
     }
 
-    /* Styling for Info */
     .fair-info-card .fair-info .info {
       margin-bottom: 10px;
     }
 
-    /* Input fields */
     .input-field {
       margin-top: 10px;
       padding: 10px;
@@ -136,46 +132,37 @@
 
   <h1>Update Fair Information</h1>
 
-  <!-- Fair Information -->
   <div class="fair-info-card" id="fairInfo">
     <h2>Current Fair Information</h2>
     <div class="fair-info">
-      <!-- Fair Name (Editable) -->
       <label for="currentFairName">Fair Name:</label>
       <div class="info" id="currentFairName">Loading...</div>
       <input type="text" id="newFairName" class="input-field" placeholder="Enter new fair name">
 
-      <!-- Fair Address (Editable) -->
       <label for="currentFairAddress">Address:</label>
       <div class="info" id="currentFairAddress">Loading...</div>
       <input type="text" id="newFairAddress" class="input-field" placeholder="Enter new address">
 
-      <!-- Fair City (Editable) -->
       <label for="currentFairCity">City:</label>
       <div class="info" id="currentFairCity">Loading...</div>
       <input type="text" id="newFairCity" class="input-field" placeholder="Enter new city">
 
-      <!-- Fair State (Editable) -->
       <label for="currentFairState">State:</label>
       <div class="info" id="currentFairState">Loading...</div>
       <input type="text" id="newFairState" class="input-field" placeholder="Enter new state">
 
-      <!-- Fair Zip (Editable) -->
       <label for="currentFairZip">Zip:</label>
       <div class="info" id="currentFairZip">Loading...</div>
       <input type="text" id="newFairZip" class="input-field" placeholder="Enter new zip">
 
-      <!-- Fair Website (Editable) -->
       <label for="currentFairWebsite">Website:</label>
       <div class="info" id="currentFairWebsite">Loading...</div>
       <input type="text" id="newFairWebsite" class="input-field" placeholder="Enter new website">
-<!-- Hours (Editable) -->
 <label for="currentFairHours">Hours of Operation:</label>
 <div class="info" id="currentFairHours">Loading...</div>
 <label for="fairHours">Hours of Operation:</label>
 <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
 
-  <!-- Start Time -->
   <input 
     type="text" 
     id="hours_start_time"
@@ -195,7 +182,6 @@
 
   <span>to</span>
 
-  <!-- End Time -->
   <input 
     type="text" 
     id="hours_end_time"
@@ -218,13 +204,11 @@
  <div class="week" data-week="1">
   <h3>Week 1</h3>
 
-  <!-- Theme row -->
   <div class="week-theme">
     <label>Theme:</label>
     <input type="text" id="week1_theme" placeholder="Optional theme" />
   </div>
 
-  <!-- Start/End row -->
   <div class="week-dates">
     <label>Start:</label>
     <input type="date" id="week1_start" />
@@ -239,12 +223,10 @@
 
 <button id="addWeekButton" type="button" class="button">Add another weekend</button>
 
-      <!-- Fair Description (Editable) -->
 <label for="currentFairDescription">Description:</label>
 <div class="info" id="currentFairDescription">Loading...</div>
 <input type="text" id="newFairDescription" class="input-field" placeholder="Enter fair description (max 400 characters)">
 
-      <!-- Fair Image URL (Editable) -->
       <label for="currentFairImage">Fair Image:</label>
 <div class="info" id="currentFairImage"></div>
 
@@ -254,28 +236,22 @@
   Remove Image
 </button>
 
-<!-- Preview -->
 <img id="fairImagePreview" style="max-width:250px;margin-top:15px;display:none;border-radius:6px;">
 
     </div>
-
-    <!-- Update Button (Redirect to Review Page) -->
     <button class="button" onclick="redirectToReview()">Proceed to Review</button>
   </div>
 
   <a href="/index.html" class="back-link">🏡 Back to Home</a>
 
   <script>
-    // Restore saved fields
 const saved = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
 
-// Restore text fields
 ["newFairName","newFairAddress","newFairCity","newFairState",
  "newFairZip","newFairWebsite"].forEach(id => {
   if (saved[id]) document.getElementById(id).value = saved[id];
 });
 
-// Restore uploaded image
 if (saved.fair_image_url) {
   document.getElementById("currentFairImage").innerHTML =
     `<img src="${saved.fair_image_url}" style="max-width:250px;border-radius:6px;">`;
@@ -284,7 +260,6 @@ if (saved.fair_image_url) {
   sessionStorage.setItem("fair_image_url", saved.fair_image_url);
 }
 
-// Auto-save on typing
 ["newFairName","newFairAddress","newFairCity","newFairState",
  "newFairZip","newFairWebsite"].forEach(id => {
   document.getElementById(id).addEventListener("input", () => {
@@ -299,14 +274,12 @@ if (saved.fair_image_url) {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
-    // Load fair admin dashboard
     async function loadAdminDashboard() {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
         console.error("User not found");
         return;
       }
-// Read fair_id from URL
 const fairId = new URLSearchParams(window.location.search).get("fair_id");
 
 if (!fairId) {
@@ -314,13 +287,13 @@ if (!fairId) {
   return;
 }
 
-// Load fair info
-const { data: fairData, error: fairError } = await supabase
-  .from('renaissance_fairs')
-  .select('*')
-  .eq('id', fairId)
-  .single();
+const { data: fairRows, error: fairError } = await supabase
+  .rpc('get_update_fair_page_fair_by_id', {
+    p_user_id: user.id,
+    p_fair_id: parseInt(fairId, 10)
+  });
 
+const fairData = fairRows?.[0];
 if (fairError || !fairData) {
   console.error("Fair not found.");
   return;
@@ -331,7 +304,6 @@ if (fairError || !fairData) {
         return;
       }
 
-      // Populate current fair information
       document.getElementById('currentFairName').textContent = `${fairData.name || 'N/A'}`;
       document.getElementById('currentFairAddress').textContent = `${fairData.address || 'N/A'}`;
       document.getElementById('currentFairCity').textContent = `${fairData.city || 'N/A'}`;
@@ -342,18 +314,9 @@ document.getElementById('currentFairImage').innerHTML =
   fairData.image_url
     ? `<img src="${fairData.image_url}" style="max-width:250px;border-radius:6px;">`
     : '';
-// ------------------------------
-// LOAD EXISTING HOURS INTO FIELDS
-// ------------------------------
 if (fairData.hours && fairData.hours.includes("to")) {
-  // Example: "11:00 AM to 6:00 PM"
   const parts = fairData.hours.split(" ");
 
-  // parts[0] = "11:00"
-  // parts[1] = "AM"
-  // parts[2] = "to"
-  // parts[3] = "6:00"
-  // parts[4] = "PM"
 
   document.getElementById("hours_start_time").value = parts[0];
   document.getElementById("hours_start_ampm").value = parts[1];
@@ -361,8 +324,6 @@ if (fairData.hours && fairData.hours.includes("to")) {
   document.getElementById("hours_end_ampm").value = parts[4];
 }
 
-
-    /* Load existing weekend dates */
 for (let i = 1; i <= 10; i++) {
   const startKey = i === 1 ? 'start_date' : `week${i}_start_date`;
   const endKey   = i === 1 ? 'end_date'   : `week${i}_end_date`;
@@ -398,8 +359,6 @@ for (let i = 1; i <= 10; i++) {
 }
 
     }
-
-    // Proceed to review page and store updated fair data in sessionStorage
 function redirectToReview() {
   const fairId = new URLSearchParams(window.location.search).get("fair_id");
   sessionStorage.setItem('fair_id', fairId);
@@ -409,40 +368,28 @@ function redirectToReview() {
     document.querySelector("#currentFairImage img")?.src ||
     "";
 
-// ------------------------------
-// VALIDATE HOURS INPUT
-// ------------------------------
 const startTime = document.getElementById("hours_start_time").value.trim();
 const startAP   = document.getElementById("hours_start_ampm").value.trim();
 const endTime   = document.getElementById("hours_end_time").value.trim();
 const endAP     = document.getElementById("hours_end_ampm").value.trim();
 
-// Strong regex check (HH:MM)
 function isValidTime(t) {
   return /^[0-9]{1,2}:[0-9]{2}$/.test(t);
 }
-
-// Check required fields
 if (startTime || startAP || endTime || endAP) {
-  // User began filling → now enforce all
   if (!startTime || !startAP || !endTime || !endAP) {
     alert("Please enter complete hours: start time, AM/PM, end time, AM/PM.");
     return;
   }
-
-  // Validate format
   if (!isValidTime(startTime) || !isValidTime(endTime)) {
     alert("Time must be in format HH:MM, example: 11:00");
     return;
   }
 }
-
-// Build final format
 let formattedHours = "";
 if (startTime && startAP && endTime && endAP) {
   formattedHours = `${startTime} ${startAP} to ${endTime} ${endAP}`;
 }
-
 
 const updatedFairData = {
     name: document.getElementById('newFairName').value || document.getElementById('currentFairName').textContent,
@@ -452,8 +399,6 @@ const updatedFairData = {
     zip: document.getElementById('newFairZip').value || document.getElementById('currentFairZip').textContent,
     website: document.getElementById('newFairWebsite').value || document.getElementById('currentFairWebsite').textContent,
     fairImage: fairImageURL,
-
-    // NEW HOURS FORMATTING
     hours: formattedHours || document.getElementById('currentFairHours').textContent
 };
 
@@ -468,26 +413,17 @@ for (let i = 1; i <= currentWeek; i++) {
   }
 }
 
-
 sessionStorage.setItem('updatedFairData', JSON.stringify(updatedFairData));
-
-// keep draft so returning to edit restores everything
 window.location.href = 'fair_review.html';
 
 }
 
-
 const cloudName = "dft7xclvh";
 const uploadPreset = "fair_upload";
-
 document.getElementById("fairImageFile").addEventListener("change", async function(e) {
     const file = e.target.files[0];
     if (!file) return;
-
-    // Compress the image
     const compressed = await compressImage(file, 0.6);
-
-    // Upload to Cloudinary
     let formData = new FormData();
     formData.append("file", compressed);
     formData.append("upload_preset", uploadPreset);
@@ -498,28 +434,18 @@ document.getElementById("fairImageFile").addEventListener("change", async functi
     });
 
     const data = await res.json();
-
-    // Save final URL
     sessionStorage.setItem("fair_image_url", data.secure_url);
     sessionStorage.setItem("uploaded_public_id", data.public_id);
 
-    // Show uploaded image
     document.getElementById("currentFairImage").innerHTML =
       `<img id="uploadedFairImage" src="${data.secure_url}" style="max-width:250px;border-radius:6px;">`;
-
     document.getElementById("fairImagePreview").style.display = "none";
-
-    // Show remove button
     document.getElementById("removeImageBtn").style.display = "inline-block";
-
-    // ---- UPDATE DRAFT (ONLY ONCE) ----
     let tempDraft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
     tempDraft.fair_image_url = data.secure_url;
     sessionStorage.setItem("update_fair_draft", JSON.stringify(tempDraft));
 });
 
-
-// Image compression
 function compressImage(file, quality) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -551,27 +477,18 @@ function compressImage(file, quality) {
 document.getElementById("removeImageBtn").onclick = async function () {
     document.getElementById("currentFairImage").innerHTML = "";
     document.getElementById("removeImageBtn").style.display = "none";
-
-    // Reset preview if used
     document.getElementById("fairImagePreview").style.display = "none";
     document.getElementById("fairImagePreview").src = "";
-
-    // Clear file input so SAME file can be selected again
     document.getElementById("fairImageFile").value = "";
-
-    // Clear stored cloudinary info
 sessionStorage.removeItem("uploaded_public_id");
 sessionStorage.removeItem("fair_image_url");
 
 const draft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
 delete draft.fair_image_url;
 sessionStorage.setItem("update_fair_draft", JSON.stringify(draft));
-
 };
-
 const maxWeeks = 10;
 let currentWeek = 1;
-
 document.getElementById('addWeekButton').addEventListener('click', () => {
   if (currentWeek < maxWeeks) {
     currentWeek++;
@@ -596,13 +513,9 @@ weekDiv.innerHTML = `
     <input type="date" id="week${currentWeek}_end" />
   </div>
 `;
-
-
-
     weekContainer.appendChild(weekDiv);
   }
 });
-
 
     loadAdminDashboard();
   </script>

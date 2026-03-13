@@ -21,18 +21,35 @@
     }
     h1 { font-family: 'Cinzel', serif; margin-bottom: 10px; }
 
-    .card {
-      position: relative;
-      background: rgba(241, 223, 153, 0.88);
-      padding: 26px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      margin: 18px auto;
-      max-width: 980px;
-      color: #3b1f1f;
-      text-align: left;
-    }
-
+.card {
+  position: relative;
+  background: rgba(255,255,255,0.95);
+  padding: 26px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  margin: 18px auto;
+  max-width: 980px;
+  color: #000;
+  text-align: left;
+}
+.card,
+.card h1,
+.card h2,
+.card h3,
+.card h4,
+.card h5,
+.card h6,
+.card p,
+.card div,
+.card span,
+.card label,
+.card strong,
+.card .label,
+.card .hint,
+.card .pill,
+.card .small {
+  color: #000 !important;
+}
     .profile-logo {
       position: absolute;
       top: 10px;
@@ -77,14 +94,15 @@
 
     .label { font-weight: bold; }
 
-    input[type="text"], input[type="number"], select, textarea {
-      font-size: 15px;
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(0,0,0,0.25);
-      box-sizing: border-box;
-    }
+  input[type="text"], input[type="number"], select, textarea {
+  font-size: 15px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.25);
+  box-sizing: border-box;
+  color: #000;
+}
 
     textarea {
       min-height: 80px;
@@ -180,6 +198,33 @@
 
 .preview-address-grid .full {
   grid-column: 1 / -1;
+}
+
+.inline-editor {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.12);
+}
+
+.inline-editor-grid {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 10px 14px;
+  align-items: center;
+}
+
+.inline-editor-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.inline-editor.hidden {
+  display: none;
 }
 
     /* Loader */
@@ -298,6 +343,12 @@
 
 
     <div class="grid">
+<div class="label">Question Order:</div>
+<div>
+  <input id="fSort" type="number" value="1" min="1" />
+  <div class="hint" style="margin-top:6px;">Use 1 for first, 2 for second, 3 for third, and so on.</div>
+</div>
+
 <div class="label">Question:</div>
 <div>
   <input id="fLabel" type="text" placeholder="Example: What is your booth name?" />
@@ -320,7 +371,6 @@
   <div class="hint" style="margin-top:6px;">Choose what kind of answer you want the applicant to give.</div>
 </div>
 
-
 <div class="label">Required:</div>
 <div>
   <label style="display:flex; align-items:center; gap:10px;">
@@ -329,14 +379,6 @@
   </label>
   <div class="hint" style="margin-top:6px;">If checked, applicants must answer this before submitting.</div>
 </div>
-
-
-<div class="label">Sort Order:</div>
-<div>
-  <input id="fSort" type="number" value="1" min="1" />
-  <div class="hint" style="margin-top:6px;">Lower numbers show first (1, 2, 3…).</div>
-</div>
-
 
 <div class="label">Help Text:</div>
 <div>
@@ -551,27 +593,25 @@ async function openPreviewPane(fairId, formId) {
   pane.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-    async function upsertField(fairId, formId, payload) {
-const args = {
-  p_fair_id: fairId,
-  p_form_id: formId,
-  p_field_key: payload.field_key,
-  p_label: payload.label,
-  p_field_type: payload.field_type,
-  p_is_required: payload.is_required,
-  p_sort_order: payload.sort_order,
-  p_help_text: payload.help_text || null,
-  p_placeholder: payload.placeholder || null,
-  p_config: payload.config ? payload.config : {},
-  p_field_id: null
-};
+async function upsertField(fairId, formId, payload) {
+  const args = {
+    p_fair_id: fairId,
+    p_form_id: formId,
+    p_field_key: payload.field_key,
+    p_label: payload.label,
+    p_field_type: payload.field_type,
+    p_is_required: payload.is_required,
+    p_sort_order: payload.sort_order,
+    p_help_text: payload.help_text || null,
+    p_placeholder: payload.placeholder || null,
+    p_config: payload.config ? payload.config : {},
+    p_field_id: payload.field_id || null
+  };
 
-
-
-      const { data, error } = await supabaseClient.rpc('fair_man_app_upsert_form_field', args);
-      if (error) throw error;
-      return data; // field_id
-    }
+  const { data, error } = await supabaseClient.rpc('fair_man_app_upsert_form_field', args);
+  if (error) throw error;
+  return data; // field_id
+}
 
     async function deleteField(fairId, formId, fieldId) {
       const { error } = await supabaseClient.rpc('fair_man_app_delete_form_field', {
@@ -690,7 +730,7 @@ function buildPreviewControl(f) {
     return wrap;
   }
 
-   if (t === 'file') {
+  if (t === 'file') {
     const box = document.createElement('div');
     box.className = 'preview-file';
 
@@ -708,7 +748,6 @@ function buildPreviewControl(f) {
     return wrap;
   }
 
-  // NEW: address preview
   if (t === 'address') {
     const grid = document.createElement('div');
     grid.className = 'preview-address-grid';
@@ -757,13 +796,110 @@ function buildPreviewControl(f) {
     return wrap;
   }
 
-  // default: text
   const el = document.createElement('input');
   el.type = 'text';
   el.placeholder = placeholder || 'Example answer...';
   el.disabled = true;
   wrap.appendChild(el);
   return wrap;
+}
+
+function buildInlineEditor(field) {
+  const options = (field.config && Array.isArray(field.config.options)) ? field.config.options : [];
+
+  const box = document.createElement('div');
+  box.className = 'inline-editor';
+  box.innerHTML = `
+    <div class="inline-editor-grid">
+    <div class="label">Question Order:</div>
+<div>
+  <input type="number" class="ie-sort" min="1" value="${Number(field.sort_order || 1)}" />
+</div>
+
+<div class="label">Question:</div>
+<div>
+  <input type="text" class="ie-label" value="${escapeHtml(field.label || '')}" />
+</div>
+
+<div class="label">Type:</div>
+<div>
+  <select class="ie-type">
+    <option value="text">Short Text</option>
+    <option value="textarea">Long Text</option>
+    <option value="number">Number</option>
+    <option value="date">Date</option>
+    <option value="checkbox">Yes / No</option>
+    <option value="select">Dropdown</option>
+    <option value="file">File Upload</option>
+    <option value="address">Address</option>
+  </select>
+</div>
+
+<div class="label">Required:</div>
+<div>
+  <label style="display:flex; align-items:center; gap:10px;">
+    <input type="checkbox" class="ie-required" />
+    Required
+  </label>
+</div>
+
+      <div class="label">Help Text:</div>
+      <div>
+        <input type="text" class="ie-help" value="${escapeHtml(field.help_text || '')}" />
+      </div>
+
+      <div class="label">Placeholder:</div>
+      <div>
+        <input type="text" class="ie-placeholder" value="${escapeHtml(field.placeholder || '')}" />
+      </div>
+
+      <div class="label ie-opt-label" style="display:none;">Dropdown options:</div>
+      <div class="ie-opt-wrap" style="display:none;">
+        <textarea class="ie-options-lines" placeholder="One option per line">${escapeHtml(options.join('\n'))}</textarea>
+      </div>
+    </div>
+
+    <div class="inline-editor-actions">
+      <button type="button" class="btn btn-dark ie-save">Save Changes</button>
+      <button type="button" class="btn btn-dark ie-cancel">Cancel</button>
+    </div>
+  `;
+
+  const typeEl = box.querySelector('.ie-type');
+  const requiredEl = box.querySelector('.ie-required');
+  const optLabel = box.querySelector('.ie-opt-label');
+  const optWrap = box.querySelector('.ie-opt-wrap');
+
+  typeEl.value = (field.field_type || 'text').toLowerCase();
+  requiredEl.checked = !!field.is_required;
+
+  function refreshInlineEditorVisibility() {
+    const t = typeEl.value;
+    const showOpts = (t === 'select');
+    optLabel.style.display = showOpts ? '' : 'none';
+    optWrap.style.display = showOpts ? '' : 'none';
+
+    if (t === 'address') {
+      requiredEl.checked = true;
+      requiredEl.disabled = true;
+    } else {
+      requiredEl.disabled = false;
+    }
+  }
+
+  typeEl.addEventListener('change', refreshInlineEditorVisibility);
+  refreshInlineEditorVisibility();
+
+  return box;
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 
@@ -804,31 +940,109 @@ row.appendChild(c1);
         c5.innerHTML = `<span class="pill">${f.is_active ? 'active' : 'inactive'}</span>`;
         row.appendChild(c5);
 
-        const c6 = document.createElement('div');
-        const btnDel = document.createElement('button');
-        btnDel.className = 'btn btn-dark';
-        btnDel.style.padding = '8px 10px';
-        btnDel.style.fontSize = '14px';
-        btnDel.textContent = 'Delete';
-        btnDel.onclick = async () => {
-          if (!confirm('Delete this field?')) return;
-          showLoader();
-          setMsg('Deleting...');
-          try {
-            await deleteField(fairId, formId, f.id);
-            const res = await loadFormAndFields(fairId, formId);
-            renderFields(res.fields, fairId, formId);
-            setMsg('Deleted.');
-          } catch (e) {
-            console.error(e);
-            setMsg('Delete failed. Check console.');
-          } finally {
-            renderSignaturePreview();
+ const c6 = document.createElement('div');
+c6.style.display = 'flex';
+c6.style.gap = '8px';
+c6.style.flexWrap = 'wrap';
 
-            hideLoader();
-          }
-        };
-  c6.appendChild(btnDel);
+const btnEdit = document.createElement('button');
+btnEdit.className = 'btn btn-dark';
+btnEdit.style.padding = '8px 10px';
+btnEdit.style.fontSize = '14px';
+btnEdit.textContent = 'Edit';
+btnEdit.onclick = () => {
+  const existing = row.querySelector('.inline-editor');
+  if (existing) {
+    existing.remove();
+    setMsg('');
+    return;
+  }
+
+  const editor = buildInlineEditor(f);
+
+  editor.querySelector('.ie-save').onclick = async () => {
+    const label = (editor.querySelector('.ie-label').value || '').trim();
+    const fieldType = editor.querySelector('.ie-type').value;
+    const isRequired = (fieldType === 'address') ? true : editor.querySelector('.ie-required').checked;
+    const sortOrder = Number(editor.querySelector('.ie-sort').value || '1');
+    const helpText = (editor.querySelector('.ie-help').value || '').trim();
+    const placeholder = (editor.querySelector('.ie-placeholder').value || '').trim();
+
+    if (!label) { setMsg('Question is required.'); return; }
+    if (!Number.isFinite(sortOrder) || sortOrder < 1) { setMsg('Sort order must be 1+'); return; }
+
+    let config = f.config || null;
+    if (fieldType === 'select') {
+      const opts = buildOptionsFromLines(editor.querySelector('.ie-options-lines').value || '');
+      if (!opts.length) {
+        setMsg('Dropdown needs at least 1 option.');
+        return;
+      }
+      config = { options: opts };
+    } else {
+      config = null;
+    }
+
+    showLoader();
+    setMsg('Updating field...');
+    try {
+      await upsertField(fairId, formId, {
+        field_id: f.id,
+        field_key: f.field_key,
+        label,
+        field_type: fieldType,
+        is_required: isRequired,
+        sort_order: sortOrder,
+        help_text: helpText || null,
+        placeholder: placeholder || null,
+        config: config
+      });
+
+      const res = await loadFormAndFields(fairId, formId);
+      renderFields(res.fields, fairId, formId);
+      setMsg('Updated.');
+    } catch (e) {
+      console.error(e);
+      setMsg('Update failed. Check console.');
+    } finally {
+      hideLoader();
+    }
+  };
+
+  editor.querySelector('.ie-cancel').onclick = () => {
+    editor.remove();
+    setMsg('');
+  };
+
+  row.appendChild(editor);
+  setMsg(`Editing field: ${f.label}`);
+};
+
+const btnDel = document.createElement('button');
+btnDel.className = 'btn btn-dark';
+btnDel.style.padding = '8px 10px';
+btnDel.style.fontSize = '14px';
+btnDel.textContent = 'Delete';
+btnDel.onclick = async () => {
+  if (!confirm('Delete this field?')) return;
+  showLoader();
+  setMsg('Deleting...');
+  try {
+    await deleteField(fairId, formId, f.id);
+    const res = await loadFormAndFields(fairId, formId);
+    renderFields(res.fields, fairId, formId);
+    setMsg('Deleted.');
+  } catch (e) {
+    console.error(e);
+    setMsg('Delete failed. Check console.');
+  } finally {
+    renderSignaturePreview();
+    hideLoader();
+  }
+};
+
+c6.appendChild(btnEdit);
+c6.appendChild(btnDel);
 row.appendChild(c6);
 
 /* NEW: preview under each field */
@@ -1107,7 +1321,7 @@ applyActiveUi(isMappedActive);
 };
 
 
- document.getElementById('btnAddField').onclick = async () => {
+document.getElementById('btnAddField').onclick = async () => {
   const label = (document.getElementById('fLabel').value || '').trim();
   const fieldType = document.getElementById('fType').value;
   const isRequired = (fieldType === 'address') ? true : document.getElementById('fRequired').checked;
@@ -1118,7 +1332,6 @@ applyActiveUi(isMappedActive);
   if (!label) { setMsg('Question is required.'); return; }
   if (!Number.isFinite(sortOrder) || sortOrder < 1) { setMsg('Sort order must be 1+'); return; }
 
-  // Auto-generate field_key (stable-ish, unique fallback)
   let key = slugify(label);
   if (!key) key = 'field';
   key = `${key}_${Date.now().toString(36)}`;
@@ -1137,6 +1350,7 @@ applyActiveUi(isMappedActive);
   setMsg('Adding field...');
   try {
     await upsertField(fairId, formId, {
+      field_id: null,
       field_key: key,
       label,
       field_type: fieldType,
@@ -1150,7 +1364,6 @@ applyActiveUi(isMappedActive);
     const res = await loadFormAndFields(fairId, formId);
     renderFields(res.fields, fairId, formId);
 
-    // Clear inputs
     document.getElementById('fLabel').value = '';
     document.getElementById('fRequired').checked = false;
     document.getElementById('fSort').value = '1';

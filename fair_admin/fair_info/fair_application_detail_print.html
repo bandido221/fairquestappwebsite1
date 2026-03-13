@@ -11,27 +11,37 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    body {
-      font-family: 'Domine', serif;
-      background: #f5f0df;
-      color: #1e1e1e;
-      padding: 20px;
-      margin: 0;
-    }
+body {
+  font-family: 'Domine', serif;
+  background: #000;
+  color: #1e1e1e;
+  padding: 80px 20px 20px 20px;
+  margin: 0;
+}
 
-    h1, h2, h3 {
-      font-family: 'Cinzel', serif;
-      margin: 0 0 10px;
-      color: #1e1e1e;
-    }
+ h1, h2, h3 {
+  font-family: 'Cinzel', serif;
+  margin: 0 0 10px;
+  color: #1e1e1e;
+  text-align: left;
+}
 
-    .toolbar {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
+ .toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #1f1f1f;
+  z-index: 9999;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+.sheet,
+.sheet * {
+  text-align: left;
+}
     .btn {
       background-color: #2f2f2f;
       color: #fff;
@@ -53,12 +63,24 @@
       margin: 0 auto;
     }
 
-    .meta-grid {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 6px 12px;
-      margin-top: 10px;
-    }
+.meta-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 8px 14px;
+  margin-top: 14px;
+  align-items: start;
+}
+
+.k {
+  font-weight: bold;
+  text-align: left;
+}
+
+.v {
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 
     .k { font-weight: bold; }
     .v { white-space: pre-wrap; word-break: break-word; }
@@ -69,15 +91,36 @@
       border-top: 1px solid rgba(0,0,0,0.15);
     }
 
-    .field {
-      border: 1px solid rgba(0,0,0,0.15);
-      border-radius: 10px;
-      padding: 12px 14px;
-      margin-top: 10px;
-      background: #fafafa;
-    }
-    .field .label { font-weight: bold; margin-bottom: 6px; }
-    .field .value { white-space: pre-wrap; word-break: break-word; }
+.field {
+  border-bottom: 1px solid rgba(0,0,0,0.2);
+  padding: 14px 0;
+  margin-top: 8px;
+  background: transparent;
+}
+
+.field .label {
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.field .value {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.field .label {
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.field .value {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 15px;
+  line-height: 1.5;
+}
 
     .file-row {
       border: 1px solid rgba(0,0,0,0.15);
@@ -126,19 +169,36 @@
       opacity: 0.85;
       margin-top: 8px;
     }
+@media (max-width: 768px) {
 
+  .sheet {
+    margin: 80px 10px 30px 10px;
+    padding: 20px;
+    max-width: none;
+  }
+
+  .meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    overflow-x: auto;
+  }
+
+}
  @media print {
   body { background: #fff; padding: 0; }
   .toolbar { display: none !important; }
 
   .sheet {
-    border: none;
-    border-radius: 0;
-    padding: 0;
-    max-width: none;
-    margin: 0;
-  }
-
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 6px;
+  padding: 28px;
+  max-width: 850px;
+  margin: 70px auto 40px auto;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
   .section,
   .field,
   .file-row,
@@ -153,11 +213,13 @@
 
 <body>
 
-  <div class="toolbar">
-    <button class="btn" id="btnBack">⬅ Back</button>
-    <button class="btn" id="btnPrint">Print</button>
-    <button class="btn" id="btnRefresh">Refresh</button>
-  </div>
+ <div class="toolbar">
+  <button class="btn" id="btnBack">⬅ Back</button>
+  <button class="btn" id="btnPrint">Print</button>
+  <button class="btn" id="btnRefresh">Refresh</button>
+  <button class="btn" id="zoomOut">−</button>
+  <button class="btn" id="zoomIn">+</button>
+</div>
 
   <div class="sheet">
     <h1 id="pageTitle">Printable Application</h1>
@@ -505,7 +567,19 @@ document.getElementById('formTitle').textContent = safeText(submission.fair_man_
     document.getElementById('btnRefresh').onclick = async () => {
       await loadPage();
     };
+let zoomLevel = 1;
 
+document.getElementById("zoomIn").onclick = () => {
+  zoomLevel += 0.1;
+  document.querySelector(".sheet").style.transform = `scale(${zoomLevel})`;
+  document.querySelector(".sheet").style.transformOrigin = "top center";
+};
+
+document.getElementById("zoomOut").onclick = () => {
+  zoomLevel = Math.max(0.5, zoomLevel - 0.1);
+  document.querySelector(".sheet").style.transform = `scale(${zoomLevel})`;
+  document.querySelector(".sheet").style.transformOrigin = "top center";
+};
     loadPage();
   </script>
 

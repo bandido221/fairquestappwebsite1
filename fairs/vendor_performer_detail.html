@@ -88,7 +88,6 @@
         document.getElementById("detailCard").innerHTML = "<p>❌ Failed to load details.</p>";
         return;
       }
-      console.log("Returned data:", data);
 
       document.getElementById("title").textContent = data.name;
       document.getElementById("detailCard").innerHTML = `

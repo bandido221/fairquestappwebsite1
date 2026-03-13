@@ -105,11 +105,8 @@ button.reject:hover {
   );
 
   async function loadSuggestions() {
-    const { data: suggestions, error } = await supabase
-  .from('fair_update_suggestions')
-  .select('*, user_id')
-  .eq('approved', false)
-  .order('id', { ascending: false });
+const { data: suggestions, error } = await supabase
+  .rpc('get_pending_fair_update_suggestions');
 
   if (error) {
     document.getElementById('reviewContainer').innerHTML = `<p>Error: ${error.message}</p>`;
@@ -125,11 +122,10 @@ button.reject:hover {
 
   for (const fairId in grouped) {
     const latest = grouped[fairId][0]; // just show the latest suggestion
-    const { data: fairData } = await supabase
-      .from('renaissance_fairs')
-      .select('*')
-      .eq('id', fairId)
-      .single();
+    const { data: fairResult } = await supabase
+  .rpc('get_fair_by_id', { p_fair_id: fairId });
+
+const fairData = fairResult?.[0];
 
     const card = document.createElement('div');
     card.className = 'card';
@@ -188,10 +184,8 @@ button.reject:hover {
 }
 
 async function rejectField(suggestionId) {
-  const { error } = await supabase
-    .from('fair_update_suggestions')
-    .delete()
-    .eq('id', suggestionId);
+const { error } = await supabase
+  .rpc('reject_fair_update_suggestion', { p_id: suggestionId });
 
   if (error) {
     alert('❌ ' + error.message);

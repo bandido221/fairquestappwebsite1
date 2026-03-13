@@ -103,11 +103,8 @@
   let seenUsers = JSON.parse(localStorage.getItem('seenUsers')) || [];
 
   async function loadUsers() {
-    const { data, error } = await supabaseClient
-      .from('app_users')
-      .select('id, email, username, level, created_at, last_login, account_type')
-      .order('created_at', { ascending: false });
-  // ✅ correct way
+const { data, error } = await supabaseClient
+  .rpc('get_admin_user_list');
 
 
       if (error || !data) {

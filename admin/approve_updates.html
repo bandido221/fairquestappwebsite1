@@ -64,20 +64,16 @@
   <div id="logContainer"></div>
 
   <script>
-    const supabase = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+  const supabaseClient = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
 
     async function loadLogs() {
       const query = document.getElementById('searchBox').value.trim();
 
-      let { data: logs, error } = await supabase
-        .from('application_update_log')
-        .select('*')
-        .eq('seen', false)
-        .order('updated_at', { ascending: false })
-        .limit(100);
+let { data: logs, error } = await supabaseClient
+  .rpc('get_unseen_application_update_logs');
 
       const container = document.getElementById('logContainer');
 
@@ -87,12 +83,11 @@
         return;
       }
 
-      // Fetch all related application names in one batch
       const appIds = [...new Set(logs.map(log => log.application_id))];
-      const { data: apps, error: appError } = await supabase
-        .from('vendor_performer_applications')
-        .select('id, name')
-        .in('id', appIds);
+const { data: apps, error: appError } = await supabaseClient.rpc(
+  'get_application_names_by_ids',
+  { p_ids: appIds }
+);
 
       const appMap = new Map((apps || []).map(app => [app.id, app.name]));
 
@@ -124,10 +119,10 @@
         const seenBtn = document.createElement('button');
         seenBtn.textContent = 'Mark as Seen';
         seenBtn.onclick = async () => {
-          await supabase
-            .from('application_update_log')
-            .update({ seen: true })
-            .eq('id', log.id);
+   await supabaseClient.rpc(
+  'mark_application_update_log_seen',
+  { p_id: log.id }
+);
           loadLogs();
         };
         div.appendChild(seenBtn);

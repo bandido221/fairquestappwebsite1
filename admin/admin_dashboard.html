@@ -135,18 +135,17 @@
 <script>
 async function searchApplications() {
   const query = document.getElementById('searchQuery').value.trim();
+  const dropdown = document.getElementById('applicationDropdown');
+
+  dropdown.innerHTML = '<option value="">-- Select an application --</option>';
+
   if (!query) return;
 
   const { data, error } = await supabaseClient
-    .from('vendor_performer_applications')
-    .select('id, name')
-    .ilike('name', `%${query}%`);
-
-  const dropdown = document.getElementById('applicationDropdown');
-  dropdown.innerHTML = '<option value="">-- Select an application --</option>';
+    .rpc('search_vendor_performer_applications', { p_query: query });
 
   if (error) {
-    console.error('❌ Supabase error:', error);
+    console.error('❌ RPC error:', error);
     const option = document.createElement('option');
     option.value = "";
     option.textContent = "Search error";
@@ -169,8 +168,6 @@ async function searchApplications() {
   }
 }
 
-
-// Update applicationId input when dropdown changes
 const dropdown = document.getElementById('applicationDropdown');
 dropdown.addEventListener('change', async () => {
   const selectedId = dropdown.value;
@@ -182,35 +179,31 @@ dropdown.addEventListener('change', async () => {
   }
 
   const { data, error } = await supabaseClient
-    .from('vendor_performer_applications')
-    .select('name, tier, application_type, photo_url')
-    .eq('id', selectedId)
-    .single();
+    .rpc('get_vendor_performer_application_for_admin', { p_id: Number(selectedId) });
 
-  if (error || !data) {
+  const row = Array.isArray(data) ? data[0] : data;
+
+  if (error || !row) {
     alert("Failed to load application data.");
     return;
   }
 
-  document.getElementById('editName').value = data.name || '';
-document.getElementById('editTier').value = data.tier || '';
-document.getElementById('editType').value = data.application_type ? 'performer' : 'vendor';
+  document.getElementById('editName').value = row.name || '';
+  document.getElementById('editTier').value = row.tier || '';
+  document.getElementById('editType').value = row.application_type ? 'performer' : 'vendor';
 
-document.getElementById('selectedApplicationCard').style.display = 'block';
+  document.getElementById('selectedApplicationCard').style.display = 'block';
 
-// Show existing photo if available
-if (data.photo_url) {
-  const preview = document.getElementById('adminImagePreview');
-  preview.src = data.photo_url;
-  preview.style.display = 'block';
-  preview.dataset.url = data.photo_url;
-
-  document.getElementById('existingImageLabel').textContent = '📷 Current Photo:';
-} else {
-  document.getElementById('adminImagePreview').style.display = 'none';
-  document.getElementById('existingImageLabel').textContent = '';
-}
-
+  if (row.photo_url) {
+    const preview = document.getElementById('adminImagePreview');
+    preview.src = row.photo_url;
+    preview.style.display = 'block';
+    preview.dataset.url = row.photo_url;
+    document.getElementById('existingImageLabel').textContent = '📷 Current Photo:';
+  } else {
+    document.getElementById('adminImagePreview').style.display = 'none';
+    document.getElementById('existingImageLabel').textContent = '';
+  }
 });
 
 </script>
@@ -390,52 +383,22 @@ fileInput.addEventListener('change', () => {
   }
 });
 
-    async function showPendingCounts() {
-      const { count: vendorCount } = await supabaseClient        .from('vendor_performer_applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('approval_status', 'pending')
-        .or('application_type.is.false,application_type.is.null');
+   async function showPendingCounts() {
+  const { data, error } = await supabaseClient.rpc('get_admin_pending_counts');
 
-      const { count: performerCount } = await supabaseClient        .from('vendor_performer_applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('approval_status', 'pending')
-        .eq('application_type', true);
+  if (error || !data) {
+    console.error('❌ Error loading admin counts:', error);
+    return;
+  }
 
-      const { count: fairCount } = await supabaseClient        .from('new_fair_addition')
-        .select('*', { count: 'exact', head: true })
-        .eq('pending', true);
-
-      const { count: updateCount } = await supabaseClient        .from('fair_update_suggestions')
-        .select('*', { count: 'exact', head: true })
-        .neq('approval_status', 'approved');
-
-const today = new Date();
-today.setHours(0, 0, 0, 0); // reset to start of day
-
-const { count: userCount } = await supabaseClient  .from('app_users')
-  .select('*', { count: 'exact', head: true })
-  .gte('created_at', today.toISOString());
-
-// 🔥 ADD THIS RIGHT HERE
-const { count: updateApplicationCount } = await supabaseClient  .from('vendor_performer_applications')
-  .select('*', { count: 'exact', head: true })
-  .eq('update_pending', true);
-
-
-  const { count: updateLogCount } = await supabaseClient  .from('application_update_log')
-  .select('*', { count: 'exact', head: true })
-  .eq('seen', false);
-
-// Now set all the text like before
-document.getElementById('vendorCount').innerText = vendorCount ?? 0;
-document.getElementById('performerCount').innerText = performerCount ?? 0;
-document.getElementById('fairCount').innerText = fairCount ?? 0;
-document.getElementById('updateCount').innerText = updateCount ?? 0;
-document.getElementById('userCount').innerText = userCount ?? 0;
-document.getElementById('updateApplicationCount').innerText = updateApplicationCount ?? 0;
-
-
-    }
+  document.getElementById('vendorCount').innerText = data.vendor_count ?? 0;
+  document.getElementById('performerCount').innerText = data.performer_count ?? 0;
+  document.getElementById('fairCount').innerText = data.fair_count ?? 0;
+  document.getElementById('updateCount').innerText = data.update_count ?? 0;
+  document.getElementById('userCount').innerText = data.user_count ?? 0;
+  document.getElementById('updateApplicationCount').innerText = data.update_application_count ?? 0;
+  document.getElementById('logUpdateCount').innerText = data.log_update_count ?? 0;
+}
 
    
     async function logout() {

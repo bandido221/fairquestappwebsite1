@@ -270,13 +270,8 @@ Please review the note above and submit a new application with the corrected inf
 
 
 async function loadPendingApplications(userId){
-  const { data, error } = await supa
-    .from("fair_verification")
-    .select("id,fair_name,fair_city,fair_state,approved,approved_at,rejected,rejection_reason,user_reset,submitted_at")
-    .eq("user_id", userId)
-    .eq("approved", false)
-.eq("user_reset", false)
-    .order("submitted_at", { ascending: false });
+const { data, error } = await supa
+  .rpc("get_my_pending_fair_verifications", { p_user_id: userId });
 
   if(error){
     renderPendingList([]);
@@ -304,14 +299,12 @@ async function deletePendingRequest(id){
     return;
   }
 
-  const { error } = await supa
-    .from("fair_verification")
-   .update({
-  user_reset: true,
-  user_reset_at: new Date().toISOString()
-})
-    .eq("id", id)
-    .eq("user_id", user.id);
+const { error } = await supa
+  .rpc("reset_my_fair_verification_request", {
+    p_id: id,
+    p_user_id: user.id,
+    p_user_reset_at: new Date().toISOString()
+  });
 
   if(error){
     showMsg(pendingMsg, friendlyDbError(error), "error");
@@ -331,11 +324,8 @@ async function loadFairSuggestions(query){
     return;
   }
 
-  const { data, error } = await supa
-    .from("renaissance_fairs")
-    .select("id,name,city,state")
-    .ilike("name", `%${q}%`)
-    .limit(10);
+const { data, error } = await supa
+  .rpc("search_renaissance_fairs_by_name", { p_query: q });
 
   if(error || !data){
     fairSuggestions.innerHTML = "";
@@ -453,17 +443,15 @@ async function submitFairInfo(){
   }
 
 
-  const { data: existingPending, error: existingErr } = await supa
-    .from("fair_verification")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("approved", false)
-    .eq("fair_name", updates.fair_name)
-    .eq("fair_city", updates.fair_city)
-    .eq("fair_state", updates.fair_state)
-    .limit(1);
+const { data: existingPending, error: existingErr } = await supa
+  .rpc("has_my_pending_fair_verification", {
+    p_user_id: user.id,
+    p_fair_name: updates.fair_name,
+    p_fair_city: updates.fair_city,
+    p_fair_state: updates.fair_state
+  });
 
-  if(!existingErr && existingPending && existingPending.length > 0){
+  if(!existingErr && existingPending === true){
     showMsg(
       fairMsg,
       `You already have a pending request for "${updates.fair_name}" in ${updates.fair_city}, ${updates.fair_state}. Please wait for review, or change the fair information to submit a different fair.`,
@@ -472,26 +460,22 @@ async function submitFairInfo(){
     return;
   }
 
-  const { error } = await supa
-    .from('fair_verification')
-    .insert([
-           {
-        user_id: user.id,
-        fair_name: updates.fair_name,
-        fair_city: updates.fair_city,
-        fair_state: updates.fair_state,
-        fair_website: updates.fair_website,
-        fair_role: updates.fair_role,
-        role_details: updates.role_details,
-        fair_notes: updates.fair_notes,
-        contact_name: updates.contact_name,
-        contact_phone: updates.contact_phone,
-        extra_email: (useAltEmail.checked ? altEmail.value.trim() : null),
-        fair_id: (fairId.value ? parseInt(fairId.value, 10) : null),
-        authorization_confirmed: true
-      }
-
-    ]);
+ const { error } = await supa
+  .rpc('submit_fair_verification_request', {
+    p_user_id: user.id,
+    p_fair_name: updates.fair_name,
+    p_fair_city: updates.fair_city,
+    p_fair_state: updates.fair_state,
+    p_fair_website: updates.fair_website,
+    p_fair_role: updates.fair_role,
+    p_role_details: updates.role_details,
+    p_fair_notes: updates.fair_notes,
+    p_contact_name: updates.contact_name,
+    p_contact_phone: updates.contact_phone,
+    p_extra_email: (useAltEmail.checked ? altEmail.value.trim() : null),
+    p_fair_id: (fairId.value ? parseInt(fairId.value, 10) : null),
+    p_authorization_confirmed: true
+  });
 
     if(error){
     showMsg(fairMsg, friendlyDbError(error), "error");

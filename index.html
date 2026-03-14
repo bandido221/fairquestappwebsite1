@@ -268,6 +268,7 @@ body {
   <a class="btn explore-btn" href="/fairs/explore.html">🎪 Explore</a>
   <a class="btn" href="/vendor_performer/vendor_list.html">🧺 Vendor List</a>
   <a class="btn" href="/vendor_performer/performer_list.html">🎭 Performer List</a>
+  <a class="btn" id="socialButton" href="#" onclick="openSocial()" style="display:none;">👥 Social</a>
 </div>
 
 <div class="button-row">
@@ -596,7 +597,18 @@ const supabaseClient = window.supabase.createClient(
   'https://awtbjuiqgtdydsqzimul.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
 );
+async function openSocial() {
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const isLoggedIn = sessionData?.session?.user != null;
 
+  if (!isLoggedIn) {
+    alert('🔒 Please log in to access Social.');
+    window.location.href = '/user_login.html?redirect=/social/index.html';
+    return;
+  }
+
+  window.location.href = '/social/index.html';
+}
 function milesBetween(lat1, lon1, lat2, lon2) {
   const toRad = (v) => (v * Math.PI) / 180;
   const R = 3958.7613; // Earth radius in miles
@@ -933,6 +945,30 @@ async function checkIfUserApplied() {
     document.getElementById('vendorButton').href = 'vendor_performer/vendor/index.html';
   }
 }
+async function checkSocialAccess() {
+
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const user = sessionData?.session?.user;
+
+  if (!user) return;
+
+  const { data, error } = await supabaseClient
+    .from('app_users')
+    .select('gh_plan_tier')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.error('Plan check error:', error);
+    return;
+  }
+
+  if (data?.gh_plan_tier === 'full') {
+    const btn = document.getElementById('socialButton');
+    if (btn) btn.style.display = 'inline-block';
+  }
+
+}
 
 async function logout() {
   await supabaseClient.auth.signOut();
@@ -1008,6 +1044,8 @@ loadEarlyTesterCard();
 checkIfUserApplied();
 updateMenuBar();
 loadNearbyFairsCard();
+checkSocialAccess();
+
 
 
 

@@ -20,11 +20,64 @@ padding:0;
 .header{
 background:#111;
 border-bottom:2px solid #bb9457;
-padding:14px;
+padding:14px 18px;
 margin-bottom:30px;
-text-align:center;
 font-family:'Cinzel',serif;
 font-size:1.5rem;
+}
+
+.header-inner{
+max-width:1200px;
+margin:0 auto;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+}
+
+.header-title{
+text-align:center;
+flex:1;
+}
+
+.header-actions{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.header-icon-btn{
+position:relative;
+border:none;
+background:#1f2125;
+color:#f0e6d2;
+border-radius:999px;
+padding:10px 14px;
+cursor:pointer;
+font-family:'Domine',serif;
+font-size:1rem;
+}
+
+.header-icon-btn:hover{
+background:#2a2d31;
+}
+
+.notif-badge{
+position:absolute;
+top:-6px;
+right:-4px;
+min-width:20px;
+height:20px;
+padding:0 6px;
+border-radius:999px;
+background:#c62828;
+color:#fff;
+font-size:0.75rem;
+line-height:20px;
+text-align:center;
+font-family:Arial,sans-serif;
+font-weight:bold;
+box-sizing:border-box;
 }
 
 
@@ -127,7 +180,8 @@ white-space:nowrap;
 }
 
 .reaction-container:hover .reaction-popup,
-.reaction-container:focus-within .reaction-popup{
+.reaction-container:focus-within .reaction-popup,
+.reaction-container.show-reactions .reaction-popup{
 opacity:1;
 pointer-events:auto;
 transform:translateY(0);
@@ -368,6 +422,146 @@ font-weight:bold;
 font-size:0.8rem;
 color:#aaa;
 }
+.comment-item{
+margin-top:10px;
+padding:10px 12px;
+background:#1f2125;
+border-radius:12px;
+}
+
+.comment-item.reply-item{
+margin-left:42px;
+margin-top:8px;
+background:#181a1d;
+}
+
+.comment-header{
+display:flex;
+gap:8px;
+align-items:center;
+}
+
+.comment-avatar{
+width:32px;
+height:32px;
+border-radius:50%;
+object-fit:cover;
+background:#333;
+}
+
+.comment-author{
+font-weight:bold;
+color:#f5f5f5;
+}
+
+.comment-content{
+margin-top:6px;
+color:#f0e6d2;
+white-space:pre-wrap;
+word-break:break-word;
+}
+
+.comment-actions{
+display:flex;
+align-items:center;
+gap:10px;
+margin-top:8px;
+font-size:0.85rem;
+color:#aaa;
+flex-wrap:wrap;
+}
+
+.comment-action-btn{
+background:none;
+border:none;
+color:#d8d8d8;
+font-family:'Domine',serif;
+font-size:0.88rem;
+cursor:pointer;
+padding:4px 6px;
+border-radius:8px;
+}
+
+.comment-action-btn:hover{
+background:rgba(255,255,255,0.08);
+}
+
+.comment-reaction-container{
+position:relative;
+display:inline-block;
+}
+
+.comment-reaction-popup{
+position:absolute;
+left:0;
+bottom:100%;
+margin-bottom:8px;
+display:flex;
+align-items:center;
+gap:8px;
+padding:8px 10px;
+border-radius:999px;
+background:#1f2125;
+border:1px solid rgba(255,255,255,0.12);
+box-shadow:0 8px 20px rgba(0,0,0,0.4);
+opacity:0;
+pointer-events:none;
+transform:translateY(8px);
+transition:opacity 0.15s ease, transform 0.15s ease;
+z-index:30;
+white-space:nowrap;
+}
+
+.comment-reaction-container:hover .comment-reaction-popup,
+.comment-reaction-container:focus-within .comment-reaction-popup,
+.comment-reaction-container.show-reactions .comment-reaction-popup{
+opacity:1;
+pointer-events:auto;
+transform:translateY(0);
+}
+
+.comment-reaction-popup span{
+display:flex;
+align-items:center;
+justify-content:center;
+width:34px;
+height:34px;
+font-size:1.45rem;
+cursor:pointer;
+transition:transform 0.12s ease;
+}
+
+.comment-reaction-popup span:hover{
+transform:scale(1.22);
+}
+
+.reply-box{
+margin-top:10px;
+margin-left:42px;
+display:flex;
+gap:8px;
+}
+
+.reply-input{
+flex:1;
+padding:10px 12px;
+border-radius:10px;
+border:none;
+outline:none;
+font-family:'Domine',serif;
+}
+
+.reply-send-btn{
+padding:10px 14px;
+border:none;
+border-radius:10px;
+background:#bb9457;
+color:#000;
+font-weight:bold;
+cursor:pointer;
+font-family:'Domine',serif;
+}
+
 @media (max-width:600px){
 
 .social-layout{
@@ -415,9 +609,36 @@ width:44px;
 height:44px;
 }
 
+.comment-item.reply-item{
+margin-left:18px;
 }
 
+.reply-box{
+margin-left:18px;
+}
 
+}
+
+.header-subnav{
+display:flex;
+justify-content:center;
+margin-top:10px;
+}
+
+.notifications-page-btn{
+background:#bb9457;
+border:none;
+color:#000;
+padding:8px 18px;
+border-radius:8px;
+font-family:'Domine',serif;
+font-weight:bold;
+cursor:pointer;
+}
+
+.notifications-page-btn:hover{
+background:#cfa75e;
+}
 
 </style>
 
@@ -426,7 +647,20 @@ height:44px;
 <body>
 
 <div class="header">
-FairQuest Social
+  <div class="header-inner">
+    <div class="header-title">FairQuest Social</div>
+    <div class="header-actions">
+      <button type="button" id="notifications-btn" class="header-icon-btn">
+        🔔 <span id="notifications-badge" class="notif-badge" style="display:none;">0</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="header-subnav">
+    <button type="button" class="notifications-page-btn" onclick="openNotificationsPage()">
+      Notifications
+    </button>
+  </div>
 </div>
 <div class="social-layout">
 
@@ -498,110 +732,97 @@ const supabaseClient = window.supabase.createClient(
 'https://awtbjuiqgtdydsqzimul.supabase.co',
 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
 );
-
 async function checkUser(){
-
 const { data } = await supabaseClient.auth.getSession();
-
 if(!data.session){
 document.getElementById("feed-container").innerHTML = "";
-
 return false;
 }
-
 return true;
-
 }
-
-async function loadFeed(){
-
+function openNotificationsPage(){
+window.location.href = "/social/notifications.html";
+}
+async function loadUnreadNotificationCount(){
 const logged = await checkUser();
-
 if(!logged) return;
 
-const { data, error } = await supabaseClient.rpc('get_social_feed');
+const { data, error } = await supabaseClient.rpc('get_my_unread_notification_count');
 
 if(error){
 console.error(error);
-document.getElementById("feed-container").innerHTML="Error loading feed";
-
 return;
 }
 
-renderFeed(data);
+const badge = document.getElementById("notifications-badge");
+const count = Number(data || 0);
 
+if(!badge) return;
+
+if(count > 0){
+badge.style.display = "inline-block";
+badge.textContent = count > 99 ? "99+" : String(count);
+}else{
+badge.style.display = "none";
+badge.textContent = "0";
+}
+}
+async function loadFeed(){
+const logged = await checkUser();
+if(!logged) return;
+const { data, error } = await supabaseClient.rpc('get_social_feed');
+if(error){
+console.error(error);
+document.getElementById("feed-container").innerHTML="Error loading feed";
+return;
+}
+renderFeed(data);
 }
 
 function renderFeed(posts){
-
 const feed=document.getElementById("feed-container");
-
 if(!posts || posts.length===0){
 feed.innerHTML="<div class='loading'>No posts yet</div>";
 return;
 }
-
 feed.innerHTML="";
-
 posts.forEach(p=>{
-
 const div=document.createElement("div");
 div.className="post";
-
 const reactionPopupHtml = reactionTypes.map(r => `
 <span data-reaction-id="${r.id}" data-reaction-emoji="${r.emoji}">${r.emoji}</span>
 `).join("");
-
 div.innerHTML=`
-
 <div class="post-header">
-
 <img class="post-avatar"
 src="${p.author_profile_image_url || 'https://via.placeholder.com/40'}">
-
 <div class="post-author-block">
-
 <div class="post-author">
 ${p.author_name || 'User'}
 </div>
-
 <div class="post-time">
 ${formatPostDate(p.created_at)}
  · ${formatAudienceIcon(p.audience)} ${formatAudienceLabel(p.audience)}
 </div>
-
 </div>
-
 </div>
-
 <div class="post-content">
 ${p.content || ""}
 </div>
-
 <div class="post-stats">
 <span>${renderReactionSummary(p.reaction_emojis, p.reaction_count)}</span>
 <span>💬 ${p.comment_count || 0}</span>
 </div>
-
-
 <div class="post-actions">
-
 <div class="reaction-container">
-
 <button class="post-action-btn like-btn" type="button">${p.my_reaction_emoji || '👍'} Like</button>
-
 <div class="reaction-popup" data-post-id="${p.id}">
 ${reactionPopupHtml}
 </div>
-
 </div>
-
 <button class="post-action-btn comment-btn" type="button" data-post-id="${p.id}">💬 Comment</button>
-
 </div>
-
 <div class="post-comment-preview" id="comment-preview-${p.id}" style="margin-top:10px;"></div>
-
 <div class="post-comments" id="comments-${p.id}" style="display:none;">
   <div class="post-comments-list"></div>
 
@@ -623,176 +844,117 @@ ${reactionPopupHtml}
     </button>
   </div>
 </div>
-
 `;
-
 feed.appendChild(div);
 loadCommentPreview(p.id);
-
 });
-
 }
-
 async function loadCurrentUserProfile(){
-
 const logged = await checkUser();
-
 if(!logged) return;
-
 const { data, error } = await supabaseClient.rpc('get_profile_page_data');
-
 if(error){
 console.error(error);
 return;
 }
-
 const profile = data?.profile || {};
 const username = profile.username || "User";
 const profileImage = profile.profile_image_url || "https://via.placeholder.com/60x60?text=U";
-
 document.getElementById("modal-user-name").textContent = username;
 document.getElementById("open-post-modal-btn").textContent = `What’s on your mind, ${username}?`;
 document.getElementById("composer-profile-image").src = profileImage;
 document.getElementById("modal-profile-image").src = profileImage;
-
 }
 
 let reactionTypes = [];
-
 async function loadReactionTypes(){
-
 const { data, error } = await supabaseClient.rpc('get_reaction_types');
-
 if(error){
 console.error(error);
 reactionTypes = [];
 return;
 }
-
 reactionTypes = data || [];
 }
 async function loadCommentPreview(postId){
-
 const box = document.getElementById(`comment-preview-${postId}`);
-
 if(!box) return;
-
 const { data, error } = await supabaseClient.rpc('get_post_comments',{
 p_post_id: postId
 });
-
 if(error){
 console.error(error);
 return;
 }
-
 if(!data || data.length === 0){
 box.innerHTML = "";
 return;
 }
-
-const preview = data.slice(0,2);
-
+const topLevelComments = data.filter(c => !c.parent_comment_id);
+const preview = topLevelComments.slice(0,2);
 box.innerHTML = "";
-
 preview.forEach(c=>{
-
 const div = document.createElement("div");
-
 div.style.marginTop = "6px";
 div.style.fontSize = "0.9rem";
 div.style.color = "#ddd";
-
 div.innerHTML = `
 <span style="font-weight:bold;">${c.author_name || 'User'}</span>
 ${c.content}
 `;
-
 box.appendChild(div);
-
 });
-
-if(data.length > 2){
-
+if(topLevelComments.length > 2){
 const more = document.createElement("div");
-
 more.style.marginTop = "6px";
 more.style.fontSize = "0.85rem";
 more.style.color = "#aaa";
 more.style.cursor = "pointer";
-
-more.innerText = `View all ${data.length} comments`;
-
+more.innerText = `View all ${topLevelComments.length} comments`;
 more.onclick = function(){
 document.querySelector(`.comment-btn[data-post-id="${postId}"]`).click();
 };
-
 box.appendChild(more);
-
+}
 }
 
-}
 function formatAudienceLabel(audience){
-
 if(audience === "close_friends") return "Close Friends";
 if(audience === "family") return "Family";
 if(audience === "friends") return "Friends";
-
 return "Public";
 }
-
-
 function formatAudienceIcon(audience){
-
 if(audience === "close_friends") return "⭐";
 if(audience === "family") return "👪";
 if(audience === "friends") return "👥";
-
 return "🌍";
 }
-
 function formatPostDate(dateString){
-
 const d = new Date(dateString);
-
 const mm = String(d.getMonth() + 1).padStart(2,'0');
 const dd = String(d.getDate()).padStart(2,'0');
 const yy = String(d.getFullYear()).slice(-2);
-
 return `${mm}/${dd}/${yy}`;
 }
-
 function renderReactionSummary(reactionEmojis, reactionCount){
-
 const total = reactionCount || 0;
-
 if(total < 1){
 return `👍 0`;
 }
-
 const emojis = Array.isArray(reactionEmojis) ? reactionEmojis.slice(0,3) : [];
 const extraEmojis = emojis.filter(e => e !== "👍");
 const emojiLine = ["👍", ...extraEmojis].slice(0,3).join(" ");
-
 return `${emojiLine} ${total}`;
 }
-
-
-
-
 function openPostModal(){
 document.getElementById("post-modal-overlay").style.display = "flex";
 }
-
-
 function closePostModal(){
 document.getElementById("post-modal-overlay").style.display = "none";
 }
-
 async function createPost(){
-
 const logged = await checkUser();
-
 if(!logged) return;
 
 const textarea = document.getElementById("post-content");
@@ -815,8 +977,8 @@ return;
 textarea.value = "";
 document.getElementById("post-audience").value = "public";
 closePostModal();
-loadFeed();
-
+await loadUnreadNotificationCount();
+await loadFeed();
 }
 
 document.getElementById("open-post-modal").addEventListener("click", openPostModal);
@@ -835,28 +997,16 @@ document.getElementById("create-post-btn").addEventListener("click", createPost)
 async function initSocialPage(){
 await loadReactionTypes();
 await loadCurrentUserProfile();
+await loadUnreadNotificationCount();
 await loadFeed();
 }
 
 initSocialPage();
 
-document.addEventListener("click",function(e){
-
-const likeBtn = e.target.closest(".like-btn");
-
-if(likeBtn){
-
-const container = likeBtn.closest(".reaction-container");
-
-document.querySelectorAll(".reaction-container").forEach(c=>{
-if(c!==container) c.classList.remove("show-reactions");
-});
 document.addEventListener("click", async function(e){
-
 const reaction = e.target.closest(".reaction-popup span");
 
-if(!reaction) return;
-
+if(reaction){
 const reactionTypeId = reaction.dataset.reactionId;
 const popup = reaction.closest(".reaction-popup");
 const postId = popup.dataset.postId;
@@ -872,12 +1022,19 @@ alert("Error saving reaction");
 return;
 }
 
-loadFeed();
+await loadUnreadNotificationCount();
+await loadFeed();
+return;
+}
 
+const likeBtn = e.target.closest(".like-btn");
+
+if(likeBtn){
+const container = likeBtn.closest(".reaction-container");
+document.querySelectorAll(".reaction-container").forEach(c=>{
+if(c!==container) c.classList.remove("show-reactions");
 });
-
 container.classList.toggle("show-reactions");
-
 e.stopPropagation();
 return;
 }
@@ -887,93 +1044,128 @@ document.querySelectorAll(".reaction-container").forEach(c=>{
 c.classList.remove("show-reactions");
 });
 }
-
 });
 
 document.addEventListener("click", async function(e){
-
 const commentBtn = e.target.closest(".comment-btn");
-
 if(!commentBtn) return;
 
 const postId = commentBtn.dataset.postId;
 const commentsBox = document.getElementById(`comments-${postId}`);
-
 if(!commentsBox) return;
 
 if(commentsBox.style.display === "none"){
 commentsBox.style.display = "block";
 await loadComments(postId);
+await loadUnreadNotificationCount();
 }else{
 commentsBox.style.display = "none";
 }
-
 });
 
-
 async function loadComments(postId){
-
 const list = document.querySelector(`#comments-${postId} .post-comments-list`);
-
 if(!list) return;
-
 const { data, error } = await supabaseClient.rpc('get_post_comments',{
 p_post_id: postId
 });
-
 if(error){
 console.error(error);
 return;
 }
-
 if(!data || data.length === 0){
 list.innerHTML = `<div style="color:#aaa; font-size:0.9rem;">No comments yet</div>`;
 return;
 }
-
 list.innerHTML = "";
+const topLevelComments = data.filter(c => !c.parent_comment_id);
+const repliesByParent = {};
+data
+.filter(c => c.parent_comment_id)
+.forEach(c => {
+if(!repliesByParent[c.parent_comment_id]){
+repliesByParent[c.parent_comment_id] = [];
+}
+repliesByParent[c.parent_comment_id].push(c);
+});
 
-data.forEach(c=>{
-
-const div = document.createElement("div");
-
-div.style.marginTop = "10px";
-div.style.padding = "8px 10px";
-div.style.background = "#1f2125";
-div.style.borderRadius = "10px";
-
-div.innerHTML = `
-<div style="display:flex; gap:8px; align-items:center;">
-<img src="${c.author_profile_image_url || 'https://via.placeholder.com/32'}"
-style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
-<div style="font-weight:bold;">${c.author_name || 'User'}</div>
-</div>
-
-<div style="margin-top:6px;">
-${c.content}
+const commentReactionPopupHtml = reactionTypes.map(r => `
+<span data-reaction-id="${r.id}" data-reaction-emoji="${r.emoji}">${r.emoji}</span>
+`).join("");
+function buildCommentHtml(c, isReply = false){
+return `
+<div class="comment-item ${isReply ? 'reply-item' : ''}" data-comment-id="${c.id}">
+  <div class="comment-header">
+    <img
+      class="comment-avatar"
+      src="${c.author_profile_image_url || 'https://via.placeholder.com/32'}"
+      alt="Profile"
+    >
+    <div class="comment-author">${c.author_name || 'User'}</div>
+  </div>
+  <div class="comment-content">${c.content || ''}</div>
+  <div class="comment-actions">
+    <span>${renderReactionSummary(c.reaction_emojis, c.reaction_count)}</span>
+    <div class="comment-reaction-container">
+      <button
+        type="button"
+        class="comment-action-btn comment-like-btn"
+        data-comment-id="${c.id}"
+      >${c.my_reaction || '👍'} Like</button>
+      <div class="comment-reaction-popup" data-comment-id="${c.id}">
+        ${commentReactionPopupHtml}
+      </div>
+    </div>
+    <button
+      type="button"
+      class="comment-action-btn reply-toggle-btn"
+      data-comment-id="${c.id}"
+      data-post-id="${postId}"
+    >Reply</button>
+  </div>
+  <div
+    class="reply-box"
+    id="reply-box-${c.id}"
+    style="display:none;"
+  >
+    <input
+      type="text"
+      class="reply-input"
+      data-comment-id="${c.id}"
+      data-post-id="${postId}"
+      placeholder="Write a reply..."
+    >
+    <button
+      type="button"
+      class="reply-send-btn"
+      data-comment-id="${c.id}"
+      data-post-id="${postId}"
+    >Reply</button>
+  </div>
 </div>
 `;
+}
+topLevelComments.forEach(c => {
+const wrapper = document.createElement("div");
+wrapper.innerHTML = buildCommentHtml(c, false);
+const replies = repliesByParent[c.id] || [];
+replies.forEach(reply => {
+wrapper.innerHTML += buildCommentHtml(reply, true);
+});
 
-list.appendChild(div);
-
+list.appendChild(wrapper);
 });
 
 }
+
 document.addEventListener("click", async function(e){
-
 const sendBtn = e.target.closest(".comment-send-btn");
-
 if(!sendBtn) return;
-
 const postId = sendBtn.dataset.postId;
 const input = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
-
 if(!input) return;
-
 const content = input.value.trim();
-
 if(!content) return;
-
 const { error } = await supabaseClient.rpc('create_post_comment',{
 p_post_id: postId,
 p_content: content,
@@ -985,13 +1177,85 @@ console.error(error);
 alert("Error saving comment");
 return;
 }
-
 input.value = "";
 await loadComments(postId);
+await loadUnreadNotificationCount();
 await loadFeed();
-
 });
 
+document.addEventListener("click", async function(e){
+const reaction = e.target.closest(".comment-reaction-popup span");
+if(reaction){
+const reactionTypeId = reaction.dataset.reactionId;
+const popup = reaction.closest(".comment-reaction-popup");
+const commentId = popup.dataset.commentId;
+const { error } = await supabaseClient.rpc('set_comment_reaction',{
+p_comment_id: commentId,
+p_reaction_type_id: reactionTypeId
+});
+
+if(error){
+console.error(error);
+alert("Error saving reaction");
+return;
+}
+
+const postBox = popup.closest(".post-comments");
+if(postBox){
+const postId = postBox.id.replace("comments-","");
+await loadComments(postId);
+await loadUnreadNotificationCount();
+}
+
+return;
+}
+const likeBtn = e.target.closest(".comment-like-btn");
+if(likeBtn){
+const container = likeBtn.closest(".comment-reaction-container");
+document.querySelectorAll(".comment-reaction-container").forEach(c=>{
+if(c!==container) c.classList.remove("show-reactions");
+});
+
+container.classList.toggle("show-reactions");
+e.stopPropagation();
+return;
+}
+});
+
+document.addEventListener("click", function(e){
+const btn = e.target.closest(".reply-toggle-btn");
+if(!btn) return;
+const commentId = btn.dataset.commentId;
+const box = document.getElementById(`reply-box-${commentId}`);
+if(!box) return;
+box.style.display = box.style.display === "none" ? "flex" : "none";
+});
+
+document.addEventListener("click", async function(e){
+const btn = e.target.closest(".reply-send-btn");
+if(!btn) return;
+const commentId = btn.dataset.commentId;
+const postId = btn.dataset.postId;
+const input = document.querySelector(`.reply-input[data-comment-id="${commentId}"]`);
+if(!input) return;
+const content = input.value.trim();
+if(!content) return;
+const { error } = await supabaseClient.rpc('create_post_comment',{
+p_post_id: postId,
+p_content: content,
+p_parent_comment_id: commentId
+});
+
+if(error){
+console.error(error);
+alert("Error saving reply");
+return;
+}
+input.value = "";
+await loadComments(postId);
+await loadUnreadNotificationCount();
+await loadFeed();
+});
 </script>
 
 </body>

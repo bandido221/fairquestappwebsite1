@@ -234,16 +234,14 @@ body {
 <div class="top-menu">
   <div class="menu-inner">
 
-  <div class="menu-row-1">
-    <div class="menu-left">
-      <a class="menu-btn" href="/fairs/explore.html">🔍 Fairs</a>
-    </div>
-
-    <div class="menu-right" id="menuRight"></div>
+ <div class="menu-row-1">
+  <div class="menu-left">
+    <a class="menu-btn" href="/fairs/explore.html">🔍 Fairs</a>
+    <a class="menu-btn" id="topMenuSocialButton" href="#" onclick="openSocial()" style="display:none;">👥 Social</a>
   </div>
-
+  <div class="menu-right" id="menuRight"></div>
+</div>
   <div id="menuEmail" class="menu-email-bar"></div>
-
   </div>
 </div>
 
@@ -963,11 +961,13 @@ async function checkSocialAccess() {
     return;
   }
 
-  if (data?.gh_plan_tier === 'full') {
-    const btn = document.getElementById('socialButton');
-    if (btn) btn.style.display = 'inline-block';
-  }
+if (data?.gh_plan_tier === 'full') {
+  const btn = document.getElementById('socialButton');
+  if (btn) btn.style.display = 'inline-block';
 
+  const topBtn = document.getElementById('topMenuSocialButton');
+  if (topBtn) topBtn.style.display = 'inline-block';
+}
 }
 
 async function logout() {

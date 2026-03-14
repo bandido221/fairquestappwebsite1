@@ -156,30 +156,26 @@ padding:40px;
 }
 .social-layout{
   display:flex;
+  justify-content:center;
+  width:100%;
   max-width:1200px;
   margin:20px auto;
-  gap:25px;
-}
-
-
-.social-left{
-  width:250px;
+  padding:0 12px 20px;
+  box-sizing:border-box;
 }
 
 .social-center{
-  flex:1;
+  width:100%;
   max-width:600px;
 }
 
-.social-right{
-  width:250px;
-}
 
 .card{
   background: rgba(214,197,126,0.88);
   padding:16px;
   border-radius:10px;
   margin-bottom:20px;
+  box-sizing:border-box;
 }
 
 .create-post-compact{
@@ -213,14 +209,10 @@ padding:40px;
   font-family:'Domine',serif;
   font-size:1rem;
   cursor:pointer;
+  box-sizing:border-box;
 }
 
-.composer-icons{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  font-size:1.4rem;
-}
+
 
 .post-modal-overlay{
   position:fixed;
@@ -273,9 +265,10 @@ padding:40px;
 .post-modal-user{
   display:flex;
   align-items:center;
-  gap:12px;
+  justify-content:flex-start;
   padding:18px 20px 10px;
 }
+
 
 .post-modal-user-info{
   display:flex;
@@ -368,6 +361,30 @@ font-weight:bold;
 font-size:0.8rem;
 color:#aaa;
 }
+@media (max-width:600px){
+
+.post-content{
+font-size:1.2rem;
+line-height:1.6;
+}
+
+.post-author{
+font-size:1.05rem;
+}
+
+.post-time{
+font-size:0.9rem;
+}
+
+.post-action-btn{
+font-size:1.05rem;
+}
+
+.composer-input-btn{
+font-size:1.1rem;
+}
+
+}
 
 </style>
 
@@ -380,80 +397,50 @@ FairQuest Social
 </div>
 <div class="social-layout">
 
-  <div class="social-left">
-    <div class="card">
-      <h3>Profile</h3>
-      <p>Your profile info</p>
-    </div>
-  </div>
-
   <div class="social-center">
 
-<div class="card create-post-compact" id="open-post-modal">
-  <div class="create-post-row">
-    <img id="composer-profile-image" class="composer-avatar" src="" alt="Profile">
-    <button type="button" class="composer-input-btn" id="open-post-modal-btn">
-      What’s on your mind?
-    </button>
-    <div class="composer-icons">
-      <span>📷</span>
-      <span>🖼️</span>
-      <span>😊</span>
-    </div>
-  </div>
+    <div class="card create-post-compact" id="open-post-modal">
+    <div class="create-post-row">
+  <img id="composer-profile-image" class="composer-avatar" src="" alt="Profile">
+  <button type="button" class="composer-input-btn" id="open-post-modal-btn">
+    What’s on your mind?
+  </button>
 </div>
 
-<div class="post-modal-overlay" id="post-modal-overlay" style="display:none;">
-  <div class="post-modal">
-    <div class="post-modal-header">
-      <h2>Create post</h2>
-      <button type="button" class="post-modal-close" id="close-post-modal-btn">✕</button>
     </div>
 
-    <div class="post-modal-user">
-      <img id="modal-profile-image" class="composer-avatar" src="" alt="Profile">
-      <div class="post-modal-user-info">
-        <div id="modal-user-name">User</div>
-        <select id="post-audience">
-          <option value="public">Public</option>
-          <option value="friends">Friends</option>
-          <option value="close_friends">Close Friends</option>
-          <option value="family">Family</option>
-        </select>
+    <div class="post-modal-overlay" id="post-modal-overlay" style="display:none;">
+      <div class="post-modal">
+        <div class="post-modal-header">
+          <h2>Create post</h2>
+          <button type="button" class="post-modal-close" id="close-post-modal-btn">✕</button>
+        </div>
+<div class="post-modal-user">
+  <img id="modal-profile-image" class="composer-avatar" src="" alt="Profile">
+  <div class="post-modal-user-info">
+
+            <div id="modal-user-name">User</div>
+            <select id="post-audience">
+              <option value="public">Public</option>
+              <option value="friends">Friends</option>
+              <option value="close_friends">Close Friends</option>
+              <option value="family">Family</option>
+            </select>
+          </div>
+        </div>
+
+        <textarea id="post-content" class="post-modal-textarea" placeholder="What’s on your mind?"></textarea>
+
+        <button id="create-post-btn" class="post-submit-btn" type="button">Post</button>
       </div>
     </div>
-
-    <textarea id="post-content" class="post-modal-textarea" placeholder="What’s on your mind?"></textarea>
-
-    <div class="post-modal-tools">
-      <span>Add to your post</span>
-      <div class="composer-icons">
-        <span>📷</span>
-        <span>🖼️</span>
-        <span>😊</span>
-        <span>📍</span>
-        <span>GIF</span>
-      </div>
-    </div>
-
-    <button id="create-post-btn" class="post-submit-btn" type="button">Post</button>
-  </div>
-</div>
-
-
 
     <div id="feed-container"></div>
 
   </div>
 
-  <div class="social-right">
-    <div class="card">
-      <h3>Suggestions</h3>
-      <p>People you may know</p>
-    </div>
-  </div>
-
 </div>
+
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -539,7 +526,6 @@ ${formatPostDate(p.created_at)}
 </div>
 
 </div>
-
 
 <div class="post-content">
 ${p.content || ""}

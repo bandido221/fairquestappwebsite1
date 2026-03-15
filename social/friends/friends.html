@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Friends | FairQuest Social</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+
+<style>
+body{
+  font-family:'Domine',serif;
+  background:#000;
+  color:#f0e6d2;
+  margin:0;
+  padding:0;
+}
+
+.header{
+  background:#111;
+  border-bottom:2px solid #bb9457;
+  padding:14px 18px;
+  margin-bottom:30px;
+  font-family:'Cinzel',serif;
+  font-size:1.5rem;
+}
+
+.header-inner{
+  max-width:1200px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.header-title{
+  text-align:center;
+  flex:1;
+}
+
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.header-btn{
+  border:none;
+  background:#1f2125;
+  color:#f0e6d2;
+  border-radius:999px;
+  padding:10px 14px;
+  cursor:pointer;
+  font-family:'Domine',serif;
+  font-size:1rem;
+}
+
+.header-btn:hover{
+  background:#2a2d31;
+}
+
+.social-layout{
+  display:grid;
+  grid-template-columns:280px minmax(0, 1fr);
+  gap:22px;
+  width:100%;
+  max-width:1400px;
+  margin:20px auto;
+  padding:0 16px 24px;
+  box-sizing:border-box;
+  align-items:start;
+}
+
+.social-sidebar{
+  background:rgba(214,197,126,0.88);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px;
+  padding:18px 14px;
+  position:sticky;
+  top:16px;
+}
+
+.sidebar-title{
+  font-family:'Cinzel',serif;
+  font-size:1.6rem;
+  color:#111;
+  margin:0 0 18px 0;
+}
+
+.sidebar-btn{
+  width:100%;
+  border:none;
+  border-radius:14px;
+  background:#111;
+  color:#f0e6d2;
+  padding:16px 18px;
+  font-family:'Domine',serif;
+  font-size:1.08rem;
+  text-align:left;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.sidebar-btn:hover{
+  background:#222;
+}
+
+.sidebar-btn.active{
+  background:#bb9457;
+  color:#000;
+  font-weight:bold;
+}
+
+.sidebar-icon{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:#111;
+  color:#f0e6d2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.1rem;
+  flex-shrink:0;
+}
+
+.search-panel{
+  background:rgba(214,197,126,0.88);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:20px;
+}
+
+.page-title{
+  font-family:'Cinzel',serif;
+  font-size:2rem;
+  margin:0;
+  color:#111;
+}
+
+.page-subtitle{
+  margin:0;
+  color:#2b2b2b;
+  font-size:0.98rem;
+}
+
+.search-input{
+  flex:1;
+  min-width:240px;
+  padding:14px 16px;
+  border:1px solid rgba(0,0,0,0.12);
+  outline:none;
+  border-radius:999px;
+  font-family:'Domine',serif;
+  font-size:1rem;
+  box-sizing:border-box;
+  background:#f6edd0;
+  color:#111;
+}
+
+.search-input::placeholder{
+  color:#5a5240;
+}
+
+.filter-btn{
+  background:#111;
+  color:#f0e6d2;
+  border:none;
+  border-radius:999px;
+  padding:10px 16px;
+  font-family:'Domine',serif;
+  cursor:pointer;
+}
+
+.filter-btn.active{
+  background:#bb9457;
+  color:#000;
+  font-weight:bold;
+}
+
+.action-btn{
+  background:#111;
+  color:#f0e6d2;
+  border:none;
+  border-radius:999px;
+  padding:12px 18px;
+  font-family:'Domine',serif;
+  cursor:pointer;
+}
+
+.action-btn:hover,
+.filter-btn:hover{
+  background:#222;
+}
+
+.page-note{
+  color:#2b2b2b;
+  margin-top:12px;
+  font-size:0.92rem;
+}
+
+.content-card{
+  background:rgba(214,197,126,0.88);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:20px;
+}
+
+.section-title{
+  font-family:'Cinzel',serif;
+  color:#111;
+  margin:0 0 14px 0;
+  font-size:1.6rem;
+}
+
+.loading{
+  text-align:center;
+  padding:24px;
+  color:#111;
+}
+
+.empty-state{
+  text-align:center;
+  padding:18px 14px;
+  background:#111;
+  border-radius:14px;
+  color:#f0e6d2;
+}
+
+.person-item{
+  background:#111;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:16px;
+  padding:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.25);
+  min-width:0;
+  max-width:260px;
+  width:100%;
+  margin:0;
+  box-sizing:border-box;
+}
+.person-name{
+  font-size:1.05rem;
+  font-weight:bold;
+  color:#f5f5f5;
+  word-break:break-word;
+}
+
+.person-sub{
+  margin-top:6px;
+  font-size:0.92rem;
+  color:#b8b8b8;
+  word-break:break-word;
+}
+
+.person-meta{
+  margin-top:8px;
+  font-size:0.85rem;
+  color:#d6c57e;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.person-btn{
+  width:100%;
+  border:none;
+  border-radius:10px;
+  padding:10px 12px;
+  font-family:'Domine',serif;
+  cursor:pointer;
+  background:#2a2d31;
+  color:#f0e6d2;
+}
+
+.person-btn:hover{
+  background:#3a3f49;
+}
+
+.person-btn.primary{
+  background:#bb9457;
+  color:#000;
+  font-weight:bold;
+}
+
+.person-btn.primary:hover{
+  background:#cfa75e;
+}
+
+.person-btn.danger{
+  background:#7a2020;
+  color:#fff;
+}
+
+.person-btn.danger:hover{
+  background:#922929;
+}
+
+.request-col-title{
+  font-family:'Cinzel',serif;
+  color:#111;
+  margin:0 0 12px 0;
+  font-size:1.15rem;
+}
+
+.relationship-title{
+  color:#111;
+  font-family:'Cinzel',serif;
+  margin:0 0 12px 0;
+  font-size:1.15rem;
+}
+
+.pagination-row{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:16px;
+  flex-wrap:wrap;
+}
+
+.people-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(220px, 260px));
+  gap:14px;
+  justify-content:start;
+}
+
+.person-top{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:12px;
+}
+
+.person-avatar{
+  width:100%;
+  height:180px;
+  border-radius:14px;
+  object-fit:contain;
+  object-position:center;
+  background:#222;
+  display:block;
+}
+
+.person-body{
+  flex:1;
+  min-width:0;
+  width:100%;
+}
+
+.person-actions{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:14px;
+  width:100%;
+}
+
+.requests-grid{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);
+  gap:18px;
+}
+
+.requests-grid > div{
+  min-width:0;
+}
+
+.requests-grid .people-list{
+  grid-template-columns:minmax(0, 260px);
+}
+
+.relationship-group{
+  margin-bottom:22px;
+}
+
+.relationship-group:last-child{
+  margin-bottom:0;
+}
+
+.section-header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+
+.search-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.filter-row{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+
+.sidebar-nav{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.social-main{
+  min-width:0;
+}
+
+.search-panel-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+
+@media (max-width:1250px){
+  .social-layout{
+    grid-template-columns:240px minmax(0, 1fr);
+    gap:18px;
+    padding:0 12px 22px;
+  }
+
+  .people-list{
+    grid-template-columns:repeat(2, minmax(220px, 260px));
+  }
+
+  .page-title{
+    font-size:1.8rem;
+  }
+}
+
+@media (max-width:980px){
+  .social-layout{
+    grid-template-columns:210px minmax(0, 1fr);
+    gap:16px;
+  }
+
+  .social-sidebar{
+    padding:14px 12px;
+  }
+
+  .sidebar-title{
+    font-size:1.3rem;
+    margin:0 0 14px 0;
+  }
+
+  .sidebar-btn{
+    padding:12px 14px;
+    font-size:0.98rem;
+    gap:10px;
+  }
+
+  .sidebar-icon{
+    width:30px;
+    height:30px;
+    font-size:0.95rem;
+  }
+
+  .search-panel,
+  .content-card{
+    padding:14px;
+  }
+
+  .page-title{
+    font-size:1.6rem;
+  }
+
+  .page-subtitle{
+    font-size:0.92rem;
+  }
+
+  .search-input,
+  .action-btn,
+  .filter-btn,
+  .person-btn,
+  .header-btn{
+    font-size:0.95rem;
+  }
+
+  .person-avatar{
+    height:120px;
+  }
+
+  .person-name{
+    font-size:0.98rem;
+  }
+
+  .person-sub,
+  .person-meta{
+    font-size:0.84rem;
+  }
+}
+
+@media (max-width:760px){
+  .social-layout{
+    grid-template-columns:1fr;
+    padding:0 8px 20px;
+  }
+
+  .social-sidebar{
+    position:static;
+  }
+
+  .requests-grid{
+    grid-template-columns:1fr;
+  }
+
+  .people-list{
+    grid-template-columns:1fr;
+    justify-content:center;
+  }
+
+  .search-panel,
+  .content-card,
+  .social-sidebar{
+    padding:14px;
+  }
+
+  .page-title{
+    font-size:1.5rem;
+  }
+
+  .person-avatar{
+    height:180px;
+  }
+
+  .search-input,
+  .action-btn,
+  .filter-btn,
+  .person-btn,
+  .header-btn,
+  .sidebar-btn{
+    font-size:1rem;
+    padding:10px 14px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <button type="button" class="header-btn" onclick="goBackToSocial()">← Social</button>
+    <div class="header-title">FairQuest Social</div>
+    <div class="header-actions">
+      <button type="button" class="header-btn" onclick="refreshAllData()">↻ Refresh</button>
+    </div>
+  </div>
+</div>
+
+<div class="social-layout">
+  <aside class="social-sidebar">
+    <h2 class="sidebar-title">Friends</h2>
+
+    <div class="sidebar-nav">
+      <button type="button" class="sidebar-btn active">
+        <span class="sidebar-icon">👥</span>
+        <span>Home</span>
+      </button>
+
+      <button type="button" class="sidebar-btn" onclick="scrollToSection('pending-requests-card')">
+        <span class="sidebar-icon">📨</span>
+        <span>Friend Requests</span>
+      </button>
+
+      <button type="button" class="sidebar-btn" onclick="scrollToSection('connections-card')">
+        <span class="sidebar-icon">🧑‍🤝‍🧑</span>
+        <span>All Friends</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="social-main">
+
+    <div class="search-panel">
+      <div class="search-panel-top">
+        <div>
+          <h1 class="page-title">Friends</h1>
+          <p class="page-subtitle">Search people, manage requests, and organize your connections.</p>
+        </div>
+      </div>
+
+      <div class="search-row">
+        <input
+          type="text"
+          id="search-input"
+          class="search-input"
+          placeholder="Search by username, first name, or last name"
+        >
+        <button type="button" class="action-btn" onclick="startSearch()">Search</button>
+      </div>
+
+      <div class="filter-row">
+        <button type="button" id="filter-all-btn" class="filter-btn active" onclick="setRelationshipFilter('all')">All</button>
+        <button type="button" id="filter-friends-btn" class="filter-btn" onclick="setRelationshipFilter('friends_only')">Friends Only</button>
+      </div>
+
+      <div class="page-note">Search shows 3 users at a time.</div>
+    </div>
+
+    <div class="content-card">
+      <div class="section-header-row">
+        <h2 class="section-title">Search Results</h2>
+      </div>
+
+      <div id="search-results-container" class="people-list">
+        <div class="empty-state">Search for a user to begin.</div>
+      </div>
+
+      <div class="pagination-row">
+        <button type="button" class="action-btn" id="prev-page-btn" onclick="prevSearchPage()">Previous</button>
+        <button type="button" class="action-btn" id="next-page-btn" onclick="nextSearchPage()">Next</button>
+      </div>
+    </div>
+
+    <div class="content-card" id="pending-requests-card">
+      <div class="section-header-row">
+        <h2 class="section-title">Pending Requests</h2>
+      </div>
+
+      <div class="requests-grid">
+        <div>
+          <h3 class="request-col-title">Incoming</h3>
+          <div id="incoming-requests-container" class="people-list">
+            <div class="loading">Loading incoming requests...</div>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="request-col-title">Outgoing</h3>
+          <div id="outgoing-requests-container" class="people-list">
+            <div class="loading">Loading outgoing requests...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card" id="connections-card">
+      <div class="section-header-row">
+        <h2 class="section-title">Your Connections</h2>
+      </div>
+
+      <div id="relationships-all-view">
+        <div class="relationship-group">
+          <h3 class="relationship-title">Friends</h3>
+          <div id="friends-list-container" class="people-list">
+            <div class="loading">Loading friends...</div>
+          </div>
+        </div>
+
+        <div class="relationship-group">
+          <h3 class="relationship-title">Family</h3>
+          <div id="family-list-container" class="people-list">
+            <div class="loading">Loading family...</div>
+          </div>
+        </div>
+
+        <div class="relationship-group">
+          <h3 class="relationship-title">Close Friends</h3>
+          <div id="close-friends-list-container" class="people-list">
+            <div class="loading">Loading close friends...</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="relationships-friends-only-view" style="display:none;">
+        <div class="relationship-group">
+          <h3 class="relationship-title">Friends</h3>
+          <div id="friends-only-list-container" class="people-list">
+            <div class="loading">Loading friends...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+const supabaseClient = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+    .replace('eyJpc3MiOiJIUzI1NiIsInR5cCI6IkpXVCJ9','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9')
+);
+</script>
+
+<script>
+const SUPABASE_URL = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUserId = null;
+let currentSearchQuery = '';
+let currentSearchOffset = 0;
+let currentSearchLimit = 3;
+let currentRelationshipFilter = 'all';
+
+function getClient(){
+  return window.supabaseClient;
+}
+
+function goBackToSocial(){
+  window.location.href = '/social/index.html';
+}
+
+async function getCurrentSession(){
+  const { data } = await getClient().auth.getSession();
+  return data.session || null;
+}
+
+async function checkUser(){
+  const session = await getCurrentSession();
+
+  if(!session){
+    window.location.href = '/user_login.html?redirect=/social/friends/friends.html';
+    currentUserId = null;
+    return false;
+  }
+
+  currentUserId = session.user.id;
+  return true;
+}
+function scrollToSection(sectionId){
+  const el = document.getElementById(sectionId);
+  if(!el) return;
+  el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function getDisplayName(person){
+  const fullName = `${person.first_name || ''} ${person.last_name || ''}`.trim();
+  if(fullName) return fullName;
+  if(person.username) return person.username;
+  return 'User';
+}
+
+function getSubText(person){
+  const bits = [];
+  if(person.username) bits.push(`@${person.username}`);
+  if(person.member_id) bits.push(`ID ${person.member_id}`);
+  return bits.join(' • ') || 'FairQuest user';
+}
+
+function getSafeImage(url, fallbackText = 'U'){
+  if(url && !String(url).startsWith('android.resource://')){
+    return url;
+  }
+  return `https://via.placeholder.com/60x60?text=${encodeURIComponent(fallbackText)}`;
+}
+
+function buildSearchResultHtml(person){
+  return `
+    <div class="person-item">
+      <div class="person-top">
+        <img
+          class="person-avatar"
+          src="${getSafeImage(person.profile_image_url, getDisplayName(person).charAt(0).toUpperCase())}"
+          alt="Profile"
+        >
+        <div class="person-body">
+          <div class="person-name">${getDisplayName(person)}</div>
+          <div class="person-sub">${getSubText(person)}</div>
+          <div class="person-actions">
+            <button type="button" class="person-btn primary" onclick="sendFriendRequest('${person.user_id}')">Add Friend</button>
+            <button type="button" class="person-btn" onclick="sendFamilyRequest('${person.user_id}')">Add Family</button>
+            <button type="button" class="person-btn" onclick="addCloseFriend('${person.user_id}')">Add Close Friend</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function buildRelationshipHtml(person){
+  const relationshipType = person.relationship_type || '';
+
+  let actions = '';
+
+  if(relationshipType === 'friend'){
+    actions = `
+      <button type="button" class="person-btn danger" onclick="removeFriend('${person.user_id}')">Remove Friend</button>
+      <button type="button" class="person-btn" onclick="addCloseFriend('${person.user_id}')">Add Close Friend</button>
+    `;
+  } else if(relationshipType === 'family'){
+    actions = `
+      <button type="button" class="person-btn danger" onclick="removeFamily('${person.user_id}')">Remove Family</button>
+    `;
+  } else if(relationshipType === 'close_friend'){
+    actions = `
+      <button type="button" class="person-btn danger" onclick="removeCloseFriend('${person.user_id}')">Remove Close Friend</button>
+    `;
+  }
+
+  return `
+    <div class="person-item">
+      <div class="person-top">
+        <img
+          class="person-avatar"
+          src="${getSafeImage(person.profile_image_url, getDisplayName(person).charAt(0).toUpperCase())}"
+          alt="Profile"
+        >
+        <div class="person-body">
+          <div class="person-name">${getDisplayName(person)}</div>
+          <div class="person-sub">${getSubText(person)}</div>
+          <div class="person-meta">
+            <span>${relationshipType === 'friend' ? 'Friend' : relationshipType === 'family' ? 'Family' : 'Close Friend'}</span>
+          </div>
+          <div class="person-actions">
+            ${actions}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function buildPendingRequestHtml(item){
+  const actionButtons = item.direction === 'incoming'
+    ? `
+      <button type="button" class="person-btn primary" onclick="${item.request_type === 'friend' ? `respondFriendRequest('${item.request_id}','accept')` : `respondFamilyRequest('${item.request_id}','accept')`}">Accept</button>
+      <button type="button" class="person-btn danger" onclick="${item.request_type === 'friend' ? `respondFriendRequest('${item.request_id}','reject')` : `respondFamilyRequest('${item.request_id}','reject')`}">Reject</button>
+    `
+    : `
+      <button type="button" class="person-btn" disabled>Pending</button>
+    `;
+
+  return `
+    <div class="person-item">
+      <div class="person-top">
+        <img
+          class="person-avatar"
+          src="${getSafeImage(item.profile_image_url, getDisplayName(item).charAt(0).toUpperCase())}"
+          alt="Profile"
+        >
+        <div class="person-body">
+          <div class="person-name">${getDisplayName(item)}</div>
+          <div class="person-sub">${getSubText(item)}</div>
+          <div class="person-meta">
+            <span>${item.request_type === 'friend' ? 'Friend Request' : 'Family Request'}</span>
+            <span>${item.direction === 'incoming' ? 'Incoming' : 'Outgoing'}</span>
+          </div>
+          <div class="person-actions">
+            ${actionButtons}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function startSearch(){
+  currentSearchOffset = 0;
+  currentSearchQuery = document.getElementById('search-input').value.trim();
+  await loadSearchResults();
+}
+
+async function prevSearchPage(){
+  if(currentSearchOffset === 0) return;
+  currentSearchOffset = Math.max(0, currentSearchOffset - currentSearchLimit);
+  await loadSearchResults();
+}
+
+async function nextSearchPage(){
+  currentSearchOffset += currentSearchLimit;
+  await loadSearchResults();
+}
+
+async function loadSearchResults(){
+  const logged = await checkUser();
+  if(!logged) return;
+
+  const container = document.getElementById('search-results-container');
+  const resultsCard = container.closest('.content-card');
+  const requestsCard = document.getElementById('pending-requests-card');
+
+  if(!currentSearchQuery){
+    resultsCard.style.display = "none";
+    requestsCard.style.display = "block";
+    container.innerHTML = `<div class="empty-state">Search for a user to begin.</div>`;
+    return;
+  }
+
+  resultsCard.style.display = "block";
+  requestsCard.style.display = "block";
+
+  container.innerHTML = `<div class="loading">Searching users...</div>`;
+
+  const { data, error } = await getClient().rpc('search_social_users', {
+    p_query: currentSearchQuery,
+    p_limit: currentSearchLimit,
+    p_offset: currentSearchOffset
+  });
+
+  if(error){
+    console.error(error);
+    container.innerHTML = `<div class="empty-state">Error loading search results</div>`;
+    return;
+  }
+
+  if(!data || data.length === 0){
+    container.innerHTML = `<div class="empty-state">No users found</div>`;
+    return;
+  }
+
+  container.innerHTML = data.map(buildSearchResultHtml).join('');
+}
+
+async function loadRelationships(){
+  const logged = await checkUser();
+  if(!logged) return;
+
+  const { data, error } = await getClient().rpc('get_my_relationships');
+
+  if(error){
+    console.error(error);
+    document.getElementById('friends-list-container').innerHTML = `<div class="empty-state">Error loading friends</div>`;
+    document.getElementById('family-list-container').innerHTML = `<div class="empty-state">Error loading family</div>`;
+    document.getElementById('close-friends-list-container').innerHTML = `<div class="empty-state">Error loading close friends</div>`;
+    document.getElementById('friends-only-list-container').innerHTML = `<div class="empty-state">Error loading friends</div>`;
+    return;
+  }
+
+  const items = data || [];
+  const friends = items.filter(item => item.relationship_type === 'friend');
+  const family = items.filter(item => item.relationship_type === 'family');
+  const closeFriends = items.filter(item => item.relationship_type === 'close_friend');
+
+  document.getElementById('friends-list-container').innerHTML = friends.length
+    ? friends.map(buildRelationshipHtml).join('')
+    : `<div class="empty-state">No friends yet</div>`;
+
+  document.getElementById('family-list-container').innerHTML = family.length
+    ? family.map(buildRelationshipHtml).join('')
+    : `<div class="empty-state">No family yet</div>`;
+
+  document.getElementById('close-friends-list-container').innerHTML = closeFriends.length
+    ? closeFriends.map(buildRelationshipHtml).join('')
+    : `<div class="empty-state">No close friends yet</div>`;
+
+  document.getElementById('friends-only-list-container').innerHTML = friends.length
+    ? friends.map(buildRelationshipHtml).join('')
+    : `<div class="empty-state">No friends yet</div>`;
+}
+
+async function loadPendingRequests(){
+  const logged = await checkUser();
+  if(!logged) return;
+
+  const incomingContainer = document.getElementById('incoming-requests-container');
+  const outgoingContainer = document.getElementById('outgoing-requests-container');
+
+  incomingContainer.innerHTML = `<div class="loading">Loading incoming requests...</div>`;
+  outgoingContainer.innerHTML = `<div class="loading">Loading outgoing requests...</div>`;
+
+  const { data, error } = await getClient().rpc('get_my_pending_relationship_requests');
+
+  if(error){
+    console.error(error);
+    incomingContainer.innerHTML = `<div class="empty-state">Error loading incoming requests</div>`;
+    outgoingContainer.innerHTML = `<div class="empty-state">Error loading outgoing requests</div>`;
+    return;
+  }
+
+  const items = data || [];
+  const incoming = items.filter(item => item.direction === 'incoming');
+  const outgoing = items.filter(item => item.direction === 'outgoing');
+
+  incomingContainer.innerHTML = incoming.length
+    ? incoming.map(buildPendingRequestHtml).join('')
+    : `<div class="empty-state">No incoming requests</div>`;
+
+  outgoingContainer.innerHTML = outgoing.length
+    ? outgoing.map(buildPendingRequestHtml).join('')
+    : `<div class="empty-state">No outgoing requests</div>`;
+}
+
+function setRelationshipFilter(filter){
+  currentRelationshipFilter = filter;
+
+  document.getElementById('filter-all-btn').classList.toggle('active', filter === 'all');
+  document.getElementById('filter-friends-btn').classList.toggle('active', filter === 'friends_only');
+
+  document.getElementById('relationships-all-view').style.display = filter === 'all' ? 'block' : 'none';
+  document.getElementById('relationships-friends-only-view').style.display = filter === 'friends_only' ? 'block' : 'none';
+}
+
+async function sendFriendRequest(userId){
+  const { error } = await getClient().rpc('send_friend_request', {
+    p_requested_id: userId
+  });
+
+  if(error){
+    console.error(error);
+    alert(error.message || 'Error sending friend request');
+    return;
+  }
+
+  await refreshAllData();
+}
+
+async function sendFamilyRequest(userId){
+  const { error } = await getClient().rpc('send_family_request', {
+    p_requested_id: userId
+  });
+
+  if(error){
+    console.error(error);
+    alert(error.message || 'Error sending family request');
+    return;
+  }
+
+  await refreshAllData();
+}
+
+async function addCloseFriend(userId){
+  const { error } = await getClient().rpc('add_close_friend', {
+    p_close_friend_id: userId
+  });
+
+  if(error){
+    console.error(error);
+    alert(error.message || 'Error adding close friend');
+    return;
+  }
+
+  await refreshAllData();
+}
+
+async function respondFriendRequest(requestId, action){
+  const { error } = await getClient().rpc('respond_friend_request', {
+    p_request_id: requestId,
+    p_action: action
+  });
+
+  if(error){
+    console.error(error);
+    alert(error.message || 'Error responding to friend request');
+    return;
+  }
+
+  await refreshAllData();
+}
+
+async function respondFamilyRequest(requestId, action){
+  const { error } = await getClient().rpc('respond_family_request', {
+    p_request_id: requestId,
+    p_action: action
+  });
+
+  if(error){
+    console.error(error);
+    alert(error.message || 'Error responding to family request');
+    return;
+  }
+
+  await refreshAllData();
+}
+
+async function removeFriend(userId){
+  const { error } = await getClient().rpc('remove_friend', {
+    p_user_id: userId
+  });
+
+  if(error){
+    console.error(error);
+    alert(error.message || 'Error removing friend');
+    return;
+  }
+
+  await refreshAllData();
+}
+
+async function removeFamily(userId){
+  const { error } = await getClient().rpc('remove_family', {
+    p_user_id: userId
+  });
+
+  if(error){
+    console.error(error);
+    alert(error.message || 'Error removing family');
+    return;
+  }
+
+  await refreshAllData();
+}
+
+async function removeCloseFriend(userId){
+  const { error } = await getClient().rpc('remove_close_friend', {
+    p_user_id: userId
+  });
+
+  if(error){
+    console.error(error);
+    alert(error.message || 'Error removing close friend');
+    return;
+  }
+
+  await refreshAllData();
+}
+
+async function refreshAllData(){
+  await loadPendingRequests();
+  await loadSearchResults();
+  await loadRelationships();
+}
+
+document.getElementById('search-input').addEventListener('keydown', async function(e){
+  if(e.key === 'Enter'){
+    await startSearch();
+  }
+});
+
+async function initFriendsPage(){
+  const logged = await checkUser();
+  if(!logged) return;
+
+  setRelationshipFilter('all');
+  await refreshAllData();
+}
+
+initFriendsPage();
+</script>
+
+</body>
+</html>

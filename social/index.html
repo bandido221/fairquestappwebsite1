@@ -622,7 +622,10 @@ margin-left:18px;
 .header-subnav{
 display:flex;
 justify-content:center;
+align-items:center;
+gap:12px;
 margin-top:10px;
+flex-wrap:wrap;
 }
 
 .notifications-page-btn{
@@ -639,7 +642,6 @@ cursor:pointer;
 .notifications-page-btn:hover{
 background:#cfa75e;
 }
-
 </style>
 
 </head>
@@ -650,15 +652,23 @@ background:#cfa75e;
   <div class="header-inner">
     <div class="header-title">FairQuest Social</div>
     <div class="header-actions">
-     <button type="button" id="notifications-btn" class="header-icon-btn" onclick="openNotificationsPage()">
-  🔔 <span id="notifications-badge" class="notif-badge" style="display:none;">0</span>
-</button>
+      <button type="button" class="header-icon-btn" onclick="openNotificationsPage()">
+        🔔
+        <span id="notifications-badge" class="notif-badge" style="display:none;">0</span>
+      </button>
+
+      <button type="button" class="header-icon-btn" onclick="openFriends()">
+        👥
+      </button>
     </div>
   </div>
 
   <div class="header-subnav">
     <button type="button" class="notifications-page-btn" onclick="openNotificationsPage()">
       Notifications
+    </button>
+    <button type="button" class="notifications-page-btn" onclick="openFriends()">
+      👥 Friends
     </button>
   </div>
 </div>
@@ -822,6 +832,9 @@ await handleRealtimeNotification(payload);
 }
 function openNotificationsPage(){
 window.location.href = "/social/notifications.html";
+}
+function openFriends(){
+  window.location.href = "/social/friends/friends.html";
 }
 async function loadUnreadNotificationCount(){
 const logged = await checkUser();

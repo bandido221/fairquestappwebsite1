@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile Setup | FairQuest Social</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body{
+      margin:0;
+      padding:0;
+      font-family:'Domine',serif;
+      background:#000;
+      color:#f0e6d2;
+    }
+
+    .header{
+      background:#111;
+      border-bottom:2px solid #bb9457;
+      padding:14px 18px;
+      margin-bottom:30px;
+      font-family:'Cinzel',serif;
+      font-size:1.5rem;
+      text-align:center;
+    }
+
+    .page-wrap{
+      width:100%;
+      max-width:760px;
+      margin:0 auto;
+      padding:0 12px 30px;
+      box-sizing:border-box;
+    }
+
+    .card{
+      background:rgba(214,197,126,0.88);
+      border-radius:18px;
+      padding:22px;
+      box-sizing:border-box;
+      color:#111;
+    }
+
+    .page-title{
+      font-family:'Cinzel',serif;
+      font-size:2rem;
+      margin:0 0 10px 0;
+      text-align:center;
+    }
+
+    .page-subtitle{
+      margin:0 0 24px 0;
+      text-align:center;
+      color:#2b2b2b;
+      line-height:1.5;
+    }
+
+    .profile-image-wrap{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+      margin-bottom:24px;
+    }
+
+    .profile-image{
+      width:140px;
+      height:140px;
+      border-radius:50%;
+      object-fit:cover;
+      background:#222;
+      border:3px solid #111;
+    }
+
+    .image-btn{
+      border:none;
+      border-radius:999px;
+      background:#111;
+      color:#f0e6d2;
+      padding:10px 18px;
+      font-family:'Domine',serif;
+      font-size:1rem;
+      cursor:pointer;
+    }
+
+    .image-btn:hover{
+      background:#222;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .field.full{
+      grid-column:1 / -1;
+    }
+
+    label{
+      font-weight:bold;
+      color:#111;
+    }
+
+    .required{
+      color:#7a2020;
+    }
+
+    input{
+      width:100%;
+      padding:14px 14px;
+      border-radius:12px;
+      border:1px solid rgba(0,0,0,0.18);
+      outline:none;
+      font-family:'Domine',serif;
+      font-size:1rem;
+      box-sizing:border-box;
+      background:#f6edd0;
+      color:#111;
+    }
+
+    input::placeholder{
+      color:#6a604d;
+    }
+
+    .helper-text{
+      font-size:0.92rem;
+      color:#2f2a20;
+      line-height:1.4;
+    }
+
+    .location-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+
+    .gps-btn{
+      border:none;
+      border-radius:999px;
+      background:#111;
+      color:#f0e6d2;
+      padding:10px 16px;
+      font-family:'Domine',serif;
+      cursor:pointer;
+    }
+
+    .gps-btn:hover{
+      background:#222;
+    }
+
+    .status-box{
+      margin-top:18px;
+      padding:12px 14px;
+      border-radius:12px;
+      display:none;
+      font-size:0.95rem;
+    }
+
+    .status-box.error{
+      display:block;
+      background:#7a2020;
+      color:#fff;
+    }
+
+    .status-box.success{
+      display:block;
+      background:#1f5f2a;
+      color:#fff;
+    }
+
+    .actions{
+      display:flex;
+      justify-content:center;
+      margin-top:24px;
+    }
+
+    .save-btn{
+      border:none;
+      border-radius:12px;
+      background:#111;
+      color:#f0e6d2;
+      padding:14px 28px;
+      font-family:'Domine',serif;
+      font-size:1.05rem;
+      cursor:pointer;
+      min-width:220px;
+    }
+
+    .save-btn:hover{
+      background:#222;
+    }
+
+    .save-btn:disabled{
+      opacity:0.7;
+      cursor:not-allowed;
+    }
+
+    .loading{
+      text-align:center;
+      padding:30px;
+      color:#111;
+    }
+
+    @media (max-width:700px){
+      .page-wrap{
+        padding:0 8px 20px;
+      }
+
+      .card{
+        padding:16px;
+      }
+
+      .page-title{
+        font-size:1.6rem;
+      }
+
+      .form-grid{
+        grid-template-columns:1fr;
+      }
+
+      input,
+      .image-btn,
+      .gps-btn,
+      .save-btn{
+        font-size:1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">FairQuest Social</div>
+
+  <div class="page-wrap">
+    <div class="card">
+      <h1 class="page-title">Set Up Your Profile</h1>
+      <p class="page-subtitle">
+        Before you continue, please choose a username and add your first and last name.
+        You can also add a profile image and your location now or update them later.
+      </p>
+
+      <div id="loading-box" class="loading">Loading profile setup...</div>
+
+      <div id="setup-form-wrap" style="display:none;">
+        <div class="profile-image-wrap">
+          <img id="profile-image-preview" class="profile-image" src="https://via.placeholder.com/140?text=User" alt="Profile">
+          <input type="file" id="profile-image-file" accept="image/*" style="display:none;">
+          <button type="button" class="image-btn" id="choose-image-btn">Choose Profile Image</button>
+        </div>
+
+        <div class="form-grid">
+          <div class="field full">
+            <label for="username">Username <span class="required">*</span></label>
+            <input type="text" id="username" maxlength="50" placeholder="Choose a unique username">
+          </div>
+
+          <div class="field">
+            <label for="first-name">First Name <span class="required">*</span></label>
+            <input type="text" id="first-name" maxlength="100" placeholder="Enter your first name">
+          </div>
+
+          <div class="field">
+            <label for="last-name">Last Name <span class="required">*</span></label>
+            <input type="text" id="last-name" maxlength="100" placeholder="Enter your last name">
+          </div>
+
+          <div class="field">
+            <label for="city">City</label>
+            <input type="text" id="city" maxlength="100" placeholder="Enter your city">
+          </div>
+
+          <div class="field">
+            <label for="state">State</label>
+            <input type="text" id="state" maxlength="100" placeholder="Enter your state">
+          </div>
+
+          <div class="field full">
+            <div class="helper-text">
+              We only use your city and state to help connect you with people around your area.
+              You can enter it manually or let your browser try to get it for you.
+            </div>
+
+            <div class="location-row">
+              <button type="button" class="gps-btn" id="use-location-btn">Use My Location</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="status-box" class="status-box"></div>
+
+        <div class="actions">
+          <button type="button" class="save-btn" id="save-btn">Save and Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    let currentUserId = null;
+    let selectedImageBase64 = null;
+    let selectedImageMimeType = null;
+
+    async function getCurrentSession(){
+      const { data } = await supabaseClient.auth.getSession();
+      return data.session || null;
+    }
+
+    async function checkUser(){
+      const session = await getCurrentSession();
+
+      if(!session){
+        window.location.href = '/user_login.html?redirect=/profile/profilesetup.html';
+        currentUserId = null;
+        return false;
+      }
+
+      currentUserId = session.user.id;
+      return true;
+    }
+
+    function showStatus(message, type){
+      const box = document.getElementById('status-box');
+      box.className = `status-box ${type}`;
+      box.textContent = message;
+    }
+
+    function clearStatus(){
+      const box = document.getElementById('status-box');
+      box.className = 'status-box';
+      box.textContent = '';
+      box.style.display = 'none';
+    }
+
+    function setLoadingState(isLoading){
+      document.getElementById('loading-box').style.display = isLoading ? 'block' : 'none';
+      document.getElementById('setup-form-wrap').style.display = isLoading ? 'none' : 'block';
+    }
+
+    function validateForm(){
+      const username = document.getElementById('username').value.trim();
+      const firstName = document.getElementById('first-name').value.trim();
+      const lastName = document.getElementById('last-name').value.trim();
+
+      if(!username){
+        showStatus('Username is required.', 'error');
+        return false;
+      }
+
+      if(!firstName){
+        showStatus('First name is required.', 'error');
+        return false;
+      }
+
+      if(!lastName){
+        showStatus('Last name is required.', 'error');
+        return false;
+      }
+
+      return true;
+    }
+
+    async function loadSetupData(){
+      const logged = await checkUser();
+      if(!logged) return;
+
+      const { data, error } = await supabaseClient.rpc('get_my_profile_setup_data');
+
+      if(error){
+        console.error(error);
+        showStatus('Error loading your profile setup data.', 'error');
+        setLoadingState(false);
+        return;
+      }
+
+      const row = data || {};
+
+      document.getElementById('username').value = row.username || '';
+      document.getElementById('first-name').value = row.first_name || '';
+      document.getElementById('last-name').value = row.last_name || '';
+      document.getElementById('city').value = row.city || '';
+      document.getElementById('state').value = row.state || '';
+
+      const imageUrl = row.profile_image_url || 'https://via.placeholder.com/140?text=User';
+      document.getElementById('profile-image-preview').src = imageUrl;
+
+      setLoadingState(false);
+    }
+
+    function wireImagePicker(){
+      const fileInput = document.getElementById('profile-image-file');
+      const chooseBtn = document.getElementById('choose-image-btn');
+      const preview = document.getElementById('profile-image-preview');
+
+      chooseBtn.addEventListener('click', function(){
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', function(e){
+        const file = e.target.files && e.target.files[0];
+        if(!file) return;
+
+        selectedImageMimeType = file.type || 'image/png';
+
+        const reader = new FileReader();
+        reader.onload = function(event){
+          const result = event.target.result || '';
+          preview.src = result;
+          selectedImageBase64 = String(result).split(',')[1] || null;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function useBrowserLocation(){
+      clearStatus();
+
+      if(!navigator.geolocation){
+        showStatus('Your browser does not support location access.', 'error');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async function(position){
+          try{
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`);
+            const data = await response.json();
+
+            const address = data.address || {};
+            const city =
+              address.city ||
+              address.town ||
+              address.village ||
+              address.hamlet ||
+              '';
+
+            const state = address.state || '';
+
+            document.getElementById('city').value = city;
+            document.getElementById('state').value = state;
+
+            showStatus('Location found and filled in.', 'success');
+          }catch(error){
+            console.error(error);
+            showStatus('We could not read your city and state from your location.', 'error');
+          }
+        },
+        function(){
+          showStatus('Location permission was denied or unavailable.', 'error');
+        },
+        {
+          enableHighAccuracy:true,
+          timeout:10000,
+          maximumAge:0
+        }
+      );
+    }
+
+    async function saveProfileSetup(){
+      clearStatus();
+
+      if(!validateForm()) return;
+
+      const saveBtn = document.getElementById('save-btn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+
+      const username = document.getElementById('username').value.trim();
+      const firstName = document.getElementById('first-name').value.trim();
+      const lastName = document.getElementById('last-name').value.trim();
+      const city = document.getElementById('city').value.trim() || null;
+      const state = document.getElementById('state').value.trim() || null;
+
+      const locationSource = (city || state) ? 'manual' : null;
+
+      const { data, error } = await supabaseClient.rpc('save_my_profile_setup', {
+        p_username: username,
+        p_first_name: firstName,
+        p_last_name: lastName,
+        p_city: city,
+        p_state: state,
+        p_location_source: locationSource,
+        p_profile_image_base64: selectedImageBase64,
+        p_profile_image_mime_type: selectedImageMimeType
+      });
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save and Continue';
+
+      if(error){
+        console.error(error);
+        showStatus(error.message || 'Error saving profile setup.', 'error');
+        return;
+      }
+
+      showStatus('Profile saved successfully.', 'success');
+
+      setTimeout(function(){
+        window.location.href = '/profile/profilepage.html';
+      }, 700);
+    }
+
+    document.getElementById('save-btn').addEventListener('click', saveProfileSetup);
+    document.getElementById('use-location-btn').addEventListener('click', useBrowserLocation);
+
+    wireImagePicker();
+    loadSetupData();
+  </script>
+</body>
+</html>

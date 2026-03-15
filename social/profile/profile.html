@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile | FairQuest Social</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+body{
+  font-family:'Domine',serif;
+  background:#000;
+  color:#f0e6d2;
+  margin:0;
+  padding:0;
+}
+
+.header{
+  background:#111;
+  border-bottom:2px solid #bb9457;
+  padding:14px 18px;
+  margin-bottom:30px;
+  font-family:'Cinzel',serif;
+  font-size:1.5rem;
+}
+
+.header-inner{
+  max-width:1400px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.header-title{
+  text-align:center;
+  flex:1;
+}
+
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.header-btn{
+  border:none;
+  background:#1f2125;
+  color:#f0e6d2;
+  border-radius:999px;
+  padding:10px 14px;
+  cursor:pointer;
+  font-family:'Domine',serif;
+  font-size:1rem;
+}
+
+.header-btn:hover{
+  background:#2a2d31;
+}
+
+.social-layout{
+  display:grid;
+  grid-template-columns:280px minmax(0, 1fr);
+  gap:22px;
+  width:100%;
+  max-width:1400px;
+  margin:20px auto;
+  padding:0 16px 24px;
+  box-sizing:border-box;
+  align-items:start;
+}
+
+.social-sidebar{
+  background:rgba(214,197,126,0.88);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px;
+  padding:18px 14px;
+  position:sticky;
+  top:16px;
+}
+
+.sidebar-title{
+  font-family:'Cinzel',serif;
+  font-size:1.6rem;
+  color:#111;
+  margin:0 0 18px 0;
+}
+
+.sidebar-nav{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.sidebar-btn{
+  width:100%;
+  border:none;
+  border-radius:14px;
+  background:#111;
+  color:#f0e6d2;
+  padding:16px 18px;
+  font-family:'Domine',serif;
+  font-size:1.08rem;
+  text-align:left;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.sidebar-btn:hover{
+  background:#222;
+}
+
+.sidebar-btn.active{
+  background:#bb9457;
+  color:#000;
+  font-weight:bold;
+}
+
+.sidebar-icon{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:#111;
+  color:#f0e6d2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.1rem;
+  flex-shrink:0;
+}
+
+.social-main{
+  min-width:0;
+}
+
+.content-card{
+  background:rgba(214,197,126,0.88);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:20px;
+  color:#111;
+}
+
+.profile-cover{
+  width:100%;
+  height:260px;
+  border-radius:18px;
+  object-fit:cover;
+  background:#222;
+  display:block;
+}
+
+.profile-top{
+  display:flex;
+  gap:18px;
+  align-items:flex-start;
+  margin-top:-70px;
+  padding:0 8px;
+  flex-wrap:wrap;
+}
+
+.profile-avatar{
+  width:150px;
+  height:150px;
+  border-radius:50%;
+  object-fit:cover;
+  background:#222;
+  border:5px solid rgba(214,197,126,0.98);
+  box-shadow:0 6px 18px rgba(0,0,0,0.35);
+}
+
+.profile-main-info{
+  flex:1;
+  min-width:260px;
+  padding-top:82px;
+}
+
+.profile-name{
+  font-family:'Cinzel',serif;
+  font-size:2rem;
+  margin:0;
+  color:#111;
+}
+
+.profile-username{
+  margin-top:4px;
+  color:#2b2b2b;
+  font-size:1rem;
+}
+
+.profile-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  padding-top:82px;
+}
+
+.action-btn{
+  background:#111;
+  color:#f0e6d2;
+  border:none;
+  border-radius:999px;
+  padding:12px 18px;
+  font-family:'Domine',serif;
+  cursor:pointer;
+}
+
+.action-btn:hover{
+  background:#222;
+}
+
+.action-btn.primary{
+  background:#bb9457;
+  color:#000;
+  font-weight:bold;
+}
+
+.action-btn.primary:hover{
+  background:#cfa75e;
+}
+
+.profile-fields{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:14px;
+  margin-top:20px;
+}
+
+.field-box{
+  background:#111;
+  color:#f0e6d2;
+  border-radius:14px;
+  padding:14px;
+  min-width:0;
+}
+
+.field-label{
+  font-size:0.88rem;
+  color:#c9b27f;
+  margin-bottom:6px;
+}
+
+.field-value{
+  font-size:1rem;
+  line-height:1.45;
+  word-break:break-word;
+}
+
+.section-title{
+  font-family:'Cinzel',serif;
+  color:#111;
+  margin:0 0 14px 0;
+  font-size:1.6rem;
+}
+
+.post{
+  background:#111;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.25);
+  color:#f0e6d2;
+}
+
+.post-header{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.post-avatar{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  object-fit:cover;
+  background:#333;
+}
+
+.post-author-block{
+  display:flex;
+  flex-direction:column;
+}
+
+.post-author{
+  font-weight:bold;
+  color:#f5f5f5;
+}
+
+.post-time{
+  font-size:0.8rem;
+  color:#aaa;
+}
+
+.post-content{
+  margin:12px 0 0;
+  font-size:1rem;
+  line-height:1.5;
+  white-space:pre-wrap;
+  word-break:break-word;
+  color:#f0e6d2;
+}
+
+.loading{
+  text-align:center;
+  padding:24px;
+  color:#111;
+}
+
+.empty-state{
+  text-align:center;
+  padding:18px 14px;
+  background:#111;
+  border-radius:14px;
+  color:#f0e6d2;
+}
+
+.private-state{
+  text-align:center;
+  padding:24px 16px;
+  background:#111;
+  color:#f0e6d2;
+  border-radius:14px;
+}
+
+@media (max-width:980px){
+  .social-layout{
+    grid-template-columns:210px minmax(0, 1fr);
+    gap:16px;
+  }
+
+  .social-sidebar{
+    padding:14px 12px;
+  }
+
+  .sidebar-title{
+    font-size:1.3rem;
+    margin:0 0 14px 0;
+  }
+
+  .sidebar-btn{
+    padding:12px 14px;
+    font-size:0.98rem;
+    gap:10px;
+  }
+
+  .sidebar-icon{
+    width:30px;
+    height:30px;
+    font-size:0.95rem;
+  }
+
+  .content-card{
+    padding:14px;
+  }
+
+  .profile-name{
+    font-size:1.7rem;
+  }
+
+  .profile-cover{
+    height:220px;
+  }
+
+  .profile-avatar{
+    width:120px;
+    height:120px;
+  }
+
+  .profile-main-info,
+  .profile-actions{
+    padding-top:58px;
+  }
+
+  .profile-fields{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width:760px){
+  .social-layout{
+    grid-template-columns:1fr;
+    padding:0 8px 20px;
+  }
+
+  .social-sidebar{
+    position:static;
+  }
+
+  .content-card,
+  .social-sidebar{
+    padding:14px;
+  }
+
+  .profile-cover{
+    height:180px;
+  }
+
+  .profile-top{
+    margin-top:-54px;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+  }
+
+  .profile-avatar{
+    width:108px;
+    height:108px;
+  }
+
+  .profile-main-info,
+  .profile-actions{
+    padding-top:0;
+    width:100%;
+  }
+
+  .profile-actions{
+    justify-content:center;
+  }
+
+  .profile-name{
+    font-size:1.5rem;
+  }
+
+  .header-btn,
+  .action-btn{
+    font-size:1rem;
+    padding:10px 14px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <button type="button" class="header-btn" onclick="goBackToSocial()">← Social</button>
+    <div class="header-title">FairQuest Social</div>
+    <div class="header-actions">
+      <button type="button" class="header-btn" onclick="refreshProfilePage()">↻ Refresh</button>
+    </div>
+  </div>
+</div>
+
+<div class="social-layout">
+  <aside class="social-sidebar">
+    <h2 class="sidebar-title">Profile</h2>
+
+    <div class="sidebar-nav">
+      <button type="button" class="sidebar-btn active" onclick="scrollToSection('profile-card')">
+        <span class="sidebar-icon">👤</span>
+        <span>Profile</span>
+      </button>
+
+      <button type="button" class="sidebar-btn" onclick="scrollToSection('posts-card')">
+        <span class="sidebar-icon">📝</span>
+        <span>Posts</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="social-main">
+    <div class="content-card" id="profile-card">
+      <div id="profile-loading" class="loading">Loading profile...</div>
+      <div id="profile-private-state" class="private-state" style="display:none;">This profile is private.</div>
+
+      <div id="profile-content" style="display:none;">
+        <img id="profile-cover-image" class="profile-cover" src="https://via.placeholder.com/1200x260?text=Cover+Image" alt="Cover">
+
+        <div class="profile-top">
+          <img id="profile-avatar-image" class="profile-avatar" src="https://via.placeholder.com/150?text=User" alt="Profile">
+
+          <div class="profile-main-info">
+            <h1 id="profile-display-name" class="profile-name">User</h1>
+            <div id="profile-username" class="profile-username">@username</div>
+          </div>
+
+          <div id="owner-actions" class="profile-actions" style="display:none;">
+            <button type="button" class="action-btn primary" onclick="openProfileUpdate()">Update Profile</button>
+            <button type="button" class="action-btn" id="toggle-private-btn" onclick="toggleProfilePrivacy()">Make Profile Private</button>
+          </div>
+        </div>
+
+        <div class="profile-fields">
+          <div class="field-box">
+            <div class="field-label">Display Name</div>
+            <div class="field-value" id="field-display-name"></div>
+          </div>
+
+          <div class="field-box">
+            <div class="field-label">Bio</div>
+            <div class="field-value" id="field-bio"></div>
+          </div>
+
+          <div class="field-box">
+            <div class="field-label">Profile Image URL</div>
+            <div class="field-value" id="field-profile-image-url"></div>
+          </div>
+
+          <div class="field-box">
+            <div class="field-label">Cover Image URL</div>
+            <div class="field-value" id="field-cover-image-url"></div>
+          </div>
+
+          <div class="field-box">
+            <div class="field-label">Location</div>
+            <div class="field-value" id="field-location"></div>
+          </div>
+
+          <div class="field-box">
+            <div class="field-label">Website URL</div>
+            <div class="field-value" id="field-website-url"></div>
+          </div>
+
+          <div class="field-box">
+            <div class="field-label">Allow Profile Public</div>
+            <div class="field-value" id="field-allow-profile-public"></div>
+          </div>
+
+          <div class="field-box">
+            <div class="field-label">Created At</div>
+            <div class="field-value" id="field-created-at"></div>
+          </div>
+
+          <div class="field-box">
+            <div class="field-label">Updated At</div>
+            <div class="field-value" id="field-updated-at"></div>
+          </div>
+
+          <div class="field-box">
+            <div class="field-label">City</div>
+            <div class="field-value" id="field-city"></div>
+          </div>
+
+          <div class="field-box">
+            <div class="field-label">State</div>
+            <div class="field-value" id="field-state"></div>
+          </div>
+
+          <div class="field-box">
+            <div class="field-label">Location Source</div>
+            <div class="field-value" id="field-location-source"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card" id="posts-card">
+      <h2 class="section-title">Posts</h2>
+      <div id="posts-container">
+        <div class="loading">Loading posts...</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const supabaseClient = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+let currentUserId = null;
+let profileUserId = null;
+let profileUsername = null;
+let profileOwner = false;
+let postsOffset = 0;
+let postsLimit = 10;
+let postsLoading = false;
+let postsHasMore = true;
+
+function getParam(name){
+  const url = new URL(window.location.href);
+  return url.searchParams.get(name);
+}
+
+function goBackToSocial(){
+  window.location.href = '/social/index.html';
+}
+
+function openProfileUpdate(){
+  window.location.href = '/profile/profileupdate.html';
+}
+
+function scrollToSection(sectionId){
+  const el = document.getElementById(sectionId);
+  if(!el) return;
+  el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+async function getCurrentSession(){
+  const { data } = await supabaseClient.auth.getSession();
+  return data.session || null;
+}
+
+async function checkUser(){
+  const session = await getCurrentSession();
+  if(!session){
+    currentUserId = null;
+    return false;
+  }
+  currentUserId = session.user.id;
+  return true;
+}
+
+function formatDateTime(value){
+  if(!value) return '—';
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString();
+}
+
+function setField(id, value){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.textContent = value === null || value === undefined || value === '' ? '—' : String(value);
+}
+
+function formatAudienceLabel(audience){
+  if(audience === 'close_friends') return 'Close Friends';
+  if(audience === 'family') return 'Family';
+  if(audience === 'friends') return 'Friends';
+  return 'Public';
+}
+
+function renderPost(post){
+  return `
+    <div class="post">
+      <div class="post-header">
+        <img class="post-avatar" src="${post.author_profile_image_url || 'https://via.placeholder.com/40'}" alt="Profile">
+        <div class="post-author-block">
+          <div class="post-author">${post.author_name || 'User'}</div>
+          <div class="post-time">${formatDateTime(post.created_at)} · ${formatAudienceLabel(post.audience)}</div>
+        </div>
+      </div>
+      <div class="post-content">${post.content || ''}</div>
+    </div>
+  `;
+}
+
+async function loadProfile(){
+  document.getElementById('profile-loading').style.display = 'block';
+  document.getElementById('profile-content').style.display = 'none';
+  document.getElementById('profile-private-state').style.display = 'none';
+
+  const { data, error } = await supabaseClient.rpc('get_social_profile_page', {
+    p_user_id: profileUserId,
+    p_username: profileUsername
+  });
+
+  if(error){
+    console.error(error);
+    document.getElementById('profile-loading').innerHTML = 'Error loading profile';
+    return;
+  }
+
+  if(!data){
+    document.getElementById('profile-loading').innerHTML = 'Profile not found';
+    return;
+  }
+
+  if(data.profile_visible === false){
+    document.getElementById('profile-loading').style.display = 'none';
+    document.getElementById('profile-private-state').style.display = 'block';
+    document.getElementById('posts-container').innerHTML = `<div class="empty-state">Posts are not visible for this profile.</div>`;
+    return;
+  }
+
+  const profile = data.profile || data;
+
+  profileUserId = profile.user_id || profileUserId;
+  profileOwner = !!profile.is_owner;
+
+  document.getElementById('profile-loading').style.display = 'none';
+  document.getElementById('profile-content').style.display = 'block';
+
+  document.getElementById('profile-cover-image').src = profile.cover_image_url || 'https://via.placeholder.com/1200x260?text=Cover+Image';
+  document.getElementById('profile-avatar-image').src = profile.profile_image_url || 'https://via.placeholder.com/150?text=User';
+  document.getElementById('profile-display-name').textContent = profile.display_name || 'User';
+  document.getElementById('profile-username').textContent = profile.username ? `@${profile.username}` : '@user';
+
+  setField('field-display-name', profile.display_name);
+  setField('field-bio', profile.bio);
+  setField('field-profile-image-url', profile.profile_image_url);
+  setField('field-cover-image-url', profile.cover_image_url);
+  setField('field-location', profile.location);
+  setField('field-website-url', profile.website_url);
+  setField('field-allow-profile-public', profile.allow_profile_public === true ? 'Yes' : 'No');
+  setField('field-created-at', formatDateTime(profile.created_at));
+  setField('field-updated-at', formatDateTime(profile.updated_at));
+  setField('field-city', profile.city);
+  setField('field-state', profile.state);
+  setField('field-location-source', profile.location_source);
+
+  const ownerActions = document.getElementById('owner-actions');
+  const toggleBtn = document.getElementById('toggle-private-btn');
+
+  if(profileOwner){
+    ownerActions.style.display = 'flex';
+    toggleBtn.textContent = profile.allow_profile_public === true ? 'Make Profile Private' : 'Make Profile Public';
+  }else{
+    ownerActions.style.display = 'none';
+  }
+}
+
+async function loadMorePosts(){
+  if(postsLoading || !postsHasMore) return;
+  postsLoading = true;
+
+  const container = document.getElementById('posts-container');
+
+  if(postsOffset === 0){
+    container.innerHTML = `<div class="loading">Loading posts...</div>`;
+  }
+
+  const { data, error } = await supabaseClient.rpc('get_profile_posts_page', {
+    p_user_id: profileUserId,
+    p_username: profileUsername,
+    p_limit: postsLimit,
+    p_offset: postsOffset
+  });
+
+  postsLoading = false;
+
+  if(error){
+    console.error(error);
+    container.innerHTML = `<div class="empty-state">Error loading posts</div>`;
+    return;
+  }
+
+  const rows = Array.isArray(data) ? data : [];
+
+  if(postsOffset === 0){
+    container.innerHTML = '';
+  }
+
+  if(rows.length === 0 && postsOffset === 0){
+    container.innerHTML = `<div class="empty-state">No posts yet</div>`;
+    postsHasMore = false;
+    return;
+  }
+
+  rows.forEach(row => {
+    container.insertAdjacentHTML('beforeend', renderPost(row));
+  });
+
+  if(rows.length < postsLimit){
+    postsHasMore = false;
+  }else{
+    postsOffset += postsLimit;
+  }
+}
+
+async function toggleProfilePrivacy(){
+  if(!profileOwner || !profileUserId) return;
+
+  const { error } = await supabaseClient.rpc('toggle_my_profile_privacy');
+
+  if(error){
+    console.error(error);
+    alert(error.message || 'Error updating profile privacy');
+    return;
+  }
+
+  postsOffset = 0;
+  postsHasMore = true;
+  await loadProfile();
+  await loadMorePosts();
+}
+
+function handleScrollLoad(){
+  if(!postsHasMore || postsLoading) return;
+  const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 500;
+  if(nearBottom){
+    loadMorePosts();
+  }
+}
+
+async function refreshProfilePage(){
+  postsOffset = 0;
+  postsHasMore = true;
+  await loadProfile();
+  await loadMorePosts();
+}
+
+async function initProfilePage(){
+  await checkUser();
+
+  profileUserId = getParam('user_id');
+  profileUsername = getParam('username');
+
+  if(!profileUserId && !profileUsername){
+    document.getElementById('profile-loading').innerHTML = 'No profile selected';
+    document.getElementById('posts-container').innerHTML = `<div class="empty-state">No posts to show</div>`;
+    return;
+  }
+
+  await loadProfile();
+  await loadMorePosts();
+  window.addEventListener('scroll', handleScrollLoad);
+}
+
+initProfilePage();
+</script>
+
+</body>
+</html>

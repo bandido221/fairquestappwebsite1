@@ -651,26 +651,34 @@ background:#cfa75e;
 <div class="header">
   <div class="header-inner">
     <div class="header-title">FairQuest Social</div>
-    <div class="header-actions">
-      <button type="button" class="header-icon-btn" onclick="openNotificationsPage()">
-        🔔
-        <span id="notifications-badge" class="notif-badge" style="display:none;">0</span>
-      </button>
+  <div class="header-actions">
+  <button type="button" class="header-icon-btn" onclick="openNotificationsPage()">
+    🔔
+    <span id="notifications-badge" class="notif-badge" style="display:none;">0</span>
+  </button>
 
-      <button type="button" class="header-icon-btn" onclick="openFriends()">
-        👥
-      </button>
-    </div>
+  <button type="button" class="header-icon-btn" onclick="openFriends()">
+    👥
+    <span id="friends-badge" class="notif-badge" style="display:none;">0</span>
+  </button>
+
+  <button type="button" class="header-icon-btn" onclick="openMyProfile()">
+    👤
+  </button>
+</div>
   </div>
 
   <div class="header-subnav">
-    <button type="button" class="notifications-page-btn" onclick="openNotificationsPage()">
-      Notifications
-    </button>
-    <button type="button" class="notifications-page-btn" onclick="openFriends()">
-      👥 Friends
-    </button>
-  </div>
+  <button type="button" class="notifications-page-btn" onclick="openNotificationsPage()">
+    Notifications
+  </button>
+  <button type="button" class="notifications-page-btn" onclick="openFriends()">
+    👥 Friends
+  </button>
+  <button type="button" class="notifications-page-btn" onclick="openMyProfile()">
+    👤 Profile
+  </button>
+</div>
 </div>
 <div class="social-layout">
 
@@ -744,6 +752,7 @@ const supabaseClient = window.supabase.createClient(
 );
 let currentUserId = null;
 let notificationsChannel = null;
+let relationshipRequestsChannel = null;
 let audioUnlocked = false;
 let lastNotificationEventAt = null;
 
@@ -778,7 +787,17 @@ return false;
 currentUserId = session.user.id;
 return true;
 }
+async function openMyProfile(){
+  const { data } = await supabaseClient.auth.getSession();
 
+  if(!data.session){
+    window.location.href = "/user_login.html?redirect=/social/profile/profile.html";
+    return;
+  }
+
+  const userId = data.session.user.id;
+  window.location.href = "/social/profile/profile.html?user_id=" + userId;
+}
 function shouldPlayOpenPageNotificationSound(payload){
 if(document.visibilityState !== "visible") return false;
 if(!payload || !payload.new) return false;
@@ -802,6 +821,7 @@ if(payload?.new?.last_event_at){
 lastNotificationEventAt = payload.new.last_event_at;
 }
 await loadUnreadNotificationCount();
+await loadPendingFriendRequestCount();
 await playNotificationSoundIfAllowed(payload);
 }
 
@@ -830,6 +850,43 @@ await handleRealtimeNotification(payload);
 )
 .subscribe();
 }
+
+async function startRelationshipRequestsRealtime(){
+const logged = await checkUser();
+if(!logged || !currentUserId) return;
+
+if(relationshipRequestsChannel){
+await supabaseClient.removeChannel(relationshipRequestsChannel);
+relationshipRequestsChannel = null;
+}
+
+relationshipRequestsChannel = supabaseClient
+.channel(`social-relationship-requests-${currentUserId}`)
+.on(
+'postgres_changes',
+{
+event: '*',
+schema: 'social',
+table: 'relat_friend_request'
+},
+async () => {
+await loadPendingFriendRequestCount();
+}
+)
+.on(
+'postgres_changes',
+{
+event: '*',
+schema: 'social',
+table: 'relat_family_request'
+},
+async () => {
+await loadPendingFriendRequestCount();
+}
+)
+.subscribe();
+}
+
 function openNotificationsPage(){
 window.location.href = "/social/notifications.html";
 }
@@ -851,6 +908,32 @@ const badge = document.getElementById("notifications-badge");
 const count = Number(data || 0);
 
 if(!badge) return;
+
+if(count > 0){
+badge.style.display = "inline-block";
+badge.textContent = count > 99 ? "99+" : String(count);
+}else{
+badge.style.display = "none";
+badge.textContent = "0";
+}
+}
+
+async function loadPendingFriendRequestCount(){
+const logged = await checkUser();
+if(!logged) return;
+
+const { data, error } = await supabaseClient.rpc('get_my_pending_relationship_requests');
+
+if(error){
+console.error(error);
+return;
+}
+
+const badge = document.getElementById("friends-badge");
+if(!badge) return;
+
+const items = Array.isArray(data) ? data : [];
+const count = items.filter(item => item.direction === "incoming").length;
 
 if(count > 0){
 badge.style.display = "inline-block";
@@ -1091,10 +1174,15 @@ async function initSocialPage(){
 await loadReactionTypes();
 await loadCurrentUserProfile();
 await loadUnreadNotificationCount();
+await loadPendingFriendRequestCount();
 await loadFeed();
 await startNotificationRealtime();
+await startRelationshipRequestsRealtime();
 }
-
+window.addEventListener("focus", async function(){
+await loadUnreadNotificationCount();
+await loadPendingFriendRequestCount();
+});
 initSocialPage();
 
 document.addEventListener("click", async function(e){
@@ -1117,6 +1205,7 @@ return;
 }
 
 await loadUnreadNotificationCount();
+await loadPendingFriendRequestCount();
 await loadFeed();
 return;
 }

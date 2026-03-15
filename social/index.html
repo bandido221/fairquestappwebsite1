@@ -650,9 +650,9 @@ background:#cfa75e;
   <div class="header-inner">
     <div class="header-title">FairQuest Social</div>
     <div class="header-actions">
-      <button type="button" id="notifications-btn" class="header-icon-btn">
-        🔔 <span id="notifications-badge" class="notif-badge" style="display:none;">0</span>
-      </button>
+     <button type="button" id="notifications-btn" class="header-icon-btn" onclick="openNotificationsPage()">
+  🔔 <span id="notifications-badge" class="notif-badge" style="display:none;">0</span>
+</button>
     </div>
   </div>
 
@@ -732,13 +732,93 @@ const supabaseClient = window.supabase.createClient(
 'https://awtbjuiqgtdydsqzimul.supabase.co',
 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
 );
-async function checkUser(){
+let currentUserId = null;
+let notificationsChannel = null;
+let audioUnlocked = false;
+let lastNotificationEventAt = null;
+
+const notificationAudio = new Audio("/social/notification.mp3");
+notificationAudio.preload = "auto";
+
+function unlockNotificationAudio(){
+if(audioUnlocked) return;
+notificationAudio.play().then(() => {
+notificationAudio.pause();
+notificationAudio.currentTime = 0;
+audioUnlocked = true;
+}).catch(() => {});
+}
+
+document.addEventListener("click", unlockNotificationAudio, { once:true });
+document.addEventListener("keydown", unlockNotificationAudio, { once:true });
+document.addEventListener("touchstart", unlockNotificationAudio, { once:true });
+
+async function getCurrentSession(){
 const { data } = await supabaseClient.auth.getSession();
-if(!data.session){
+return data.session || null;
+}
+
+async function checkUser(){
+const session = await getCurrentSession();
+if(!session){
 document.getElementById("feed-container").innerHTML = "";
+currentUserId = null;
 return false;
 }
+currentUserId = session.user.id;
 return true;
+}
+
+function shouldPlayOpenPageNotificationSound(payload){
+if(document.visibilityState !== "visible") return false;
+if(!payload || !payload.new) return false;
+if(payload.new.is_read === true) return false;
+if(!payload.new.last_event_at) return true;
+if(!lastNotificationEventAt) return true;
+return new Date(payload.new.last_event_at).getTime() > new Date(lastNotificationEventAt).getTime();
+}
+
+async function playNotificationSoundIfAllowed(payload){
+if(!audioUnlocked) return;
+if(!shouldPlayOpenPageNotificationSound(payload)) return;
+try{
+notificationAudio.currentTime = 0;
+await notificationAudio.play();
+}catch(_e){}
+}
+
+async function handleRealtimeNotification(payload){
+if(payload?.new?.last_event_at){
+lastNotificationEventAt = payload.new.last_event_at;
+}
+await loadUnreadNotificationCount();
+await playNotificationSoundIfAllowed(payload);
+}
+
+async function startNotificationRealtime(){
+const logged = await checkUser();
+if(!logged || !currentUserId) return;
+
+if(notificationsChannel){
+await supabaseClient.removeChannel(notificationsChannel);
+notificationsChannel = null;
+}
+
+notificationsChannel = supabaseClient
+.channel(`social-notifications-${currentUserId}`)
+.on(
+'postgres_changes',
+{
+event: '*',
+schema: 'social',
+table: 'notif_user_notification',
+filter: `recipient_user_id=eq.${currentUserId}`
+},
+async (payload) => {
+await handleRealtimeNotification(payload);
+}
+)
+.subscribe();
 }
 function openNotificationsPage(){
 window.location.href = "/social/notifications.html";
@@ -999,6 +1079,7 @@ await loadReactionTypes();
 await loadCurrentUserProfile();
 await loadUnreadNotificationCount();
 await loadFeed();
+await startNotificationRealtime();
 }
 
 initSocialPage();

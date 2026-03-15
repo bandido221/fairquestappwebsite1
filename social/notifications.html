@@ -306,18 +306,110 @@ const supabaseClient = window.supabase.createClient(
 'https://awtbjuiqgtdydsqzimul.supabase.co',
 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
 );
+let currentUserId = null;
+let notificationsChannel = null;
+let audioUnlocked = false;
+let lastNotificationEventAt = null;
+
+const notificationAudio = new Audio("/social/notification.mp3");
+notificationAudio.preload = "auto";
+
+function unlockNotificationAudio(){
+if(audioUnlocked) return;
+notificationAudio.play().then(() => {
+notificationAudio.pause();
+notificationAudio.currentTime = 0;
+audioUnlocked = true;
+}).catch(() => {});
+}
+
+document.addEventListener("click", unlockNotificationAudio, { once:true });
+document.addEventListener("keydown", unlockNotificationAudio, { once:true });
+document.addEventListener("touchstart", unlockNotificationAudio, { once:true });
+
+async function getCurrentSession(){
+  const { data } = await supabaseClient.auth.getSession();
+  return data.session || null;
+}
 
 async function checkUser(){
-  const { data } = await supabaseClient.auth.getSession();
+  const session = await getCurrentSession();
 
-  if(!data.session){
+  if(!session){
     window.location.href = "/user_login.html?redirect=/social/notifications.html";
+    currentUserId = null;
     return false;
   }
 
+  currentUserId = session.user.id;
   return true;
 }
 
+async function loadUnreadNotificationCount(){
+  const logged = await checkUser();
+  if(!logged) return 0;
+
+  const { data, error } = await supabaseClient.rpc('get_my_unread_notification_count');
+
+  if(error){
+    console.error(error);
+    return 0;
+  }
+
+  return Number(data || 0);
+}
+
+function shouldPlayOpenPageNotificationSound(payload){
+if(document.visibilityState !== "visible") return false;
+if(!payload || !payload.new) return false;
+if(payload.new.is_read === true) return false;
+if(!payload.new.last_event_at) return true;
+if(!lastNotificationEventAt) return true;
+return new Date(payload.new.last_event_at).getTime() > new Date(lastNotificationEventAt).getTime();
+}
+
+async function playNotificationSoundIfAllowed(payload){
+if(!audioUnlocked) return;
+if(!shouldPlayOpenPageNotificationSound(payload)) return;
+try{
+notificationAudio.currentTime = 0;
+await notificationAudio.play();
+}catch(_e){}
+}
+
+async function handleRealtimeNotification(payload){
+if(payload?.new?.last_event_at){
+lastNotificationEventAt = payload.new.last_event_at;
+}
+await loadNotifications();
+await playNotificationSoundIfAllowed(payload);
+}
+
+async function startNotificationRealtime(){
+const logged = await checkUser();
+if(!logged || !currentUserId) return;
+
+if(notificationsChannel){
+await supabaseClient.removeChannel(notificationsChannel);
+notificationsChannel = null;
+}
+
+notificationsChannel = supabaseClient
+.channel(`social-notifications-page-${currentUserId}`)
+.on(
+'postgres_changes',
+{
+event: '*',
+schema: 'social',
+table: 'notif_user_notification',
+filter: `recipient_user_id=eq.${currentUserId}`
+},
+async (payload) => {
+await handleRealtimeNotification(payload);
+}
+)
+.subscribe();
+}
 function goBackToSocial(){
   window.location.href = "/social/index.html";
 }
@@ -488,8 +580,25 @@ document.addEventListener("click", async function(e){
     }
   }
 });
+window.addEventListener("focus", async function(){
+await loadUnreadNotificationCount();
+});
 
-loadNotifications();
+setInterval(async function(){
+await loadUnreadNotificationCount();
+}, 30000);
+
+async function initNotificationsPage(){
+  const logged = await checkUser();
+  if(!logged) return;
+
+  await markAllNotificationsRead();
+  await loadNotifications();
+  await startNotificationRealtime();
+}
+
+initNotificationsPage();
+
 </script>
 
 </body>

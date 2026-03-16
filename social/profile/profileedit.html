@@ -96,8 +96,28 @@ body{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:12px;
+  gap:14px;
   margin:0 0 24px 0;
+}
+
+.profile-preview-shell{
+  position:relative;
+  width:100%;
+  max-width:700px;
+  height:260px;
+  border-radius:18px;
+  overflow:visible;
+  margin-bottom:38px;
+}
+
+.cover-image-preview{
+  width:100%;
+  height:100%;
+  border-radius:18px;
+  object-fit:cover;
+  background:#222;
+  border:3px solid #111;
+  display:block;
 }
 
 .profile-image{
@@ -106,7 +126,21 @@ body{
   border-radius:50%;
   object-fit:cover;
   background:#222;
-  border:3px solid #111;
+  border:4px solid rgba(214,197,126,0.98);
+  box-shadow:0 6px 18px rgba(0,0,0,0.35);
+}
+
+.profile-image.overlay{
+  position:absolute;
+  left:24px;
+  bottom:-34px;
+}
+
+.image-btn-row{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:center;
 }
 
 .image-btn{
@@ -289,9 +323,18 @@ textarea{
 
     <div id="form-wrap" style="display:none;">
       <div class="profile-image-wrap">
-        <img id="profile-image-preview" class="profile-image" src="https://via.placeholder.com/140?text=User" alt="Profile">
+        <div class="profile-preview-shell">
+          <img id="cover-image-preview" class="cover-image-preview" src="https://via.placeholder.com/1200x260?text=Cover+Image" alt="Cover">
+          <img id="profile-image-preview" class="profile-image overlay" src="https://via.placeholder.com/140?text=User" alt="Profile">
+        </div>
+
         <input type="file" id="profile-image-file" accept="image/*" style="display:none;">
-        <button type="button" class="image-btn" id="choose-image-btn">Choose Profile Image</button>
+        <input type="file" id="cover-image-file" accept="image/*" style="display:none;">
+
+        <div class="image-btn-row">
+          <button type="button" class="image-btn" id="choose-image-btn">Choose Profile Image</button>
+          <button type="button" class="image-btn" id="choose-cover-image-btn">Choose Cover Image</button>
+        </div>
       </div>
 
       <div class="form-grid">
@@ -360,7 +403,9 @@ const supabaseClient = window.supabase.createClient(
 );
 let currentUserId = null;
 let selectedImageFile = null;
+let selectedCoverImageFile = null;
 let uploadedProfileImageUrl = null;
+let uploadedCoverImageUrl = null;
 
 async function getCurrentSession(){
   const { data } = await supabaseClient.auth.getSession();
@@ -398,28 +443,35 @@ function goBackToProfile(){
 }
 
 function wireImagePicker(){
-  const fileInput = document.getElementById('profile-image-file');
-  const chooseBtn = document.getElementById('choose-image-btn');
-  const preview = document.getElementById('profile-image-preview');
+  const profileFileInput = document.getElementById('profile-image-file');
+  const coverFileInput = document.getElementById('cover-image-file');
+  const chooseProfileBtn = document.getElementById('choose-image-btn');
+  const chooseCoverBtn = document.getElementById('choose-cover-image-btn');
+  const profilePreview = document.getElementById('profile-image-preview');
+  const coverPreview = document.getElementById('cover-image-preview');
 
-  chooseBtn.addEventListener('click', function(){
-    fileInput.click();
+  chooseProfileBtn.addEventListener('click', function(){
+    profileFileInput.click();
   });
 
-  fileInput.addEventListener('change', function(e){
+  chooseCoverBtn.addEventListener('click', function(){
+    coverFileInput.click();
+  });
+
+  profileFileInput.addEventListener('change', function(e){
     const file = e.target.files && e.target.files[0];
     if(!file) return;
 
     if(!file.type.startsWith('image/')){
       showStatus('Please choose an image file.', 'error');
-      fileInput.value = '';
+      profileFileInput.value = '';
       selectedImageFile = null;
       return;
     }
 
     if(file.size > 5 * 1024 * 1024){
       showStatus('Image must be 5 MB or smaller.', 'error');
-      fileInput.value = '';
+      profileFileInput.value = '';
       selectedImageFile = null;
       return;
     }
@@ -430,7 +482,36 @@ function wireImagePicker(){
     const reader = new FileReader();
     reader.onload = function(event){
       const result = event.target.result || '';
-      preview.src = result;
+      profilePreview.src = result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  coverFileInput.addEventListener('change', function(e){
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+
+    if(!file.type.startsWith('image/')){
+      showStatus('Please choose an image file.', 'error');
+      coverFileInput.value = '';
+      selectedCoverImageFile = null;
+      return;
+    }
+
+    if(file.size > 8 * 1024 * 1024){
+      showStatus('Cover image must be 8 MB or smaller.', 'error');
+      coverFileInput.value = '';
+      selectedCoverImageFile = null;
+      return;
+    }
+
+    selectedCoverImageFile = file;
+    uploadedCoverImageUrl = null;
+
+    const reader = new FileReader();
+    reader.onload = function(event){
+      const result = event.target.result || '';
+      coverPreview.src = result;
     };
     reader.readAsDataURL(file);
   });
@@ -505,7 +586,7 @@ async function uploadProfileImageToStorage(){
   const originalSizeKb = Math.round(selectedImageFile.size / 1024);
   const compressedSizeKb = Math.round(compressedImage.size / 1024);
 
-  showStatus(`Original: ${originalSizeKb} KB | Compressed: ${compressedSizeKb} KB`, 'success');
+  showStatus(`Profile image: ${originalSizeKb} KB → ${compressedSizeKb} KB`, 'success');
 
   const { error: uploadError } = await supabaseClient
     .storage
@@ -527,6 +608,45 @@ async function uploadProfileImageToStorage(){
 
   uploadedProfileImageUrl = data?.publicUrl || null;
   return uploadedProfileImageUrl;
+}
+
+async function uploadCoverImageToStorage(){
+  if(!selectedCoverImageFile){
+    return uploadedCoverImageUrl;
+  }
+
+  const logged = await checkUser();
+  if(!logged || !currentUserId){
+    throw new Error('User not logged in');
+  }
+
+  const filePath = `${currentUserId}/cover-${Date.now()}.jpg`;
+  const compressedImage = await compressImage(selectedCoverImageFile);
+
+  if(!compressedImage){
+    throw new Error('Compressed image was empty');
+  }
+
+  const { error: uploadError } = await supabaseClient
+    .storage
+    .from('social-profile-images')
+    .upload(filePath, compressedImage, {
+      cacheControl: '3600',
+      upsert: true,
+      contentType: 'image/jpeg'
+    });
+
+  if(uploadError){
+    throw uploadError;
+  }
+
+  const { data } = supabaseClient
+    .storage
+    .from('social-profile-images')
+    .getPublicUrl(filePath);
+
+  uploadedCoverImageUrl = data?.publicUrl || null;
+  return uploadedCoverImageUrl;
 }
 
 async function loadProfileEdit(){
@@ -558,7 +678,10 @@ async function loadProfileEdit(){
   document.getElementById('allow_profile_public').checked = row.allow_profile_public === true;
 
   uploadedProfileImageUrl = row.profile_image_url || null;
+  uploadedCoverImageUrl = row.cover_image_url || null;
+
   document.getElementById('profile-image-preview').src = uploadedProfileImageUrl || 'https://via.placeholder.com/140?text=User';
+  document.getElementById('cover-image-preview').src = uploadedCoverImageUrl || 'https://via.placeholder.com/1200x260?text=Cover+Image';
 
   document.getElementById('loading-box').style.display = 'none';
   document.getElementById('form-wrap').style.display = 'block';
@@ -573,12 +696,13 @@ async function saveProfileEdit(){
 
   try{
     const profileImageUrl = await uploadProfileImageToStorage();
+    const coverImageUrl = await uploadCoverImageToStorage();
 
     const payload = {
       p_display_name: document.getElementById('display_name').value.trim() || null,
       p_bio: document.getElementById('bio').value.trim() || null,
       p_profile_image_url: profileImageUrl || null,
-      p_cover_image_url: null,
+      p_cover_image_url: coverImageUrl || null,
       p_location: document.getElementById('location').value.trim() || null,
       p_website_url: document.getElementById('website_url').value.trim() || null,
       p_allow_profile_public: document.getElementById('allow_profile_public').checked,
@@ -607,7 +731,7 @@ async function saveProfileEdit(){
     console.error(error);
     saveBtn.disabled = false;
     saveBtn.textContent = 'Save Changes';
-    showStatus(error.message || 'Error uploading profile image.', 'error');
+    showStatus(error.message || 'Error uploading image.', 'error');
   }
 }
 

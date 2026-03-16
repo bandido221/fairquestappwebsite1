@@ -244,10 +244,15 @@
   <div class="page-wrap">
     <div class="card">
       <h1 class="page-title">Set Up Your Profile</h1>
-      <p class="page-subtitle">
-        Before you continue, please choose a username and add your first and last name.
-        You can also add a profile image and your location now or update them later.
-      </p>
+   <p class="page-subtitle">
+  To create your FairQuest Social profile we require three things:
+  <strong>username, first name, and last name.</strong><br><br>
+
+  These help us recover your account if it is ever lost and allow other
+  users to correctly find and identify your profile.<br><br>
+
+  Your profile image and location are optional and can be updated later.
+</p>
 
       <div id="loading-box" class="loading">Loading profile setup...</div>
 
@@ -351,28 +356,21 @@ let uploadedProfileImageUrl = null;
       document.getElementById('setup-form-wrap').style.display = isLoading ? 'none' : 'block';
     }
 
-    function validateForm(){
-      const username = document.getElementById('username').value.trim();
-      const firstName = document.getElementById('first-name').value.trim();
-      const lastName = document.getElementById('last-name').value.trim();
+function validateForm(){
+  const username = document.getElementById('username').value.trim();
+  const firstName = document.getElementById('first-name').value.trim();
+  const lastName = document.getElementById('last-name').value.trim();
 
-      if(!username){
-        showStatus('Username is required.', 'error');
-        return false;
-      }
+  if(!username || !firstName || !lastName){
+    showStatus(
+      'Username, first name, and last name are required to create your social profile.',
+      'error'
+    );
+    return false;
+  }
 
-      if(!firstName){
-        showStatus('First name is required.', 'error');
-        return false;
-      }
-
-      if(!lastName){
-        showStatus('Last name is required.', 'error');
-        return false;
-      }
-
-      return true;
-    }
+  return true;
+}
 
     async function loadSetupData(){
       const logged = await checkUser();

@@ -311,9 +311,9 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
-    let currentUserId = null;
-    let selectedImageBase64 = null;
-    let selectedImageMimeType = null;
+  let currentUserId = null;
+let selectedImageFile = null;
+let uploadedProfileImageUrl = null;
 
     async function getCurrentSession(){
       const { data } = await supabaseClient.auth.getSession();
@@ -401,31 +401,135 @@
       setLoadingState(false);
     }
 
-    function wireImagePicker(){
-      const fileInput = document.getElementById('profile-image-file');
-      const chooseBtn = document.getElementById('choose-image-btn');
-      const preview = document.getElementById('profile-image-preview');
+function wireImagePicker(){
+  const fileInput = document.getElementById('profile-image-file');
+  const chooseBtn = document.getElementById('choose-image-btn');
+  const preview = document.getElementById('profile-image-preview');
 
-      chooseBtn.addEventListener('click', function(){
-        fileInput.click();
-      });
+  chooseBtn.addEventListener('click', function(){
+    fileInput.click();
+  });
 
-      fileInput.addEventListener('change', function(e){
-        const file = e.target.files && e.target.files[0];
-        if(!file) return;
+  fileInput.addEventListener('change', function(e){
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
 
-        selectedImageMimeType = file.type || 'image/png';
-
-        const reader = new FileReader();
-        reader.onload = function(event){
-          const result = event.target.result || '';
-          preview.src = result;
-          selectedImageBase64 = String(result).split(',')[1] || null;
-        };
-        reader.readAsDataURL(file);
-      });
+    if(!file.type.startsWith('image/')){
+      showStatus('Please choose an image file.', 'error');
+      fileInput.value = '';
+      selectedImageFile = null;
+      return;
     }
 
+    if(file.size > 5 * 1024 * 1024){
+      showStatus('Image must be 5 MB or smaller.', 'error');
+      fileInput.value = '';
+      selectedImageFile = null;
+      return;
+    }
+
+    selectedImageFile = file;
+    uploadedProfileImageUrl = null;
+
+    const reader = new FileReader();
+    reader.onload = function(event){
+      const result = event.target.result || '';
+      preview.src = result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+async function compressImage(file){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+      img.src = e.target.result;
+    };
+
+    reader.onerror = reject;
+
+    img.onload = function(){
+      const MAX_SIZE = 600;
+
+      let width = img.width;
+      let height = img.height;
+
+      if(width > height){
+        if(width > MAX_SIZE){
+          height = height * (MAX_SIZE / width);
+          width = MAX_SIZE;
+        }
+      }else{
+        if(height > MAX_SIZE){
+          width = width * (MAX_SIZE / height);
+          height = MAX_SIZE;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        function(blob){
+          resolve(blob);
+        },
+        "image/jpeg",
+        0.75
+      );
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+async function uploadProfileImageToStorage(){
+  if(!selectedImageFile){
+    return null;
+  }
+
+  const logged = await checkUser();
+  if(!logged || !currentUserId){
+    throw new Error('User not logged in');
+  }
+const filePath = `${currentUserId}/avatar-${Date.now()}.jpg`;
+
+const compressedImage = await compressImage(selectedImageFile);
+
+if(!compressedImage){
+  throw new Error('Compressed image was empty');
+}
+
+const originalSizeKb = Math.round(selectedImageFile.size / 1024);
+const compressedSizeKb = Math.round(compressedImage.size / 1024);
+
+showStatus(`Original: ${originalSizeKb} KB | Compressed: ${compressedSizeKb} KB`, 'success');
+
+const { error: uploadError } = await supabaseClient
+  .storage
+  .from('social-profile-images')
+  .upload(filePath, compressedImage, {
+    cacheControl: '3600',
+    upsert: true,
+    contentType: 'image/jpeg'
+  });
+
+  if(uploadError){
+    throw uploadError;
+  }
+
+  const { data } = supabaseClient
+    .storage
+    .from('social-profile-images')
+    .getPublicUrl(filePath);
+
+  uploadedProfileImageUrl = data?.publicUrl || null;
+  return uploadedProfileImageUrl;
+}
     async function useBrowserLocation(){
       clearStatus();
 
@@ -473,49 +577,56 @@
       );
     }
 
-    async function saveProfileSetup(){
-      clearStatus();
+async function saveProfileSetup(){
+  clearStatus();
 
-      if(!validateForm()) return;
+  if(!validateForm()) return;
 
-      const saveBtn = document.getElementById('save-btn');
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Saving...';
+  const saveBtn = document.getElementById('save-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving...';
 
-      const username = document.getElementById('username').value.trim();
-      const firstName = document.getElementById('first-name').value.trim();
-      const lastName = document.getElementById('last-name').value.trim();
-      const city = document.getElementById('city').value.trim() || null;
-      const state = document.getElementById('state').value.trim() || null;
+  try{
+    const username = document.getElementById('username').value.trim();
+    const firstName = document.getElementById('first-name').value.trim();
+    const lastName = document.getElementById('last-name').value.trim();
+    const city = document.getElementById('city').value.trim() || null;
+    const state = document.getElementById('state').value.trim() || null;
 
-      const locationSource = (city || state) ? 'manual' : null;
+    const locationSource = (city || state) ? 'manual' : null;
+    const profileImageUrl = await uploadProfileImageToStorage();
 
-      const { data, error } = await supabaseClient.rpc('save_my_profile_setup', {
-        p_username: username,
-        p_first_name: firstName,
-        p_last_name: lastName,
-        p_city: city,
-        p_state: state,
-        p_location_source: locationSource,
-        p_profile_image_base64: selectedImageBase64,
-        p_profile_image_mime_type: selectedImageMimeType
-      });
+    const { error } = await supabaseClient.rpc('save_my_profile_setup', {
+      p_username: username,
+      p_first_name: firstName,
+      p_last_name: lastName,
+      p_city: city,
+      p_state: state,
+      p_location_source: locationSource,
+      p_profile_image_url: profileImageUrl
+    });
 
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'Save and Continue';
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save and Continue';
 
-      if(error){
-        console.error(error);
-        showStatus(error.message || 'Error saving profile setup.', 'error');
-        return;
-      }
-
-      showStatus('Profile saved successfully.', 'success');
-
-      setTimeout(function(){
-        window.location.href = '/profile/profilepage.html';
-      }, 700);
+    if(error){
+      console.error(error);
+      showStatus(error.message || 'Error saving profile setup.', 'error');
+      return;
     }
+
+    showStatus('Profile saved successfully.', 'success');
+
+    setTimeout(function(){
+      window.location.href = '/social/profile/profile.html';
+    }, 700);
+  }catch(error){
+    console.error(error);
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save and Continue';
+    showStatus(error.message || 'Error uploading profile image.', 'error');
+  }
+}
 
     document.getElementById('save-btn').addEventListener('click', saveProfileSetup);
     document.getElementById('use-location-btn').addEventListener('click', useBrowserLocation);

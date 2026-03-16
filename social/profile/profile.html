@@ -483,10 +483,10 @@ body{
             <div id="profile-username" class="profile-username">@username</div>
           </div>
 
-          <div id="owner-actions" class="profile-actions" style="display:none;">
-            <button type="button" class="action-btn primary" onclick="openProfileUpdate()">Update Profile</button>
-            <button type="button" class="action-btn" id="toggle-private-btn" onclick="toggleProfilePrivacy()">Make Profile Private</button>
-          </div>
+       <div id="owner-actions" class="profile-actions" style="display:none;">
+  <button type="button" class="action-btn primary" onclick="openProfileEdit()">Edit Profile</button>
+  <button type="button" class="action-btn" id="toggle-private-btn" onclick="toggleProfilePrivacy()">Make Profile Private</button>
+</div>
         </div>
 
         <div class="profile-fields">
@@ -500,16 +500,7 @@ body{
             <div class="field-value" id="field-bio"></div>
           </div>
 
-          <div class="field-box">
-            <div class="field-label">Profile Image URL</div>
-            <div class="field-value" id="field-profile-image-url"></div>
-          </div>
-
-          <div class="field-box">
-            <div class="field-label">Cover Image URL</div>
-            <div class="field-value" id="field-cover-image-url"></div>
-          </div>
-
+         
           <div class="field-box">
             <div class="field-label">Location</div>
             <div class="field-value" id="field-location"></div>
@@ -586,8 +577,8 @@ function goBackToSocial(){
   window.location.href = '/social/index.html';
 }
 
-function openProfileUpdate(){
-  window.location.href = '/profile/profileupdate.html';
+function openProfileEdit(){
+  window.location.href = '/social/profile/profileedit.html';
 }
 
 function scrollToSection(sectionId){
@@ -689,8 +680,6 @@ async function loadProfile(){
 
   setField('field-display-name', profile.display_name);
   setField('field-bio', profile.bio);
-  setField('field-profile-image-url', profile.profile_image_url);
-  setField('field-cover-image-url', profile.cover_image_url);
   setField('field-location', profile.location);
   setField('field-website-url', profile.website_url);
   setField('field-allow-profile-public', profile.allow_profile_public === true ? 'Yes' : 'No');
@@ -792,15 +781,19 @@ async function refreshProfilePage(){
 }
 
 async function initProfilePage(){
-  await checkUser();
+  const loggedIn = await checkUser();
 
   profileUserId = getParam('user_id');
   profileUsername = getParam('username');
 
   if(!profileUserId && !profileUsername){
-    document.getElementById('profile-loading').innerHTML = 'No profile selected';
-    document.getElementById('posts-container').innerHTML = `<div class="empty-state">No posts to show</div>`;
-    return;
+    if(loggedIn && currentUserId){
+      profileUserId = currentUserId;
+    }else{
+      document.getElementById('profile-loading').innerHTML = 'No profile selected';
+      document.getElementById('posts-container').innerHTML = `<div class="empty-state">No posts to show</div>`;
+      return;
+    }
   }
 
   await loadProfile();

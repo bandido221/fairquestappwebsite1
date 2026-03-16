@@ -597,11 +597,32 @@ const supabaseClient = window.supabase.createClient(
 );
 async function openSocial() {
   const { data: sessionData } = await supabaseClient.auth.getSession();
-  const isLoggedIn = sessionData?.session?.user != null;
+  const user = sessionData?.session?.user;
 
-  if (!isLoggedIn) {
+  if (!user) {
     alert('🔒 Please log in to access Social.');
     window.location.href = '/user_login.html?redirect=/social/index.html';
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from('app_users')
+    .select('username, first_name, last_name')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Social profile setup check error:', error);
+    alert('Error checking your social profile setup.');
+    return;
+  }
+
+  const hasUsername = !!data?.username?.trim();
+  const hasFirstName = !!data?.first_name?.trim();
+  const hasLastName = !!data?.last_name?.trim();
+
+  if (!hasUsername || !hasFirstName || !hasLastName) {
+    window.location.href = '/social/profile/profilesetup.html';
     return;
   }
 

@@ -911,6 +911,54 @@ cursor:pointer;
 .notifications-page-btn:hover{
 background:#cfa75e;
 }
+
+.modal-overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.72);
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:10000;
+padding:20px;
+box-sizing:border-box;
+}
+
+.create-post-card{
+width:min(100%, 520px);
+background:#1f2125;
+border-radius:18px;
+box-shadow:0 10px 30px rgba(0,0,0,0.55);
+padding:20px;
+position:relative;
+box-sizing:border-box;
+}
+
+.close-modal{
+position:absolute;
+top:12px;
+right:12px;
+width:36px;
+height:36px;
+border:none;
+border-radius:50%;
+background:#3a3d42;
+color:#fff;
+font-size:1.2rem;
+cursor:pointer;
+}
+
+.publish-btn{
+border:none;
+border-radius:8px;
+padding:11px 16px;
+background:#bb9457;
+color:#000;
+font-family:Arial,sans-serif;
+font-size:0.95rem;
+font-weight:600;
+cursor:pointer;
+}
 </style>
 
 </head>
@@ -1022,6 +1070,39 @@ background:#cfa75e;
 
 </div>
 
+<div class="modal-overlay" id="comment-edit-modal-overlay" style="display:none;">
+  <div class="create-post-card" style="max-width:520px;">
+    <button class="close-modal" type="button" onclick="closeCommentEditModal()">×</button>
+    <h2 id="comment-edit-modal-title">Edit Comment</h2>
+
+    <textarea
+      id="comment-edit-content"
+      placeholder="Edit your comment..."
+      style="width:100%; min-height:120px; border:none; outline:none; border-radius:12px; padding:12px; font-family:'Domine',serif; resize:vertical;"
+    ></textarea>
+
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:14px;">
+      <button type="button" class="publish-btn" style="background:#666; color:#fff;" onclick="closeCommentEditModal()">Cancel</button>
+      <button type="button" class="publish-btn" onclick="saveEditedComment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="comment-delete-modal-overlay" style="display:none;">
+  <div class="create-post-card" style="max-width:460px;">
+    <button class="close-modal" type="button" onclick="closeCommentDeleteModal()">×</button>
+    <h2>Delete Comment</h2>
+    <p style="color:#f0e6d2; line-height:1.5;">
+      This will soft delete the comment and show <strong>[deleted]</strong> in the thread.
+    </p>
+
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:14px;">
+      <button type="button" class="publish-btn" style="background:#666; color:#fff;" onclick="closeCommentDeleteModal()">Cancel</button>
+      <button type="button" class="publish-btn" onclick="confirmDeleteComment()">Delete</button>
+    </div>
+  </div>
+</div>
+
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -1035,12 +1116,25 @@ const supabaseClient = window.supabase.createClient(
 let currentUserId = null;
 let notificationsChannel = null;
 let relationshipRequestsChannel = null;
+let commentsChannel = null;
 let audioUnlocked = false;
 let lastNotificationEventAt = null;
 
 let selectedPostImage = null;
 let isCreatingPost = false;
 let postSuccessMessageTimeout = null;
+
+let feedOffset = 0;
+const FEED_PAGE_SIZE = 5;
+let isFeedLoading = false;
+let hasMoreFeedPosts = true;
+
+let editingPostId = null;
+let editingPostOriginalImageUrl = null;
+
+let editingCommentId = null;
+let deletingCommentId = null;
+let activeCommentPostId = null;
 
 const notificationAudio = new Audio("/social/notification.mp3");
 notificationAudio.preload = "auto";
@@ -1072,6 +1166,39 @@ return false;
 }
 currentUserId = session.user.id;
 return true;
+}
+async function startCommentsRealtime(){
+const logged = await checkUser();
+if(!logged || !currentUserId) return;
+
+if(commentsChannel){
+await supabaseClient.removeChannel(commentsChannel);
+commentsChannel = null;
+}
+
+commentsChannel = supabaseClient
+.channel('social-comments')
+.on(
+'postgres_changes',
+{
+event: '*',
+schema: 'social',
+table: 'comment_post_comment'
+},
+async (payload) => {
+
+const postId = payload?.new?.post_id || payload?.old?.post_id;
+if(!postId) return;
+
+const box = document.getElementById(`comments-${postId}`);
+if(!box) return;
+
+if(box.style.display !== "none"){
+await loadComments(postId);
+}
+}
+)
+.subscribe();
 }
 async function openMyProfile(){
   const { data } = await supabaseClient.auth.getSession();
@@ -1257,39 +1384,92 @@ savedPostIds.add(String(item.post_id));
 });
 }
 
-async function loadFeed(){
+async function loadFeed(reset = true){
 const logged = await checkUser();
 if(!logged) return;
+if(isFeedLoading) return;
 
+if(reset){
+feedOffset = 0;
+hasMoreFeedPosts = true;
+document.getElementById("feed-container").innerHTML = "<div class='loading'>Loading...</div>";
+}
+
+if(!hasMoreFeedPosts) return;
+
+isFeedLoading = true;
+
+try{
 await loadMyPostPreferences();
 
-const { data, error } = await supabaseClient.rpc('get_social_feed');
+const { data, error } = await supabaseClient.rpc('get_social_feed_page',{
+p_limit: FEED_PAGE_SIZE,
+p_offset: feedOffset
+});
+
 if(error){
 console.error(error);
-document.getElementById("feed-container").innerHTML="Error loading feed";
+document.getElementById("feed-container").innerHTML = "Error loading feed";
+isFeedLoading = false;
 return;
-}
-renderFeed(data);
 }
 
-function renderFeed(posts){
-const feed=document.getElementById("feed-container");
-if(!posts || posts.length===0){
-feed.innerHTML="<div class='loading'>No posts yet</div>";
+const posts = Array.isArray(data) ? data : [];
+const visiblePosts = posts.filter(p => !hiddenPostIds.has(String(p.id)));
+
+if(reset){
+renderFeed(visiblePosts, true);
+}else{
+renderFeed(visiblePosts, false);
+}
+
+feedOffset += posts.length;
+
+if(posts.length < FEED_PAGE_SIZE){
+hasMoreFeedPosts = false;
+}
+
+updateFeedLoadMarker();
+
+}catch(error){
+console.error(error);
+document.getElementById("feed-container").innerHTML = "Error loading feed";
+}finally{
+isFeedLoading = false;
+}
+}
+
+function renderFeed(posts, replace = true){
+const feed = document.getElementById("feed-container");
+
+if(replace){
+feed.innerHTML = "";
+}
+
+if((!posts || posts.length === 0) && replace){
+feed.innerHTML = "<div class='loading'>No posts yet</div>";
+updateFeedLoadMarker();
 return;
 }
-feed.innerHTML="";
-posts.forEach(p=>{
+
+(posts || []).forEach(p=>{
 if(hiddenPostIds.has(String(p.id))){
 return;
 }
-const div=document.createElement("div");
-div.className="post";
+
+if(feed.querySelector(`.post[data-post-id="${p.id}"]`)){
+return;
+}
+
+const div = document.createElement("div");
+div.className = "post";
 div.setAttribute("data-post-id", p.id);
+
 const reactionPopupHtml = reactionTypes.map(r => `
 <span data-reaction-id="${r.id}" data-reaction-emoji="${r.emoji}">${r.emoji}</span>
 `).join("");
-div.innerHTML=`
+
+div.innerHTML = `
 <div class="post-header">
   <div class="post-header-left">
     <img class="post-avatar"
@@ -1330,23 +1510,28 @@ div.innerHTML=`
             <button type="button" class="post-menu-btn" data-action="edit-post" data-post-id="${p.id}">Edit post</button>
             <button type="button" class="post-menu-btn" data-action="edit-audience" data-post-id="${p.id}">Edit audience</button>
           `
-: `
-  <button type="button" class="post-menu-btn" data-action="interested-post" data-post-id="${p.id}">Interested</button>
-  <button type="button" class="post-menu-btn" data-action="not-interested-post" data-post-id="${p.id}">Not interested</button>
-  <button type="button" class="post-menu-btn" data-action="${savedPostIds.has(String(p.id)) ? 'unsave-post' : 'save-post'}" data-post-id="${p.id}">${savedPostIds.has(String(p.id)) ? 'Unsave post' : 'Save post'}</button>
-`
+          : `
+            <button type="button" class="post-menu-btn" data-action="interested-post" data-post-id="${p.id}">Interested</button>
+            <button type="button" class="post-menu-btn" data-action="not-interested-post" data-post-id="${p.id}">Not interested</button>
+            <button type="button" class="post-menu-btn" data-action="${savedPostIds.has(String(p.id)) ? 'unsave-post' : 'save-post'}" data-post-id="${p.id}">${savedPostIds.has(String(p.id)) ? 'Unsave post' : 'Save post'}</button>
+
+            <div class="post-menu-divider"></div>
+
+            <button type="button" class="post-menu-btn" data-action="report-post" data-post-id="${p.id}">Report post</button>
+          `
       }
     </div>
   </div>
 </div>
 <div class="post-content">
+${p.is_edited ? `<div style="font-size:12px;color:#aaa;margin-bottom:4px;">edited</div>` : ""}
 ${p.content || ""}
 </div>
 
 ${p.image_url ? `
 <div style="margin-top:10px;">
-<img 
-src="${p.image_url}" 
+<img
+src="${p.image_url}"
 style="width:50%; border-radius:10px; max-height:250px; object-fit:cover;">
 </div>
 ` : ""}
@@ -1356,7 +1541,7 @@ style="width:50%; border-radius:10px; max-height:250px; object-fit:cover;">
 </div>
 <div class="post-actions">
 <div class="reaction-container">
-<button class="post-action-btn like-btn" type="button">${p.my_reaction_emoji || '👍'} Like</button>
+<button class="post-action-btn like-btn" type="button">${p.my_reaction || '👍'} Like</button>
 <div class="reaction-popup" data-post-id="${p.id}">
 ${reactionPopupHtml}
 </div>
@@ -1365,9 +1550,7 @@ ${reactionPopupHtml}
 </div>
 <div class="post-comment-preview" id="comment-preview-${p.id}" style="margin-top:10px;"></div>
 <div class="post-comments" id="comments-${p.id}" style="display:none;">
-  <div class="post-comments-list"></div>
-
-  <div class="post-comment-form" style="margin-top:12px; display:flex; gap:8px;">
+  <div class="post-comment-form" style="margin-top:12px; margin-bottom:12px; display:flex; gap:8px;">
     <input
       type="text"
       class="comment-input"
@@ -1384,12 +1567,49 @@ ${reactionPopupHtml}
       Post
     </button>
   </div>
+
+  <div class="post-comments-list"></div>
 </div>
 `;
+
 feed.appendChild(div);
 loadCommentPreview(p.id);
 });
+
 wirePostHeaderControls();
+updateFeedLoadMarker();
+}
+
+function updateFeedLoadMarker(){
+const feed = document.getElementById("feed-container");
+if(!feed) return;
+
+let marker = document.getElementById("feed-load-marker");
+if(marker){
+marker.remove();
+}
+
+if(!hasMoreFeedPosts){
+return;
+}
+
+marker = document.createElement("div");
+marker.id = "feed-load-marker";
+marker.className = "loading";
+marker.textContent = isFeedLoading ? "Loading..." : "Scroll for more";
+feed.appendChild(marker);
+}
+
+function isNearBottom(){
+return window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
+}
+
+async function maybeLoadMoreFeed(){
+if(isFeedLoading) return;
+if(!hasMoreFeedPosts) return;
+if(!isNearBottom()) return;
+
+await loadFeed(false);
 }
 async function loadCurrentUserProfile(){
 const logged = await checkUser();
@@ -1460,6 +1680,123 @@ box.appendChild(more);
 }
 }
 
+function openCommentEditModal(commentId, currentContent, postId){
+editingCommentId = commentId;
+activeCommentPostId = postId || null;
+
+document.getElementById("comment-edit-modal-title").textContent = "Edit Comment";
+document.getElementById("comment-edit-content").value = currentContent || "";
+document.getElementById("comment-edit-modal-overlay").style.display = "flex";
+}
+
+function closeCommentEditModal(){
+editingCommentId = null;
+document.getElementById("comment-edit-content").value = "";
+document.getElementById("comment-edit-modal-overlay").style.display = "none";
+}
+
+async function saveEditedComment(){
+if(!editingCommentId) return;
+
+const content = document.getElementById("comment-edit-content").value.trim();
+if(!content){
+alert("Comment content cannot be empty");
+return;
+}
+
+const { error } = await supabaseClient.rpc('update_post_comment',{
+p_comment_id: editingCommentId,
+p_content: content
+});
+
+if(error){
+console.error(error);
+alert("Error updating comment");
+return;
+}
+
+closeCommentEditModal();
+
+if(activeCommentPostId){
+await loadComments(activeCommentPostId);
+}
+}
+
+function openCommentDeleteModal(commentId, postId){
+deletingCommentId = commentId;
+activeCommentPostId = postId || null;
+document.getElementById("comment-delete-modal-overlay").style.display = "flex";
+}
+
+function closeCommentDeleteModal(){
+deletingCommentId = null;
+document.getElementById("comment-delete-modal-overlay").style.display = "none";
+}
+
+async function confirmDeleteComment(){
+if(!deletingCommentId) return;
+
+const { error } = await supabaseClient.rpc('delete_post_comment_soft',{
+p_comment_id: deletingCommentId
+});
+
+if(error){
+console.error(error);
+alert("Error deleting comment");
+return;
+}
+
+closeCommentDeleteModal();
+
+if(activeCommentPostId){
+await loadComments(activeCommentPostId);
+}
+}
+
+async function confirmDeleteComment(){
+if(!deletingCommentId) return;
+
+const { error } = await supabaseClient.rpc('delete_post_comment_soft',{
+p_comment_id: deletingCommentId
+});
+
+if(error){
+console.error(error);
+alert("Error deleting comment");
+return;
+}
+
+closeCommentDeleteModal();
+
+if(activeCommentPostId){
+await loadComments(activeCommentPostId);
+}
+}
+function closeAllCommentMenus(){
+  document.querySelectorAll(".comment-menu.show").forEach(menu => {
+    menu.classList.remove("show");
+  });
+}
+
+async function handleCommentMenuAction(action, commentId, postId){
+closeAllCommentMenus();
+
+const commentEl = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
+const contentEl = commentEl ? commentEl.querySelector(".comment-body-text") : null;
+const currentContent = contentEl
+  ? (contentEl.getAttribute("data-comment-raw") || contentEl.textContent.trim())
+  : "";
+
+if(action === "edit-comment"){
+openCommentEditModal(commentId, currentContent, postId);
+return;
+}
+
+if(action === "delete-comment"){
+openCommentDeleteModal(commentId, postId);
+return;
+}
+}
 function formatAudienceLabel(audience){
 if(audience === "close_friends") return "Close Friends";
 if(audience === "family") return "Family";
@@ -1468,6 +1805,9 @@ return "Public";
 }
 const hiddenPostIds = new Set();
 const savedPostIds = new Set();
+const visibleTopLevelCommentsByPost = {};
+const TOP_LEVEL_COMMENTS_PAGE_SIZE = 2;
+const expandedRepliesByComment = {};
 
 function closeAllPostMenus(){
   document.querySelectorAll('.post-menu.show').forEach(menu => {
@@ -1501,11 +1841,30 @@ async function hidePostFromView(postId){
   });
 
   closeAllPostMenus();
+  updateFeedLoadMarker();
+  await maybeLoadMoreFeed();
 }
 
 async function handlePostMenuAction(action, postId){
   closeAllPostMenus();
+if(action === 'report-post'){
+  const reason = prompt("Why are you reporting this post?");
+  if(!reason) return;
 
+  const { error } = await supabaseClient.rpc('report_social_post', {
+    p_post_id: postId,
+    p_reason: reason
+  });
+
+  if(error){
+    console.error(error);
+    alert("Error reporting post");
+    return;
+  }
+
+  alert("Post reported");
+  return;
+}
   if(action === 'delete-post'){
     const confirmDelete = confirm("Are you sure you want to delete this post?");
     if(!confirmDelete) return;
@@ -1524,8 +1883,8 @@ async function handlePostMenuAction(action, postId){
     return;
   }
 
-  if(action === 'edit-post'){
-    alert('Edit post will be connected next.');
+   if(action === 'edit-post'){
+    openEditPostModal(postId);
     return;
   }
 
@@ -1629,6 +1988,9 @@ function wirePostHeaderControls(){
 
 document.addEventListener('click', function(){
   closeAllPostMenus();
+  document.querySelectorAll(".comment-menu.show").forEach(menu => {
+    menu.classList.remove("show");
+  });
 });
 
 function formatAudienceIcon(audience){
@@ -1660,13 +2022,91 @@ return items
 .join("   ");
 }
 function openPostModal(){
+editingPostId = null;
+editingPostOriginalImageUrl = null;
+
 document.getElementById("post-modal-overlay").style.display = "flex";
-}
-function closePostModal(){
-document.getElementById("post-modal-overlay").style.display = "none";
+document.getElementById("create-post-btn").textContent = "Post";
+document.getElementById("post-content").value = "";
+document.getElementById("post-audience").value = "public";
 clearPostImageSelection();
 }
 
+function closePostModal(){
+document.getElementById("post-modal-overlay").style.display = "none";
+document.getElementById("post-content").value = "";
+document.getElementById("post-audience").value = "public";
+document.getElementById("create-post-btn").textContent = "Post";
+
+editingPostId = null;
+editingPostOriginalImageUrl = null;
+
+clearPostImageSelection();
+}
+function openEditPostModal(postId){
+const postEl = document.querySelector(`.post[data-post-id="${postId}"]`);
+if(!postEl) return;
+
+const contentEl = postEl.querySelector(".post-content");
+const imageEl = postEl.querySelector('.post-content + div img');
+const timeEl = postEl.querySelector(".post-time");
+
+const editedLabel = contentEl ? contentEl.querySelector("div") : null;
+const content = contentEl
+  ? Array.from(contentEl.childNodes)
+      .filter(node => node !== editedLabel)
+      .map(node => node.textContent || "")
+      .join("")
+      .trim()
+  : "";
+let audience = "public";
+
+if(timeEl){
+const txt = timeEl.textContent || "";
+if(txt.includes("Close Friends")) audience = "close_friends";
+else if(txt.includes("Family")) audience = "family";
+else if(txt.includes("Friends")) audience = "friends";
+else audience = "public";
+}
+
+editingPostId = postId;
+editingPostOriginalImageUrl = imageEl ? imageEl.getAttribute("src") : null;
+
+document.getElementById("post-content").value = content;
+document.getElementById("post-audience").value = audience;
+document.getElementById("create-post-btn").textContent = "Save";
+document.getElementById("post-modal-overlay").style.display = "flex";
+clearPostImageSelection();
+}
+
+async function saveEditedPost(){
+if(!editingPostId) return false;
+
+const textarea = document.getElementById("post-content");
+const audience = document.getElementById("post-audience").value;
+const content = textarea.value.trim();
+
+if(!content){
+alert("Post content cannot be empty");
+return true;
+}
+
+const { error } = await supabaseClient.rpc('update_social_post',{
+p_post_id: editingPostId,
+p_content: content,
+p_audience: audience
+});
+
+if(error){
+console.error(error);
+alert("Error updating post");
+return true;
+}
+
+await loadFeed();
+closePostModal();
+return true;
+}
 function showPostImagePreview(file){
 const previewWrap = document.getElementById("post-image-preview-wrap");
 const previewImg = document.getElementById("post-image-preview");
@@ -1882,6 +2322,24 @@ const textarea = document.getElementById("post-content");
 const audience = document.getElementById("post-audience").value;
 const content = textarea.value.trim();
 
+if(editingPostId){
+isCreatingPost = true;
+setCreatePostLoadingState(true);
+
+try{
+const handled = await saveEditedPost();
+setCreatePostLoadingState(false);
+isCreatingPost = false;
+return;
+}catch(error){
+console.error(error);
+alert("Error updating post");
+setCreatePostLoadingState(false);
+isCreatingPost = false;
+return;
+}
+}
+
 if(!content && !selectedPostImage) return;
 
 isCreatingPost = true;
@@ -2007,6 +2465,7 @@ selectedPostImage = e.target.files[0] || null;
 showPostImagePreview(selectedPostImage);
 });
 }
+
 async function initSocialPage(){
 await loadReactionTypes();
 await loadCurrentUserProfile();
@@ -2015,10 +2474,14 @@ await loadPendingFriendRequestCount();
 await loadFeed();
 await startNotificationRealtime();
 await startRelationshipRequestsRealtime();
+await startCommentsRealtime();
 }
 window.addEventListener("focus", async function(){
 await loadUnreadNotificationCount();
 await loadPendingFriendRequestCount();
+});
+window.addEventListener("scroll", function(){
+maybeLoadMoreFeed();
 });
 initSocialPage();
 
@@ -2098,7 +2561,16 @@ list.innerHTML = `<div style="color:#aaa; font-size:0.9rem;">No comments yet</di
 return;
 }
 list.innerHTML = "";
-const topLevelComments = data.filter(c => !c.parent_comment_id);
+const topLevelComments = data
+  .filter(c => !c.parent_comment_id)
+  .sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
+
+if(!visibleTopLevelCommentsByPost[postId]){
+visibleTopLevelCommentsByPost[postId] = TOP_LEVEL_COMMENTS_PAGE_SIZE;
+}
+
+const visibleCount = visibleTopLevelCommentsByPost[postId];
+const visibleComments = topLevelComments.slice(0, visibleCount);
 const repliesByParent = {};
 data
 .filter(c => c.parent_comment_id)
@@ -2112,22 +2584,67 @@ repliesByParent[c.parent_comment_id].push(c);
 const commentReactionPopupHtml = reactionTypes.map(r => `
 <span data-reaction-id="${r.id}" data-reaction-emoji="${r.emoji}">${r.emoji}</span>
 `).join("");
-function buildCommentHtml(c, isReply = false){
+function escapeHtml(value){
+return String(value || "")
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;")
+  .replace(/'/g, "&#39;");
+}
+
+function buildCommentHtml(c, level = 0){
+const isOwner = c.author_id === currentUserId;
+const isDeleted = c.status === 'deleted';
+
 return `
-<div class="comment-item ${isReply ? 'reply-item' : ''}" data-comment-id="${c.id}">
-  <div class="comment-header">
-    <img
-      class="comment-avatar"
-      src="${c.author_profile_image_url || 'https://via.placeholder.com/32'}"
-      alt="Profile"
-    >
-    <div class="comment-author">
-  <a href="/social/profile/profile.html?user_id=${encodeURIComponent(c.author_id)}" style="color:#f5f5f5; text-decoration:none;">
-    ${c.author_name || 'User'}
-  </a>
-</div>
+<div class="comment-item ${level > 0 ? 'reply-item' : ''}" data-comment-id="${c.id}">
+  <div class="comment-header" style="justify-content:space-between;">
+    <div style="display:flex; gap:8px; align-items:center;">
+      <img
+        class="comment-avatar"
+        src="${c.author_profile_image_url || 'https://via.placeholder.com/32'}"
+        alt="Profile"
+      >
+      <div class="comment-author">
+        <a href="/social/profile/profile.html?user_id=${encodeURIComponent(c.author_id)}" style="color:#f5f5f5; text-decoration:none;">
+          ${c.author_name || 'User'}
+        </a>
+      </div>
+    </div>
+
+    <div class="comment-menu-wrap" style="position:relative;">
+      <button
+        type="button"
+        class="comment-action-btn comment-menu-toggle-btn"
+        data-comment-id="${c.id}"
+        style="font-size:1.1rem; padding:2px 8px;"
+      >⋯</button>
+
+      <div
+        class="post-menu comment-menu"
+        id="comment-menu-${c.id}"
+        style="top:28px; right:0; min-width:180px;"
+      >
+        ${
+          isOwner && !isDeleted
+            ? `
+              <button type="button" class="post-menu-btn comment-menu-action-btn" data-action="edit-comment" data-comment-id="${c.id}" data-post-id="${c.post_id}">Edit comment</button>
+              <button type="button" class="post-menu-btn comment-menu-action-btn" data-action="delete-comment" data-comment-id="${c.id}" data-post-id="${c.post_id}">Delete comment</button>
+            `
+            : `
+              <button type="button" class="post-menu-btn comment-report-btn" data-comment-id="${c.id}">Report comment</button>
+            `
+        }
+      </div>
+    </div>
   </div>
-  <div class="comment-content">${c.content || ''}</div>
+
+  <div class="comment-content comment-body-text" data-comment-raw="${escapeHtml(c.content || '')}">
+    ${c.is_edited && !isDeleted ? `<div style="font-size:12px;color:#aaa;margin-bottom:4px;">edited</div>` : ""}
+    ${escapeHtml(c.content || '')}
+  </div>
+
   <div class="comment-actions">
     <span>${renderReactionSummary(c.reaction_emojis, c.reaction_count)}</span>
     <div class="comment-reaction-container">
@@ -2140,13 +2657,17 @@ return `
         ${commentReactionPopupHtml}
       </div>
     </div>
-    <button
-      type="button"
-      class="comment-action-btn reply-toggle-btn"
-      data-comment-id="${c.id}"
-      data-post-id="${postId}"
-    >Reply</button>
+${level < 2 && !isDeleted ? `
+<button
+  type="button"
+  class="comment-action-btn reply-toggle-btn"
+  data-comment-id="${c.id}"
+  data-post-id="${postId}"
+>Reply</button>
+` : ""}
   </div>
+
+  ${!isDeleted ? `
   <div
     class="reply-box"
     id="reply-box-${c.id}"
@@ -2166,22 +2687,139 @@ return `
       data-post-id="${postId}"
     >Reply</button>
   </div>
+  ` : ""}
 </div>
 `;
 }
-topLevelComments.forEach(c => {
+visibleComments.forEach(c => {
 const wrapper = document.createElement("div");
-wrapper.innerHTML = buildCommentHtml(c, false);
+wrapper.innerHTML = buildCommentHtml(c, 0);
+
 const replies = repliesByParent[c.id] || [];
+const parentCommentEl = wrapper.firstElementChild;
+
+if(replies.length > 0 && parentCommentEl){
+
+const isExpanded = expandedRepliesByComment[c.id] === true;
+
+const toggleBtn = document.createElement("div");
+toggleBtn.style.marginTop = "6px";
+toggleBtn.style.marginLeft = "42px";
+toggleBtn.style.fontSize = "0.85rem";
+toggleBtn.style.color = "#bb9457";
+toggleBtn.style.cursor = "pointer";
+toggleBtn.innerText = isExpanded
+  ? "Hide replies"
+  : `View ${replies.length} repl${replies.length === 1 ? "y" : "ies"}`;
+
+toggleBtn.onclick = async function(){
+expandedRepliesByComment[c.id] = !isExpanded;
+await refreshPostCommentsInPlace(postId);
+};
+
+parentCommentEl.appendChild(toggleBtn);
+
+if(isExpanded){
 replies.forEach(reply => {
-wrapper.innerHTML += buildCommentHtml(reply, true);
+const temp = document.createElement("div");
+temp.innerHTML = buildCommentHtml(reply, 1);
+if(temp.firstElementChild){
+wrapper.appendChild(temp.firstElementChild);
+}
 });
+}
+}
 
 list.appendChild(wrapper);
 });
+if(topLevelComments.length > visibleCount){
+const moreBtn = document.createElement("div");
+moreBtn.style.marginTop = "10px";
+moreBtn.style.fontSize = "0.9rem";
+moreBtn.style.color = "#bb9457";
+moreBtn.style.cursor = "pointer";
+moreBtn.innerText = "View more comments";
+
+moreBtn.onclick = async function(){
+visibleTopLevelCommentsByPost[postId] += TOP_LEVEL_COMMENTS_PAGE_SIZE;
+await refreshPostCommentsInPlace(postId);
+};
+
+list.appendChild(moreBtn);
+}
+document.querySelectorAll(".comment-menu-toggle-btn").forEach(btn=>{
+btn.onclick = function(e){
+e.stopPropagation();
+const commentId = btn.getAttribute("data-comment-id");
+const menu = document.getElementById(`comment-menu-${commentId}`);
+if(!menu) return;
+
+const isOpen = menu.classList.contains("show");
+document.querySelectorAll(".comment-menu.show").forEach(m=>m.classList.remove("show"));
+
+if(!isOpen){
+menu.classList.add("show");
+}
+};
+});
+
+document.querySelectorAll(".comment-menu-action-btn").forEach(btn=>{
+btn.onclick = async function(e){
+e.stopPropagation();
+
+const action = btn.getAttribute("data-action");
+const commentId = btn.getAttribute("data-comment-id");
+const postId = btn.getAttribute("data-post-id");
+
+await handleCommentMenuAction(action, commentId, postId);
+};
+});
 
 }
+function showToast(message){
+let toast = document.createElement("div");
+toast.innerText = message;
 
+toast.style.position = "fixed";
+toast.style.bottom = "20px";
+toast.style.left = "50%";
+toast.style.transform = "translateX(-50%)";
+toast.style.background = "#111";
+toast.style.color = "#f0e6d2";
+toast.style.padding = "10px 16px";
+toast.style.borderRadius = "10px";
+toast.style.border = "1px solid #bb9457";
+toast.style.fontSize = "0.9rem";
+toast.style.zIndex = "9999";
+toast.style.opacity = "0";
+toast.style.transition = "opacity 0.2s ease";
+
+document.body.appendChild(toast);
+
+setTimeout(()=> toast.style.opacity = "1", 10);
+
+setTimeout(()=>{
+toast.style.opacity = "0";
+setTimeout(()=> toast.remove(), 200);
+}, 2000);
+}
+async function refreshPostCommentsInPlace(postId){
+const postEl = document.querySelector(`.post[data-post-id="${postId}"]`);
+const commentsBox = document.getElementById(`comments-${postId}`);
+const previousTop = postEl ? postEl.getBoundingClientRect().top : null;
+
+await loadComments(postId);
+await loadCommentPreview(postId);
+
+if(commentsBox){
+commentsBox.style.display = "block";
+}
+
+if(postEl && previousTop !== null){
+const newTop = postEl.getBoundingClientRect().top;
+window.scrollBy(0, newTop - previousTop);
+}
+}
 document.addEventListener("click", async function(e){
 const sendBtn = e.target.closest(".comment-send-btn");
 if(!sendBtn) return;
@@ -2190,6 +2828,9 @@ const input = document.querySelector(`.comment-input[data-post-id="${postId}"]`)
 if(!input) return;
 const content = input.value.trim();
 if(!content) return;
+
+const previousScrollY = window.scrollY;
+
 const { error } = await supabaseClient.rpc('create_post_comment',{
 p_post_id: postId,
 p_content: content,
@@ -2201,13 +2842,41 @@ console.error(error);
 alert("Error saving comment");
 return;
 }
+
 input.value = "";
-await loadComments(postId);
+showToast("Comment posted");
+await refreshPostCommentsInPlace(postId);
 await loadUnreadNotificationCount();
-await loadFeed();
+window.scrollTo(0, previousScrollY);
+
 });
 
 document.addEventListener("click", async function(e){
+
+const reportBtn = e.target.closest(".comment-report-btn");
+if(reportBtn){
+const commentId = reportBtn.dataset.commentId;
+const reason = prompt("Why are you reporting this comment?");
+if(!reason) return;
+
+const { error } = await supabaseClient.rpc('report_post_comment', {
+  p_comment_id: commentId,
+  p_reason: reason
+});
+
+if(error){
+console.error(error);
+alert("Error reporting comment");
+return;
+}
+
+alert("Comment reported");
+document.querySelectorAll(".comment-menu.show").forEach(menu => {
+menu.classList.remove("show");
+});
+return;
+}
+
 const reaction = e.target.closest(".comment-reaction-popup span");
 if(reaction){
 const reactionTypeId = reaction.dataset.reactionId;
@@ -2247,12 +2916,19 @@ return;
 });
 
 document.addEventListener("click", function(e){
+
+if(!e.target.closest(".comment-menu-wrap")){
+document.querySelectorAll(".comment-menu.show").forEach(menu => {
+menu.classList.remove("show");
+});
+}
+
 const btn = e.target.closest(".reply-toggle-btn");
 if(!btn) return;
 const commentId = btn.dataset.commentId;
 const box = document.getElementById(`reply-box-${commentId}`);
 if(!box) return;
-box.style.display = box.style.display === "none" ? "flex" : "none";
+box.style.display = "flex";
 });
 
 document.addEventListener("click", async function(e){
@@ -2264,6 +2940,21 @@ const input = document.querySelector(`.reply-input[data-comment-id="${commentId}
 if(!input) return;
 const content = input.value.trim();
 if(!content) return;
+const { data: allComments } = await supabaseClient.rpc('get_post_comments',{
+p_post_id: postId
+});
+
+const parent = allComments.find(c => c.id === commentId);
+
+if(parent && parent.parent_comment_id){
+const parentOfParent = allComments.find(c => c.id === parent.parent_comment_id);
+
+if(parentOfParent && parentOfParent.parent_comment_id){
+alert("No more replies allowed");
+return;
+}
+}
+
 const { error } = await supabaseClient.rpc('create_post_comment',{
 p_post_id: postId,
 p_content: content,
@@ -2275,10 +2966,11 @@ console.error(error);
 alert("Error saving reply");
 return;
 }
+
 input.value = "";
-await loadComments(postId);
+showToast("Reply posted");
+await refreshPostCommentsInPlace(postId);
 await loadUnreadNotificationCount();
-await loadFeed();
 });
 </script>
 

@@ -160,7 +160,39 @@ max-width:90%;
 max-height:90%;
 border-radius:10px;
 }
+.skeleton-book{
+margin-bottom:25px;
+}
 
+.skeleton-title{
+height:22px;
+width:180px;
+border-radius:8px;
+margin-bottom:10px;
+background:linear-gradient(90deg, rgba(17,17,17,0.18) 25%, rgba(187,148,87,0.32) 50%, rgba(17,17,17,0.18) 75%);
+background-size:200% 100%;
+animation:skeletonShimmer 1.4s infinite linear;
+}
+
+.skeleton-preview{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+.skeleton-thumb{
+width:90px;
+height:90px;
+border-radius:8px;
+background:linear-gradient(90deg, rgba(17,17,17,0.18) 25%, rgba(187,148,87,0.32) 50%, rgba(17,17,17,0.18) 75%);
+background-size:200% 100%;
+animation:skeletonShimmer 1.4s infinite linear;
+}
+
+@keyframes skeletonShimmer{
+0%{background-position:200% 0;}
+100%{background-position:-200% 0;}
+}
 </style>
 </head>
 
@@ -256,22 +288,51 @@ html+=`<img class="gallery-thumb" src="${img.image_url}" onclick="openModal('${i
 return html
 }
 
+function renderBookSkeleton(containerId,count=2){
+const container=document.getElementById(containerId)
+if(!container) return
+
+let html=""
+for(let i=0;i<count;i++){
+html+=`
+<div class="skeleton-book">
+  <div class="skeleton-title"></div>
+  <div class="skeleton-preview">
+    <div class="skeleton-thumb"></div>
+    <div class="skeleton-thumb"></div>
+    <div class="skeleton-thumb"></div>
+    <div class="skeleton-thumb"></div>
+    <div class="skeleton-thumb"></div>
+  </div>
+</div>
+`
+}
+container.innerHTML=html
+}
+
 async function loadPortraits(){
 
 const privateContainer=document.getElementById("private-books")
 const friendsContainer=document.getElementById("friends-books")
 const publicContainer=document.getElementById("public-books")
 
-privateContainer.innerHTML=""
-friendsContainer.innerHTML=""
-publicContainer.innerHTML=""
+renderBookSkeleton("private-books",2)
+renderBookSkeleton("friends-books",2)
+renderBookSkeleton("public-books",2)
 
 const {data:galleries,error:gErr}=await supabaseClient.rpc('get_my_portrait_galleries')
 
 if(gErr){
 console.error(gErr)
+privateContainer.innerHTML="<div>No books found.</div>"
+friendsContainer.innerHTML="<div>No books found.</div>"
+publicContainer.innerHTML="<div>No books found.</div>"
 return
 }
+
+privateContainer.innerHTML=""
+friendsContainer.innerHTML=""
+publicContainer.innerHTML=""
 
 for(const g of galleries){
 
@@ -313,6 +374,18 @@ publicContainer.insertAdjacentHTML("beforeend",`
 `)
 }
 
+}
+
+if(!privateContainer.innerHTML.trim()){
+privateContainer.innerHTML="<div>No private books yet.</div>"
+}
+
+if(!friendsContainer.innerHTML.trim()){
+friendsContainer.innerHTML="<div>No friends books yet.</div>"
+}
+
+if(!publicContainer.innerHTML.trim()){
+publicContainer.innerHTML="<div>No public books yet.</div>"
 }
 
 }

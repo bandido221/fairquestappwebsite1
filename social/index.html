@@ -1039,6 +1039,8 @@ let audioUnlocked = false;
 let lastNotificationEventAt = null;
 
 let selectedPostImage = null;
+let isCreatingPost = false;
+let postSuccessMessageTimeout = null;
 
 const notificationAudio = new Audio("/social/notification.mp3");
 notificationAudio.preload = "auto";
@@ -1239,11 +1241,18 @@ return;
 }
 
 hiddenPostIds.clear();
+savedPostIds.clear();
 
 const items = Array.isArray(data) ? data : [];
 items.forEach(item => {
-if(item && item.is_hidden === true && item.post_id){
+if(!item || !item.post_id) return;
+
+if(item.is_hidden === true){
 hiddenPostIds.add(String(item.post_id));
+}
+
+if(item.is_saved === true){
+savedPostIds.add(String(item.post_id));
 }
 });
 }
@@ -1321,11 +1330,11 @@ div.innerHTML=`
             <button type="button" class="post-menu-btn" data-action="edit-post" data-post-id="${p.id}">Edit post</button>
             <button type="button" class="post-menu-btn" data-action="edit-audience" data-post-id="${p.id}">Edit audience</button>
           `
-          : `
-            <button type="button" class="post-menu-btn" data-action="interested-post" data-post-id="${p.id}">Interested</button>
-            <button type="button" class="post-menu-btn" data-action="not-interested-post" data-post-id="${p.id}">Not interested</button>
-            <button type="button" class="post-menu-btn" data-action="save-post" data-post-id="${p.id}">Save post</button>
-          `
+: `
+  <button type="button" class="post-menu-btn" data-action="interested-post" data-post-id="${p.id}">Interested</button>
+  <button type="button" class="post-menu-btn" data-action="not-interested-post" data-post-id="${p.id}">Not interested</button>
+  <button type="button" class="post-menu-btn" data-action="${savedPostIds.has(String(p.id)) ? 'unsave-post' : 'save-post'}" data-post-id="${p.id}">${savedPostIds.has(String(p.id)) ? 'Unsave post' : 'Save post'}</button>
+`
       }
     </div>
   </div>
@@ -1458,6 +1467,7 @@ if(audience === "friends") return "Friends";
 return "Public";
 }
 const hiddenPostIds = new Set();
+const savedPostIds = new Set();
 
 function closeAllPostMenus(){
   document.querySelectorAll('.post-menu.show').forEach(menu => {
@@ -1496,23 +1506,23 @@ async function hidePostFromView(postId){
 async function handlePostMenuAction(action, postId){
   closeAllPostMenus();
 
- if(action === 'delete-post'){
-  const confirmDelete = confirm("Delete this post?");
-  if(!confirmDelete) return;
+  if(action === 'delete-post'){
+    const confirmDelete = confirm("Are you sure you want to delete this post?");
+    if(!confirmDelete) return;
 
-  const { error } = await supabaseClient.rpc('delete_post_soft',{
-    p_post_id: postId
-  });
+    const { error } = await supabaseClient.rpc('delete_post_soft',{
+      p_post_id: postId
+    });
 
-  if(error){
-    console.error(error);
-    alert("Error deleting post");
+    if(error){
+      console.error(error);
+      alert("Error deleting post");
+      return;
+    }
+
+    await hidePostFromView(postId);
     return;
   }
-
-  hidePostFromView(postId);
-  return;
-}
 
   if(action === 'edit-post'){
     alert('Edit post will be connected next.');
@@ -1525,27 +1535,67 @@ async function handlePostMenuAction(action, postId){
   }
 
   if(action === 'interested-post'){
-    await supabaseClient.rpc('set_post_preference',{
+    const { error } = await supabaseClient.rpc('set_post_preference',{
       p_post_id: postId,
       p_action: 'interested'
     });
+
+    if(error){
+      console.error(error);
+      alert("Error updating post preference");
+      return;
+    }
+
     return;
   }
 
   if(action === 'not-interested-post'){
-    await supabaseClient.rpc('set_post_preference',{
+    const { error } = await supabaseClient.rpc('set_post_preference',{
       p_post_id: postId,
       p_action: 'not_interested'
     });
-    hidePostFromView(postId);
+
+    if(error){
+      console.error(error);
+      alert("Error updating post preference");
+      return;
+    }
+
+    await hidePostFromView(postId);
     return;
   }
 
   if(action === 'save-post'){
-    await supabaseClient.rpc('set_post_preference',{
+    const { error } = await supabaseClient.rpc('set_post_preference',{
       p_post_id: postId,
       p_action: 'save'
     });
+
+    if(error){
+      console.error(error);
+      alert("Error saving post");
+      return;
+    }
+
+    savedPostIds.add(String(postId));
+    await loadFeed();
+    return;
+  }
+
+  if(action === 'unsave-post'){
+    const { error } = await supabaseClient.rpc('set_post_preference',{
+      p_post_id: postId,
+      p_action: 'unsave'
+    });
+
+    if(error){
+      console.error(error);
+      alert("Error unsaving post");
+      return;
+    }
+
+    savedPostIds.delete(String(postId));
+    await loadFeed();
     return;
   }
 }
@@ -1653,7 +1703,38 @@ previewWrap.style.display = "none";
 previewImg.src = "";
 modalBox.classList.remove("has-image");
 }
+function setCreatePostLoadingState(isLoading){
+const createBtn = document.getElementById("create-post-btn");
+if(!createBtn) return;
 
+createBtn.disabled = isLoading;
+createBtn.textContent = isLoading ? "Posting..." : "Post";
+createBtn.style.opacity = isLoading ? "0.7" : "1";
+createBtn.style.cursor = isLoading ? "not-allowed" : "pointer";
+}
+
+function showPostSuccessMessage(){
+const createBtn = document.getElementById("create-post-btn");
+if(!createBtn) return;
+
+if(postSuccessMessageTimeout){
+clearTimeout(postSuccessMessageTimeout);
+postSuccessMessageTimeout = null;
+}
+
+createBtn.textContent = "Your post has been posted";
+createBtn.disabled = true;
+createBtn.style.opacity = "1";
+createBtn.style.cursor = "default";
+
+postSuccessMessageTimeout = setTimeout(() => {
+createBtn.textContent = "Post";
+createBtn.disabled = false;
+createBtn.style.opacity = "1";
+createBtn.style.cursor = "pointer";
+postSuccessMessageTimeout = null;
+}, 2200);
+}
 function getPostBookPrivacy(audience){
 if(audience === "public") return "public";
 if(audience === "friends" || audience === "close_friends" || audience === "family") return "friends";
@@ -1792,6 +1873,8 @@ reader.readAsDataURL(file);
 }
 
 async function createPost(){
+if(isCreatingPost) return;
+
 const logged = await checkUser();
 if(!logged) return;
 
@@ -1801,6 +1884,10 @@ const content = textarea.value.trim();
 
 if(!content && !selectedPostImage) return;
 
+isCreatingPost = true;
+setCreatePostLoadingState(true);
+
+try{
 let imageUrl = null;
 
 if(selectedPostImage){
@@ -1817,6 +1904,8 @@ const { error:uploadError } = await supabaseClient
 if(uploadError){
 console.error(uploadError);
 alert("Image upload failed");
+setCreatePostLoadingState(false);
+isCreatingPost = false;
 return;
 }
 
@@ -1829,6 +1918,8 @@ imageUrl = urlData?.publicUrl || null;
 
 if(!imageUrl){
 alert("Image URL could not be created");
+setCreatePostLoadingState(false);
+isCreatingPost = false;
 return;
 }
 
@@ -1838,6 +1929,8 @@ bookData = await getOrCreatePostBookId(audience);
 }catch(bookError){
 console.error(bookError);
 alert(bookError.message || "Could not prepare book");
+setCreatePostLoadingState(false);
+isCreatingPost = false;
 return;
 }
 
@@ -1853,6 +1946,8 @@ p_visibility: bookData.privacy
 if(galleryImageError){
 console.error(galleryImageError);
 alert("Image saved to storage but not to book");
+setCreatePostLoadingState(false);
+isCreatingPost = false;
 return;
 }
 
@@ -1867,15 +1962,28 @@ p_image_url: imageUrl
 if(error){
 console.error(error);
 alert("Error creating post");
+setCreatePostLoadingState(false);
+isCreatingPost = false;
 return;
 }
 
 textarea.value = "";
 clearPostImageSelection();
 document.getElementById("post-audience").value = "public";
-closePostModal();
 await loadUnreadNotificationCount();
 await loadFeed();
+showPostSuccessMessage();
+closePostModal();
+isCreatingPost = false;
+return;
+
+}catch(error){
+console.error(error);
+alert("Error creating post");
+setCreatePostLoadingState(false);
+isCreatingPost = false;
+return;
+}
 }
 
 document.getElementById("open-post-modal").addEventListener("click", openPostModal);

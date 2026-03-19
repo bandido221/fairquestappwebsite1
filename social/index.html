@@ -587,9 +587,87 @@ padding:40px;
 }
 .post-header{
 display:flex;
-align-items:center;
+align-items:flex-start;
+justify-content:space-between;
 gap:10px;
 margin-bottom:8px;
+}
+
+.post-header-left{
+display:flex;
+align-items:center;
+gap:10px;
+min-width:0;
+flex:1;
+}
+
+.post-header-right{
+display:flex;
+align-items:center;
+gap:8px;
+position:relative;
+flex-shrink:0;
+}
+
+.post-top-btn{
+width:34px;
+height:34px;
+border:none;
+border-radius:50%;
+background:transparent;
+color:#d8d8d8;
+font-family:Arial,sans-serif;
+font-size:1.35rem;
+line-height:1;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.post-top-btn:hover{
+background:rgba(255,255,255,0.08);
+}
+
+.post-menu{
+position:absolute;
+top:40px;
+right:0;
+min-width:220px;
+background:#1f2125;
+border:1px solid rgba(255,255,255,0.12);
+border-radius:14px;
+box-shadow:0 10px 24px rgba(0,0,0,0.45);
+padding:8px;
+display:none;
+z-index:50;
+}
+
+.post-menu.show{
+display:block;
+}
+
+.post-menu-btn{
+width:100%;
+border:none;
+background:transparent;
+color:#f0e6d2;
+text-align:left;
+padding:12px 14px;
+border-radius:10px;
+font-family:'Domine',serif;
+font-size:0.95rem;
+cursor:pointer;
+}
+
+.post-menu-btn:hover{
+background:rgba(255,255,255,0.08);
+}
+
+.post-menu-divider{
+height:1px;
+background:rgba(255,255,255,0.10);
+margin:6px 0;
 }
 
 .post-avatar{
@@ -1149,9 +1227,33 @@ badge.style.display = "none";
 badge.textContent = "0";
 }
 }
+async function loadMyPostPreferences(){
+const logged = await checkUser();
+if(!logged) return;
+
+const { data, error } = await supabaseClient.rpc('get_my_post_preferences');
+
+if(error){
+console.error(error);
+return;
+}
+
+hiddenPostIds.clear();
+
+const items = Array.isArray(data) ? data : [];
+items.forEach(item => {
+if(item && item.is_hidden === true && item.post_id){
+hiddenPostIds.add(String(item.post_id));
+}
+});
+}
+
 async function loadFeed(){
 const logged = await checkUser();
 if(!logged) return;
+
+await loadMyPostPreferences();
+
 const { data, error } = await supabaseClient.rpc('get_social_feed');
 if(error){
 console.error(error);
@@ -1169,26 +1271,64 @@ return;
 }
 feed.innerHTML="";
 posts.forEach(p=>{
+if(hiddenPostIds.has(String(p.id))){
+return;
+}
 const div=document.createElement("div");
 div.className="post";
+div.setAttribute("data-post-id", p.id);
 const reactionPopupHtml = reactionTypes.map(r => `
 <span data-reaction-id="${r.id}" data-reaction-emoji="${r.emoji}">${r.emoji}</span>
 `).join("");
 div.innerHTML=`
 <div class="post-header">
-<img class="post-avatar"
-src="${p.author_profile_image_url || 'https://via.placeholder.com/40'}">
-<div class="post-author-block">
-<div class="post-author">
-<a href="/social/profile/profile.html?user_id=${encodeURIComponent(p.author_id)}" style="color:#f5f5f5; text-decoration:none;">
-${p.author_name || 'User'}
-</a>
-</div>
-<div class="post-time">
-${formatPostDate(p.created_at)}
- · ${formatAudienceIcon(p.audience)} ${formatAudienceLabel(p.audience)}
-</div>
-</div>
+  <div class="post-header-left">
+    <img class="post-avatar"
+    src="${p.author_profile_image_url || 'https://via.placeholder.com/40'}">
+    <div class="post-author-block">
+      <div class="post-author">
+        <a href="/social/profile/profile.html?user_id=${encodeURIComponent(p.author_id)}" style="color:#f5f5f5; text-decoration:none;">
+          ${p.author_name || 'User'}
+        </a>
+      </div>
+      <div class="post-time">
+        ${formatPostDate(p.created_at)}
+        · ${formatAudienceIcon(p.audience)} ${formatAudienceLabel(p.audience)}
+      </div>
+    </div>
+  </div>
+
+  <div class="post-header-right">
+    <button
+      type="button"
+      class="post-top-btn post-menu-toggle-btn"
+      data-post-id="${p.id}"
+      aria-label="Post options"
+    >⋯</button>
+
+    <button
+      type="button"
+      class="post-top-btn post-hide-btn"
+      data-post-id="${p.id}"
+      aria-label="Close post"
+    >✕</button>
+
+    <div class="post-menu" id="post-menu-${p.id}">
+      ${
+        p.author_id === currentUserId
+          ? `
+            <button type="button" class="post-menu-btn" data-action="delete-post" data-post-id="${p.id}">Delete post</button>
+            <button type="button" class="post-menu-btn" data-action="edit-post" data-post-id="${p.id}">Edit post</button>
+            <button type="button" class="post-menu-btn" data-action="edit-audience" data-post-id="${p.id}">Edit audience</button>
+          `
+          : `
+            <button type="button" class="post-menu-btn" data-action="interested-post" data-post-id="${p.id}">Interested</button>
+            <button type="button" class="post-menu-btn" data-action="not-interested-post" data-post-id="${p.id}">Not interested</button>
+            <button type="button" class="post-menu-btn" data-action="save-post" data-post-id="${p.id}">Save post</button>
+          `
+      }
+    </div>
+  </div>
 </div>
 <div class="post-content">
 ${p.content || ""}
@@ -1240,6 +1380,7 @@ ${reactionPopupHtml}
 feed.appendChild(div);
 loadCommentPreview(p.id);
 });
+wirePostHeaderControls();
 }
 async function loadCurrentUserProfile(){
 const logged = await checkUser();
@@ -1316,6 +1457,130 @@ if(audience === "family") return "Family";
 if(audience === "friends") return "Friends";
 return "Public";
 }
+const hiddenPostIds = new Set();
+
+function closeAllPostMenus(){
+  document.querySelectorAll('.post-menu.show').forEach(menu => {
+    menu.classList.remove('show');
+  });
+}
+
+function togglePostMenu(postId){
+  const menu = document.getElementById(`post-menu-${postId}`);
+  if(!menu) return;
+
+  const isOpen = menu.classList.contains('show');
+  closeAllPostMenus();
+
+  if(!isOpen){
+    menu.classList.add('show');
+  }
+}
+
+async function hidePostFromView(postId){
+  hiddenPostIds.add(String(postId));
+
+  const postEl = document.querySelector(`.post[data-post-id="${postId}"]`);
+  if(postEl){
+    postEl.remove();
+  }
+
+  await supabaseClient.rpc('set_post_preference',{
+    p_post_id: postId,
+    p_action: 'hide'
+  });
+
+  closeAllPostMenus();
+}
+
+async function handlePostMenuAction(action, postId){
+  closeAllPostMenus();
+
+ if(action === 'delete-post'){
+  const confirmDelete = confirm("Delete this post?");
+  if(!confirmDelete) return;
+
+  const { error } = await supabaseClient.rpc('delete_post_soft',{
+    p_post_id: postId
+  });
+
+  if(error){
+    console.error(error);
+    alert("Error deleting post");
+    return;
+  }
+
+  hidePostFromView(postId);
+  return;
+}
+
+  if(action === 'edit-post'){
+    alert('Edit post will be connected next.');
+    return;
+  }
+
+  if(action === 'edit-audience'){
+    alert('Edit audience will be connected next.');
+    return;
+  }
+
+  if(action === 'interested-post'){
+    await supabaseClient.rpc('set_post_preference',{
+      p_post_id: postId,
+      p_action: 'interested'
+    });
+    return;
+  }
+
+  if(action === 'not-interested-post'){
+    await supabaseClient.rpc('set_post_preference',{
+      p_post_id: postId,
+      p_action: 'not_interested'
+    });
+    hidePostFromView(postId);
+    return;
+  }
+
+  if(action === 'save-post'){
+    await supabaseClient.rpc('set_post_preference',{
+      p_post_id: postId,
+      p_action: 'save'
+    });
+    return;
+  }
+}
+
+function wirePostHeaderControls(){
+  document.querySelectorAll('.post-menu-toggle-btn').forEach(btn => {
+    btn.onclick = function(event){
+      event.stopPropagation();
+      const postId = btn.dataset.postId;
+      togglePostMenu(postId);
+    };
+  });
+
+  document.querySelectorAll('.post-hide-btn').forEach(btn => {
+    btn.onclick = function(event){
+      event.stopPropagation();
+      const postId = btn.dataset.postId;
+      hidePostFromView(postId);
+    };
+  });
+
+  document.querySelectorAll('.post-menu-btn').forEach(btn => {
+    btn.onclick = function(event){
+      event.stopPropagation();
+      const action = btn.dataset.action;
+      const postId = btn.dataset.postId;
+      handlePostMenuAction(action, postId);
+    };
+  });
+}
+
+document.addEventListener('click', function(){
+  closeAllPostMenus();
+});
+
 function formatAudienceIcon(audience){
 if(audience === "close_friends") return "⭐";
 if(audience === "family") return "👪";

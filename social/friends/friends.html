@@ -45,7 +45,8 @@ body{
   gap:10px;
 }
 
-.header-btn{
+.header-icon-btn{
+  position:relative;
   border:none;
   background:#1f2125;
   color:#f0e6d2;
@@ -56,8 +57,32 @@ body{
   font-size:1rem;
 }
 
-.header-btn:hover{
+.header-icon-btn:hover{
   background:#2a2d31;
+}
+
+.header-subnav{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+
+.notifications-page-btn{
+  background:#bb9457;
+  border:none;
+  color:#000;
+  padding:8px 18px;
+  border-radius:8px;
+  font-family:'Domine',serif;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.notifications-page-btn:hover{
+  background:#cfa75e;
 }
 
 .social-layout{
@@ -484,7 +509,8 @@ body{
   .action-btn,
   .filter-btn,
   .person-btn,
-  .header-btn{
+  .header-icon-btn,
+  .notifications-page-btn{
     font-size:0.95rem;
   }
 
@@ -539,7 +565,8 @@ body{
   .action-btn,
   .filter-btn,
   .person-btn,
-  .header-btn,
+  .header-icon-btn,
+  .notifications-page-btn,
   .sidebar-btn{
     font-size:1rem;
     padding:10px 14px;
@@ -553,12 +580,21 @@ body{
 
 <div class="header">
   <div class="header-inner">
-    <button type="button" class="header-btn" onclick="goBackToSocial()">← Social</button>
     <div class="header-title">FairQuest Social</div>
-    <div class="header-actions">
-      <button type="button" class="header-btn" onclick="refreshAllData()">↻ Refresh</button>
-    </div>
+ <div class="header-actions">
+  <button type="button" class="header-icon-btn" onclick="openSocialHome()">🏠</button>
+  <button type="button" class="header-icon-btn" onclick="openNotificationsPage()">🔔</button>
+  <button type="button" class="header-icon-btn" onclick="openFriends()">👥</button>
+  <button type="button" class="header-icon-btn" onclick="openMyProfile()">👤</button>
+</div>
   </div>
+
+ <div class="header-subnav">
+  <button type="button" class="notifications-page-btn" onclick="openSocialHome()">🏠 Home</button>
+  <button type="button" class="notifications-page-btn" onclick="openNotificationsPage()">Notifications</button>
+  <button type="button" class="notifications-page-btn" onclick="openFriends()">👥 Friends</button>
+  <button type="button" class="notifications-page-btn" onclick="openMyProfile()">👤 Profile</button>
+</div>
 </div>
 
 <div class="social-layout">
@@ -714,8 +750,26 @@ function getClient(){
   return window.supabaseClient;
 }
 
-function goBackToSocial(){
-  window.location.href = '/social/index.html';
+function openNotificationsPage(){
+  window.location.href = '/social/notifications.html';
+}
+
+function openFriends(){
+  window.location.href = '/social/friends/friends.html';
+}
+function openSocialHome(){
+  window.location.href = "/social/index.html";
+}
+async function openMyProfile(){
+  const { data } = await getClient().auth.getSession();
+
+  if(!data.session){
+    window.location.href = '/user_login.html?redirect=/social/profile/profile.html';
+    return;
+  }
+
+  const userId = data.session.user.id;
+  window.location.href = '/social/profile/profile.html?user_id=' + userId;
 }
 
 async function getCurrentSession(){
@@ -771,7 +825,11 @@ function buildSearchResultHtml(person){
           alt="Profile"
         >
         <div class="person-body">
-          <div class="person-name">${getDisplayName(person)}</div>
+          <div class="person-name">
+            <a href="/social/profile/profile.html?user_id=${encodeURIComponent(person.user_id)}" style="color:#f5f5f5; text-decoration:none;">
+              ${getDisplayName(person)}
+            </a>
+          </div>
           <div class="person-sub">${getSubText(person)}</div>
           <div class="person-actions">
             <button type="button" class="person-btn primary" onclick="sendFriendRequest('${person.user_id}')">Add Friend</button>
@@ -813,7 +871,11 @@ function buildRelationshipHtml(person){
           alt="Profile"
         >
         <div class="person-body">
-          <div class="person-name">${getDisplayName(person)}</div>
+          <div class="person-name">
+            <a href="/social/profile/profile.html?user_id=${encodeURIComponent(person.user_id)}" style="color:#f5f5f5; text-decoration:none;">
+              ${getDisplayName(person)}
+            </a>
+          </div>
           <div class="person-sub">${getSubText(person)}</div>
           <div class="person-meta">
             <span>${relationshipType === 'friend' ? 'Friend' : relationshipType === 'family' ? 'Family' : 'Close Friend'}</span>
@@ -846,7 +908,11 @@ function buildPendingRequestHtml(item){
           alt="Profile"
         >
         <div class="person-body">
-          <div class="person-name">${getDisplayName(item)}</div>
+          <div class="person-name">
+            <a href="/social/profile/profile.html?user_id=${encodeURIComponent(item.user_id)}" style="color:#f5f5f5; text-decoration:none;">
+              ${getDisplayName(item)}
+            </a>
+          </div>
           <div class="person-sub">${getSubText(item)}</div>
           <div class="person-meta">
             <span>${item.request_type === 'friend' ? 'Friend Request' : 'Family Request'}</span>

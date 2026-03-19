@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portrait Book | FairQuest Social</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+
+body{
+font-family:'Domine',serif;
+background:#000;
+color:#f0e6d2;
+margin:0;
+}
+
+.header{
+background:#111;
+border-bottom:2px solid #bb9457;
+padding:14px 18px;
+font-family:'Cinzel',serif;
+}
+
+.header-inner{
+max-width:1400px;
+margin:auto;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.header-actions button{
+background:#1f2125;
+border:none;
+color:#fff;
+border-radius:999px;
+padding:10px 14px;
+cursor:pointer;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+padding:20px;
+}
+
+.book-title{
+font-family:'Cinzel',serif;
+font-size:1.6rem;
+margin-bottom:15px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+gap:14px;
+}
+
+.image-card{
+position:relative;
+}
+
+.image-card img{
+width:100%;
+height:160px;
+object-fit:cover;
+border-radius:10px;
+}
+
+.checkbox{
+position:absolute;
+top:6px;
+left:6px;
+display:none;
+}
+
+.edit-mode .checkbox{
+display:block;
+}
+
+.load-more{
+margin-top:20px;
+padding:10px 16px;
+border:none;
+background:#bb9457;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.toolbar{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+background:#111;
+border-top:2px solid #bb9457;
+padding:12px;
+display:flex;
+justify-content:center;
+gap:10px;
+}
+
+.toolbar button{
+padding:10px 18px;
+border:none;
+background:#bb9457;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+}
+.modal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.75);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:9999;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<div class="header-inner">
+<div>FairQuest Social</div>
+
+<div class="header-actions">
+<button onclick="goBack()">⬅</button>
+<button onclick="openHome()">🏠</button>
+</div>
+</div>
+</div>
+
+<div class="container">
+
+<div class="book-title" id="bookTitle"></div>
+
+<div id="imageGrid" class="grid"></div>
+
+<button id="loadMoreBtn" class="load-more" onclick="loadMore()">Load More</button>
+
+</div>
+
+<div class="toolbar">
+<button onclick="toggleEdit()">Edit</button>
+<button id="moveBtn" style="display:none;" onclick="moveImages()">Move</button>
+</div>
+<div id="moveModal" class="modal" style="display:none;">
+  <div style="background:#1a1a1a;padding:24px;border-radius:12px;width:340px;border:2px solid #bb9457;" onclick="event.stopPropagation()">
+
+    <h3 style="margin-top:0;">Move Images</h3>
+
+    <label>Privacy</label>
+    <select id="movePrivacy" style="width:100%;padding:10px;margin-bottom:10px;" onchange="loadBooksForPrivacy()">
+      <option value="">Select privacy</option>
+      <option value="friends">Friends</option>
+      <option value="public">Public</option>
+    </select>
+
+ <label>Book</label>
+<select id="moveBook" style="width:100%;padding:10px;margin-bottom:10px;" onchange="handleBookChange()">
+  <option value="">Select book</option>
+</select>
+    <button onclick="confirmMove()" style="width:100%;padding:10px;background:#bb9457;border:none;border-radius:8px;">Move</button>
+
+    <button onclick="closeMoveModal()" style="width:100%;padding:10px;margin-top:6px;">Cancel</button>
+
+  </div>
+</div>
+<script>
+
+const supabaseClient = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+)
+
+const urlParams=new URLSearchParams(window.location.search)
+const galleryId=urlParams.get("gallery")
+
+let images=[]
+let offset=0
+const LIMIT=10
+let editMode=false
+
+function goBack(){
+location.href="gallery.html"
+}
+
+function openHome(){
+location.href="/social/index.html"
+}
+
+async function loadBook(){
+
+const {data:galleries}=await supabaseClient.rpc("get_my_portrait_galleries")
+
+const book=galleries.find(g=>g.id===galleryId)
+
+document.getElementById("bookTitle").innerText=book.title
+
+const {data}=await supabaseClient.rpc("get_my_portrait_gallery_images",{p_gallery_id:galleryId})
+
+images=data
+
+loadMore()
+
+}
+
+function loadMore(){
+
+const grid=document.getElementById("imageGrid")
+
+const slice=images.slice(offset,offset+LIMIT)
+
+slice.forEach(img=>{
+
+grid.insertAdjacentHTML("beforeend",`
+
+<div class="image-card">
+
+<input type="checkbox" class="checkbox" value="${img.id}">
+
+<img src="${img.image_url}">
+
+</div>
+
+`)
+
+})
+
+offset+=LIMIT
+
+if(offset>=images.length){
+
+document.getElementById("loadMoreBtn").style.display="none"
+
+}
+
+}
+
+function toggleEdit(){
+
+editMode=!editMode
+
+const grid=document.getElementById("imageGrid")
+
+if(editMode){
+
+grid.classList.add("edit-mode")
+
+}else{
+
+grid.classList.remove("edit-mode")
+
+}
+
+document.querySelectorAll(".checkbox").forEach(cb=>{
+
+cb.addEventListener("change",updateMoveButton)
+
+})
+
+}
+
+function updateMoveButton(){
+
+const checked=[...document.querySelectorAll(".checkbox:checked")]
+
+document.getElementById("moveBtn").style.display=checked.length?"inline-block":"none"
+
+}
+
+function moveImages(){
+openMoveModal()
+}
+
+async function openMoveModal(){
+
+const modal=document.getElementById("moveModal")
+modal.style.display="flex"
+
+document.getElementById("movePrivacy").value=""
+document.getElementById("moveBook").innerHTML=`<option value="">Select book</option>`
+
+}
+async function loadBooksForPrivacy(){
+
+const privacy=document.getElementById("movePrivacy").value
+const select=document.getElementById("moveBook")
+
+select.innerHTML=`<option value="">Select book</option>`
+
+if(!privacy)return
+
+const {data:books,error}=await supabaseClient.rpc("get_my_portrait_galleries")
+
+if(error){
+console.error(error)
+return
+}
+
+books
+.filter(b=>b.privacy===privacy)
+.forEach(b=>{
+select.insertAdjacentHTML("beforeend",
+`<option value="${b.id}">${b.title}</option>`
+)
+})
+
+select.insertAdjacentHTML("beforeend",
+`<option value="__new__">+ New Book</option>`
+)
+
+}
+
+function handleBookChange(){
+
+const value=document.getElementById("moveBook").value
+
+if(value==="__new__"){
+const name=prompt("New book name")
+if(!name || !name.trim()){
+document.getElementById("moveBook").value=""
+return
+}
+document.getElementById("moveBook").dataset.newBookName=name.trim()
+}else{
+delete document.getElementById("moveBook").dataset.newBookName
+}
+
+}
+function closeMoveModal(){
+document.getElementById("moveModal").style.display="none"
+}
+
+async function confirmMove(){
+
+const selected=[...document.querySelectorAll(".checkbox:checked")].map(cb=>cb.value)
+const privacy=document.getElementById("movePrivacy").value
+const moveBook=document.getElementById("moveBook")
+const bookId=moveBook.value
+
+if(!selected.length)return
+if(!privacy)return
+if(!bookId)return
+
+let targetGalleryId=bookId
+
+if(bookId==="__new__"){
+
+const newBookName=(moveBook.dataset.newBookName||"").trim()
+if(!newBookName)return
+
+const {data:newGallery,error:newGalleryError}=await supabaseClient.rpc("create_portrait_gallery",{
+p_title:newBookName,
+p_description:null,
+p_privacy:privacy
+})
+
+if(newGalleryError){
+console.error(newGalleryError)
+return
+}
+
+targetGalleryId=newGallery.id
+}
+
+for(const id of selected){
+
+const {error:updateError}=await supabaseClient.rpc("update_portrait_gallery_image",{
+p_image_id:id,
+p_gallery_id:targetGalleryId,
+p_visibility:privacy
+})
+
+if(updateError){
+console.error(updateError)
+}
+}
+
+location.reload()
+
+}
+
+loadBook()
+
+</script>
+
+</body>
+</html>

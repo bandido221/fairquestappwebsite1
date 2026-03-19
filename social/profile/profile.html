@@ -46,7 +46,8 @@ body{
   gap:10px;
 }
 
-.header-btn{
+.header-icon-btn{
+  position:relative;
   border:none;
   background:#1f2125;
   color:#f0e6d2;
@@ -57,8 +58,32 @@ body{
   font-size:1rem;
 }
 
-.header-btn:hover{
+.header-icon-btn:hover{
   background:#2a2d31;
+}
+
+.header-subnav{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+
+.notifications-page-btn{
+  background:#bb9457;
+  border:none;
+  color:#000;
+  padding:8px 18px;
+  border-radius:8px;
+  font-family:'Domine',serif;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.notifications-page-btn:hover{
+  background:#cfa75e;
 }
 
 .social-layout{
@@ -330,6 +355,96 @@ body{
   border-radius:14px;
 }
 
+.portrait-gallery-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+
+.portrait-upload-box{
+  margin-top:16px;
+  background:#111;
+  border-radius:14px;
+  padding:14px;
+  color:#f0e6d2;
+}
+
+.portrait-upload-note{
+  font-size:0.95rem;
+  line-height:1.5;
+  color:#f0e6d2;
+  margin-bottom:12px;
+}
+
+.portrait-upload-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.portrait-upload-preview{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, 90px);
+  gap:10px;
+  margin-top:14px;
+}
+
+.portrait-preview-item{
+  background:#1b1b1b;
+  border-radius:8px;
+  padding:6px;
+  width:90px;
+}
+
+.portrait-preview-thumb{
+  width:90px;
+  height:90px;
+  object-fit:cover;
+  border-radius:8px;
+  display:block;
+  background:#2a2a2a;
+}
+
+.portrait-preview-name{
+  margin-top:8px;
+  font-size:0.88rem;
+  line-height:1.35;
+  word-break:break-word;
+  color:#f0e6d2;
+}
+
+.portrait-upload-status{
+  margin-top:12px;
+  background:#222;
+  border-radius:10px;
+  padding:10px 12px;
+  color:#f0e6d2;
+  line-height:1.45;
+}
+
+.portrait-gallery-choice-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:12px;
+}
+
+.portrait-gallery-choice-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:#1b1b1b;
+  border-radius:12px;
+  padding:12px;
+  color:#f0e6d2;
+}
+
+.portrait-gallery-choice-item input[type="radio"]{
+  transform:scale(1.15);
+}
+
 @media (max-width:980px){
   .social-layout{
     grid-template-columns:210px minmax(0, 1fr);
@@ -429,7 +544,8 @@ body{
     font-size:1.5rem;
   }
 
-  .header-btn,
+  .header-icon-btn,
+  .notifications-page-btn,
   .action-btn{
     font-size:1rem;
     padding:10px 14px;
@@ -442,12 +558,21 @@ body{
 
 <div class="header">
   <div class="header-inner">
-    <button type="button" class="header-btn" onclick="goBackToSocial()">← Social</button>
     <div class="header-title">FairQuest Social</div>
-    <div class="header-actions">
-      <button type="button" class="header-btn" onclick="refreshProfilePage()">↻ Refresh</button>
-    </div>
+ <div class="header-actions">
+  <button type="button" class="header-icon-btn" onclick="openSocialHome()">🏠</button>
+  <button type="button" class="header-icon-btn" onclick="openNotificationsPage()">🔔</button>
+  <button type="button" class="header-icon-btn" onclick="openFriends()">👥</button>
+  <button type="button" class="header-icon-btn" onclick="openMyProfile()">👤</button>
+</div>
   </div>
+
+<div class="header-subnav">
+  <button type="button" class="notifications-page-btn" onclick="openSocialHome()">🏠 Home</button>
+  <button type="button" class="notifications-page-btn" onclick="openNotificationsPage()">Notifications</button>
+  <button type="button" class="notifications-page-btn" onclick="openFriends()">👥 Friends</button>
+  <button type="button" class="notifications-page-btn" onclick="openMyProfile()">👤 Profile</button>
+</div>
 </div>
 
 <div class="social-layout">
@@ -460,10 +585,15 @@ body{
         <span>Profile</span>
       </button>
 
-      <button type="button" class="sidebar-btn" onclick="scrollToSection('posts-card')">
-        <span class="sidebar-icon">📝</span>
-        <span>Posts</span>
-      </button>
+   <button type="button" class="sidebar-btn" onclick="scrollToSection('posts-card')">
+  <span class="sidebar-icon">📝</span>
+  <span>Posts</span>
+</button>
+
+<button type="button" class="sidebar-btn" onclick="scrollToSection('portrait-gallery-card')">
+  <span class="sidebar-icon">🖼️</span>
+  <span>Portrait Gallery</span>
+</button>
     </div>
   </aside>
 
@@ -483,9 +613,13 @@ body{
             <div id="profile-username" class="profile-username">@username</div>
           </div>
 
-       <div id="owner-actions" class="profile-actions" style="display:none;">
+ <div id="owner-actions" class="profile-actions" style="display:none;">
   <button type="button" class="action-btn primary" onclick="openProfileEdit()">Edit Profile</button>
   <button type="button" class="action-btn" id="toggle-private-btn" onclick="toggleProfilePrivacy()">Make Profile Private</button>
+</div>
+
+<div id="friend-actions" class="profile-actions" style="display:none;">
+  <button type="button" class="action-btn primary" id="add-friend-btn" onclick="sendFriendRequestFromProfile()">Add Friend</button>
 </div>
         </div>
 
@@ -500,30 +634,9 @@ body{
             <div class="field-value" id="field-bio"></div>
           </div>
 
-         
-          <div class="field-box">
-            <div class="field-label">Location</div>
-            <div class="field-value" id="field-location"></div>
-          </div>
-
           <div class="field-box">
             <div class="field-label">Website URL</div>
             <div class="field-value" id="field-website-url"></div>
-          </div>
-
-          <div class="field-box">
-            <div class="field-label">Allow Profile Public</div>
-            <div class="field-value" id="field-allow-profile-public"></div>
-          </div>
-
-          <div class="field-box">
-            <div class="field-label">Created At</div>
-            <div class="field-value" id="field-created-at"></div>
-          </div>
-
-          <div class="field-box">
-            <div class="field-label">Updated At</div>
-            <div class="field-value" id="field-updated-at"></div>
           </div>
 
           <div class="field-box">
@@ -535,21 +648,106 @@ body{
             <div class="field-label">State</div>
             <div class="field-value" id="field-state"></div>
           </div>
-
-          <div class="field-box">
-            <div class="field-label">Location Source</div>
-            <div class="field-value" id="field-location-source"></div>
-          </div>
         </div>
       </div>
     </div>
 
-    <div class="content-card" id="posts-card">
-      <h2 class="section-title">Posts</h2>
-      <div id="posts-container">
-        <div class="loading">Loading posts...</div>
-      </div>
+<div class="content-card" id="portrait-gallery-card">
+
+  <h2 class="section-title" id="portrait-gallery-title">Portrait Gallery</h2>
+
+  <div id="portrait-gallery-container">
+    <div class="empty-state">
+      No portraits yet.
     </div>
+  </div>
+
+  <div class="portrait-gallery-actions">
+    <button type="button" class="action-btn primary" onclick="openPortraitGallery()">
+      Open Portal
+    </button>
+
+    <button type="button" class="action-btn" id="add-portrait-btn" onclick="togglePortraitUploadBox()" style="display:none;">
+      Add Portrait
+    </button>
+  </div>
+
+  <div id="portrait-upload-box" class="portrait-upload-box" style="display:none;">
+    <div class="portrait-upload-note">
+      Portraits uploaded here go to <strong>Main Portrait Gallery</strong> by default, stay <strong>private</strong> by default, and are resized before upload.
+    </div>
+
+    <input
+      type="file"
+      id="portrait-file-input"
+      accept="image/*"
+      multiple
+      style="display:none;"
+      onchange="handlePortraitFilesSelected(event)"
+    >
+
+    <div class="portrait-upload-actions">
+      <button type="button" class="action-btn primary" onclick="document.getElementById('portrait-file-input').click()">
+        Choose Portraits
+      </button>
+
+      <button type="button" class="action-btn" onclick="clearPortraitSelection()">
+        Clear
+      </button>
+    </div>
+
+    <div id="portrait-upload-preview" class="portrait-upload-preview" style="display:none;"></div>
+
+<div id="portrait-upload-status" class="portrait-upload-status" style="display:none;"></div>
+
+<div id="portrait-gallery-choice-box" class="portrait-upload-box" style="display:none; margin-top:14px;">
+  <div class="portrait-upload-note">
+    Choose where you want to save these portraits.
+  </div>
+
+  <div id="portrait-gallery-choice-list" class="portrait-gallery-choice-list"></div>
+
+  <div id="new-portrait-gallery-fields" style="display:none; margin-top:14px;">
+    <input
+      type="text"
+      id="new-portrait-gallery-title"
+      placeholder="New Portrait Gallery Name"
+      style="width:100%; box-sizing:border-box; padding:12px; border-radius:10px; border:none; font-family:'Domine',serif; margin-bottom:10px;"
+    >
+
+    <textarea
+      id="new-portrait-gallery-description"
+      placeholder="Optional description"
+      style="width:100%; box-sizing:border-box; padding:12px; border-radius:10px; border:none; font-family:'Domine',serif; min-height:90px; resize:vertical;"
+    ></textarea>
+  </div>
+
+  <div class="portrait-upload-actions">
+    <button type="button" class="action-btn primary" id="save-portraits-gallery-btn" onclick="confirmPortraitGalleryChoice()" disabled>
+      Save to Gallery
+    </button>
+
+    <button type="button" class="action-btn" onclick="cancelPortraitGalleryChoice()">
+      Cancel
+    </button>
+  </div>
+</div>
+
+<div class="portrait-upload-actions">
+  <button type="button" class="action-btn primary" id="upload-portraits-btn" onclick="uploadSelectedPortraits()" disabled style="display:none;">
+    Upload Portraits
+  </button>
+</div>
+  </div>
+
+</div>
+
+<div class="content-card" id="posts-card">
+  <h2 class="section-title">Posts</h2>
+  <div id="posts-container">
+    <div class="loading">Loading posts...</div>
+  </div>
+</div>
   </main>
 </div>
 
@@ -563,22 +761,423 @@ let currentUserId = null;
 let profileUserId = null;
 let profileUsername = null;
 let profileOwner = false;
+let profileRelationshipType = null;
 let postsOffset = 0;
 let postsLimit = 10;
 let postsLoading = false;
 let postsHasMore = true;
+let selectedPortraitFiles = [];
+let mainPortraitGalleryId = null;
+let portraitGalleryChoices = [];
+let selectedPortraitGalleryMode = null;
+let selectedPortraitGalleryId = null;
 
 function getParam(name){
   const url = new URL(window.location.href);
   return url.searchParams.get(name);
 }
 
-function goBackToSocial(){
-  window.location.href = '/social/index.html';
+function openNotificationsPage(){
+  window.location.href = '/social/notifications.html';
+}
+function openSocialHome(){
+  window.location.href = "/social/index.html";
+}
+function openPortraitGallery(){
+  window.location.href = '/social/gallery/gallery.html';
+}
+
+async function openMyProfile(){
+  const { data } = await supabaseClient.auth.getSession();
+
+  if(!data.session){
+    window.location.href = '/user_login.html?redirect=/social/profile/profile.html';
+    return;
+  }
+
+  const userId = data.session.user.id;
+  window.location.href = '/social/profile/profile.html?user_id=' + userId;
 }
 
 function openProfileEdit(){
   window.location.href = '/social/profile/profileedit.html';
+}
+
+function togglePortraitUploadBox(){
+  const box = document.getElementById('portrait-upload-box');
+  if(!box) return;
+
+  const willShow = box.style.display === 'none';
+  box.style.display = willShow ? 'block' : 'none';
+
+  if(!willShow){
+    clearPortraitSelection();
+  }
+}
+
+function clearPortraitSelection(){
+  selectedPortraitFiles = [];
+
+  const input = document.getElementById('portrait-file-input');
+  const preview = document.getElementById('portrait-upload-preview');
+  const status = document.getElementById('portrait-upload-status');
+  const uploadBtn = document.getElementById('upload-portraits-btn');
+
+  if(input) input.value = '';
+  if(preview){
+    preview.innerHTML = '';
+    preview.style.display = 'none';
+  }
+  if(status){
+    status.innerHTML = '';
+    status.style.display = 'none';
+  }
+  if(uploadBtn){
+    uploadBtn.disabled = true;
+    uploadBtn.style.display = 'none';
+  }
+}
+
+function handlePortraitFilesSelected(event){
+  const files = Array.from(event.target.files || []).filter(file => file.type.startsWith('image/'));
+
+  selectedPortraitFiles = files.slice(0, 5);
+
+  const preview = document.getElementById('portrait-upload-preview');
+  const status = document.getElementById('portrait-upload-status');
+  const uploadBtn = document.getElementById('upload-portraits-btn');
+
+  if(!preview || !status || !uploadBtn) return;
+
+  preview.innerHTML = '';
+
+  if(selectedPortraitFiles.length === 0){
+    preview.style.display = 'none';
+    status.innerHTML = 'No valid image files selected.';
+    status.style.display = 'block';
+    uploadBtn.disabled = true;
+    uploadBtn.style.display = 'none';
+    return;
+  }
+
+  selectedPortraitFiles.forEach(file => {
+    const item = document.createElement('div');
+    item.className = 'portrait-preview-item';
+
+    const img = document.createElement('img');
+    img.className = 'portrait-preview-thumb';
+    img.src = URL.createObjectURL(file);
+
+    const name = document.createElement('div');
+    name.className = 'portrait-preview-name';
+    name.textContent = file.name;
+
+    item.appendChild(img);
+    item.appendChild(name);
+    preview.appendChild(item);
+  });
+
+  preview.style.display = 'grid';
+  status.innerHTML = selectedPortraitFiles.length === files.length
+    ? `${selectedPortraitFiles.length} portrait(s) ready to upload.`
+    : `Only the first 5 images were kept for this upload.`;
+  status.style.display = 'block';
+  uploadBtn.disabled = false;
+  uploadBtn.style.display = 'inline-block';
+}
+
+async function uploadSelectedPortraits(){
+  if(!selectedPortraitFiles.length){
+    return;
+  }
+
+  const uploadBtn = document.getElementById('upload-portraits-btn');
+  if(uploadBtn){
+    uploadBtn.style.display = 'none';
+  }
+
+  await openPortraitGalleryChoiceBox();
+}
+
+async function openPortraitGalleryChoiceBox(){
+  const choiceBox = document.getElementById('portrait-gallery-choice-box');
+  const choiceList = document.getElementById('portrait-gallery-choice-list');
+  const saveBtn = document.getElementById('save-portraits-gallery-btn');
+  const newFields = document.getElementById('new-portrait-gallery-fields');
+  const titleInput = document.getElementById('new-portrait-gallery-title');
+  const descInput = document.getElementById('new-portrait-gallery-description');
+
+  if(!choiceBox || !choiceList || !saveBtn || !newFields || !titleInput || !descInput){
+    return;
+  }
+
+  selectedPortraitGalleryMode = null;
+  selectedPortraitGalleryId = null;
+  saveBtn.disabled = true;
+  titleInput.value = '';
+  descInput.value = '';
+  newFields.style.display = 'none';
+  choiceList.innerHTML = '<div class="loading">Loading portrait galleries...</div>';
+  choiceBox.style.display = 'block';
+
+  const { error: ensureError } = await supabaseClient.rpc('ensure_main_portrait_gallery');
+
+  if(ensureError){
+    console.error(ensureError);
+    choiceList.innerHTML = `<div class="empty-state">Error preparing Main Portrait Gallery.</div>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient.rpc('get_my_portrait_galleries');
+
+  if(error){
+    console.error(error);
+    choiceList.innerHTML = `<div class="empty-state">Error loading portrait galleries.</div>`;
+    return;
+  }
+
+  const rows = Array.isArray(data) ? data : [];
+  portraitGalleryChoices = rows;
+
+  let html = '';
+
+  const mainGallery = rows.find(row => row.is_main === true);
+  if(mainGallery){
+    html += `
+      <label class="portrait-gallery-choice-item">
+        <input type="radio" name="portrait-gallery-choice" value="existing" data-gallery-id="${mainGallery.id}">
+        <span>Main Portrait Gallery</span>
+      </label>
+    `;
+  }
+
+  html += `
+    <label class="portrait-gallery-choice-item">
+      <input type="radio" name="portrait-gallery-choice" value="new">
+      <span>Create New Portrait Gallery</span>
+    </label>
+  `;
+
+  rows
+    .filter(row => row.is_main !== true)
+    .forEach(row => {
+      html += `
+        <label class="portrait-gallery-choice-item">
+          <input type="radio" name="portrait-gallery-choice" value="existing" data-gallery-id="${row.id}">
+          <span>${row.title}</span>
+        </label>
+      `;
+    });
+
+  choiceList.innerHTML = html;
+
+  choiceList.querySelectorAll('input[name="portrait-gallery-choice"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const mode = radio.value;
+      const galleryId = radio.dataset.galleryId || null;
+
+      selectedPortraitGalleryMode = mode;
+      selectedPortraitGalleryId = galleryId;
+      newFields.style.display = mode === 'new' ? 'block' : 'none';
+
+      if(mode === 'new'){
+        saveBtn.disabled = titleInput.value.trim() === '';
+      }else{
+        saveBtn.disabled = !galleryId;
+      }
+    });
+  });
+
+  titleInput.addEventListener('input', () => {
+    if(selectedPortraitGalleryMode === 'new'){
+      saveBtn.disabled = titleInput.value.trim() === '';
+    }
+  });
+}
+async function resizeImageFile(file){
+
+  const MAX_SIZE = 1200; // max width or height
+  const QUALITY = 0.82;  // compression quality
+
+  return new Promise((resolve) => {
+
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+      img.src = e.target.result;
+    };
+
+    img.onload = function(){
+
+      let width = img.width;
+      let height = img.height;
+
+      if(width > height){
+        if(width > MAX_SIZE){
+          height *= MAX_SIZE / width;
+          width = MAX_SIZE;
+        }
+      }else{
+        if(height > MAX_SIZE){
+          width *= MAX_SIZE / height;
+          height = MAX_SIZE;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img,0,0,width,height);
+
+      canvas.toBlob((blob)=>{
+        const resizedFile = new File([blob], file.name, {
+          type: "image/jpeg",
+          lastModified: Date.now()
+        });
+
+        resolve(resizedFile);
+      }, "image/jpeg", QUALITY);
+
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+async function uploadPortraitImages(galleryId){
+
+  if(!selectedPortraitFiles.length) return;
+
+  const status = document.getElementById('portrait-upload-status');
+  if(status){
+    status.style.display = 'block';
+    status.innerHTML = 'Uploading portraits...';
+  }
+
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const userId = sessionData?.session?.user?.id;
+
+  if(!userId){
+    alert('Not authenticated');
+    return;
+  }
+
+  for(const originalFile of selectedPortraitFiles){
+
+  const file = await resizeImageFile(originalFile);
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = crypto.randomUUID() + '.' + fileExt;
+
+    const storagePath = `${userId}/${galleryId}/${fileName}`;
+
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from('social-portrait-gallery')
+      .upload(storagePath, file);
+
+    if(uploadError){
+      console.error(uploadError);
+      alert('Error uploading image');
+      return;
+    }
+
+    const { data: publicUrlData } = supabaseClient
+      .storage
+      .from('social-portrait-gallery')
+      .getPublicUrl(storagePath);
+
+    const imageUrl = publicUrlData.publicUrl;
+const { error: insertError } = await supabaseClient.rpc('create_portrait_gallery_image', {
+  p_gallery_id: galleryId,
+  p_image_url: imageUrl,
+  p_storage_path: storagePath,
+  p_visibility: 'private'
+});
+    if(insertError){
+      console.error(insertError);
+      alert('Error saving portrait record');
+      return;
+    }
+  }
+
+  if(status){
+    status.innerHTML = 'Portraits uploaded successfully.';
+  }
+
+  clearPortraitSelection();
+  cancelPortraitGalleryChoice();
+
+  const uploadBox = document.getElementById('portrait-upload-box');
+  if(uploadBox){
+    uploadBox.style.display = 'none';
+  }
+}
+function cancelPortraitGalleryChoice(){
+  const choiceBox = document.getElementById('portrait-gallery-choice-box');
+  const choiceList = document.getElementById('portrait-gallery-choice-list');
+  const saveBtn = document.getElementById('save-portraits-gallery-btn');
+  const newFields = document.getElementById('new-portrait-gallery-fields');
+  const titleInput = document.getElementById('new-portrait-gallery-title');
+  const descInput = document.getElementById('new-portrait-gallery-description');
+  const uploadBtn = document.getElementById('upload-portraits-btn');
+
+  selectedPortraitGalleryMode = null;
+  selectedPortraitGalleryId = null;
+
+  if(choiceBox) choiceBox.style.display = 'none';
+  if(choiceList) choiceList.innerHTML = '';
+  if(saveBtn) saveBtn.disabled = true;
+  if(newFields) newFields.style.display = 'none';
+  if(titleInput) titleInput.value = '';
+  if(descInput) descInput.value = '';
+  if(uploadBtn && selectedPortraitFiles.length > 0){
+    uploadBtn.style.display = 'inline-block';
+  }
+}
+async function confirmPortraitGalleryChoice(){
+
+  let galleryId = null;
+
+  if(selectedPortraitGalleryMode === 'existing'){
+    galleryId = selectedPortraitGalleryId;
+  }
+
+  if(selectedPortraitGalleryMode === 'new'){
+
+    const titleInput = document.getElementById('new-portrait-gallery-title');
+    const descInput = document.getElementById('new-portrait-gallery-description');
+
+    const title = titleInput.value.trim();
+    const description = descInput.value.trim();
+
+    if(!title){
+      alert('Please enter a gallery name.');
+      return;
+    }
+
+    const { data, error } = await supabaseClient.rpc('create_portrait_gallery', {
+      p_title: title,
+      p_description: description
+    });
+
+    if(error){
+      console.error(error);
+      alert('Error creating gallery.');
+      return;
+    }
+
+    galleryId = data;
+  }
+
+  if(!galleryId){
+    alert('Please choose a gallery.');
+    return;
+  }
+
+  await uploadPortraitImages(galleryId);
 }
 
 function scrollToSection(sectionId){
@@ -586,7 +1185,6 @@ function scrollToSection(sectionId){
   if(!el) return;
   el.scrollIntoView({ behavior:'smooth', block:'start' });
 }
-
 async function getCurrentSession(){
   const { data } = await supabaseClient.auth.getSession();
   return data.session || null;
@@ -637,6 +1235,83 @@ function renderPost(post){
   `;
 }
 
+async function loadProfileRelationshipType(){
+  profileRelationshipType = null;
+
+  const loggedIn = await checkUser();
+  if(!loggedIn || !currentUserId || !profileUserId || currentUserId === profileUserId){
+    return;
+  }
+
+  const { data, error } = await supabaseClient.rpc('get_my_relationships');
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  const items = Array.isArray(data) ? data : [];
+  const match = items.find(item => item.user_id === profileUserId);
+
+  if(match){
+    profileRelationshipType = match.relationship_type || null;
+  }
+}
+async function loadLatestPortraitCard(){
+
+  const container = document.getElementById('portrait-gallery-container');
+  if(!container || !profileUserId) return;
+
+  container.innerHTML = `<div class="loading">Loading portraits...</div>`;
+
+const { data, error } = await supabaseClient.rpc('get_profile_latest_portrait_images', {
+  p_user_id: profileUserId
+});
+  if(error){
+    console.error(error);
+    container.innerHTML = `
+      <div class="empty-state">
+        No portraits yet.
+      </div>
+    `;
+    return;
+  }
+
+if(!data || data.length === 0){
+  container.innerHTML = `
+    <div class="empty-state">
+      No portraits yet.
+    </div>
+  `;
+  return;
+}
+
+const imagesHTML = data.map(img => `
+  <img
+    src="${img.image_url}"
+    style="
+      width:110px;
+      height:110px;
+      object-fit:cover;
+      border-radius:10px;
+      background:#222;
+    "
+  >
+`).join('');
+
+container.innerHTML = `
+  <div class="post">
+    <div style="
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    ">
+      ${imagesHTML}
+    </div>
+  </div>
+`;
+}
 async function loadProfile(){
   document.getElementById('profile-loading').style.display = 'block';
   document.getElementById('profile-content').style.display = 'none';
@@ -670,6 +1345,8 @@ async function loadProfile(){
   profileUserId = profile.user_id || profileUserId;
   profileOwner = !!profile.is_owner;
 
+  await loadProfileRelationshipType();
+
   document.getElementById('profile-loading').style.display = 'none';
   document.getElementById('profile-content').style.display = 'block';
 
@@ -680,24 +1357,36 @@ async function loadProfile(){
 
   setField('field-display-name', profile.display_name);
   setField('field-bio', profile.bio);
-  setField('field-location', profile.location);
   setField('field-website-url', profile.website_url);
-  setField('field-allow-profile-public', profile.allow_profile_public === true ? 'Yes' : 'No');
-  setField('field-created-at', formatDateTime(profile.created_at));
-  setField('field-updated-at', formatDateTime(profile.updated_at));
   setField('field-city', profile.city);
   setField('field-state', profile.state);
-  setField('field-location-source', profile.location_source);
 
   const ownerActions = document.getElementById('owner-actions');
   const toggleBtn = document.getElementById('toggle-private-btn');
+  const friendActions = document.getElementById('friend-actions');
 
-  if(profileOwner){
-    ownerActions.style.display = 'flex';
-    toggleBtn.textContent = profile.allow_profile_public === true ? 'Make Profile Private' : 'Make Profile Public';
+const addPortraitBtn = document.getElementById('add-portrait-btn');
+const portraitGalleryTitle = document.getElementById('portrait-gallery-title');
+
+if(profileOwner){
+  ownerActions.style.display = 'flex';
+  friendActions.style.display = 'none';
+  toggleBtn.textContent = profile.allow_profile_public === true ? 'Make Profile Private' : 'Make Profile Public';
+
+  if(addPortraitBtn) addPortraitBtn.style.display = 'inline-block';
+  if(portraitGalleryTitle) portraitGalleryTitle.textContent = 'My Portrait Gallery';
+}else{
+  ownerActions.style.display = 'none';
+
+  if(profileRelationshipType === 'friend' || profileRelationshipType === 'family' || profileRelationshipType === 'close_friend'){
+    friendActions.style.display = 'none';
   }else{
-    ownerActions.style.display = 'none';
+    friendActions.style.display = 'flex';
   }
+
+  if(addPortraitBtn) addPortraitBtn.style.display = 'none';
+  if(portraitGalleryTitle) portraitGalleryTitle.textContent = 'Portrait Gallery';
+}
 }
 
 async function loadMorePosts(){
@@ -764,7 +1453,22 @@ async function toggleProfilePrivacy(){
   await loadProfile();
   await loadMorePosts();
 }
+async function sendFriendRequestFromProfile(){
 
+  if(!profileUserId) return;
+
+  const { error } = await supabaseClient.rpc('send_friend_request', {
+    p_requested_id: profileUserId
+  });
+
+  if(error){
+    console.error(error);
+    alert(error.message || 'Error sending friend request');
+    return;
+  }
+
+  alert('Friend request sent');
+}
 function handleScrollLoad(){
   if(!postsHasMore || postsLoading) return;
   const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 500;
@@ -797,6 +1501,7 @@ async function initProfilePage(){
   }
 
   await loadProfile();
+  await loadLatestPortraitCard();
   await loadMorePosts();
   window.addEventListener('scroll', handleScrollLoad);
 }

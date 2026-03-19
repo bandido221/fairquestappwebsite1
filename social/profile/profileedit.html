@@ -46,7 +46,8 @@ body{
   gap:10px;
 }
 
-.header-btn{
+.header-icon-btn{
+  position:relative;
   border:none;
   background:#1f2125;
   color:#f0e6d2;
@@ -57,8 +58,32 @@ body{
   font-size:1rem;
 }
 
-.header-btn:hover{
+.header-icon-btn:hover{
   background:#2a2d31;
+}
+
+.header-subnav{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+
+.notifications-page-btn{
+  background:#bb9457;
+  border:none;
+  color:#000;
+  padding:8px 18px;
+  border-radius:8px;
+  font-family:'Domine',serif;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.notifications-page-btn:hover{
+  background:#cfa75e;
 }
 
 .page-wrap{
@@ -292,7 +317,8 @@ textarea{
     font-size:1.6rem;
   }
 
-  .header-btn,
+  .header-icon-btn,
+  .notifications-page-btn,
   .action-btn,
   input,
   textarea,
@@ -306,12 +332,21 @@ textarea{
 
 <div class="header">
   <div class="header-inner">
-    <button type="button" class="header-btn" onclick="goBackToProfile()">← Profile</button>
     <div class="header-title">FairQuest Social</div>
-    <div class="header-actions">
-      <button type="button" class="header-btn" onclick="loadProfileEdit()">↻ Refresh</button>
-    </div>
+   <div class="header-actions">
+  <button type="button" class="header-icon-btn" onclick="openSocialHome()">🏠</button>
+  <button type="button" class="header-icon-btn" onclick="openNotificationsPage()">🔔</button>
+  <button type="button" class="header-icon-btn" onclick="openFriends()">👥</button>
+  <button type="button" class="header-icon-btn" onclick="openMyProfile()">👤</button>
+</div>
   </div>
+
+ <div class="header-subnav">
+  <button type="button" class="notifications-page-btn" onclick="openSocialHome()">🏠 Home</button>
+  <button type="button" class="notifications-page-btn" onclick="openNotificationsPage()">Notifications</button>
+  <button type="button" class="notifications-page-btn" onclick="openFriends()">👥 Friends</button>
+  <button type="button" class="notifications-page-btn" onclick="openMyProfile()">👤 Profile</button>
+</div>
 </div>
 
 <div class="page-wrap">
@@ -436,6 +471,28 @@ function clearStatus(){
   box.className = 'status-box';
   box.textContent = '';
   box.style.display = 'none';
+}
+
+function openNotificationsPage(){
+  window.location.href = '/social/notifications.html';
+}
+
+function openFriends(){
+  window.location.href = '/social/friends/friends.html';
+}
+function openSocialHome(){
+  window.location.href = "/social/index.html";
+}
+async function openMyProfile(){
+  const { data } = await supabaseClient.auth.getSession();
+
+  if(!data.session){
+    window.location.href = '/user_login.html?redirect=/social/profile/profile.html';
+    return;
+  }
+
+  const userId = data.session.user.id;
+  window.location.href = '/social/profile/profile.html?user_id=' + userId;
 }
 
 function goBackToProfile(){

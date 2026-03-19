@@ -40,24 +40,49 @@ flex:1;
 }
 
 .header-actions{
-display:flex;
-align-items:center;
-gap:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
-.header-btn{
-border:none;
-background:#1f2125;
-color:#f0e6d2;
-border-radius:999px;
-padding:10px 14px;
-cursor:pointer;
-font-family:'Domine',serif;
-font-size:1rem;
+.header-icon-btn{
+  position:relative;
+  border:none;
+  background:#1f2125;
+  color:#f0e6d2;
+  border-radius:999px;
+  padding:10px 14px;
+  cursor:pointer;
+  font-family:'Domine',serif;
+  font-size:1rem;
 }
 
-.header-btn:hover{
-background:#2a2d31;
+.header-icon-btn:hover{
+  background:#2a2d31;
+}
+
+.header-subnav{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+
+.notifications-page-btn{
+  background:#bb9457;
+  border:none;
+  color:#000;
+  padding:8px 18px;
+  border-radius:8px;
+  font-family:'Domine',serif;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.notifications-page-btn:hover{
+  background:#cfa75e;
 }
 
 .social-layout{
@@ -271,14 +296,23 @@ padding:10px 14px;
 
 <div class="header">
   <div class="header-inner">
-    <button type="button" class="header-btn" onclick="goBackToSocial()">← Social</button>
     <div class="header-title">FairQuest Social</div>
+
     <div class="header-actions">
-      <button type="button" class="header-btn" onclick="loadNotifications()">↻ Refresh</button>
+      <button type="button" class="header-icon-btn" onclick="openSocialHome()">🏠</button>
+      <button type="button" class="header-icon-btn" onclick="openNotificationsPage()">🔔</button>
+      <button type="button" class="header-icon-btn" onclick="openFriends()">👥</button>
+      <button type="button" class="header-icon-btn" onclick="openMyProfile()">👤</button>
     </div>
   </div>
-</div>
 
+  <div class="header-subnav">
+    <button type="button" class="notifications-page-btn" onclick="openSocialHome()">🏠 Home</button>
+    <button type="button" class="notifications-page-btn" onclick="openNotificationsPage()">Notifications</button>
+    <button type="button" class="notifications-page-btn" onclick="openFriends()">👥 Friends</button>
+    <button type="button" class="notifications-page-btn" onclick="openMyProfile()">👤 Profile</button>
+  </div>
+</div>
 <div class="social-layout">
   <div class="social-center">
 
@@ -410,8 +444,28 @@ await handleRealtimeNotification(payload);
 )
 .subscribe();
 }
-function goBackToSocial(){
+function openSocialHome(){
   window.location.href = "/social/index.html";
+}
+
+function openNotificationsPage(){
+  window.location.href = "/social/notifications.html";
+}
+
+function openFriends(){
+  window.location.href = "/social/friends/friends.html";
+}
+
+async function openMyProfile(){
+  const { data } = await supabaseClient.auth.getSession();
+
+  if(!data.session){
+    window.location.href = "/user_login.html?redirect=/social/profile/profile.html";
+    return;
+  }
+
+  const userId = data.session.user.id;
+  window.location.href = "/social/profile/profile.html?user_id=" + userId;
 }
 
 function formatPostDate(dateString){

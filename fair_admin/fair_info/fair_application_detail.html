@@ -16,7 +16,7 @@
       background: #000;
       color: #f0e6d2;
       text-align: center;
-      padding: 20px;
+      padding: 0;
       margin: 0;
     }
     h1 {
@@ -143,6 +143,31 @@
       opacity: 0.85;
     }
 
+
+    .topnav {
+      background: #1a1208; border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links .nav-logout { background: rgba(180,50,50,0.18); color: #f4a0a0; margin-left:8px; border:1px solid rgba(180,50,50,0.3); }
+    .breadcrumb { font-size:13px; color:#bb9457; padding:10px 20px 0; text-align:left; }
+    .breadcrumb a { color:#bb9457; text-decoration:none; }
+    .breadcrumb a:hover { text-decoration:underline; }
+    .breadcrumb span { color:#f0e6d2; }
+    /* Approve / Decline prominent buttons */
+    .btn-approve { background: #2e7d32 !important; font-size: 16px !important; padding: 12px 24px !important; }
+    .btn-approve:hover { background: #1b5e20 !important; }
+    .btn-decline { background: #c62828 !important; font-size: 16px !important; padding: 12px 24px !important; }
+    .btn-decline:hover { background: #8b1a1a !important; }
     /* Loader */
     @keyframes spin {
       0% { transform: rotate(0deg); }
@@ -153,7 +178,21 @@
 
 <body>
 
-  <h1 id="pageTitle">Application Detail</h1>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="../fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" id="navApplications" class="active">📋 Applications</a>
+    </div>
+  </nav>
+  <div class="breadcrumb">
+    <a href="../fair_admin.html">Admin Home</a> › <a href="#" id="breadDashboard">Dashboard</a> › <a href="#" id="breadApplications">Applications</a> › <span>Review Application</span>
+  </div>
+  <h1 id="pageTitle" style="font-family:'Cinzel',serif; color:#f1df99; text-align:center; padding:8px 0 0;">Review Application</h1>
 
   <div id="loadingOverlay" style="
     position: fixed;

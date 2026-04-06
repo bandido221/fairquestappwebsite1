@@ -16,7 +16,7 @@
       background: #000;
       color: #f0e6d2;
       text-align: center;
-      padding: 20px;
+      padding: 0;
       margin: 0;
     }
     h1, h2 { font-family: 'Cinzel', serif; margin: 10px 0; }
@@ -71,6 +71,22 @@
     .hint { margin-top: 10px; opacity: 0.9; }
     .divider { margin: 18px 0; height: 1px; background: rgba(0,0,0,0.18); }
 
+
+    .topnav {
+      background: #1a1208; border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+      margin-bottom: 0;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); }
     /* Loader */
     @keyframes spin {
       0% { transform: rotate(0deg); }
@@ -80,7 +96,17 @@
 </head>
 
 <body>
-  <h1>Apply</h1>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="/home.html">🏡 Home</a>
+      <a href="/fairs/explore.html">🎪 Find a Fair</a>
+    </div>
+  </nav>
+  <h1 style="font-family:'Cinzel',serif; text-align:center; padding:16px 0 0; color:#f1df99;">Apply to This Fair</h1>
 
   <div id="loadingOverlay" style="
     position: fixed;
@@ -150,23 +176,23 @@
     <div class="divider"></div>
 
     <div id="lockedApplicationArea" style="opacity:0.55; pointer-events:none;">
-      <h3 style="margin:0;">Choose your profile</h3>
+      <h3 style="margin:0;">Your Vendor / Performer Profile</h3>
       <div class="hint" style="margin-top:6px;">
-        If you have more than one approved Vendor/Performer profile, pick the one you want to use for this application.
+        If you have more than one approved profile, select the one you'd like to use for this application.
       </div>
 
       <div class="grid" style="margin-top:12px;">
-        <div class="label">Profile:</div>
+        <div class="label">Your Profile:</div>
         <div>
           <select id="vpaSelect" style="display:none;"></select>
           <div id="vpaSingle" style="display:none;"></div>
         </div>
 
-        <div class="label">Type:</div><div id="vpaType">—</div>
-        <div class="label">Food Vendor:</div><div id="vpaFood">—</div>
+        <div class="label">Applicant Type:</div><div id="vpaType">—</div>
+        <div class="label">Food Vendor?:</div><div id="vpaFood">—</div>
         <div class="label">Email:</div><div id="vpaEmail">—</div>
         <div class="label">Contact Name:</div><div id="vpaContact">—</div>
-        <div class="label">Application Form:</div><div id="activeFormInfo">—</div>
+        <div class="label">Form in Use:</div><div id="activeFormInfo">—</div>
       </div>
 
       <div class="divider"></div>
@@ -178,7 +204,7 @@
 
     <div class="btn-row">
       <button class="btn btn-dark" id="btnBack">⬅ Back to Fair</button>
-      <button class="btn" id="btnReview" disabled>Review</button>
+      <button class="btn" id="btnReview" disabled>Review My Application →</button>
     </div>
     <div class="hint" id="statusMsg"></div>
   </div>
@@ -837,7 +863,7 @@ function setApplicationLocked(isLocked) {
         vpas = await loadApprovedVpa(user.id);
       } catch (e) {
         console.error(e);
-        document.getElementById('pageHint').textContent = 'Could not load your approved profile(s).';
+        document.getElementById('pageHint').textContent = 'We could not load your profile. Please refresh the page or contact support.';
         hideLoader();
         return;
       }
@@ -990,7 +1016,7 @@ chkAcceptContract.onchange = () => {
 
         } catch (e) {
           console.error(e);
-          setMsg('Failed to load application. Check console.');
+          setMsg('Could not load the application. Please refresh the page.');
         } finally {
           hideLoader();
         }

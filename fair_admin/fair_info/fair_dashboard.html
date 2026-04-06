@@ -16,7 +16,7 @@
       background: #000;
       color: #f0e6d2;
       text-align: center;
-      padding: 20px;
+      padding: 0;
       margin: 0;
     }
     h1 {
@@ -77,6 +77,36 @@
       text-decoration: none;
     }
 
+
+    /* ── TOP NAV ── */
+    .topnav {
+      background: #1a1208;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links a.active { background: rgba(241,223,153,0.18); color: #f1df99; font-weight: bold; }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18); color: #f4a0a0;
+      margin-left: 8px; border: 1px solid rgba(180,50,50,0.3);
+    }
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      font-size: 13px; color: #bb9457;
+      padding: 10px 0 0; text-align: left;
+    }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
     /* Loader */
     @keyframes spin {
       0% { transform: rotate(0deg); }
@@ -109,7 +139,26 @@
 
 <body>
 
-  <h1 id="pageTitle">Fair Dashboard</h1>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="../fair_admin.html">🏰 My Fairs</a>
+      <a href="#" class="active">📊 Dashboard</a>
+      <a href="#" id="navApplications">📋 Applications</a>
+      <a href="#" id="navUpdateFair">✏️ Update Fair</a>
+    </div>
+  </nav>
+
+    <div style="max-width:800px; margin:0 auto; padding: 0 0 0 0;">
+      <div class="breadcrumb">
+        <a href="../fair_admin.html">Admin Home</a> › <span id="breadFairName">Dashboard</span>
+      </div>
+    </div>
+
+  <h1 id="pageTitle" style="text-align:center; font-family:'Cinzel', serif; padding: 8px 0 0; color:#f1df99;">Fair Dashboard</h1>
 
   <div id="loadingOverlay" style="
     position: fixed;
@@ -230,7 +279,7 @@
     async function loadFairInfo(fairId) {
       const { data, error } = await supabaseClient
         .from('renaissance_fairs')
-        .select('id, name, address, city, state, website')
+        .select('id, name, address, city, state, website, fair_tier')
         .eq('id', fairId)
         .single();
 
@@ -285,6 +334,14 @@
     }
 
 async function load() {
+
+  const fairId = getFairIdFromUrl();
+  // Wire nav links
+  if (fairId) {
+    document.getElementById('navApplications').href = '#';
+    document.getElementById('navUpdateFair').href = `../fair_update.html?fair_id=${fairId}`;
+  }
+
   // Buttons (wire first so they always work)
   document.getElementById('btnBackToAdmin').onclick = () => {
     window.location.href = '../fair_admin.html';
@@ -293,22 +350,14 @@ async function load() {
   document.getElementById('btnUpdateFair').onclick = () => {
     const fairId = getFairIdFromUrl();
     if (!fairId) {
-      alert('Missing fair_id in the URL.');
+      alert('Something went wrong — the fair ID is missing. Please go back and try again.');
       return;
     }
     window.location.href = `../fair_update.html?fair_id=${fairId}`;
   };
 
-  document.getElementById('btnApplications').onclick = () => {
-    const fairId = getFairIdFromUrl();
-    if (!fairId) {
-      alert('Missing fair_id in the URL.');
-      return;
-    }
-    window.location.href = `fair_applications.html?fair_id=${fairId}`;
-  };
 
-  const fairId = getFairIdFromUrl();
+
   if (!fairId) {
     showError('⚠️ Missing fair_id in URL.');
     return;
@@ -330,6 +379,46 @@ async function load() {
   if (!fair) {
     showError('⚠️ Fair not found.');
     return;
+  }
+
+  const isGold = fair.fair_tier === 'gold';
+
+  function showComingSoon() {
+    document.getElementById('comingSoonModal').style.display = 'flex';
+  }
+
+  // Lock Applications nav link if not gold
+  const navApps = document.getElementById('navApplications');
+  if (!isGold) {
+    navApps.onclick = (e) => { e.preventDefault(); showComingSoon(); };
+  }
+
+
+  // Lock Applications button if not gold
+  document.getElementById('btnApplications').onclick = () => {
+    if (!isGold) { showComingSoon(); return; }
+    window.location.href = `fair_applications.html?fair_id=${fairId}`;
+  };
+
+  // Add unavailable overlay to appsCard if not gold
+  if (!isGold) {
+    const appsCard = document.getElementById('appsCard');
+    appsCard.style.position = 'relative';
+    appsCard.style.overflow = 'hidden';
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position:absolute; inset:0; background:rgba(0,0,0,0.55);
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; border-radius:12px; cursor:pointer;
+      z-index:10;
+    `;
+    overlay.innerHTML = `
+      <div style="font-size:28px; margin-bottom:8px;">🔒</div>
+      <div style="font-family:'Cinzel',serif; font-size:16px; color:#f1df99; font-weight:bold;">Gold Tier Required</div>
+      <div style="font-size:13px; color:#f0e6d2; margin-top:6px; opacity:0.85;">Tap to learn more</div>
+    `;
+    overlay.onclick = showComingSoon;
+    appsCard.appendChild(overlay);
   }
 
   document.getElementById('pageTitle').textContent = `Fair Dashboard — ${fair.name || ''}`.trim();
@@ -387,6 +476,15 @@ async function load() {
 
     load();
   </script>
+<div id="comingSoonModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:10000; justify-content:center; align-items:center; padding:20px;">
+  <div style="background:rgba(241,223,153,0.97); border-radius:14px; max-width:460px; width:100%; padding:28px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.6); color:#000;">
+    <div style="font-size:42px; margin-bottom:12px;">🏰</div>
+    <h2 style="font-family:'Cinzel',serif; font-size:20px; margin:0 0 10px; color:#000;">Coming Soon</h2>
+    <p style="font-size:15px; color:#3b1f1f; line-height:1.6; margin-bottom:8px;">This feature requires a <strong>Gold tier</strong> fair listing.</p>
+    <p style="font-size:14px; color:#5c3a1e; line-height:1.6; margin-bottom:20px;">Application management — including reviewing vendor and performer applications, approving submissions, and managing contracts — is available to Gold tier fairs. More details and pricing will be available soon.</p>
+    <button onclick="document.getElementById('comingSoonModal').style.display='none';" style="background:#4CAF50; color:#fff; border:none; padding:11px 28px; border-radius:8px; font-size:15px; font-family:'Domine',serif; cursor:pointer;">Close</button>
+  </div>
+</div>
 
 </body>
 </html>

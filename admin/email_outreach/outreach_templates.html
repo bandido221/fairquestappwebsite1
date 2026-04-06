@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Templates | FairQuest Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Domine', serif; background: #0a0a0a; color: #f0e6d2; margin: 0; padding: 0; }
+
+    .topnav { background: #1a1208; border-bottom: 1px solid #3d2e0e; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a { color: #c8aa6e; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: background 0.15s; }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links a.active { background: rgba(241,223,153,0.18); color: #f1df99; font-weight: bold; }
+    .topnav-links .nav-logout { background: rgba(180,50,50,0.18); color: #f4a0a0; margin-left: 8px; border: 1px solid rgba(180,50,50,0.3); }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+
+    .page-body { padding: 16px 20px 50px; max-width: 980px; margin: 0 auto; }
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+    h1 { font-family: 'Cinzel', serif; font-size: 22px; color: #f1df99; margin: 8px 0 16px; }
+
+    .card { background: rgba(241,223,153,0.88); padding: 22px 24px; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,0.4); margin-bottom: 20px; color: #3b1f1f; text-align: left; }
+    .card h2 { font-family: 'Cinzel', serif; font-size: 16px; margin: 0 0 14px; color: #3b1f1f; }
+    .divider { height: 1px; background: rgba(0,0,0,0.15); margin: 16px 0; }
+
+    /* TEMPLATE CARDS GRID */
+    .tmpl-grid { display: flex; flex-direction: column; gap: 12px; }
+    .tmpl-card { background: rgba(255,255,255,0.65); border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 16px; }
+    .tmpl-card.archived { opacity: 0.6; }
+    .tmpl-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+    .tmpl-title { font-weight: bold; font-size: 15px; color: #3b1f1f; flex: 1; }
+    .tmpl-meta { font-size: 13px; color: #5c3a1e; margin-bottom: 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .tmpl-body-preview { font-size: 13px; color: #3b1f1f; background: rgba(0,0,0,0.04); border-radius: 6px; padding: 10px 12px; white-space: pre-wrap; max-height: 80px; overflow: hidden; line-height: 1.5; margin-bottom: 10px; }
+    .tmpl-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: bold; }
+    .pill-invitation  { background: rgba(76,175,80,0.2); color: #1a5c1e; border: 1px solid rgba(76,175,80,0.35); }
+    .pill-follow_up   { background: rgba(240,180,20,0.22); color: #7a5200; border: 1px solid rgba(240,180,20,0.4); }
+    .pill-announcement{ background: rgba(100,100,220,0.18); color: #1a1a6c; border: 1px solid rgba(100,100,220,0.3); }
+    .pill-custom      { background: rgba(150,100,50,0.18); color: #5c3a1e; border: 1px solid rgba(150,100,50,0.3); }
+    .pill-archived    { background: rgba(120,120,120,0.2); color: #555; border: 1px solid rgba(120,120,120,0.3); }
+
+    /* FORM FIELDS */
+    .field-group { margin-bottom: 14px; }
+    .field-group label { display: block; font-weight: bold; font-size: 14px; color: #3b1f1f; margin-bottom: 6px; }
+    .field-hint { font-size: 13px; color: #5c3a1e; margin-bottom: 8px; }
+    select, input[type="text"], textarea { font-size: 15px; width: 100%; padding: 11px 14px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.2); font-family: 'Domine', serif; background: rgba(255,255,255,0.9); color: #111; transition: border-color 0.15s, box-shadow 0.15s; }
+    select:focus, input:focus, textarea:focus { outline: none; border-color: #bb7a28; box-shadow: 0 0 0 3px rgba(187,122,40,0.2); }
+    textarea { resize: vertical; min-height: 260px; line-height: 1.6; white-space: pre-wrap; }
+
+    /* BUTTONS */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .btn { background-color: #4CAF50; color: #fff; padding: 10px 16px; border: none; border-radius: 8px; font-size: 14px; font-family: 'Domine', serif; cursor: pointer; transition: background 0.15s; }
+    .btn:hover { background-color: #43a047; }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #222; }
+    .btn-gold { background-color: #bb7a28; }
+    .btn-gold:hover { background-color: #a06820; }
+    .btn-red { background-color: #c62828; }
+    .btn-red:hover { background-color: #8b1a1a; }
+
+    .btn-sm { padding: 7px 12px; border: none; border-radius: 7px; font-size: 13px; font-family: 'Domine', serif; cursor: pointer; transition: background 0.15s; color: #fff; }
+    .btn-sm-dark { background: #2f2f2f; }
+    .btn-sm-dark:hover { background: #1a1a1a; }
+    .btn-sm-gold { background: #bb7a28; }
+    .btn-sm-gold:hover { background: #a06820; }
+    .btn-sm-red  { background: #c62828; }
+    .btn-sm-red:hover { background: #8b1a1a; }
+    .btn-sm-gray { background: #888; }
+    .btn-sm-gray:hover { background: #666; }
+
+    .status-msg { margin-top: 10px; font-size: 14px; min-height: 18px; color: #3b1f1f; }
+    .status-msg.success { color: #1a5c1e; font-weight: bold; }
+    .status-msg.error   { color: #8b1a1a; }
+
+    /* EDITOR PANEL */
+    .editor-panel { display: none; }
+    .editor-panel.open { display: block; }
+
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; gap: 16px; }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner { border: 5px solid rgba(255,255,255,0.15); border-top: 5px solid #bb9457; border-radius: 50%; width: 52px; height: 52px; animation: spin 0.9s linear infinite; }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html"><img src="/images/logo.png" alt="FairQuest" /><span>FairQuest</span></a>
+    <div class="topnav-links">
+      <a href="/home.html">🏡 Home</a>
+      <a href="/admin/admin_dashboard.html">🛡️ Admin Panel</a>
+      <a href="outreach.html">📣 Outreach</a>
+      <a href="outreach_templates.html" class="active">✉️ Templates</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div id="loadingOverlay"><div class="spinner"></div><p>Loading templates…</p></div>
+
+  <div class="page-body">
+    <div class="breadcrumb">
+      <a href="/home.html">Home</a> › <a href="/admin/index.html">Admin Panel</a> › <a href="outreach.html">Outreach</a> › <span>Email Templates</span>
+    </div>
+    <h1>✉️ Email Templates</h1>
+
+    <!-- EDITOR CARD -->
+    <div class="card">
+      <div class="btn-row">
+        <a href="outreach.html" class="btn btn-dark">⬅ Back to Outreach</a>
+        <button class="btn btn-gold" id="btnNewTemplate">＋ New Template</button>
+      </div>
+
+      <!-- EDITOR PANEL (hidden until create/edit clicked) -->
+      <div class="editor-panel" id="editorPanel">
+        <div class="divider"></div>
+        <h2 id="editorTitle">New Template</h2>
+
+        <div class="field-group">
+          <label for="eTmplTitle">Template Name (internal)</label>
+          <input type="text" id="eTmplTitle" placeholder="e.g. Fair Invitation — Spring 2026" />
+        </div>
+        <div class="field-group">
+          <label for="eTmplType">Outreach Type</label>
+          <select id="eTmplType">
+            <option value="invitation">Invitation</option>
+            <option value="follow_up">Follow-Up</option>
+            <option value="announcement">Announcement</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="eTmplSubject">Subject Line</label>
+          <input type="text" id="eTmplSubject" placeholder="e.g. Invite your vendors to apply through FairQuest" />
+        </div>
+        <div class="field-group">
+          <label for="eTmplBody">Email Body</label>
+          <div class="field-hint">Tokens: <code>{{fair_name}}</code> <code>{{city}}</code> <code>{{state}}</code> <code>{{contact_name}}</code> <code>{{website}}</code></div>
+          <textarea id="eTmplBody" placeholder="Write your email template here…"></textarea>
+        </div>
+        <div class="field-group" id="activeToggleGroup" style="display:none;">
+          <label><input type="checkbox" id="eTmplActive" checked /> Template is active (appears in compose dropdown)</label>
+        </div>
+
+        <div class="btn-row" style="margin-top:0;">
+          <button class="btn btn-gold" id="btnSaveTemplate">💾 Save Template</button>
+          <button class="btn btn-dark" id="btnCancelEdit">Cancel</button>
+        </div>
+        <div class="status-msg" id="editorMsg"></div>
+      </div>
+    </div>
+
+    <!-- TEMPLATES LIST -->
+    <div class="card">
+      <h2>Your Templates</h2>
+      <div class="tmpl-grid" id="tmplGrid">
+        <div style="font-size:14px; color:#5c3a1e; text-align:center; padding:20px 0;" id="tmplEmpty">Loading templates…</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sb = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    let allTemplates = [];
+    let editingId = null;   // null = new, number = editing existing
+
+    const showLoader = () => document.getElementById('loadingOverlay').style.display='flex';
+    const hideLoader = () => document.getElementById('loadingOverlay').style.display='none';
+    const setEditorMsg = (t,c) => { const el=document.getElementById('editorMsg'); el.textContent=t||''; el.className='status-msg'+(c?` ${c}`:''); };
+
+    function typePill(type, archived) {
+      if (archived) return `<span class="pill pill-archived">Archived</span>`;
+      const labels={invitation:'Invitation',follow_up:'Follow-Up',announcement:'Announcement',custom:'Custom'};
+      return `<span class="pill pill-${type}">${labels[type]||type}</span>`;
+    }
+
+    function renderTemplates() {
+      const grid = document.getElementById('tmplGrid');
+      const empty= document.getElementById('tmplEmpty');
+      grid.querySelectorAll('.tmpl-card').forEach(c=>c.remove());
+
+      if (!allTemplates.length) { empty.style.display='block'; empty.textContent='No templates yet. Click "New Template" to create one.'; return; }
+      empty.style.display='none';
+
+      allTemplates.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'tmpl-card' + (t.is_active===false ? ' archived' : '');
+        const preview = (t.body||'').slice(0,200) + ((t.body||'').length>200 ? '…' : '');
+        card.innerHTML = `
+          <div class="tmpl-header">
+            <div class="tmpl-title">${t.title||'Untitled'}</div>
+          </div>
+          <div class="tmpl-meta">
+            ${typePill(t.outreach_type, t.is_active===false)}
+            <span style="opacity:0.7;">Subject: ${t.subject||'—'}</span>
+          </div>
+          <div class="tmpl-body-preview">${preview}</div>
+          <div class="tmpl-actions">
+            <button class="btn-sm btn-sm-gold" onclick="startEdit(${t.id})">✏️ Edit</button>
+            ${t.is_active!==false
+              ? `<button class="btn-sm btn-sm-gray" onclick="archiveTemplate(${t.id})">Archive</button>`
+              : `<button class="btn-sm btn-sm-dark" onclick="restoreTemplate(${t.id})">Restore</button>`
+            }
+          </div>`;
+        grid.insertBefore(card, empty);
+      });
+    }
+
+    function openEditor(title) {
+      document.getElementById('editorTitle').textContent = title;
+      document.getElementById('editorPanel').classList.add('open');
+      document.getElementById('editorPanel').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+
+    function closeEditor() {
+      editingId = null;
+      document.getElementById('eTmplTitle').value   = '';
+      document.getElementById('eTmplSubject').value = '';
+      document.getElementById('eTmplBody').value    = '';
+      document.getElementById('eTmplType').value    = 'invitation';
+      document.getElementById('eTmplActive').checked= true;
+      document.getElementById('activeToggleGroup').style.display='none';
+      document.getElementById('editorPanel').classList.remove('open');
+      setEditorMsg('');
+    }
+
+    function startEdit(id) {
+      const t = allTemplates.find(x=>x.id===id);
+      if (!t) return;
+      editingId = id;
+      document.getElementById('eTmplTitle').value   = t.title||'';
+      document.getElementById('eTmplSubject').value = t.subject||'';
+      document.getElementById('eTmplBody').value    = t.body||'';
+      document.getElementById('eTmplType').value    = t.outreach_type||'invitation';
+      document.getElementById('eTmplActive').checked= t.is_active !== false;
+      document.getElementById('activeToggleGroup').style.display='block';
+      openEditor('Edit Template');
+    }
+
+    async function saveTemplate() {
+      const title   = document.getElementById('eTmplTitle').value.trim();
+      const subject = document.getElementById('eTmplSubject').value.trim();
+      const body    = document.getElementById('eTmplBody').value.trim();
+      const type    = document.getElementById('eTmplType').value;
+      const active  = document.getElementById('eTmplActive').checked;
+
+      if (!title)   { setEditorMsg('Please enter a template name.','error'); return; }
+      if (!subject) { setEditorMsg('Please enter a subject line.','error'); return; }
+      if (!body)    { setEditorMsg('Please write the email body.','error'); return; }
+
+      setEditorMsg('Saving…');
+      try {
+        if (editingId) {
+          const { error } = await sb.rpc('outreach_update_template', { p_id:editingId, p_title:title, p_subject:subject, p_body:body, p_outreach_type:type, p_is_active:active });
+          if (error) throw error;
+        } else {
+          const { error } = await sb.rpc('outreach_create_template', { p_title:title, p_subject:subject, p_body:body, p_outreach_type:type });
+          if (error) throw error;
+        }
+        setEditorMsg('✅ Template saved!','success');
+        setTimeout(() => { closeEditor(); loadTemplates(); }, 800);
+      } catch(e) {
+        console.error(e); setEditorMsg('Save failed. Please try again.','error');
+      }
+    }
+
+    async function archiveTemplate(id) {
+      const t = allTemplates.find(x=>x.id===id);
+      if (!t) return;
+      if (!confirm(`Archive "${t.title}"? It will no longer appear in the compose dropdown.`)) return;
+      await sb.rpc('outreach_update_template', { p_id:id, p_title:t.title, p_subject:t.subject, p_body:t.body, p_outreach_type:t.outreach_type, p_is_active:false });
+      loadTemplates();
+    }
+
+    async function restoreTemplate(id) {
+      const t = allTemplates.find(x=>x.id===id);
+      if (!t) return;
+      await sb.rpc('outreach_update_template', { p_id:id, p_title:t.title, p_subject:t.subject, p_body:t.body, p_outreach_type:t.outreach_type, p_is_active:true });
+      loadTemplates();
+    }
+
+    async function loadTemplates() {
+      showLoader();
+      // Fetch ALL templates including archived (query direct for admin view)
+      const { data, error } = await sb.from('email_templates').select('*').order('outreach_type').order('title');
+      allTemplates = Array.isArray(data) ? data : [];
+      renderTemplates();
+      hideLoader();
+    }
+
+    // Wire events
+    document.getElementById('btnNewTemplate').addEventListener('click', () => {
+      editingId = null;
+      document.getElementById('activeToggleGroup').style.display='none';
+      openEditor('New Template');
+    });
+    document.getElementById('btnSaveTemplate').addEventListener('click', saveTemplate);
+    document.getElementById('btnCancelEdit').addEventListener('click', closeEditor);
+    document.getElementById('navLogout').addEventListener('click', async(e) => { e.preventDefault(); await sb.auth.signOut(); window.location.href='/index.html'; });
+
+    loadTemplates();
+  </script>
+</body>
+</html>

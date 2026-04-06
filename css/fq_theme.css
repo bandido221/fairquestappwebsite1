@@ -1,7 +1,7 @@
 :root{
-  --fq-card-bg: rgba(214, 197, 126, 0.88);
+--fq-card-bg: rgba(174, 157, 86, 0.88);
   --fq-card-border: #aa8425;
-  --fq-card-text: #3b1f1f;
+ --fq-card-text: #000000;
   --fq-card-media-bg: rgba(214, 197, 126, 0.55);
 }
 
@@ -25,7 +25,7 @@
 
 .vendor-card .card-desc,
 .performer-card .card-desc{
-  color: rgba(59, 31, 31, 0.92) !important;
+  color: #000000 !important;
 }
 
 /* Reusable card classes used in other VP pages */
@@ -33,4 +33,24 @@
 .review-card{
   background: var(--fq-card-bg) !important;
   color: var(--fq-card-text) !important;
+}
+
+.card,
+.card *,
+.review-card,
+.review-card *,
+.vendor-card,
+.vendor-card *,
+.performer-card,
+.performer-card * {
+  color: #000000 !important;
+}
+
+.stat-box,
+.stat-box *,
+.char-item,
+.char-item *,
+.role-btn,
+.role-btn * {
+  color: #000000 !important;
 }

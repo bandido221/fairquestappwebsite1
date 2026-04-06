@@ -167,7 +167,16 @@ li {
     alert("Fair ID missing. Please start over.");
     return;
   }
+const { data: allowed } = await supabase
+  .rpc('check_fair_permission', {
+    p_fair_id: parseInt(fairId, 10),
+    p_permission: 'edit_fair_info'
+  });
 
+if (!allowed) {
+  alert('You do not have permission to update this fair.');
+  return;
+}
   const draft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
 
   const updateData = {};

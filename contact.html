@@ -59,21 +59,21 @@
       margin-bottom: 16px;
     }
 
-    a.button {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 10px 20px;
-      background-color: #5b2a86;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
-    }
+  a.button {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #8a6a1a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+}
 
-    a.button:hover {
-      background-color: #472460;
-    }
+a.button:hover {
+  background-color: #6d5214;
+}
 
     footer {
       margin-top: 40px;
@@ -117,6 +117,103 @@
         box-sizing: border-box;
       }
     }
+    .contact-form {
+      margin-top: 24px;
+      text-align: left;
+    }
+    .contact-form label {
+      display: block;
+      font-weight: bold;
+      font-size: 14px;
+      color: #3b1f1f;
+      margin-bottom: 5px;
+      margin-top: 14px;
+    }
+    .contact-form input,
+    .contact-form select,
+    .contact-form textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2);
+      font-family: 'Domine', serif;
+      font-size: 15px;
+      color: #111;
+      background: rgba(255,255,255,0.9);
+      box-sizing: border-box;
+    }
+    .contact-form textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+    .contact-form input:focus,
+    .contact-form select:focus,
+    .contact-form textarea:focus {
+      outline: none;
+      border-color: #8a6a1a;
+      box-shadow: 0 0 0 3px rgba(138,106,26,0.2);
+    }
+    .submit-btn {
+      margin-top: 18px;
+      width: 100%;
+      padding: 13px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Domine', serif;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .submit-btn:hover { background: #43a047; }
+    .success-msg {
+      display: none;
+      margin-top: 16px;
+      padding: 14px;
+      background: rgba(76,175,80,0.15);
+      border: 1px solid rgba(76,175,80,0.4);
+      border-radius: 8px;
+      color: #1a5c1e;
+      font-size: 15px;
+      text-align: center;
+    }
+    .faq-item {
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    .faq-item strong {
+      display: block;
+      font-size: 15px;
+      color: #3b1f1f;
+      margin-bottom: 5px;
+    }
+    .faq-item p {
+      font-size: 14px;
+      color: #3b1f1f;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .organizer-banner {
+      background: rgba(138,106,26,0.15);
+      border: 1px solid rgba(138,106,26,0.35);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .organizer-banner p {
+      font-size: 15px;
+      color: #3b1f1f;
+      margin: 0;
+      line-height: 1.55;
+    }
+
   </style>
 </head>
 <body>
@@ -127,35 +224,75 @@
 
   <div class="container">
     <h1>Contact Us</h1>
+
+    <div class="organizer-banner">
+      <p>🏰 <strong>Are you a fair organizer?</strong> We'd love to show you what FairQuest can do for your fair — email us or fill out the form below and we'll get back to you within 24 hours.</p>
+    </div>
+
+    <p>We're here for vendors, performers, fair organizers, and anyone with a question or idea. Fill out the form below or email us directly.</p>
+
     <p>
-      We'd love to hear from you! Whether you're a vendor with questions or feedback, or just want to say hello, we're here for you.
+      <strong>Email:</strong>
+      <a href="mailto:fairquestapp@gmail.com" style="color:#6d4c2a;">fairquestapp@gmail.com</a>
     </p>
-   <p>
-  Email us anytime at:
-  <br><br>
-  <strong><a href="mailto:fairquest2025@gmail.com">fairquest2025@gmail.com</a></strong>
-</p>
 
-<h2>Response Time</h2>
-<p>
-  We aim to reply to all inquiries within 2–3 business days. During active fair seasons,
-  replies may take a bit longer, but every message receives a response.
-</p>
+    <!-- CONTACT FORM (Formspree) -->
+   <form class="contact-form" id="contactForm">
+      <label for="name">Your Name</label>
+      <input type="text" id="name" name="name" placeholder="Jane Smith" required />
 
-<h2>Business Details</h2>
-<p>
-  FairQuest is operated in Des Moines, Iowa, USA. We are an independent event-information
-  and vendor-support platform not affiliated with any single fair or organizer.
-</p>
+      <label for="email">Your Email</label>
+      <input type="email" id="email" name="email" placeholder="you@email.com" required />
 
-<h2>Data Handling</h2>
-<p>
-  When you contact us, your email and message content are used solely to respond to your inquiry.
-  We do not share or sell contact information and we delete old correspondence once it’s no longer needed.
-  For more details, please see our <a href="privacy.html">Privacy Policy</a>.
-</p>
+      <label for="topic">What is this about?</label>
+      <select id="topic" name="topic" required>
+        <option value="" disabled selected>Choose a topic…</option>
+        <option value="question">General question about FairQuest</option>
+        <option value="organizer">I'm a fair organizer — I want to learn more</option>
+        <option value="vendor">Vendor or performer help</option>
+        <option value="problem">Report a problem</option>
+        <option value="other">Other</option>
+      </select>
 
-<a href="index.html" class="button">Return Home</a>
+      <label for="message">Your Message</label>
+      <textarea id="message" name="message" placeholder="Tell us what's on your mind…" required></textarea>
+
+      <button type="submit" class="submit-btn">✉️ Send Message</button>
+    </form>
+
+    <div class="success-msg" id="successMsg">
+      ✅ Message sent! We'll get back to you within 2–3 business days.
+    </div>
+
+    <h2 style="margin-top:32px;">Common Questions</h2>
+
+    <div class="faq-item">
+      <strong>How do I apply to a fair as a vendor or performer?</strong>
+      <p>Go to the fair's listing on FairQuest, click Apply, and fill out the application form. You'll need a free FairQuest account first.</p>
+    </div>
+
+    <div class="faq-item">
+      <strong>I'm a fair organizer — how do I get my fair on FairQuest?</strong>
+      <p>Email us at fairquestapp@gmail.com or use the form above and select "I'm a fair organizer." We'll set everything up for you.</p>
+    </div>
+
+    <div class="faq-item">
+      <strong>How long does it take to hear back on an application?</strong>
+      <p>Application review times vary by fair. Once a fair approves or declines your application, you'll be notified through FairQuest.</p>
+    </div>
+
+    <div class="faq-item">
+      <strong>Is FairQuest free to use?</strong>
+      <p>Yes — FairQuest is free for vendors, performers, and attendees. Fair organizer tools are currently offered free during our founding partner program.</p>
+    </div>
+
+    <h2 style="margin-top:28px;">Response Time</h2>
+    <p>We reply to all messages within 2–3 business days. During active fair season it may take a little longer, but every message gets a response.</p>
+
+    <h2>Data Handling</h2>
+    <p>Your name and email are used only to respond to your message. We never share or sell contact information. See our <a href="privacy.html" style="color:#6d4c2a;">Privacy Policy</a> for details.</p>
+
+    <a href="index.html" class="button">🏡 Return Home</a>
   </div>
 
   <footer>
@@ -165,6 +302,37 @@
     <a href="privacy.html">Privacy</a> |
     <a href="contact.html">Contact</a>
   </footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+  const supabaseClient = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
+
+  document.getElementById('contactForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const name    = document.getElementById('name').value.trim();
+    const email   = document.getElementById('email').value.trim();
+    const topic   = document.getElementById('topic').value;
+    const message = document.getElementById('message').value.trim();
+
+    const { error } = await supabaseClient
+      .from('contact_messages')
+      .insert([{ name, email, topic, message }]);
+
+    if (error) {
+      alert('Something went wrong. Please email us directly at fairquestapp@gmail.com');
+      console.error(error);
+      return;
+    }
+
+    document.getElementById('contactForm').style.display = 'none';
+    document.getElementById('successMsg').style.display = 'block';
+  });
+</script>
 
 </body>
 </html>

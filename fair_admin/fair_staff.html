@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Staff | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Domine', serif;
+      background: #0a0a0a;
+      color: #f0e6d2;
+      margin: 0; padding: 0;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      background: #1a1208;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links a.active { background: rgba(241,223,153,0.18); color: #f1df99; font-weight: bold; }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18); color: #f4a0a0;
+      margin-left: 8px; border: 1px solid rgba(180,50,50,0.3);
+    }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+
+    /* ── LAYOUT ── */
+    .page-body { padding: 16px 20px 50px; max-width: 760px; margin: 0 auto; }
+
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+
+    h1 { font-family: 'Cinzel', serif; font-size: 22px; color: #f1df99; margin: 8px 0 16px; text-align: center; }
+
+    /* ── CARDS ── */
+    .card {
+      background: rgba(241, 223, 153, 0.88);
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+      margin-bottom: 20px;
+      color: #000;
+      text-align: left;
+    }
+    .card, .card * { color: #000 !important; }
+    .card h2 { font-family: 'Cinzel', serif; font-size: 16px; margin: 0 0 14px; }
+
+    /* ── ROLE EXPLANATION ── */
+    .role-explainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .role-box {
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .role-box-name {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    .role-box-desc { font-size: 12px; line-height: 1.5; opacity: 0.85; }
+
+    /* ── ADD STAFF FORM ── */
+    .add-form {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      margin-top: 6px;
+    }
+    .field-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px; }
+    .field-group label { font-size: 13px; font-weight: bold; }
+    .field-group input,
+    .field-group select {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2);
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      background: rgba(255,255,255,0.9);
+      color: #111 !important;
+      width: 100%;
+    }
+    .field-group input:focus,
+    .field-group select:focus {
+      outline: none;
+      border-color: #bb7a28;
+      box-shadow: 0 0 0 3px rgba(187,122,40,0.2);
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Domine', serif;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-green { background: #4CAF50; color: #fff !important; }
+    .btn-green:hover { background: #43a047; }
+    .btn-dark { background: #2f2f2f; color: #fff !important; }
+    .btn-dark:hover { background: #1a1a1a; }
+    .btn-red { background: #c62828; color: #fff !important; font-size: 13px; padding: 7px 12px; }
+    .btn-red:hover { background: #8b1a1a; }
+
+    /* ── STATUS MESSAGE ── */
+    .status-msg {
+      margin-top: 10px;
+      font-size: 14px;
+      min-height: 20px;
+      font-weight: bold;
+    }
+    .msg-ok { color: #1a5c1e !important; }
+    .msg-err { color: #8b1a1a !important; }
+    .msg-info { color: #5c3a1e !important; }
+
+    /* ── STAFF LIST ── */
+    .staff-list { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+
+    .staff-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 10px;
+      padding: 12px 14px;
+      flex-wrap: wrap;
+    }
+
+    .staff-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(0,0,0,0.12);
+      flex-shrink: 0;
+    }
+    .staff-avatar-placeholder {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #bb7a28;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff !important;
+      flex-shrink: 0;
+      font-family: 'Cinzel', serif;
+    }
+
+    .staff-info { flex: 1; min-width: 0; }
+    .staff-username { font-weight: bold; font-size: 15px; }
+    .staff-email { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+    .staff-since { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+
+    .staff-role {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .role-owner    { background: rgba(187,122,40,0.25); color: #5c3200 !important; border: 1px solid rgba(187,122,40,0.4); }
+    .role-manager  { background: rgba(76,175,80,0.2);   color: #1a5c1e !important; border: 1px solid rgba(76,175,80,0.35); }
+    .role-reviewer { background: rgba(33,150,243,0.18); color: #0d3c6b !important; border: 1px solid rgba(33,150,243,0.35); }
+
+    .staff-actions { flex-shrink: 0; }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      font-size: 14px;
+      opacity: 0.7;
+    }
+
+    /* ── OWNER ONLY NOTICE ── */
+    .owner-only-notice {
+      background: rgba(187,122,40,0.15);
+      border: 1px solid rgba(187,122,40,0.3);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    /* ── LOADER ── */
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; flex-direction: column; gap: 16px;
+    }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner {
+      border: 5px solid rgba(255,255,255,0.15);
+      border-top: 5px solid #bb9457;
+      border-radius: 50%; width: 52px; height: 52px;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @media (max-width: 540px) {
+      .add-form { flex-direction: column; }
+      .btn { width: 100%; }
+      .staff-row { flex-wrap: wrap; }
+      .staff-actions { width: 100%; }
+      .btn-red { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" id="navApplications">📋 Applications</a>
+      <a href="#" class="active">👥 Staff</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <!-- LOADER -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading staff…</p>
+  </div>
+
+  <div class="page-body">
+
+    <div class="breadcrumb">
+      <a href="fair_admin.html">Admin Home</a> ›
+      <a href="#" id="breadDashboard">Dashboard</a> ›
+      <span>Manage Staff</span>
+    </div>
+
+    <h1>👥 Manage Staff</h1>
+
+    <!-- ROLE EXPLANATION CARD -->
+    <div class="card">
+      <h2>Staff Roles</h2>
+      <div class="role-explainer">
+        <div class="role-box">
+          <div class="role-box-name">🏰 Owner</div>
+          <div class="role-box-desc">Full access. Can add and remove staff, edit fair info, manage applications, and everything else.</div>
+        </div>
+        <div class="role-box">
+          <div class="role-box-name">⚙️ Manager</div>
+          <div class="role-box-desc">Can manage applications and contracts. Cannot edit fair info or manage other staff members.</div>
+        </div>
+        <div class="role-box">
+          <div class="role-box-name">👁️ Reviewer</div>
+          <div class="role-box-desc">Can view and approve or decline applications only. Read-only access to everything else.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD STAFF CARD (owner only) -->
+    <div class="card" id="addStaffCard">
+      <h2>➕ Add Staff Member</h2>
+      <div class="owner-only-notice">
+        The person you add must already have a FairQuest account. Enter their exact FairQuest username.
+      </div>
+      <div class="add-form">
+        <div class="field-group">
+          <label for="usernameInput">FairQuest Username</label>
+          <input type="text" id="usernameInput" placeholder="e.g. Bandido" autocomplete="off" />
+        </div>
+        <div class="field-group">
+          <label for="roleSelect">Role</label>
+          <select id="roleSelect">
+           <option value="manager">Manager</option>
+<option value="staff">Staff</option>
+<option value="owner">Owner</option>
+          </select>
+        </div>
+        <button class="btn btn-green" id="btnAdd">Add Staff</button>
+      </div>
+      <div class="status-msg" id="addMsg"></div>
+    </div>
+
+    <!-- CURRENT STAFF CARD -->
+    <div class="card">
+      <h2>Current Staff</h2>
+      <div class="staff-list" id="staffList">
+        <div class="empty-state">Loading…</div>
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+
+  <script>
+    const SUPABASE_URL = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    function showLoader() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    function setMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text || '';
+      el.className = 'status-msg ' + (type ? `msg-${type}` : '');
+    }
+
+    function getFairIdFromUrl() {
+      const n = Number(new URLSearchParams(window.location.search).get('fair_id'));
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function initials(username) {
+      if (!username) return '?';
+      return username[0].toUpperCase();
+    }
+
+    function fmtDate(ts) {
+      if (!ts) return '—';
+      return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function rolePillClass(level) {
+      if (level === 'owner')    return 'role-owner';
+      if (level === 'manager')  return 'role-manager';
+      if (level === 'reviewer') return 'role-reviewer';
+      return '';
+    }
+
+    function roleLabel(level) {
+      if (level === 'owner')    return '🏰 Owner';
+      if (level === 'manager')  return '⚙️ Manager';
+      if (level === 'staff') return '📋 Staff';
+      return level;
+    }
+
+    async function loadStaff(fairId, myUserId, myLevel) {
+      const list = document.getElementById('staffList');
+      list.innerHTML = '<div class="empty-state">Loading…</div>';
+
+      const { data, error } = await supabaseClient.rpc('get_fair_staff', { p_fair_id: fairId });
+
+      if (error) {
+        list.innerHTML = `<div class="empty-state">Could not load staff. Please refresh.</div>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        list.innerHTML = `<div class="empty-state">No staff members yet.</div>`;
+        return;
+      }
+
+      list.innerHTML = '';
+
+      data.forEach(member => {
+        const isMe = member.user_id === myUserId;
+        const canRemove = myLevel === 'owner' && !isMe;
+
+        const avatarHtml = member.profile_image_url
+          ? `<img src="${member.profile_image_url}" class="staff-avatar" alt="${member.username}" />`
+          : `<div class="staff-avatar-placeholder">${initials(member.username)}</div>`;
+
+        const row = document.createElement('div');
+        row.className = 'staff-row';
+        row.innerHTML = `
+          ${avatarHtml}
+          <div class="staff-info">
+            <div class="staff-username">${member.username || '(No username)'}${isMe ? ' <span style="font-size:11px;opacity:0.6;">(you)</span>' : ''}</div>
+            <div class="staff-email">${member.email || ''}</div>
+            <div class="staff-since">Added ${fmtDate(member.created_at)}</div>
+          </div>
+          <span class="staff-role ${rolePillClass(member.admin_level)}">${roleLabel(member.admin_level)}</span>
+          <div class="staff-actions">
+            ${canRemove ? `<button class="btn btn-red" onclick="removeStaff('${member.user_id}', '${member.username}', ${fairId})">Remove</button>` : ''}
+          </div>`;
+
+        list.appendChild(row);
+      });
+    }
+
+    async function removeStaff(userId, username, fairId) {
+      if (!confirm(`Remove ${username} from this fair's staff?`)) return;
+
+      showLoader();
+      const { data, error } = await supabaseClient.rpc('remove_fair_staff', {
+        p_fair_id: fairId,
+        p_user_id: userId
+      });
+
+      if (error) {
+        hideLoader();
+        alert('Could not remove staff member. ' + error.message);
+        return;
+      }
+
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      const myLevel = await getMyLevel(fairId);
+      await loadStaff(fairId, user.id, myLevel);
+      hideLoader();
+    }
+
+    async function getMyLevel(fairId) {
+      const { data } = await supabaseClient.rpc('get_my_fair_admin_level', { p_fair_id: fairId });
+      return data;
+    }
+
+    async function loadPage() {
+      showLoader();
+
+      const fairId = getFairIdFromUrl();
+      if (!fairId) {
+        hideLoader();
+        return;
+      }
+
+      // Wire nav
+      document.getElementById('navDashboard').href = `fair_info/fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('navApplications').href = `fair_info/fair_applications.html?fair_id=${fairId}`;
+      document.getElementById('breadDashboard').href = `fair_info/fair_dashboard.html?fair_id=${fairId}`;
+
+      document.getElementById('navLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = '/index.html';
+      });
+
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) {
+        hideLoader();
+        window.location.href = '/admin/admin_login.html';
+        return;
+      }
+
+      const myLevel = await getMyLevel(fairId);
+
+      // If not owner, hide the add staff card
+      if (myLevel !== 'owner') {
+        document.getElementById('addStaffCard').style.display = 'none';
+      }
+
+      // Wire add button
+      document.getElementById('btnAdd').onclick = async () => {
+        const username = document.getElementById('usernameInput').value.trim();
+        const role = document.getElementById('roleSelect').value;
+
+        if (!username) {
+          setMsg('addMsg', 'Please enter a FairQuest username.', 'err');
+          return;
+        }
+
+        setMsg('addMsg', 'Adding…', 'info');
+        showLoader();
+
+        const { data, error } = await supabaseClient.rpc('add_fair_staff', {
+          p_fair_id: fairId,
+          p_username: username,
+          p_admin_level: role
+        });
+
+        hideLoader();
+
+        if (error) {
+          setMsg('addMsg', 'Error: ' + error.message, 'err');
+          return;
+        }
+
+        if (data === 'not_found') {
+          setMsg('addMsg', `No FairQuest account found with username "${username}". They must sign up first.`, 'err');
+          return;
+        }
+
+        if (data === 'self') {
+          setMsg('addMsg', 'You cannot add yourself — you are already the owner.', 'err');
+          return;
+        }
+
+        if (data === 'ok') {
+          setMsg('addMsg', `✅ ${username} added successfully as ${role}.`, 'ok');
+          document.getElementById('usernameInput').value = '';
+          await loadStaff(fairId, user.id, myLevel);
+          return;
+        }
+
+        setMsg('addMsg', data || 'Done.', 'ok');
+        await loadStaff(fairId, user.id, myLevel);
+      };
+
+      // Allow pressing Enter on username field
+      document.getElementById('usernameInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('btnAdd').click();
+      });
+
+      await loadStaff(fairId, user.id, myLevel);
+      hideLoader();
+    }
+
+    loadPage();
+  </script>
+</body>
+</html>

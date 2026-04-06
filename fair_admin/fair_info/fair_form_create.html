@@ -3,181 +3,284 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Create Form | FairQuest</title>
-
+  <title>Create New Application Form | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
-<link rel="stylesheet" href="/css/fq_theme.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
     body {
       font-family: 'Domine', serif;
-      background: #000;
+      background: #0a0a0a;
       color: #f0e6d2;
-      text-align: center;
-      padding: 20px;
-      margin: 0;
+      margin: 0; padding: 0;
     }
-    h1 { font-family: 'Cinzel', serif; margin-bottom: 10px; }
 
+    /* ── TOP NAV ── */
+    .topnav {
+      background: #1a1208;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links a.active { background: rgba(241,223,153,0.18); color: #f1df99; font-weight: bold; }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18); color: #f4a0a0;
+      margin-left: 8px; border: 1px solid rgba(180,50,50,0.3);
+    }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+
+    /* ── LAYOUT ── */
+    .page-body { padding: 16px 20px 50px; max-width: 800px; margin: 0 auto; }
+
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+
+    h1 { font-family: 'Cinzel', serif; font-size: 22px; color: #f1df99; margin: 8px 0 16px; }
+
+    /* ── GOLD CARD ── */
     .card {
-      position: relative;
       background: rgba(241, 223, 153, 0.88);
       padding: 26px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      margin: 18px auto;
-      max-width: 800px;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+      margin-bottom: 20px;
       color: #3b1f1f;
       text-align: left;
     }
+    .card h2 { font-family: 'Cinzel', serif; font-size: 17px; margin: 0 0 16px; color: #3b1f1f; }
 
-    .profile-logo {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 60px;
-      height: auto;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-    }
-
-    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    /* ── BUTTONS ── */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
     .btn {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
+      background-color: #4CAF50; color: #fff;
+      padding: 11px 20px; border: none; border-radius: 8px;
+      font-size: 15px; font-family: 'Domine', serif;
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
     }
-    .btn:hover { background-color: #45a049; }
+    .btn:hover { background-color: #43a047; }
+    .btn:active { transform: scale(0.98); }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #1a1a1a; }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 10px 14px;
-      margin-top: 12px;
-      align-items: center;
+    /* ── FORM FIELDS ── */
+    .field-group { margin-bottom: 20px; }
+    .field-group label {
+      display: block;
+      font-weight: bold;
+      font-size: 14px;
+      color: #3b1f1f;
+      margin-bottom: 6px;
     }
-
-    .label { font-weight: bold; }
+    .field-group .field-hint {
+      font-size: 13px;
+      color: #5c3a1e;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
 
     select, input[type="text"] {
       font-size: 15px;
       width: 100%;
-      padding: 10px;
+      padding: 11px 14px;
       border-radius: 8px;
-      border: 1px solid rgba(0,0,0,0.25);
+      border: 1px solid rgba(0,0,0,0.2);
       box-sizing: border-box;
+      font-family: 'Domine', serif;
+      background: rgba(255,255,255,0.9);
+      color: #111;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    select:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: #bb7a28;
+      box-shadow: 0 0 0 3px rgba(187,122,40,0.2);
     }
 
-    .hint { margin-top: 10px; opacity: 0.9; }
+    /* ── TYPE PREVIEW CARDS ── */
+    .type-previews {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .type-preview {
+      background: rgba(255,255,255,0.45);
+      border: 2px solid transparent;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .type-preview.selected {
+      border-color: #bb7a28;
+      background: rgba(255,255,255,0.75);
+    }
+    .type-preview .tp-icon { font-size: 28px; margin-bottom: 6px; }
+    .type-preview .tp-name { font-weight: bold; font-size: 14px; color: #3b1f1f; }
+    .type-preview .tp-desc { font-size: 12px; color: #5c3a1e; margin-top: 4px; line-height: 1.4; }
 
-    /* Loader */
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    /* ── STATUS MSG ── */
+    .status-msg {
+      margin-top: 14px;
+      font-size: 14px;
+      min-height: 20px;
+      color: #3b1f1f;
+    }
+    .status-msg.error { color: #8b1a1a; }
+    .status-msg.info { color: #5c3a1e; }
+
+    /* ── LOADER ── */
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; flex-direction: column; gap: 16px;
+    }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner {
+      border: 5px solid rgba(255,255,255,0.15);
+      border-top: 5px solid #bb9457;
+      border-radius: 50%; width: 52px; height: 52px;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @media (max-width: 540px) {
+      .topnav-links a { font-size: 12px; padding: 5px 8px; }
     }
   </style>
 </head>
-
 <body>
-  <h1 id="pageTitle">Create New Form</h1>
 
-  <div id="loadingOverlay" style="
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  ">
-    <div style="
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #bb9457;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1s linear infinite;
-    "></div>
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="../fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" id="navApplications">📋 Applications</a>
+      <a href="#" id="navUpdateFair">✏️ Update Fair</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <!-- LOADER -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Setting up form creator…</p>
   </div>
 
-  <div class="card">
-    <a href="/home.html">
-      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
-    </a>
+  <div class="page-body">
 
-    <h2 style="margin-top:0;">New Form</h2>
-
-    <div class="btn-row">
-      <button class="btn" id="btnBack">⬅ Back to Setup</button>
-      <button class="btn" id="btnCreate">Create</button>
+    <div class="breadcrumb">
+      <a href="../fair_admin.html">Admin Home</a> ›
+      <a href="#" id="breadDashboard">Dashboard</a> ›
+      <a href="#" id="breadApplications">Applications</a> ›
+      <a href="#" id="breadSetup">Manage Forms</a> ›
+      <span>Create New Form</span>
     </div>
 
-    <div class="grid">
-      <div class="label">Form Type:</div>
-      <div>
-        <select id="selType">
-          <option value="">Select type...</option>
-          <option value="vendor">Vendor</option>
+    <h1>Create New Application Form</h1>
+
+    <div class="card">
+      <h2>📝 New Application Form</h2>
+
+      <div class="btn-row">
+        <button class="btn btn-dark" id="btnBack">⬅ Back to Forms</button>
+      </div>
+
+      <!-- STEP 1: FORM TYPE -->
+      <div class="field-group">
+        <label>Step 1 — Who is this application for?</label>
+        <div class="field-hint">Choose the type of applicant this form will be used for. You can create one form per type.</div>
+
+        <div class="type-previews" id="typePreviews">
+          <div class="type-preview" data-type="vendor" onclick="selectType('vendor', this)">
+            <div class="tp-icon">🧺</div>
+            <div class="tp-name">Artisan / Craft Vendor</div>
+            <div class="tp-desc">Jewelry, clothing, pottery, candles, weapons, and other handmade goods</div>
+          </div>
+          <div class="type-preview" data-type="food_vendor" onclick="selectType('food_vendor', this)">
+            <div class="tp-icon">🍖</div>
+            <div class="tp-name">Food Vendor</div>
+            <div class="tp-desc">Turkey legs, drinks, baked goods, food trucks, and concessions</div>
+          </div>
+          <div class="type-preview" data-type="performer" onclick="selectType('performer', this)">
+            <div class="tp-icon">🎭</div>
+            <div class="tp-name">Performer</div>
+            <div class="tp-desc">Musicians, dancers, actors, combat performers, and entertainers</div>
+          </div>
+        </div>
+
+        <!-- Hidden select kept for compatibility -->
+        <select id="selType" style="display:none;">
+          <option value="">Select type…</option>
+          <option value="vendor">Artisan / Craft Vendor</option>
           <option value="food_vendor">Food Vendor</option>
           <option value="performer">Performer</option>
         </select>
       </div>
 
-      <div class="label">Title:</div>
-      <div>
-        <input id="txtTitle" type="text" placeholder="Example: 2026 Vendor Application" />
+      <!-- STEP 2: TITLE -->
+      <div class="field-group">
+        <label for="txtTitle">Step 2 — Give this form a name</label>
+        <div class="field-hint">This name is for your reference only — applicants won't see it. Use something descriptive like "2026 Spring Vendor Application."</div>
+        <input id="txtTitle" type="text" placeholder="Example: 2026 Spring Vendor Application" />
       </div>
+
+      <div class="btn-row" style="margin-bottom: 0;">
+        <button class="btn" id="btnCreate">Create Form →</button>
+      </div>
+
+      <div class="status-msg" id="statusMsg"></div>
     </div>
 
-    <div class="hint" id="statusMsg"></div>
-  </div>
+  </div><!-- /page-body -->
 
   <script>
-    const supabaseClient = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+    const SUPABASE_URL = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    function showLoader() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
+    function setMsg(t, cls) {
+      const el = document.getElementById('statusMsg');
+      el.textContent = t || '';
+      el.className = 'status-msg' + (cls ? ` ${cls}` : '');
+    }
 
     function getFairIdFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      const fairIdRaw = params.get('fair_id');
-      const fairId = Number(fairIdRaw);
-      return Number.isFinite(fairId) ? fairId : null;
+      const n = Number(new URLSearchParams(window.location.search).get('fair_id'));
+      return Number.isFinite(n) ? n : null;
     }
 
-    function hideLoader() {
-      const el = document.getElementById('loadingOverlay');
-      if (el) el.style.display = 'none';
-    }
-
-    function showLoader() {
-      const el = document.getElementById('loadingOverlay');
-      if (el) el.style.display = 'flex';
-    }
-
-    function setMsg(text) {
-      document.getElementById('statusMsg').textContent = text || '';
-    }
-
-    async function requireAccess(fairId) {
-      const { data, error } = await supabaseClient
-        .rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'edit_forms' });
-      if (error) throw error;
-      return data;
-    }
-
-    async function createForm(fairId, formType, title) {
-      const { data, error } = await supabaseClient
-        .rpc('fair_man_app_create_form', { p_fair_id: fairId, p_form_type: formType, p_title: title });
-      if (error) throw error;
-      return data; // uuid
+    // Visual type selection
+    let selectedType = '';
+    function selectType(type, el) {
+      selectedType = type;
+      document.getElementById('selType').value = type;
+      document.querySelectorAll('.type-preview').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      setMsg('');
     }
 
     async function loadPage() {
@@ -186,57 +289,72 @@
 
       const fairId = getFairIdFromUrl();
       if (!fairId) {
-        setMsg('Missing fair_id in URL.');
+        setMsg('Fair not found. Please go back and try again.', 'error');
         hideLoader();
         return;
       }
 
-      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-      if (userError || !user) {
-        setMsg('Please log in first.');
-        hideLoader();
-        return;
-      }
-
-      try {
-        await requireAccess(fairId);
-      } catch (e) {
-        setMsg('Not authorized.');
-        hideLoader();
-        return;
-      }
+      // Wire nav
+      document.getElementById('navDashboard').href = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('navApplications').href = `fair_applications.html?fair_id=${fairId}`;
+      document.getElementById('navUpdateFair').href = `../fair_update.html?fair_id=${fairId}`;
+      document.getElementById('breadDashboard').href = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('breadApplications').href = `fair_applications.html?fair_id=${fairId}`;
+      document.getElementById('breadSetup').href = `fair_application_setup.html?fair_id=${fairId}`;
 
       document.getElementById('btnBack').onclick = () => {
         window.location.href = `fair_application_setup.html?fair_id=${fairId}`;
       };
 
+      document.getElementById('navLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = '/index.html';
+      });
+
+ const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) {
+        setMsg('Please log in to continue.', 'error');
+        hideLoader();
+        return;
+      }
+
+      const { data: allowed } = await supabaseClient
+        .rpc('check_fair_permission', {
+          p_fair_id: fairId,
+          p_permission: 'edit_forms'
+        });
+
+      if (!allowed) {
+        window.location.href = `fair_access_denied.html?fair_id=${fairId}`;
+        return;
+      }
+
       document.getElementById('btnCreate').onclick = async () => {
-        const type = document.getElementById('selType').value;
-        const title = document.getElementById('txtTitle').value || '';
+        const type = document.getElementById('selType').value || selectedType;
+        const title = (document.getElementById('txtTitle').value || '').trim();
 
         if (!type) {
-          setMsg('Select a form type.');
+          setMsg('Please choose a form type first — click one of the boxes above.', 'info');
           return;
         }
-        if (!title.trim()) {
-          setMsg('Enter a title.');
+        if (!title) {
+          setMsg('Please give this form a name before continuing.', 'info');
           return;
         }
 
         showLoader();
-        setMsg('Creating...');
+        setMsg('Creating your form…', 'info');
 
         try {
-          const formId = await createForm(fairId, type, title.trim());
-          setMsg('Created.');
-
-          // Next page (we will build this next)
+          const { data: formId, error } = await supabaseClient
+            .rpc('fair_man_app_create_form', { p_fair_id: fairId, p_form_type: type, p_title: title });
+          if (error) throw error;
           window.location.href = `fair_form_edit.html?fair_id=${fairId}&form_id=${formId}`;
         } catch (e) {
           console.error(e);
-          setMsg('Create failed. Check console.');
+          setMsg('Could not create the form. Please try again.', 'error');
           hideLoader();
-          return;
         }
       };
 

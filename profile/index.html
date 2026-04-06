@@ -3,224 +3,768 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User Profile | FairQuest</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <title>My Profile | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Domine:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
-<link rel="stylesheet" href="/css/fq_theme.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── ROOT VARIABLES ── */
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --parchment-2: rgba(214, 197, 126, 0.90);
+      --ink:         #1e1208;
+      --ink-2:       #3b1f1f;
+      --ink-3:       #5c3a1e;
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
+    /* ── BODY & BACKGROUND ── */
     body {
       font-family: 'Domine', serif;
-      background: #000;
-      color: #f0e6d2;
-      text-align: center;
-      padding: 20px;
-      margin: 0;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
     }
-  h1 {
-  font-family: 'Cinzel', serif;
-  margin-bottom: 20px;
-  font-size: 32px;
-}
-    .profile-card {
-  position: relative;
-  background: rgba(214, 197, 126, 0.88);
-  padding: 26px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  margin: 20px auto;
-  max-width: 700px;
-  color: #3b1f1f;
-  text-align: left;
-  width: 95%;
-}
-    .profile-logo {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 60px;
-      height: auto;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+
+    /* Textured background with subtle pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
     }
-    .profile-card img.profile-img {
-      max-width: 120px;
-      border-radius: 50%;
-      margin: 0 auto 15px auto;
-      display: block;
+
+    /* ── TOP NAV ── */
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
     }
-    .profile-card p {
-      margin: 8px 0;
-    }
-    .settings-button {
-  margin-top: 20px;
-  background-color: #4CAF50;
-  color: white;
-  padding: 14px 22px;
-  border: none;
-  border-radius: 8px;
-  font-size: 18px;
-  cursor: pointer;
-}
-    .settings-button:hover {
-      background-color: #45a049;
-    }
-    a.back-link {
-      display: inline-block;
-      margin-top: 30px;
-      color: #bb9457;
-      font-weight: bold;
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       text-decoration: none;
     }
-    .updates-section {
-      margin-top: 40px;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-      text-align: left;
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
     }
-.update-item {
-  background: rgba(214, 197, 126, 0.88);
-  color: #3b1f1f;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
+    }
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
+    }
+    .nav-btn-home {
+      background: rgba(201,168,76,0.10);
+    }
+
+    /* ── PAGE WRAPPER ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 28px;
+      animation: fadeDown 0.5s ease both;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 34px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+      line-height: 1.2;
+    }
+    .page-header .subtitle {
+      font-size: 14px;
+      color: var(--gold);
+      margin-top: 6px;
+      opacity: 0.85;
+    }
+
+    /* ── SECTION ANIMATIONS ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card { animation: fadeUp 0.45s ease both; }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.12s; }
+    .card:nth-child(3) { animation-delay: 0.19s; }
+    .card:nth-child(4) { animation-delay: 0.26s; }
+    .card:nth-child(5) { animation-delay: 0.33s; }
+
+    /* ── GOLD CARD ── */
+    .card {
+      background: var(--parchment);
+      border-radius: var(--card-radius);
+      padding: 22px 20px;
+      margin-bottom: 18px;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
+      color: #111;       /* BLACK TEXT — all card content */
+    }
+    /* BLACK TEXT — nuclear rule for all card content */
+    .card, .card * { color: #111 !important; }
+    /* Exemptions — elements with dark backgrounds need light text */
+    .avatar-level { color: #f1df99 !important; }
+    .avatar-level * { color: #f1df99 !important; }
+    .new-badge { color: #fff !important; }
+
+    .card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #111 !important;
+      opacity: 1;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(0,0,0,0.12);
+    }
+
+    /* ── PROFILE HERO ── */
+    .profile-hero {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .avatar-img {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--gold);
+      box-shadow: 0 0 0 4px rgba(201,168,76,0.2), 0 4px 14px rgba(0,0,0,0.4);
+      display: block;
+    }
+    .avatar-placeholder {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8a6a1a, #c9a84c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      border: 3px solid var(--gold);
+      box-shadow: 0 0 0 4px rgba(201,168,76,0.2), 0 4px 14px rgba(0,0,0,0.4);
+    }
+    .avatar-level {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      background: var(--ink);
+      border: 2px solid var(--gold);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold-light);
+      padding: 2px 7px;
+      font-family: 'Cinzel', serif;
+      white-space: nowrap;
+    }
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(17px, 4.5vw, 22px);
+      font-weight: 700;
+      color: #111 !important;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    .profile-email {
+      font-size: 13px;
+      color: #111 !important;
+      margin-bottom: 8px;
+      word-break: break-all;
+    }
+    .profile-since {
+  font-size: 12px;
+  color: #111 !important;
+  opacity: 1;
 }
+
+    /* ── STATS GRID ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 12px;
+      padding: 12px 10px;
+      text-align: center;
+    }
+    .stat-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+    .stat-val {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #111 !important;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #111 !important;
+      margin-top: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── CHARACTER CARD ── */
+    .char-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 400px) {
+      .char-grid { grid-template-columns: 1fr; }
+    }
+    .char-item {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .char-item-label {
+      font-size: 11px;
+      color: #111 !important;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 3px;
+    }
+    .char-item-val {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111 !important;
+    }
+
+    /* ── ROLE / DASHBOARD BUTTONS ── */
+    .dashboards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 380px) {
+      .dashboards-grid { grid-template-columns: 1fr; }
+    }
+    .role-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 14px;
+      background: rgba(255,255,255,0.85);
+      border: 1.5px solid rgba(0,0,0,0.18);
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      width: 100%;
+      font-family: 'Domine', serif;
+    }
+    .role-btn:hover {
+      background: rgba(255,255,255,1);
+      border-color: rgba(0,0,0,0.22);
+      transform: translateY(-1px);
+    }
+    .role-btn:active { transform: scale(0.98); }
+    .role-icon { font-size: 24px; flex-shrink: 0; }
+    .role-text { flex: 1; min-width: 0; }
+    .role-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111 !important;
+      line-height: 1.2;
+    }
+    .role-sub {
+      font-size: 11px;
+      color: #111 !important;
+      margin-top: 2px;
+    }
+    .role-arrow {
+      font-size: 16px;
+      color: #111 !important;
+      flex-shrink: 0;
+    }
+
+    /* Settings button — special full-width */
+    .settings-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      background: rgba(255,255,255,0.85);
+      border: 1.5px solid rgba(0,0,0,0.18);
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Domine', serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #111 !important;
+      transition: background 0.15s, transform 0.1s;
+      margin-top: 10px;
+    }
+    .settings-btn:hover { background: rgba(255,255,255,0.75); transform: translateY(-1px); }
+    .settings-btn:active { transform: scale(0.98); }
+
+    /* ── UPDATES SECTION ── */
+    .updates-list { display: flex; flex-direction: column; gap: 10px; }
+    .update-item {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .update-date {
+      font-size: 11px;
+      color: #111 !important;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 5px;
+    }
+    .update-text {
+      font-size: 14px;
+      color: #111 !important;
+      line-height: 1.55;
+    }
+    .new-badge {
+      display: none;
+      background: #c0392b;
+      color: #fff !important;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      border-radius: 999px;
+      vertical-align: middle;
+      margin-left: 8px;
+      text-transform: uppercase;
+    }
+
+    /* ── DANGER ZONE ── */
+    .danger-zone {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .delete-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px;
+      background: rgba(180,30,30,0.12);
+      border: 1.5px solid rgba(180,30,30,0.3);
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      font-weight: 700;
+      transition: background 0.15s;
+      text-decoration: none;
+    }
+    /* Delete button stays red — override the card black rule */
+   .danger-zone .delete-btn,
+.danger-zone .delete-btn * { color: #cc0000 !important; }
+    .delete-btn:hover { background: rgba(180,30,30,0.22); }
+
+    /* ── FOOTER LINKS ── */
+    .footer-links {
+      text-align: center;
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(201,168,76,0.15);
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--gold);
+      font-size: 13px;
+      text-decoration: none;
+      opacity: 0.8;
+    }
+    .footer-links a:hover { opacity: 1; text-decoration: underline; }
+
+    /* ── SKELETON / LOADING ── */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.08) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+      height: 16px;
+      margin: 6px 0;
+    }
+    @keyframes shimmer {
+      from { background-position: 200% 0; }
+      to   { background-position: -200% 0; }
+    }
+
+    /* ── LOADER OVERLAY ── */
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay {
+      position: fixed; inset: 0;
+      background: rgba(13,10,4,0.92);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; flex-direction: column; gap: 18px;
+    }
+    .spinner {
+      border: 4px solid rgba(201,168,76,0.2);
+      border-top: 4px solid var(--gold);
+      border-radius: 50%;
+      width: 48px; height: 48px;
+      animation: spin 0.85s linear infinite;
+    }
+    #loadingOverlay p {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      color: var(--gold);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── MOBILE TWEAKS ── */
+    @media (max-width: 480px) {
+      .page { padding: 20px 12px 50px; }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .stat-val { font-size: 17px; }
+      .profile-hero { gap: 14px; }
+      .avatar-img, .avatar-placeholder { width: 74px; height: 74px; }
+    }
   </style>
 </head>
 <body>
 
-  <h1>Welcome to Your Profile</h1>
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading your profile…</p>
+  </div>
 
-  <div class="profile-card" id="profileCard">
-    <a href="/home.html">
-      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
     </a>
-    Loading profile...
-  </div>
+    <div class="topnav-right">
+      <a href="/fairs/explore.html" class="nav-btn">🎪 Explore Fairs</a>
+      <a href="/index.html" class="nav-btn nav-btn-home">🏡 Home</a>
+    </div>
+  </nav>
 
-  <div id="profileButtons">
-    <button class="settings-button" onclick="goToSettings()">⚙️Settings</button>
-  </div>
+  <!-- PAGE -->
+  <div class="page">
 
-  <a href="/index.html" class="back-link">🏡Back to Home</a>
-  <a href="/delet_account.html" class="back-link" style="color: red; display: inline-block; margin-top: 20px;">
-    🗑️ Delete My Account
-  </a>
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <h1>⚔️ My Profile</h1>
+      <p class="subtitle">Your FairQuest identity & dashboards</p>
+    </div>
 
-  <div class="updates-section" id="updatesSection">
-    <h2>
-      📢 Latest FairQuest Updates
-      <span id="newBadge" style="display:none; color: red; font-size: 16px;">● NEW</span>
-    </h2>
-    <div id="updatesList">Loading updates...</div>
-  </div>
+    <!-- ① PROFILE CARD -->
+    <div class="card" id="profileCard">
+      <div class="card-title">👤 Account</div>
+      <!-- Loading skeleton -->
+      <div class="profile-hero">
+        <div class="avatar-placeholder">⚔️</div>
+        <div class="profile-info">
+          <div class="skeleton" style="width:55%; height:22px;"></div>
+          <div class="skeleton" style="width:80%; height:14px; margin-top:8px;"></div>
+          <div class="skeleton" style="width:45%; height:12px; margin-top:8px;"></div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box"><span class="stat-icon">⭐</span><div class="stat-val">—</div><div class="stat-label">Level</div></div>
+        <div class="stat-box"><span class="stat-icon">🏆</span><div class="stat-val">—</div><div class="stat-label">XP Points</div></div>
+        <div class="stat-box"><span class="stat-icon">🪙</span><div class="stat-val">—</div><div class="stat-label">Tokens</div></div>
+      </div>
+    </div>
+
+    <!-- ② CHARACTER CARD -->
+    <div class="card" id="characterCard" style="display:none;">
+      <div class="card-title">🛡️ Character</div>
+      <div class="char-grid" id="charGrid"></div>
+    </div>
+
+    <!-- ③ DASHBOARDS CARD -->
+    <div class="card" id="dashboardsCard">
+      <div class="card-title">🗺️ My Dashboards</div>
+      <div class="dashboards-grid" id="dashboardsGrid">
+        <div class="skeleton" style="height:60px; border-radius:12px;"></div>
+        <div class="skeleton" style="height:60px; border-radius:12px;"></div>
+      </div>
+      <button class="settings-btn" onclick="window.location.href='settings.html'">
+        ⚙️ Account Settings
+      </button>
+    </div>
+
+    <!-- ④ UPDATES CARD -->
+    <div class="card">
+      <div class="card-title">
+        📢 FairQuest Updates
+        <span class="new-badge" id="newBadge">New</span>
+      </div>
+      <div class="updates-list" id="updatesList">
+        <div class="skeleton" style="height:60px; border-radius:10px;"></div>
+        <div class="skeleton" style="height:60px; border-radius:10px;"></div>
+      </div>
+    </div>
+
+    <!-- ⑤ ACCOUNT ACTIONS CARD -->
+    <div class="card">
+      <div class="card-title">⚠️ Account</div>
+      <div class="danger-zone">
+        <a href="/delet_account.html" class="delete-btn">
+          🗑️ Delete My Account
+        </a>
+      </div>
+    </div>
+
+    <!-- FOOTER LINKS -->
+    <div class="footer-links">
+      <a href="/how_to/help_center.html">Help Center</a>
+      <a href="/contact.html">Contact Us</a>
+      <a href="/terms.html">Terms</a>
+      <a href="/privacy.html">Privacy</a>
+    </div>
+
+  </div><!-- /page -->
 
   <script>
-    console.log("Script loaded successfully");
-
-    // ✅ FIX: do NOT declare "supabase" again. Use a unique name.
     const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
-    function goToSettings() {
-      window.location.href = 'settings.html';
+    function hideLoader() {
+      document.getElementById('loadingOverlay').style.display = 'none';
     }
 
-   async function loadProfilePage() {
+    async function loadProfilePage() {
+      const { data, error } = await supabaseClient.rpc('get_profile_page_data');
 
-  const { data, error } = await supabaseClient.rpc('get_profile_page_data');
+      if (error || !data) {
+        document.getElementById('profileCard').innerHTML = `
+          <div class="card-title">👤 Account</div>
+          <div style="background:rgba(180,30,30,0.12); border:1px solid rgba(180,30,30,0.25); border-radius:10px; padding:16px; text-align:center;">
+            <p style="color:#8b1a1a !important; font-size:15px; font-weight:bold;">⚠️ We couldn't load your profile.</p>
+            <p style="color:#8b1a1a !important; font-size:13px; margin-top:6px;">Please refresh the page or <a href="/how_to/help_center.html" style="color:#8b1a1a;">contact support</a>.</p>
+          </div>`;
+        hideLoader();
+        return;
+      }
 
-  if (error || !data) {
-    document.getElementById('profileCard').innerHTML = '<p>⚠️ Failed to load profile.</p>';
-    return;
-  }
+      const p = data.profile;
+      const r = data.roles;
 
-  const p = data.profile;
-  const r = data.roles;
+      /* ── ① PROFILE CARD ── */
+      const avatarHtml = p.profile_image_url
+        ? `<img src="${p.profile_image_url}" class="avatar-img" alt="Profile photo" />`
+        : `<div class="avatar-placeholder">⚔️</div>`;
 
-  document.getElementById('profileCard').innerHTML = `
-    <a href="/home.html">
-      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
-    </a>
+      const memberSince = new Date(p.created_at).toLocaleDateString('en-US', {
+        month: 'long', day: 'numeric', year: 'numeric'
+      });
 
-    ${p.profile_image_url ? `<img src="${p.profile_image_url}" class="profile-img" />` : ''}
+      document.getElementById('profileCard').innerHTML = `
+        <div class="card-title">👤 Account</div>
+        <div class="profile-hero">
+          <div class="avatar-wrap">
+            ${avatarHtml}
+            <div class="avatar-level">Lvl ${p.level ?? 1}</div>
+          </div>
+          <div class="profile-info">
+            <div class="profile-name">${p.username || '(No username set)'}</div>
+            <div class="profile-email">${p.email || ''}</div>
+            <div class="profile-since">Member since ${memberSince}</div>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-icon">⭐</span>
+            <div class="stat-val">${p.level ?? 1}</div>
+            <div class="stat-label">Level</div>
+          </div>
+          <div class="stat-box">
+            <span class="stat-icon">🏆</span>
+            <div class="stat-val">${(p.points ?? 0).toLocaleString()}</div>
+            <div class="stat-label">XP Points</div>
+          </div>
+          <div class="stat-box">
+            <span class="stat-icon">🪙</span>
+            <div class="stat-val">${(p.tokens ?? 0).toLocaleString()}</div>
+            <div class="stat-label">Tokens</div>
+          </div>
+        </div>`;
 
-    <p><strong>Username:</strong> ${p.username || '(Not Set)'}</p>
-    <p><strong>Email:</strong> ${p.email}</p>
-    <p><strong>Level:</strong> ${p.level ?? 1}</p>
-    <p><strong>XP Points:</strong> ${p.points ?? 0}</p>
-    <p><strong>Tokens:</strong> ${p.tokens ?? 0}</p>
-    <p><strong>Character Class:</strong> ${p.character_class || '(None)'}</p>
-    <p><strong>Character Clan:</strong> ${p.character_clan || '(None)'}</p>
-    <p><strong>Alignment:</strong> ${p.character_alignment || '(None)'}</p>
-    <p><strong>Member Since:</strong> ${new Date(p.created_at).toLocaleDateString()}</p>
-  `;
+      /* ── ② CHARACTER CARD ── */
+      const hasChar = p.character_class || p.character_clan || p.character_alignment;
+      if (hasChar) {
+        const charCard = document.getElementById('characterCard');
+        const charGrid = document.getElementById('charGrid');
+        charCard.style.display = 'block';
 
-  const profileButtons = document.getElementById('profileButtons');
+        const items = [
+          { label: 'Class',     val: p.character_class     || '—' },
+          { label: 'Clan',      val: p.character_clan      || '—' },
+          { label: 'Alignment', val: p.character_alignment || '—' },
+        ];
+        charGrid.innerHTML = items.map(it => `
+          <div class="char-item">
+            <div class="char-item-label">${it.label}</div>
+            <div class="char-item-val">${it.val}</div>
+          </div>`).join('');
+      }
 
-  if (r.is_admin) {
-    const btn = document.createElement('button');
-    btn.className = 'settings-button';
-    btn.innerHTML = '🏰 Manage My Fairs';
-    btn.onclick = () => window.location.href = '/fair_admin/fair_admin.html';
-    profileButtons.appendChild(btn);
-  }
+      /* ── ③ DASHBOARDS ── */
+      const grid = document.getElementById('dashboardsGrid');
+      grid.innerHTML = '';
 
-  if (r.is_vendor) {
-    const btn = document.createElement('button');
-    btn.className = 'settings-button';
-    btn.innerHTML = '🧺 Vendor Dashboard';
-    btn.onclick = () => window.location.href = '/vendor_performer/vendor/dashboard.html';
-    profileButtons.appendChild(btn);
-  }
+      const roles = [
+        { flag: r.is_admin,       icon: '🏰', name: 'Manage My Fairs',    sub: 'Fair organizer tools',   href: '/fair_admin/fair_admin.html' },
+        { flag: r.is_vendor,      icon: '🧺', name: 'Vendor Dashboard',   sub: 'Applications & booth',   href: '/vendor_performer/vendor/dashboard.html' },
+        { flag: r.is_performer,   icon: '🎭', name: 'Performer Dashboard',sub: 'Shows & bookings',       href: '/vendor_performer/performer/dashboard.html' },
+        { flag: r.is_food_vendor, icon: '🍖', name: 'Food Vendor',        sub: 'Food stall management',  href: '/food_vendor/index.html' },
+      ].filter(role => role.flag);
 
-  if (r.is_performer) {
-    const btn = document.createElement('button');
-    btn.className = 'settings-button';
-    btn.innerHTML = '🎭 Performer Dashboard';
-    btn.onclick = () => window.location.href = '/vendor_performer/performer/dashboard.html';
-    profileButtons.appendChild(btn);
-  }
+      if (roles.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column:1/-1; background:rgba(255,255,255,0.85); border:1px dashed rgba(0,0,0,0.2); border-radius:12px; padding:16px; text-align:center;">
+            <div style="font-size:13px; color:#111 !important;">Apply as a vendor or performer to unlock your dashboard here.</div>
+          </div>`;
+      } else {
+        roles.forEach(role => {
+          const btn = document.createElement('button');
+          btn.className = 'role-btn';
+          btn.innerHTML = `
+            <span class="role-icon">${role.icon}</span>
+            <div class="role-text">
+              <div class="role-name">${role.name}</div>
+              <div class="role-sub">${role.sub}</div>
+            </div>
+            <span class="role-arrow">›</span>`;
+          btn.onclick = () => window.location.href = role.href;
+          grid.appendChild(btn);
+        });
+      }
 
-  if (r.is_food_vendor) {
-    const btn = document.createElement('button');
-    btn.className = 'settings-button';
-    btn.innerHTML = '🍔 Manage Food Vendor';
-    btn.onclick = () => window.location.href = '/food_vendor/index.html';
-    profileButtons.appendChild(btn);
-  }
+      /* ── ④ UPDATES ── */
+      const list = document.getElementById('updatesList');
+      list.innerHTML = '';
 
-  const list = document.getElementById('updatesList');
-  list.innerHTML = '';
+      if (!data.updates || data.updates.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:14px; font-size:14px; color:#111 !important;">No updates yet. Check back soon!</div>`;
+      } else {
+        // Show NEW badge if most recent update is < 7 days old
+        const newest = new Date(data.updates[0].created_at);
+        const daysDiff = (Date.now() - newest.getTime()) / (1000 * 60 * 60 * 24);
+        if (daysDiff < 7) {
+          document.getElementById('newBadge').style.display = 'inline-block';
+        }
 
-  data.updates.forEach(u => {
+        data.updates.forEach(u => {
+          const div = document.createElement('div');
+          div.className = 'update-item';
+          const dateStr = new Date(u.created_at).toLocaleDateString('en-US', {
+            month: 'long', day: 'numeric', year: 'numeric'
+          });
+          div.innerHTML = `
+            <div class="update-date">${dateStr}</div>
+            <div class="update-text">${(u.message || '').replace(/\n/g, '<br>')}</div>`;
+          list.appendChild(div);
+        });
+      }
 
-    const div = document.createElement('div');
-    div.className = 'update-item';
+      hideLoader();
+    }
 
-    div.innerHTML = `
-      <strong>${new Date(u.created_at).toLocaleDateString()}</strong><br>
-      ${(u.message || '').replace(/\n/g,'<br>')}
-    `;
-
-    list.appendChild(div);
-  });
-}
-
-   loadProfilePage();
+    loadProfilePage();
   </script>
-
-  <section style="max-width:760px;margin:24px auto 12px;padding:0 18px;text-align:left;opacity:0.9;">
-    <p style="font-size:0.95rem;">
-      This profile shows your FairQuest account details and shortcuts to your dashboards.
-      We keep profiles and application statuses up to date as changes are made by us.
-      For account help, visit <a href="/how_to/help_center.html">Help Center</a> or <a href="/contact.html">Contact</a>.
-    </p>
-  </section>
 
 </body>
 </html>

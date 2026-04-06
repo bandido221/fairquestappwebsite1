@@ -3,392 +3,542 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fair Applications | FairQuest</title>
-
+  <title>Applications | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
-<link rel="stylesheet" href="/css/fq_theme.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
     body {
       font-family: 'Domine', serif;
-      background: #000;
+      background: #0a0a0a;
       color: #f0e6d2;
-      text-align: center;
-      padding: 20px;
       margin: 0;
+      padding: 0;
     }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      background: #1a1208;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      color: #f1df99;
+    }
+    .topnav-links {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .topnav-links a {
+      color: #c8aa6e;
+      text-decoration: none;
+      font-size: 14px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links a.active { background: rgba(241,223,153,0.18); color: #f1df99; font-weight: bold; }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18);
+      color: #f4a0a0;
+      margin-left: 8px;
+      border: 1px solid rgba(180,50,50,0.3);
+    }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+
+    /* ── PAGE ── */
+    .page-body {
+      padding: 16px 20px 50px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .breadcrumb {
+      font-size: 13px;
+      color: #bb9457;
+      margin-bottom: 6px;
+    }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+
     h1 {
       font-family: 'Cinzel', serif;
-      margin-bottom: 10px;
+      font-size: 22px;
+      color: #f1df99;
+      margin: 8px 0 16px;
     }
 
     .card {
-      position: relative;
       background: rgba(241, 223, 153, 0.88);
-      padding: 26px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      margin: 18px auto;
-      max-width: 900px;
+      padding: 22px 24px;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+      margin-bottom: 20px;
       color: #3b1f1f;
       text-align: left;
     }
-
-    .profile-logo {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 60px;
-      height: auto;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    .card h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      margin: 0 0 14px;
+      color: #3b1f1f;
     }
 
-    .btn-row {
+    /* ── BUTTONS ── */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .btn {
+      background-color: #4CAF50;
+      color: #fff;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: 'Domine', serif;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn:hover { background-color: #43a047; }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #222; }
+
+    /* ── SEARCH & FILTER ── */
+    .filter-bar {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin-top: 18px;
+      margin-bottom: 14px;
+      align-items: center;
     }
-    .btn {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
+    .filter-bar input[type="text"] {
+      flex: 1;
+      min-width: 180px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2);
+      font-size: 14px;
+      font-family: 'Domine', serif;
+      background: rgba(255,255,255,0.85);
+      color: #111;
+    }
+    .filter-bar select {
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2);
+      font-size: 14px;
+      font-family: 'Domine', serif;
+      background: rgba(255,255,255,0.85);
+      color: #111;
       cursor: pointer;
     }
-    .btn:hover { background-color: #45a049; }
 
+    /* ── APPLICATION ROWS ── */
     .section-title {
       font-family: 'Cinzel', serif;
-      margin: 6px 0 12px;
-    }
-
-    .list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .row {
+      font-size: 16px;
+      margin: 0 0 12px;
+      color: #3b1f1f;
       display: flex;
       align-items: center;
-      gap: 12px;
-      background: rgba(255,255,255,0.55);
-      border: 1px solid rgba(0,0,0,0.12);
+      gap: 8px;
+    }
+    .section-count {
+      background: rgba(0,0,0,0.12);
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-family: 'Domine', serif;
+    }
+
+    .list { display: flex; flex-direction: column; gap: 10px; }
+
+    .app-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,0,0,0.1);
       border-radius: 10px;
-      padding: 10px 12px;
+      padding: 12px 14px;
+      transition: background 0.1s;
     }
+    .app-row:hover { background: rgba(255,255,255,0.8); }
 
-    .logo {
-      width: 54px;
-      height: 54px;
+    /* Initials avatar */
+    .avatar {
+      width: 46px;
+      height: 46px;
       border-radius: 10px;
-      object-fit: cover;
-      background: rgba(0,0,0,0.08);
-      flex: 0 0 auto;
-    }
-
-    .meta {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-
-    .name {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
       font-weight: bold;
-      font-size: 16px;
-      margin-bottom: 4px;
+      color: #fff;
+      text-transform: uppercase;
+      font-family: 'Cinzel', serif;
+    }
+    .avatar-vendor  { background: #6d4c2a; }
+    .avatar-food    { background: #c0622a; }
+    .avatar-performer { background: #4a3a8f; }
+
+    .app-meta { flex: 1 1 auto; min-width: 0; }
+    .app-name {
+      font-weight: bold;
+      font-size: 15px;
+      color: #3b1f1f;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      margin-bottom: 4px;
     }
-
-    .subline {
-      font-size: 14px;
-      opacity: 0.85;
+    .app-sub {
+      font-size: 13px;
+      color: #5c3a1e;
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
+      align-items: center;
     }
 
-    .pill {
+    /* Status pills with colors */
+    .status-pill {
       display: inline-block;
       padding: 3px 10px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: bold;
-      background: rgba(0,0,0,0.10);
     }
+    .status-in_review  { background: rgba(240,180,20,0.25);  color: #7a5200; border: 1px solid rgba(240,180,20,0.4); }
+    .status-approved   { background: rgba(76,175,80,0.22);   color: #1a5c1e; border: 1px solid rgba(76,175,80,0.4); }
+    .status-rejected,
+    .status-declined   { background: rgba(200,50,50,0.18);   color: #8b1a1a; border: 1px solid rgba(200,50,50,0.3); }
+    .status-pending    { background: rgba(0,0,0,0.08);       color: #3b1f1f; border: 1px solid rgba(0,0,0,0.15); }
+    .status-default    { background: rgba(0,0,0,0.08);       color: #3b1f1f; }
 
-    .right-actions {
-      flex: 0 0 auto;
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-small {
-      background-color: #2f2f2f;
-      color: #fff;
-      padding: 8px 10px;
+    .app-actions { flex-shrink: 0; }
+    .btn-review {
+      background: #4a3a1a;
+      color: #f1df99;
       border: none;
-      border-radius: 6px;
+      padding: 9px 14px;
+      border-radius: 8px;
       font-size: 14px;
+      font-family: 'Domine', serif;
       cursor: pointer;
       white-space: nowrap;
+      transition: background 0.15s;
     }
-    .btn-small:hover { opacity: 0.9; }
+    .btn-review:hover { background: #3a2c12; }
 
-    .empty {
-      margin: 10px 0 0;
+    .empty-msg {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 14px;
+      color: #5c3a1e;
       opacity: 0.85;
     }
 
-    /* Loader */
+    /* ── LOADER ── */
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner {
+      border: 5px solid rgba(255,255,255,0.15);
+      border-top: 5px solid #bb9457;
+      border-radius: 50%;
+      width: 52px;
+      height: 52px;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @media (max-width: 540px) {
+      .app-row { flex-wrap: wrap; }
+      .app-actions { width: 100%; }
+      .btn-review { width: 100%; text-align: center; }
+      .topnav-links a { font-size: 12px; padding: 5px 8px; }
+    }
   </style>
 </head>
-
 <body>
 
-  <h1 id="pageTitle">Fair Applications</h1>
-
-  <div id="loadingOverlay" style="
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  ">
-    <div style="
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #bb9457;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1s linear infinite;
-    "></div>
-  </div>
-
-  <div class="card">
-    <a href="/home.html">
-      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
     </a>
+    <div class="topnav-links">
+      <a href="fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" class="active">📋 Applications</a>
+      <a href="#" id="navUpdateFair">✏️ Update Fair</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
 
-    <h2 style="margin-top:0;">Applications</h2>
-
- <div class="btn-row">
-  <button class="btn" id="btnBackToDashboard">⬅ Back to Dashboard</button>
-  <button class="btn" id="btnAppSetup">Application Setup</button>
-  <button class="btn" id="btnRefresh">Refresh</button>
-</div>
-
-    <p style="margin: 14px 0 0; opacity: 0.9;">
-      This page is list-only. Open an application to review and approve/reject.
-    </p>
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading applications…</p>
   </div>
 
-  <div class="card">
-    <h2 class="section-title">Vendors</h2>
-    <div id="vendorsList" class="list"></div>
-    <div id="vendorsEmpty" class="empty" style="display:none;">No vendor applications found.</div>
-  </div>
+  <div class="page-body">
 
-  <div class="card">
-    <h2 class="section-title">Food Vendors</h2>
-    <div id="foodList" class="list"></div>
-    <div id="foodEmpty" class="empty" style="display:none;">No food vendor applications found.</div>
-  </div>
+    <div class="breadcrumb">
+      <a href="fair_admin.html">Admin Home</a> › <a href="#" id="breadDashboard">Dashboard</a> › <span>Applications</span>
+    </div>
 
-  <div class="card">
-    <h2 class="section-title">Performers</h2>
-    <div id="performersList" class="list"></div>
-    <div id="performersEmpty" class="empty" style="display:none;">No performer applications found.</div>
-  </div>
+    <h1 id="pageTitle">Applications</h1>
+
+    <!-- TOP CONTROL CARD -->
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn btn-dark" id="btnBackToDashboard">⬅ Back to Dashboard</button>
+        <button class="btn" id="btnAppSetup">⚙️ Manage Application Forms</button>
+        <button class="btn btn-dark" id="btnRefresh">↺ Refresh</button>
+      </div>
+
+      <!-- SEARCH + FILTER -->
+      <div class="filter-bar">
+        <input type="text" id="searchInput" placeholder="🔍  Search by applicant name or email…" />
+        <select id="statusFilter">
+          <option value="">All Statuses</option>
+          <option value="pending">Draft / Pending</option>
+          <option value="in_review">In Review</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Declined</option>
+        </select>
+      </div>
+      <p style="font-size:13px; color:#5c3a1e; margin:0;">Click <strong>Review Application</strong> on any row to open, approve, or decline it.</p>
+    </div>
+
+    <!-- VENDORS -->
+    <div class="card">
+      <h2 class="section-title">🧺 Artisan &amp; Craft Vendors <span class="section-count" id="vendorCount">0</span></h2>
+      <div id="vendorsList" class="list"></div>
+      <div id="vendorsEmpty" class="empty-msg" style="display:none;">No vendor applications found.</div>
+    </div>
+
+    <!-- FOOD VENDORS -->
+    <div class="card">
+      <h2 class="section-title">🍖 Food Vendors <span class="section-count" id="foodCount">0</span></h2>
+      <div id="foodList" class="list"></div>
+      <div id="foodEmpty" class="empty-msg" style="display:none;">No food vendor applications found.</div>
+    </div>
+
+    <!-- PERFORMERS -->
+    <div class="card">
+      <h2 class="section-title">🎭 Performers <span class="section-count" id="performersCount">0</span></h2>
+      <div id="performersList" class="list"></div>
+      <div id="performersEmpty" class="empty-msg" style="display:none;">No performer applications found.</div>
+    </div>
+
+  </div><!-- /page-body -->
 
   <script>
-    const supabaseClient = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+    const SUPABASE_URL = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    // All loaded rows — for client-side filtering
+    let allVendors = [], allFood = [], allPerformers = [];
 
     function getFairIdFromUrl() {
       const params = new URLSearchParams(window.location.search);
-      const fairIdRaw = params.get('fair_id');
-      const fairId = Number(fairIdRaw);
-      return Number.isFinite(fairId) ? fairId : null;
+      const n = Number(params.get('fair_id'));
+      return Number.isFinite(n) ? n : null;
     }
 
-    function hideLoader() {
-      const el = document.getElementById('loadingOverlay');
-      if (el) el.style.display = 'none';
+    function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
+    function showLoader() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+
+    function statusLabel(s) {
+      const v = String(s || '').toLowerCase();
+      if (v === 'in_review') return 'In Review';
+      if (v === 'approved') return 'Approved';
+      if (v === 'rejected' || v === 'declined') return 'Declined';
+      if (v === 'pending') return 'Pending';
+      return s || 'Unknown';
     }
 
-    function showLoader() {
-      const el = document.getElementById('loadingOverlay');
-      if (el) el.style.display = 'flex';
+    function statusClass(s) {
+      const v = String(s || '').toLowerCase();
+      if (v === 'in_review') return 'status-in_review';
+      if (v === 'approved') return 'status-approved';
+      if (v === 'rejected' || v === 'declined') return 'status-rejected';
+      if (v === 'pending') return 'status-pending';
+      return 'status-default';
     }
 
-    function clearLists() {
-      document.getElementById('vendorsList').innerHTML = '';
-      document.getElementById('foodList').innerHTML = '';
-      document.getElementById('performersList').innerHTML = '';
-
-      document.getElementById('vendorsEmpty').style.display = 'none';
-      document.getElementById('foodEmpty').style.display = 'none';
-      document.getElementById('performersEmpty').style.display = 'none';
-    }
-
-    function safeText(v) {
-      return (v === null || v === undefined || v === '') ? 'N/A' : String(v);
+    function initials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      if (parts.length === 1) return parts[0][0].toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
 
     function formatDate(ts) {
       try {
         const d = new Date(ts);
-        if (isNaN(d.getTime())) return 'N/A';
-        return d.toLocaleString();
-      } catch (_) {
-        return 'N/A';
-      }
+        if (isNaN(d)) return '—';
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      } catch (_) { return '—'; }
     }
 
-    function buildRow(item, fairId) {
+    function buildRow(item, fairId, type) {
+      const avatarClass = type === 'food_vendor' ? 'avatar-food' : type === 'performer' ? 'avatar-performer' : 'avatar-vendor';
+      const displayName = item.applicant_name || item.applicant_email || 'Unknown Applicant';
+
       const row = document.createElement('div');
-      row.className = 'row';
+      row.className = 'app-row';
+      row.dataset.name = displayName.toLowerCase();
+      row.dataset.email = (item.applicant_email || '').toLowerCase();
+      row.dataset.status = String(item.status || '').toLowerCase();
 
-      const img = document.createElement('img');
-      img.className = 'logo';
-      img.alt = 'Logo';
-
-      // If you later make a Storage bucket public or use signed URLs, you can replace this.
-      // For now, show a placeholder when we don't have a direct URL.
-      img.src = '/images/logo.png';
-      row.appendChild(img);
-
-      const meta = document.createElement('div');
-      meta.className = 'meta';
-
-      const name = document.createElement('div');
-      name.className = 'name';
-      name.textContent = item.applicant_name || item.applicant_email || 'Unknown Applicant';
-      meta.appendChild(name);
-
-      const sub = document.createElement('div');
-      sub.className = 'subline';
-
-      const status = document.createElement('span');
-      status.className = 'pill';
-      status.textContent = `Status: ${safeText(item.status)}`;
-      sub.appendChild(status);
-
-      const submitted = document.createElement('span');
-      submitted.className = 'pill';
-      submitted.textContent = `Submitted: ${formatDate(item.submitted_at)}`;
-      sub.appendChild(submitted);
-
-      meta.appendChild(sub);
-      row.appendChild(meta);
-
-      const actions = document.createElement('div');
-      actions.className = 'right-actions';
-
-      const btnView = document.createElement('button');
-      btnView.className = 'btn-small';
-      btnView.textContent = 'Quick View';
-      btnView.onclick = () => {
-        // Detail page next step. Keep this link ready now.
-        window.location.href = `fair_application_detail.html?fair_id=${fairId}&submission_id=${item.submission_id}`;
-      };
-
-      actions.appendChild(btnView);
-      row.appendChild(actions);
-
+      row.innerHTML = `
+        <div class="avatar ${avatarClass}">${initials(displayName)}</div>
+        <div class="app-meta">
+          <div class="app-name">${displayName}</div>
+          <div class="app-sub">
+            <span class="status-pill ${statusClass(item.status)}">${statusLabel(item.status)}</span>
+            <span>Submitted: ${formatDate(item.submitted_at)}</span>
+          </div>
+        </div>
+        <div class="app-actions">
+          <button class="btn-review" onclick="window.location.href='fair_application_detail.html?fair_id=${fairId}&submission_id=${item.submission_id}'">
+            Review Application →
+          </button>
+        </div>`;
       return row;
     }
 
-    function renderSection(listId, emptyId, rows, fairId) {
+    function renderSection(listId, emptyId, countId, rows, fairId, type) {
       const listEl = document.getElementById(listId);
       const emptyEl = document.getElementById(emptyId);
+      const countEl = document.getElementById(countId);
+      listEl.innerHTML = '';
 
-      if (!Array.isArray(rows) || rows.length === 0) {
+      const visible = rows.filter(item => {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const statusF = document.getElementById('statusFilter').value.toLowerCase();
+        const name = (item.applicant_name || item.applicant_email || '').toLowerCase();
+        const matchSearch = !search || name.includes(search) || (item.applicant_email || '').toLowerCase().includes(search);
+        const matchStatus = !statusF || String(item.status || '').toLowerCase().includes(statusF);
+        return matchSearch && matchStatus;
+      });
+
+      countEl.textContent = visible.length;
+
+      if (visible.length === 0) {
         emptyEl.style.display = 'block';
         return;
       }
+      emptyEl.style.display = 'none';
+      visible.forEach(item => listEl.appendChild(buildRow(item, fairId, type)));
+    }
 
-      for (const item of rows) {
-        listEl.appendChild(buildRow(item, fairId));
-      }
+    function applyFilters(fairId) {
+      renderSection('vendorsList',   'vendorsEmpty',   'vendorCount',    allVendors,    fairId, 'vendor');
+      renderSection('foodList',      'foodEmpty',      'foodCount',      allFood,       fairId, 'food_vendor');
+      renderSection('performersList','performersEmpty','performersCount', allPerformers, fairId, 'performer');
     }
 
     async function requireAccess(fairId) {
-      const { data, error } = await supabaseClient
-        .rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'read' });
-
+      const { data, error } = await supabaseClient.rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'read' });
       if (error) throw error;
       return data;
     }
 
     async function listSubmissions(fairId) {
-      const { data, error } = await supabaseClient
-        .rpc('fair_man_app_list_submissions', { p_fair_id: fairId });
-
+      const { data, error } = await supabaseClient.rpc('fair_man_app_list_submissions', { p_fair_id: fairId });
       if (error) throw error;
       return Array.isArray(data) ? data : [];
     }
 
     async function load() {
-      // Buttons
+      const fairId = getFairIdFromUrl();
+
+      // Wire nav
+      if (fairId) {
+        document.getElementById('navDashboard').href = `fair_dashboard.html?fair_id=${fairId}`;
+        document.getElementById('navUpdateFair').href = `../fair_update.html?fair_id=${fairId}`;
+        document.getElementById('breadDashboard').href = `fair_dashboard.html?fair_id=${fairId}`;
+      }
+
       document.getElementById('btnBackToDashboard').onclick = () => {
-        const fairId = getFairIdFromUrl();
-        if (!fairId) {
-          alert('Missing fair_id in the URL.');
-          return;
-        }
+        if (!fairId) return;
         window.location.href = `fair_dashboard.html?fair_id=${fairId}`;
       };
+      document.getElementById('btnAppSetup').onclick = () => {
+        if (!fairId) return;
+        window.location.href = `fair_application_setup.html?fair_id=${fairId}`;
+      };
+      document.getElementById('btnRefresh').onclick = () => loadPage();
 
-document.getElementById('btnAppSetup').onclick = () => {
-  const fairId = getFairIdFromUrl();
-  if (!fairId) {
-    alert('Missing fair_id in the URL.');
-    return;
-  }
-  window.location.href = `fair_application_setup.html?fair_id=${fairId}`;
-};
+      document.getElementById('navLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = '/index.html';
+      });
 
-document.getElementById('btnRefresh').onclick = async () => {
-  await loadPage();
-};
+      // Search & filter — live
+      document.getElementById('searchInput').addEventListener('input', () => applyFilters(fairId));
+      document.getElementById('statusFilter').addEventListener('change', () => applyFilters(fairId));
 
-await loadPage();
-
+      await loadPage();
     }
 
     async function loadPage() {
       showLoader();
-      clearLists();
+      allVendors = []; allFood = []; allPerformers = [];
 
       const fairId = getFairIdFromUrl();
       if (!fairId) {
-        document.getElementById('pageTitle').textContent = 'Fair Applications — Missing fair_id';
+        document.getElementById('pageTitle').textContent = 'Applications — Fair not found';
         hideLoader();
         return;
       }
 
       const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
       if (userError || !user) {
-        document.getElementById('pageTitle').textContent = 'Fair Applications — Please log in';
+        document.getElementById('pageTitle').textContent = 'Please log in to continue';
         hideLoader();
         return;
       }
@@ -396,41 +546,33 @@ await loadPage();
       try {
         await requireAccess(fairId);
       } catch (e) {
-        document.getElementById('pageTitle').textContent = 'Fair Applications — Not authorized';
+        document.getElementById('pageTitle').textContent = 'Applications — Not authorized';
         hideLoader();
         return;
       }
 
-      document.getElementById('pageTitle').textContent = `Fair Applications — Fair ID ${fairId}`;
+      document.getElementById('pageTitle').textContent = 'Applications';
 
       let rows = [];
       try {
         rows = await listSubmissions(fairId);
       } catch (e) {
-        document.getElementById('pageTitle').textContent = `Fair Applications — Error loading applications`;
+        document.getElementById('pageTitle').textContent = 'Applications — Could not load. Please refresh.';
         hideLoader();
         return;
       }
 
-      const vendors = [];
-      const food = [];
-      const performers = [];
-
       for (const r of rows) {
-        if (r.form_type === 'performer') performers.push(r);
-        else if (r.form_type === 'food_vendor') food.push(r);
-        else vendors.push(r); // vendor (default)
+        if (r.form_type === 'performer') allPerformers.push(r);
+        else if (r.form_type === 'food_vendor') allFood.push(r);
+        else allVendors.push(r);
       }
 
-      renderSection('vendorsList', 'vendorsEmpty', vendors, fairId);
-      renderSection('foodList', 'foodEmpty', food, fairId);
-      renderSection('performersList', 'performersEmpty', performers, fairId);
-
+      applyFilters(fairId);
       hideLoader();
     }
 
     load();
   </script>
-
 </body>
 </html>

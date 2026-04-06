@@ -16,40 +16,43 @@
       background: #000;
       color: #f0e6d2;
       text-align: center;
-      padding: 20px;
+      padding: 0;
       margin: 0;
     }
     h1 { font-family: 'Cinzel', serif; margin-bottom: 10px; }
 
 .card {
   position: relative;
-  background: rgba(255,255,255,0.95);
+  background: rgba(241, 223, 153, 0.88);
   padding: 26px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.45);
   margin: 18px auto;
   max-width: 980px;
-  color: #000;
+  color: #3b1f1f;
   text-align: left;
 }
-.card,
-.card h1,
-.card h2,
-.card h3,
-.card h4,
-.card h5,
-.card h6,
-.card p,
-.card div,
-.card span,
-.card label,
-.card strong,
-.card .label,
-.card .hint,
-.card .pill,
-.card .small {
-  color: #000 !important;
-}
+.card, .card h1, .card h2, .card h3, .card label, .card strong, .card .label { color: #3b1f1f; }
+
+    .topnav {
+      background: #1a1208; border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links .nav-logout { background: rgba(180,50,50,0.18); color: #f4a0a0; margin-left:8px; border:1px solid rgba(180,50,50,0.3); }
+    .breadcrumb { font-size:13px; color:#bb9457; padding:10px 20px 0; text-align:left; }
+    .breadcrumb a { color:#bb9457; text-decoration:none; }
+    .breadcrumb a:hover { text-decoration:underline; }
+    .breadcrumb span { color:#f0e6d2; }
     .profile-logo {
       position: absolute;
       top: 10px;
@@ -236,7 +239,23 @@
 </head>
 
 <body>
-  <h1 id="pageTitle">Edit Form</h1>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="../fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" id="navApplications">📋 Applications</a>
+      <a href="#" class="active">📝 Edit Form</a>
+    </div>
+  </nav>
+  <div class="breadcrumb">
+    <a href="../fair_admin.html">Admin Home</a> › <a href="#" id="breadDashboard">Dashboard</a> › <a href="#" id="breadApplications">Applications</a> › <a href="#" id="breadSetup">Manage Forms</a> › <span>Edit Form</span>
+  </div>
+
+  <h1 id="pageTitle" style="font-family:'Cinzel',serif; color:#f1df99; text-align:center; padding: 8px 0 0;">Edit Form</h1>
 
   <div id="loadingOverlay" style="
     position: fixed;
@@ -1137,12 +1156,26 @@ async function addFieldAuto(fairId, formId, q) {
 }
 
     async function loadPage() {
+
+      const { fairId, formId } = getParams();
+      if (fairId) {
+        const dEl = document.getElementById('navDashboard');
+        const aEl = document.getElementById('navApplications');
+        const bD = document.getElementById('breadDashboard');
+        const bA = document.getElementById('breadApplications');
+        const bS = document.getElementById('breadSetup');
+        if (dEl) dEl.href = `fair_dashboard.html?fair_id=${fairId}`;
+        if (aEl) aEl.href = `fair_applications.html?fair_id=${fairId}`;
+        if (bD) bD.href = `fair_dashboard.html?fair_id=${fairId}`;
+        if (bA) bA.href = `fair_applications.html?fair_id=${fairId}`;
+        if (bS) bS.href = `fair_application_setup.html?fair_id=${fairId}`;
+      }
+
       showLoader();
       setMsg('');
       document.getElementById('fType').addEventListener('change', updateSelectOptionsVisibility);
       updateSelectOptionsVisibility();
 
-    const { fairId, formId } = getParams();
 if (!fairId || !formId) {
   setMsg('Missing fair_id or form_id in URL.');
   hideLoader();
@@ -1218,11 +1251,14 @@ applyTemplateButtonState(formId);
       };
 
 
-      try {
-        await requireAccess(fairId);
-      } catch (e) {
-        setMsg('Not authorized.');
-        hideLoader();
+    const { data: allowed } = await supabaseClient
+        .rpc('check_fair_permission', {
+          p_fair_id: fairId,
+          p_permission: 'edit_forms'
+        });
+
+      if (!allowed) {
+        window.location.href = `fair_access_denied.html?fair_id=${fairId}`;
         return;
       }
 
@@ -1237,7 +1273,7 @@ document.getElementById('btnSaveForm').onclick = async () => {
     setMsg('Saved.');
   } catch (e) {
     console.error(e);
-    setMsg('Save failed. Check console.');
+    setMsg('Save failed. Please try again or refresh the page.');
   } finally {
     hideLoader();
   }
@@ -1289,7 +1325,7 @@ applyActiveUi(isMappedActive);
         renderFields(res.fields, fairId, formId);
       } catch (e) {
         console.error(e);
-        setMsg('Error loading form. Check console.');
+        setMsg('Could not load the form. Please refresh the page.');
         hideLoader();
         return;
       }

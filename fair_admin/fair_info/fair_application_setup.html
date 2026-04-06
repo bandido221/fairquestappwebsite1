@@ -3,331 +3,336 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Application Setup | FairQuest</title>
-
+  <title>Manage Application Forms | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
     body {
       font-family: 'Domine', serif;
-      background: #000;
+      background: #0a0a0a;
       color: #f0e6d2;
-      text-align: center;
-      padding: 20px;
-      margin: 0;
+      margin: 0; padding: 0;
     }
 
-    h1, h2, h3 {
-      font-family: 'Cinzel', serif;
-      margin: 10px 0;
+    /* ── TOP NAV ── */
+    .topnav {
+      background: #1a1208;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links a.active { background: rgba(241,223,153,0.18); color: #f1df99; font-weight: bold; }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18); color: #f4a0a0;
+      margin-left: 8px; border: 1px solid rgba(180,50,50,0.3);
+    }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+
+    /* ── LAYOUT ── */
+    .page-body { padding: 16px 20px 50px; max-width: 980px; margin: 0 auto; }
+
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+
+    h1 { font-family: 'Cinzel', serif; font-size: 22px; color: #f1df99; margin: 8px 0 16px; }
 
     .card {
-      position: relative;
-      background: rgba(214, 197, 126, 0.88);
-      padding: 26px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      margin: 18px auto;
-      max-width: 980px;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+      margin-bottom: 20px;
       color: #3b1f1f;
       text-align: left;
     }
+    .card h2 { font-family: 'Cinzel', serif; font-size: 16px; margin: 0 0 14px; color: #3b1f1f; }
 
-    .profile-logo {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 60px;
-      height: auto;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-    }
-
-    .btn-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-    }
-
+    /* ── BUTTONS ── */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
     .btn {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
+      background-color: #4CAF50; color: #fff;
+      padding: 10px 18px; border: none; border-radius: 8px;
+      font-size: 15px; font-family: 'Domine', serif;
+      cursor: pointer; transition: background 0.15s;
     }
+    .btn:hover { background-color: #43a047; }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #222; }
 
-    .btn:hover {
-      background-color: #45a049;
+    .divider { height: 1px; background: rgba(0,0,0,0.15); margin: 16px 0; }
+
+    /* ── HOW IT WORKS BANNER ── */
+    .how-it-works {
+      background: rgba(255,255,255,0.4);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 14px;
+      color: #3b1f1f;
+      line-height: 1.6;
     }
+    .how-it-works strong { color: #3b1f1f; }
 
-    .btn-dark {
-      background-color: #2f2f2f;
-    }
-
-    .btn-dark:hover {
-      background-color: #222;
-    }
-
-    .hint {
-      margin-top: 10px;
-      opacity: 0.9;
-    }
-
-    .divider {
-      margin: 18px 0;
-      height: 1px;
-      background: rgba(0,0,0,0.18);
-    }
-
+    /* ── FORM TYPE CARDS GRID ── */
     .forms-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 18px;
-      margin-top: 18px;
     }
 
     .form-type-card {
-      background: rgba(255,255,255,0.55);
+      background: rgba(255,255,255,0.6);
       border: 1px solid rgba(0,0,0,0.12);
       border-radius: 12px;
-      padding: 18px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .form-type-card h3 {
-      margin-top: 0;
-      color: #3b1f1f;
+    .form-type-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
     }
-
-    .meta-line {
-      margin-top: 8px;
+    .form-type-icon { font-size: 22px; }
+    .form-type-title {
+      font-family: 'Cinzel', serif;
       font-size: 15px;
+      color: #3b1f1f;
+      margin: 0;
     }
 
-    .meta-label {
-      font-weight: 700;
-    }
+    .meta-line { font-size: 14px; color: #3b1f1f; }
+    .meta-label { font-weight: 700; }
 
-    .empty-box {
-      margin-top: 10px;
-      padding: 14px;
-      border-radius: 10px;
-      background: rgba(0,0,0,0.06);
-      border: 1px dashed rgba(0,0,0,0.20);
-      text-align: center;
-      font-weight: 700;
-    }
-
-    .pill {
+    /* Active pill */
+    .pill-active {
       display: inline-block;
       padding: 3px 10px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: bold;
-      background: rgba(0,0,0,0.10);
-      margin-top: 8px;
+      background: rgba(76,175,80,0.22);
+      color: #1a5c1e;
+      border: 1px solid rgba(76,175,80,0.4);
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    /* Empty box */
+    .empty-box {
+      background: rgba(0,0,0,0.05);
+      border: 2px dashed rgba(0,0,0,0.18);
+      border-radius: 10px;
+      padding: 18px;
+      text-align: center;
+      color: #5c3a1e;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .empty-box .empty-icon { font-size: 28px; margin-bottom: 8px; }
+    .empty-box strong { color: #3b1f1f; display: block; margin-bottom: 4px; }
+
+    .card-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .btn-small {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Domine', serif;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-view  { background: #2f2f2f; color: #fff; }
+    .btn-view:hover { background: #1a1a1a; }
+    .btn-edit  { background: #4CAF50; color: #fff; }
+    .btn-edit:hover { background: #43a047; }
+
+    /* Status message */
+    .status-msg {
+      font-size: 14px;
+      color: #5c3a1e;
+      margin-top: 4px;
+      min-height: 20px;
+    }
+
+    /* ── LOADER ── */
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; flex-direction: column; gap: 16px;
+    }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner {
+      border: 5px solid rgba(255,255,255,0.15);
+      border-top: 5px solid #bb9457;
+      border-radius: 50%; width: 52px; height: 52px;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @media (max-width: 540px) {
+      .topnav-links a { font-size: 12px; padding: 5px 8px; }
     }
   </style>
 </head>
-
 <body>
-  <h1 id="pageTitle">Application Setup</h1>
 
-  <div id="loadingOverlay" style="
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  ">
-    <div style="
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #bb9457;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1s linear infinite;
-    "></div>
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="../fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" id="navApplications">📋 Applications</a>
+      <a href="#" id="navUpdateFair">✏️ Update Fair</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <!-- LOADER -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading your application forms…</p>
   </div>
 
-  <div class="card">
-    <a href="/home.html">
-      <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
-    </a>
+  <div class="page-body">
 
-    <h2 style="margin-top:0;">Application Forms</h2>
-
-    <div class="btn-row">
-      <button class="btn btn-dark" id="btnBack">⬅ Back to Applications</button>
-      <button class="btn" id="btnCreateForm">Create New Form</button>
+    <div class="breadcrumb">
+      <a href="../fair_admin.html">Admin Home</a> ›
+      <a href="#" id="breadDashboard">Dashboard</a> ›
+      <a href="#" id="breadApplications">Applications</a> ›
+      <span>Manage Application Forms</span>
     </div>
 
-    <div class="hint" id="statusMsg"></div>
+    <h1 id="pageTitle">Manage Application Forms</h1>
 
-    <div class="divider"></div>
+    <!-- CONTROLS CARD -->
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn btn-dark" id="btnBack">⬅ Back to Applications</button>
+        <button class="btn" id="btnCreateForm">＋ Create New Application Form</button>
+      </div>
 
-    <div class="forms-grid" id="formsGrid"></div>
-  </div>
+      <div class="how-it-works">
+        <strong>How application forms work:</strong>
+        You can create one form for each applicant type — Artisan/Craft Vendors, Food Vendors, and Performers.
+        Each form has its own questions and contract. Once a form is marked <em>active</em>, vendors can apply through it.
+        Click <strong>Edit Application</strong> to add your own questions or paste your vendor contract.
+      </div>
+
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
+
+    <!-- FORMS GRID CARD -->
+    <div class="card">
+      <h2>Your Application Forms</h2>
+      <div class="forms-grid" id="formsGrid">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
 
   <script>
-    const supabaseClient = window.supabase.createClient(
-      'https://awtbjuiqgtdydsqzimul.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-    );
+    const SUPABASE_URL = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
     function getFairIdFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      const fairIdRaw = params.get('fair_id');
-      const fairId = Number(fairIdRaw);
-      return Number.isFinite(fairId) ? fairId : null;
+      const n = Number(new URLSearchParams(window.location.search).get('fair_id'));
+      return Number.isFinite(n) ? n : null;
     }
+    function showLoader() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
+    function setMsg(t) { document.getElementById('statusMsg').textContent = t || ''; }
 
-    function showLoader() {
-      const el = document.getElementById('loadingOverlay');
-      if (el) el.style.display = 'flex';
-    }
-
-    function hideLoader() {
-      const el = document.getElementById('loadingOverlay');
-      if (el) el.style.display = 'none';
-    }
-
-    function setMsg(text) {
-      document.getElementById('statusMsg').textContent = text || '';
-    }
-
-    async function requireAccess(fairId) {
-      const { data, error } = await supabaseClient
-        .rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'edit_forms' });
-
-      if (error) throw error;
-      return data;
-    }
-
-    async function loadFair(fairId) {
-      const { data, error } = await supabaseClient
-        .from('renaissance_fairs')
-        .select('id, name')
-        .eq('id', fairId)
-        .single();
-
-      if (error) throw error;
-      return data;
-    }
-
-    async function listForms(fairId) {
-      const { data, error } = await supabaseClient
-        .rpc('fair_man_app_list_forms', { p_fair_id: fairId });
-
-      if (error) throw error;
-      return Array.isArray(data) ? data : [];
-    }
-
-    async function getActiveForms(fairId) {
-      const { data, error } = await supabaseClient
-        .rpc('fair_man_app_get_active_forms', { p_fair_id: fairId });
-
-      if (error) throw error;
-      return Array.isArray(data) ? data : [];
-    }
-
-    function getTypeLabel(formType) {
-      if (formType === 'vendor') return 'Vendor Form';
-      if (formType === 'food_vendor') return 'Food Vendor Form';
-      if (formType === 'performer') return 'Performer Form';
-      return formType || 'Form';
-    }
+    const TYPE_META = {
+      vendor:      { label: 'Artisan & Craft Vendors', icon: '🧺' },
+      food_vendor: { label: 'Food Vendors',            icon: '🍖' },
+      performer:   { label: 'Performers',              icon: '🎭' },
+    };
 
     function pickActiveForm(forms, activeRows, type) {
       const activeRow = activeRows.find(r => r.form_type === type);
-      if (!activeRow || !activeRow.active_form_id) return null;
-
+      if (!activeRow?.active_form_id) return null;
       return forms.find(f => String(f.form_id) === String(activeRow.active_form_id)) || null;
     }
 
     function buildCard({ fairId, type, form }) {
+      const { label, icon } = TYPE_META[type] || { label: type, icon: '📄' };
       const card = document.createElement('div');
       card.className = 'form-type-card';
 
-      const title = document.createElement('h3');
-      title.textContent = getTypeLabel(type);
-      card.appendChild(title);
-
       if (!form) {
-        const empty = document.createElement('div');
-        empty.className = 'empty-box';
-        empty.textContent = `No application created for ${getTypeLabel(type)}.`;
-        card.appendChild(empty);
+        card.innerHTML = `
+          <div class="form-type-header">
+            <span class="form-type-icon">${icon}</span>
+            <h3 class="form-type-title">${label}</h3>
+          </div>
+          <div class="empty-box">
+            <div class="empty-icon">📝</div>
+            <strong>No form created yet</strong>
+            Click "Create New Application Form" above to build your ${label.toLowerCase()} application.
+          </div>`;
         return card;
       }
 
-      const nameLine = document.createElement('div');
-      nameLine.className = 'meta-line';
-      nameLine.innerHTML = `<span class="meta-label">Application:</span> ${form.title || 'Untitled Form'}`;
-      card.appendChild(nameLine);
+      const lastUpdated = form.updated_at
+        ? new Date(form.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : '—';
 
-      const versionLine = document.createElement('div');
-      versionLine.className = 'meta-line';
-      versionLine.innerHTML = `<span class="meta-label">Version:</span> ${form.version || '—'}`;
-      card.appendChild(versionLine);
-
-      const activePill = document.createElement('div');
-      activePill.className = 'pill';
-      activePill.textContent = 'active';
-      card.appendChild(activePill);
-
-      const btnRow = document.createElement('div');
-      btnRow.className = 'btn-row';
-
-      const btnView = document.createElement('button');
-      btnView.className = 'btn btn-dark';
-      btnView.type = 'button';
-      btnView.textContent = 'View Application';
-      btnView.onclick = () => {
-        window.location.href = `fair_form_preview.html?fair_id=${fairId}&form_id=${form.form_id}`;
-      };
-
-      const btnEdit = document.createElement('button');
-      btnEdit.className = 'btn';
-      btnEdit.type = 'button';
-      btnEdit.textContent = 'Edit Application';
-      btnEdit.onclick = () => {
-        window.location.href = `fair_form_edit.html?fair_id=${fairId}&form_id=${form.form_id}`;
-      };
-
-      btnRow.appendChild(btnView);
-      btnRow.appendChild(btnEdit);
-      card.appendChild(btnRow);
-
+      card.innerHTML = `
+        <div class="form-type-header">
+          <span class="form-type-icon">${icon}</span>
+          <h3 class="form-type-title">${label}</h3>
+        </div>
+        <div class="meta-line"><span class="meta-label">Form name:</span> ${form.title || 'Untitled'}</div>
+        <div class="meta-line"><span class="meta-label">Last updated:</span> ${lastUpdated}</div>
+        <div style="margin-top:2px;"><span class="pill-active">● Active</span></div>
+        <div class="card-btns">
+          <button class="btn-small btn-view" onclick="window.location.href='fair_form_preview.html?fair_id=${fairId}&form_id=${form.form_id}'">
+            👁️ Preview Form
+          </button>
+          <button class="btn-small btn-edit" onclick="window.location.href='fair_form_edit.html?fair_id=${fairId}&form_id=${form.form_id}'">
+            ✏️ Edit Form
+          </button>
+        </div>`;
       return card;
     }
 
     function renderCards(fairId, forms, activeRows) {
       const grid = document.getElementById('formsGrid');
       grid.innerHTML = '';
-
-      const vendorForm = pickActiveForm(forms, activeRows, 'vendor');
-      const foodForm = pickActiveForm(forms, activeRows, 'food_vendor');
-      const performerForm = pickActiveForm(forms, activeRows, 'performer');
-
-      grid.appendChild(buildCard({ fairId, type: 'vendor', form: vendorForm }));
-      grid.appendChild(buildCard({ fairId, type: 'food_vendor', form: foodForm }));
-      grid.appendChild(buildCard({ fairId, type: 'performer', form: performerForm }));
+      ['vendor', 'food_vendor', 'performer'].forEach(type => {
+        const form = pickActiveForm(forms, activeRows, type);
+        grid.appendChild(buildCard({ fairId, type, form }));
+      });
     }
 
     async function loadPage() {
@@ -335,46 +340,58 @@
       setMsg('');
 
       const fairId = getFairIdFromUrl();
-      if (!fairId) {
-        setMsg('Missing fair_id in URL.');
-        hideLoader();
-        return;
-      }
+      if (!fairId) { setMsg('Fair not found. Please go back and try again.'); hideLoader(); return; }
 
-      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-      if (userError || !user) {
-        setMsg('Please log in first.');
-        hideLoader();
-        return;
-      }
+      // Wire nav
+      document.getElementById('navDashboard').href = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('navApplications').href = `fair_applications.html?fair_id=${fairId}`;
+      document.getElementById('navUpdateFair').href = `../fair_update.html?fair_id=${fairId}`;
+      document.getElementById('breadDashboard').href = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('breadApplications').href = `fair_applications.html?fair_id=${fairId}`;
 
       document.getElementById('btnBack').onclick = () => {
         window.location.href = `fair_applications.html?fair_id=${fairId}`;
       };
-
       document.getElementById('btnCreateForm').onclick = () => {
         window.location.href = `fair_form_create.html?fair_id=${fairId}`;
       };
+      document.getElementById('navLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = '/index.html';
+      });
+
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) { setMsg('Please log in to continue.'); hideLoader(); return; }
+
+      const { data: allowed } = await supabaseClient
+  .rpc('check_fair_permission', {
+    p_fair_id: fairId,
+    p_permission: 'edit_forms'
+  });
+
+if (!allowed) {
+  window.location.href = `fair_access_denied.html?fair_id=${fairId}`;
+  return;
+}
 
       try {
-        await requireAccess(fairId);
+        await supabaseClient.rpc('fair_man_app_require_access', { p_fair_id: fairId, p_perm: 'edit_forms' });
+        const { data: fair } = await supabaseClient.from('renaissance_fairs').select('name').eq('id', fairId).single();
+        document.getElementById('pageTitle').textContent = `Manage Application Forms — ${fair?.name || ''}`;
 
-        const fair = await loadFair(fairId);
-        document.getElementById('pageTitle').textContent = `Application Setup — ${fair.name}`;
+        const { data: forms } = await supabaseClient.rpc('fair_man_app_list_forms', { p_fair_id: fairId });
+        const { data: activeRows } = await supabaseClient.rpc('fair_man_app_get_active_forms', { p_fair_id: fairId });
 
-        const forms = await listForms(fairId);
-        const activeRows = await getActiveForms(fairId);
+        renderCards(fairId, Array.isArray(forms) ? forms : [], Array.isArray(activeRows) ? activeRows : []);
 
-        renderCards(fairId, forms, activeRows);
-
-        if (!activeRows.length) {
-          setMsg('No active applications created yet.');
-        } else {
-          setMsg('');
+        const hasActive = (activeRows || []).some(r => r.active_form_id);
+        if (!hasActive) {
+          setMsg('💡 No application forms are active yet. Click "Create New Application Form" to get started.');
         }
       } catch (e) {
         console.error(e);
-        setMsg('Error loading application setup. Check console.');
+        setMsg('Could not load forms. Please refresh the page.');
       } finally {
         hideLoader();
       }

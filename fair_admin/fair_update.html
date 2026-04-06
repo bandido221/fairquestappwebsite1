@@ -14,7 +14,7 @@
       background: #000;
       color: #f0e6d2;
       text-align: center;
-      padding: 20px;
+      padding: 0;
       margin: 0;
     }
     h1 {
@@ -269,13 +269,13 @@ if (saved.fair_image_url) {
   });
 });
 
-    const supabase = window.supabase.createClient(
+    const sb = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
     async function loadAdminDashboard() {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await sb.auth.getUser();
       if (userError || !user) {
         console.error("User not found");
         return;
@@ -287,8 +287,17 @@ if (!fairId) {
   return;
 }
 
-const { data: fairRows, error: fairError } = await supabase
-  .rpc('get_update_fair_page_fair_by_id', {
+const { data: allowed } = await sb.rpc('check_fair_permission', {
+    p_fair_id: parseInt(fairId, 10),
+    p_permission: 'edit_fair_info'
+  });
+
+if (!allowed) {
+  window.location.href = `fair_access_denied.html?fair_id=${fairId}`;
+  return;
+}
+
+const { data: fairRows, error: fairError } = await sb.rpc('get_update_fair_page_fair_by_id', {
     p_user_id: user.id,
     p_fair_id: parseInt(fairId, 10)
   });

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compose Email | Vendor & Performer Outreach</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Domine', serif; background: #0a0a0a; color: #f0e6d2; margin: 0; padding: 0; }
+    .topnav { background: #1a1208; border-bottom: 1px solid #3d2e0e; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a { color: #c8aa6e; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: background 0.15s; }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links .nav-logout { background: rgba(180,50,50,0.18); color: #f4a0a0; margin-left: 8px; border: 1px solid rgba(180,50,50,0.3); }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+    .page-body { padding: 16px 20px 50px; max-width: 960px; margin: 0 auto; }
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+    h1 { font-family: 'Cinzel', serif; font-size: 22px; color: #f1df99; margin: 8px 0 16px; }
+    .card { background: rgba(241,223,153,0.88); padding: 22px 24px; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,0.4); margin-bottom: 20px; color: #3b1f1f; text-align: left; }
+    .card h2 { font-family: 'Cinzel', serif; font-size: 16px; margin: 0 0 10px; color: #3b1f1f; }
+    .divider { height: 1px; background: rgba(0,0,0,0.15); margin: 14px 0; }
+    .field-group { margin-bottom: 14px; }
+    .field-group label { display: block; font-weight: bold; font-size: 14px; color: #3b1f1f; margin-bottom: 6px; }
+    .field-hint { font-size: 13px; color: #5c3a1e; margin-bottom: 8px; line-height: 1.5; }
+    select, input[type="text"], input[type="email"], input[type="date"], textarea { font-size: 15px; width: 100%; padding: 10px 13px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.2); font-family: 'Domine', serif; background: rgba(255,255,255,0.9); color: #111; transition: border-color 0.15s, box-shadow 0.15s; }
+    select:focus, input:focus, textarea:focus { outline: none; border-color: #bb7a28; box-shadow: 0 0 0 3px rgba(187,122,40,0.2); }
+    textarea { resize: vertical; min-height: 280px; line-height: 1.6; white-space: pre-wrap; }
+    .token-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+    .token-chip { background: rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; padding: 4px 10px; font-size: 13px; color: #3b1f1f; cursor: pointer; font-family: monospace; transition: background 0.12s; }
+    .token-chip:hover { background: rgba(187,122,40,0.18); }
+    .rec-wrap { overflow-x: auto; }
+    table.rec-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    table.rec-table th { text-align: left; padding: 8px 10px; background: rgba(0,0,0,0.08); color: #3b1f1f; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.15); }
+    table.rec-table td { padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,0.08); color: #3b1f1f; vertical-align: middle; }
+    table.rec-table tr:last-child td { border-bottom: none; }
+    table.rec-table input { font-size: 13px; padding: 7px 10px; margin: 0; }
+    .preview-box { background: rgba(255,255,255,0.88); border: 1px solid rgba(0,0,0,0.15); border-radius: 10px; padding: 16px 18px; font-size: 14px; color: #111; white-space: pre-wrap; line-height: 1.65; max-height: 360px; overflow-y: auto; }
+    .preview-placeholder { color: #999; font-style: italic; }
+    .progress-wrap { display: none; margin-top: 14px; }
+    .progress-bg { background: rgba(0,0,0,0.12); border-radius: 999px; height: 10px; overflow: hidden; margin-bottom: 6px; }
+    .progress-fill { height: 100%; background: #4CAF50; border-radius: 999px; transition: width 0.3s; width: 0%; }
+    .progress-label { font-size: 13px; color: #3b1f1f; }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .btn { background-color: #4CAF50; color: #fff; padding: 10px 18px; border: none; border-radius: 8px; font-size: 15px; font-family: 'Domine', serif; cursor: pointer; transition: background 0.15s; }
+    .btn:hover { background-color: #43a047; }
+    .btn:disabled { background-color: #666; cursor: not-allowed; opacity: 0.6; }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #1a1a1a; }
+    .btn-gold { background-color: #bb7a28; }
+    .btn-gold:hover { background-color: #a06820; }
+    .status-msg { margin-top: 12px; font-size: 14px; min-height: 20px; color: #3b1f1f; }
+    .status-msg.success { color: #1a5c1e; font-weight: bold; }
+    .status-msg.error   { color: #8b1a1a; }
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; gap: 16px; }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner { border: 5px solid rgba(255,255,255,0.15); border-top: 5px solid #bb9457; border-radius: 50%; width: 52px; height: 52px; animation: spin 0.9s linear infinite; }
+  </style>
+</head>
+<body>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html"><img src="/images/logo.png" alt="FairQuest" /><span>FairQuest</span></a>
+    <div class="topnav-links">
+      <a href="/index.html">🏡 Home</a>
+      <a href="/admin/index.html">🛡️ Admin Panel</a>
+      <a href="outreach_vendors.html">🧺 Vendor Outreach</a>
+      <a href="/outreach/outreach_templates.html">✉️ Templates</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div id="loadingOverlay"><div class="spinner"></div><p id="loaderMsg">Loading…</p></div>
+
+  <div class="page-body">
+    <div class="breadcrumb">
+      <a href="/home.html">Home</a> › <a href="/admin/index.html">Admin Panel</a> › <a href="outreach_vendors.html">Vendor Outreach</a> › <span>Compose Email</span>
+    </div>
+    <h1>📨 Compose Email — Vendors & Performers</h1>
+
+    <!-- STEP 1: TEMPLATE + BODY -->
+    <div class="card">
+      <h2>Step 1 — Write Your Email</h2>
+      <div class="field-group">
+        <label for="selTemplate">Load from Template (optional)</label>
+        <select id="selTemplate"><option value="">— Select a template —</option></select>
+      </div>
+      <div class="field-group">
+        <label for="txtSubject">Subject Line *</label>
+        <input type="text" id="txtSubject" placeholder="e.g. Exciting news from FairQuest!" />
+      </div>
+      <div class="divider"></div>
+      <div class="field-group">
+        <label>Email Body *</label>
+        <div class="field-hint">
+          Click a token to insert it:
+          <div class="token-list">
+            <span class="token-chip" onclick="insertToken('{{name}}')">{{name}}</span>
+            <span class="token-chip" onclick="insertToken('{{contact_name}}')">{{contact_name}}</span>
+            <span class="token-chip" onclick="insertToken('{{city}}')">{{city}}</span>
+            <span class="token-chip" onclick="insertToken('{{state}}')">{{state}}</span>
+            <span class="token-chip" onclick="insertToken('{{vendor_type}}')">{{vendor_type}}</span>
+          </div>
+        </div>
+        <textarea id="txtBody" placeholder="Write your email here…"></textarea>
+      </div>
+    </div>
+
+    <!-- STEP 2: RECIPIENTS -->
+    <div class="card">
+      <h2>Step 2 — Confirm Recipients</h2>
+      <div class="rec-wrap">
+        <table class="rec-table">
+          <thead>
+            <tr><th>Name</th><th>Type</th><th>Email *</th><th>Contact Name</th></tr>
+          </thead>
+          <tbody id="recBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STEP 3: OPTIONS -->
+    <div class="card">
+      <h2>Step 3 — Options</h2>
+      <div class="field-group">
+        <label for="selType">Outreach Type</label>
+        <select id="selType">
+          <option value="invitation">Invitation</option>
+          <option value="follow_up">Follow-Up</option>
+          <option value="announcement">Announcement</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="txtNotes">Private Notes (optional)</label>
+        <input type="text" id="txtNotes" placeholder="e.g. Met at CMRF last weekend" />
+      </div>
+      <div class="field-group">
+        <label for="txtFollowUp">Follow-Up Reminder Date (optional)</label>
+        <input type="date" id="txtFollowUp" />
+      </div>
+    </div>
+
+    <!-- STEP 4: PREVIEW + SEND -->
+    <div class="card">
+      <h2>Step 4 — Preview & Send</h2>
+      <div class="field-group">
+        <label for="selPreview">Preview for:</label>
+        <select id="selPreview"></select>
+      </div>
+      <div class="preview-box" id="previewBox">
+        <span class="preview-placeholder">Fill in the body above to see a live preview here.</span>
+      </div>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bg"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-label" id="progressLabel">Sending…</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-dark" id="btnBack">⬅ Back</button>
+        <button class="btn btn-gold" id="btnSend">🚀 Send to All Recipients</button>
+      </div>
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
+  </div>
+
+  <script>
+    const sb = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    let vpsData = [], templates = [];
+
+    const showLoader = m => { document.getElementById('loaderMsg').textContent = m||'Loading…'; document.getElementById('loadingOverlay').style.display='flex'; };
+    const hideLoader = () => document.getElementById('loadingOverlay').style.display='none';
+    const setMsg = (t,c) => { const el=document.getElementById('statusMsg'); el.textContent=t||''; el.className='status-msg'+(c?` ${c}`:''); };
+
+    function insertToken(token) {
+      const ta=document.getElementById('txtBody'), s=ta.selectionStart, e=ta.selectionEnd;
+      ta.value=ta.value.slice(0,s)+token+ta.value.slice(e);
+      ta.selectionStart=ta.selectionEnd=s+token.length; ta.focus(); updatePreview();
+    }
+
+    function resolveTokens(text, vp, contactName) {
+      return text
+        .replace(/\{\{name\}\}/g,         vp.vp_name      || '')
+        .replace(/\{\{contact_name\}\}/g,  contactName     || vp.contact_name || '')
+        .replace(/\{\{city\}\}/g,          vp.city         || '')
+        .replace(/\{\{state\}\}/g,         vp.state        || '')
+        .replace(/\{\{vendor_type\}\}/g,   vp.vendor_type  || '');
+    }
+
+    function buildRecTable() {
+      const tbody   = document.getElementById('recBody');
+      const prevSel = document.getElementById('selPreview');
+      tbody.innerHTML = ''; prevSel.innerHTML = '';
+
+      vpsData.forEach((vp, idx) => {
+        const tr = document.createElement('tr');
+        tr.dataset.idx = idx;
+        tr.dataset.vpId = vp.vp_id;
+        tr.innerHTML = `
+          <td><strong>${vp.vp_name||'—'}</strong></td>
+          <td style="font-size:13px;">${vp.application_type ? '🎭 Performer' : '🧺 Vendor'}</td>
+          <td><input type="email" class="inp-email" value="${vp.contact_email||''}" placeholder="email@example.com" /></td>
+          <td><input type="text"  class="inp-contact" value="${vp.contact_name||''}" placeholder="Contact name" /></td>`;
+        tbody.appendChild(tr);
+        tbody.addEventListener('input', updatePreview);
+
+        const o = document.createElement('option');
+        o.value = idx; o.textContent = vp.vp_name;
+        prevSel.appendChild(o);
+      });
+
+      prevSel.addEventListener('change', updatePreview);
+    }
+
+    function updatePreview() {
+      const idx  = document.getElementById('selPreview').value;
+      const body = document.getElementById('txtBody').value;
+      const box  = document.getElementById('previewBox');
+      if (!body.trim() || idx === '') { box.innerHTML='<span class="preview-placeholder">Fill in the body above to see a live preview here.</span>'; return; }
+      const row = document.querySelector(`#recBody tr[data-idx="${idx}"]`);
+      if (!row) return;
+      const vp = vpsData.find(v => v.vp_id === Number(row.dataset.vpId)) || {};
+      box.textContent = resolveTokens(body, vp, row.querySelector('.inp-contact').value);
+    }
+
+    async function sendEmails() {
+      const subject  = document.getElementById('txtSubject').value.trim();
+      const body     = document.getElementById('txtBody').value.trim();
+      const type     = document.getElementById('selType').value;
+      const notes    = document.getElementById('txtNotes').value.trim() || null;
+      const followUp = document.getElementById('txtFollowUp').value || null;
+      const tmplId   = Number(document.getElementById('selTemplate').value) || null;
+
+      if (!subject) { setMsg('Please enter a subject line.','error'); return; }
+      if (!body)    { setMsg('Please write the email body.','error'); return; }
+
+      const rows = [...document.querySelectorAll('#recBody tr[data-idx]')];
+      const recipients = rows.map(tr => ({
+        email:   tr.querySelector('.inp-email').value.trim(),
+        contact: tr.querySelector('.inp-contact').value.trim(),
+        vp:      vpsData.find(v => v.vp_id === Number(tr.dataset.vpId))
+      })).filter(r => r.email && r.vp);
+
+      if (!recipients.length) { setMsg('Please fill in at least one recipient email.','error'); return; }
+
+      const preview = recipients.map(r=>`• ${r.vp.vp_name} → ${r.email}`).join('\n');
+      if (!confirm(`Send ${recipients.length} email(s)?\n\n${preview}\n\nProceed?`)) return;
+
+      document.getElementById('btnSend').disabled = true;
+      document.getElementById('progressWrap').style.display = 'block';
+      setMsg('');
+
+      let sent=0, failed=0, total=recipients.length;
+
+      for (const rec of recipients) {
+        const rSubject = resolveTokens(subject, rec.vp, rec.contact);
+        const rBody    = resolveTokens(body,    rec.vp, rec.contact);
+
+        document.getElementById('progressLabel').textContent = `Sending to ${rec.vp.vp_name}… (${sent+failed+1}/${total})`;
+        document.getElementById('progressFill').style.width  = `${Math.round(((sent+failed)/total)*100)}%`;
+
+        try {
+          const { error: fnErr } = await sb.functions.invoke('send-outreach-email', {
+            body: { to: rec.email, subject: rSubject, text: rBody, replyTo: 'fairquestapp@gmail.com' }
+          });
+          if (fnErr) { console.error(fnErr); failed++; } else { sent++; }
+          await sb.rpc('outreach_log_vendor_performer_email', {
+            p_vp_id:          rec.vp.vp_id,
+            p_vp_name:        rec.vp.vp_name,
+            p_recipient_email: rec.email,
+            p_contact_name:   rec.contact || null,
+            p_template_id:    tmplId,
+            p_subject:        rSubject,
+            p_body_sent:      rBody,
+            p_outreach_type:  type,
+            p_status:         fnErr ? 'failed' : 'sent',
+            p_notes:          notes,
+            p_follow_up_after: followUp
+          });
+        } catch(e) { console.error(e); failed++; }
+      }
+
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('progressLabel').textContent = `Done! ${sent} sent, ${failed} failed.`;
+      if (!failed) setMsg(`✅ All ${sent} email(s) sent and logged!`,'success');
+      else setMsg(`⚠ ${sent} sent, ${failed} failed.`,'error');
+      document.getElementById('btnSend').disabled = false;
+    }
+
+    async function loadPage() {
+      showLoader();
+      const { data:{user} } = await sb.auth.getUser();
+      if (!user) { window.location.href='/index.html'; return; }
+
+      const vpIds = (new URLSearchParams(window.location.search).get('vp_ids')||'').split(',').map(Number).filter(n=>n>0);
+      if (!vpIds.length) { setMsg('No vendors selected. Go back.','error'); hideLoader(); return; }
+
+      const { data: allVPs } = await sb.rpc('outreach_get_vendors_performers_summary');
+      vpsData = (allVPs||[]).filter(v => vpIds.includes(v.vp_id));
+      if (!vpsData.length) { setMsg('Could not load vendor data.','error'); hideLoader(); return; }
+
+      buildRecTable();
+
+      const { data: tmplData } = await sb.rpc('outreach_list_templates');
+      templates = tmplData||[];
+      const selT = document.getElementById('selTemplate');
+      templates.forEach(t => {
+        const o=document.createElement('option'); o.value=t.id; o.textContent=`[${t.outreach_type}] ${t.title}`; selT.appendChild(o);
+      });
+      selT.addEventListener('change', () => {
+        const t=templates.find(x=>String(x.id)===selT.value); if (!t) return;
+        document.getElementById('txtSubject').value=t.subject;
+        document.getElementById('txtBody').value=t.body;
+        document.getElementById('selType').value=t.outreach_type||'invitation';
+        updatePreview();
+      });
+
+      document.getElementById('txtBody').addEventListener('input', updatePreview);
+      document.getElementById('txtSubject').addEventListener('input', updatePreview);
+      document.getElementById('btnBack').onclick = () => window.location.href='outreach_vendors.html';
+      document.getElementById('btnSend').onclick = sendEmails;
+      document.getElementById('navLogout').addEventListener('click', async e => { e.preventDefault(); await sb.auth.signOut(); window.location.href='/index.html'; });
+
+      hideLoader();
+    }
+
+    loadPage();
+  </script>
+</body>
+</html>

@@ -6,73 +6,36 @@
   <title>Fair Review | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
-<link rel="stylesheet" href="/css/fq_theme.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    body {
-      font-family: 'Domine', serif;
-      background: #000;
-      color: #f0e6d2;
-      text-align: center;
-      padding: 20px;
-      margin: 0;
-    }
-    p {
-  margin-bottom: 15px !important;
-  line-height: 1.6;
-}
-
-ul {
-  margin-top: 10px;
-  margin-bottom: 20px;
-}
-
-li {
-  margin-bottom: 8px;
-}
-
-    h1 {
-      font-family: 'Cinzel', serif;
-      margin-bottom: 20px;
-    }
+    body { font-family: 'Domine', serif; background: #000; color: #f0e6d2; text-align: center; padding: 20px; margin: 0; }
+    p { margin-bottom: 15px !important; line-height: 1.6; }
+    ul { margin-top: 10px; margin-bottom: 20px; }
+    li { margin-bottom: 8px; }
+    h1 { font-family: 'Cinzel', serif; margin-bottom: 20px; }
     .review-card {
-      background: rgba(241, 223, 153, 0.88);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      margin: 20px auto;
-      max-width: 700px;
-      color: #3b1f1f;
-      text-align: left;
+      background: rgba(241, 223, 153, 0.88); padding: 30px; border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin: 20px auto; max-width: 700px;
+      color: #3b1f1f; text-align: left;
     }
-    .input-field {
-      width: 100%;
-      max-width: 600px;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+    .button { margin-top: 20px; background-color: #4CAF50; color: white; padding: 10px 16px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+    .button:hover { background-color: #45a049; }
+    .back-link { display: inline-block; margin-top: 30px; color: #bb9457; font-weight: bold; text-decoration: none; }
+
+    /* CONTACTS PREVIEW */
+    .contacts-preview { margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(0,0,0,0.15); }
+    .contacts-preview h3 { font-family: 'Cinzel', serif; font-size: 15px; margin: 0 0 12px; color: #3b1f1f; }
+    .contact-preview-row {
+      background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 14px; color: #3b1f1f;
     }
-    .button {
-      margin-top: 20px;
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .button:hover {
-      background-color: #45a049;
-    }
-    .back-link {
-      display: inline-block;
-      margin-top: 30px;
-      color: #bb9457;
-      font-weight: bold;
-      text-decoration: none;
-    }
+    .contact-preview-row strong { display: block; margin-bottom: 3px; }
+    .contact-preview-meta { font-size: 12px; color: #5c3a1e; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+    .pill-sm { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: bold; }
+    .pill-default { background: rgba(76,175,80,0.2); color: #1a5c1e; border: 1px solid rgba(76,175,80,0.4); }
+    .pill-public  { background: rgba(100,100,220,0.15); color: #1a1a6c; border: 1px solid rgba(100,100,220,0.3); }
+    .pill-type    { background: rgba(187,122,40,0.15); color: #5c3a1e; border: 1px solid rgba(187,122,40,0.3); }
   </style>
 </head>
 <body>
@@ -81,10 +44,7 @@ li {
 
   <div class="review-card" id="fairReviewCard">
     <h2>Fair Information Preview</h2>
-
-    <div id="fairInfoPreview">
-    </div>
-
+    <div id="fairInfoPreview"></div>
     <button class="button" onclick="confirmUpdate()">Confirm Updates</button>
     <button class="button" onclick="cancelUpdate()">Cancel</button>
   </div>
@@ -99,174 +59,161 @@ li {
 
     const updatedFairData = JSON.parse(sessionStorage.getItem('updatedFairData'));
 
+    const TYPE_LABELS = {
+      general:'General / Main', vendor:'Vendor Coordinator', performer:'Performer Coordinator',
+      tickets:'Tickets / Attendee', press:'Press / Media', other:'Other'
+    };
+
     function displayFairPreview() {
       if (!updatedFairData) {
-        console.error("No fair data found in sessionStorage.");
         alert("Fair data could not be loaded. Please try again.");
         return;
       }
 
-          let weekendsHTML = "";
-
-      if (updatedFairData.weekends && updatedFairData.weekends.length > 0) {
+      let weekendsHTML = "";
+      if (updatedFairData.weekends?.length) {
         weekendsHTML += `<p><strong>Weekends:</strong></p><ul>`;
         updatedFairData.weekends.forEach(w => {
-
-        function formatDate(d) {
-          const date = new Date(d);
-          const mm = String(date.getMonth() + 1).padStart(2, '0');
-          const dd = String(date.getDate()).padStart(2, '0');
-          const yy = String(date.getFullYear()).slice(-2);
-          return `${mm}-${dd}-${yy}`;
-        }
-
-        weekendsHTML += `
-          <li><strong>Week ${w.week}:</strong> ${formatDate(w.start)} → ${formatDate(w.end)}</li>
-        `;
-      });
-
+          function formatDate(d) {
+            const date = new Date(d);
+            const mm = String(date.getMonth()+1).padStart(2,'0');
+            const dd = String(date.getDate()).padStart(2,'0');
+            const yy = String(date.getFullYear()).slice(-2);
+            return `${mm}-${dd}-${yy}`;
+          }
+          weekendsHTML += `<li><strong>Week ${w.week}:</strong> ${formatDate(w.start)} → ${formatDate(w.end)}</li>`;
+        });
         weekendsHTML += `</ul>`;
       } else {
         weekendsHTML = `<p><strong>Weekends:</strong> No weekends entered.</p>`;
       }
 
-      const fairPreview = `
+      // Contacts preview
+      let contactsHTML = `<div class="contacts-preview"><h3>📬 Contacts</h3>`;
+      const contacts = updatedFairData.contacts || [];
+      if (contacts.length) {
+        contacts.forEach(c => {
+          contactsHTML += `
+            <div class="contact-preview-row">
+              <strong>${c.name || '—'} &lt;${c.email || '—'}&gt;</strong>
+              ${c.phone ? `<span style="font-size:13px;">📞 ${c.phone}</span>` : ''}
+              ${c.label ? `<span style="font-size:13px; color:#5c3a1e;">${c.label}</span>` : ''}
+              <div class="contact-preview-meta">
+                <span class="pill-sm pill-type">${TYPE_LABELS[c.contact_type]||c.contact_type}</span>
+                ${c.is_default ? `<span class="pill-sm pill-default">★ Default</span>` : ''}
+                ${c.is_public  ? `<span class="pill-sm pill-public">Public</span>` : ''}
+              </div>
+            </div>`;
+        });
+      } else {
+        contactsHTML += `<p style="color:#8b1a1a;">No contacts added.</p>`;
+      }
+      contactsHTML += `</div>`;
+
+      document.getElementById('fairInfoPreview').innerHTML = `
         <p><strong>Fair Name:</strong> ${updatedFairData.name || 'No data'}</p>
         <p><strong>Address:</strong> ${updatedFairData.address || 'No data'}</p>
         <p><strong>City:</strong> ${updatedFairData.city || 'No data'}</p>
         <p><strong>State:</strong> ${updatedFairData.state || 'No data'}</p>
         <p><strong>Zip:</strong> ${updatedFairData.zip || 'No data'}</p>
         <p><strong>Website:</strong> ${updatedFairData.website || 'No data'}</p>
-
         <p><strong>Hours:</strong> ${updatedFairData.hours || 'No hours entered'}</p>
-
         <p><strong>Description:</strong> ${updatedFairData.description || 'No description added yet.'}</p>
-
         ${weekendsHTML}
-
         <p><strong>Fair Image:</strong></p>
-        <img src="${updatedFairData.fairImage || '/images/default_image.png'}"
-             alt="Fair Image"
-             style="max-width: 200px; max-height: 150px;">
-      `;
-
-
-      document.getElementById('fairInfoPreview').innerHTML = fairPreview;
+        <img src="${updatedFairData.fairImage || '/images/default_image.png'}" alt="Fair Image" style="max-width:200px;max-height:150px;">
+        ${contactsHTML}`;
     }
 
-   async function confirmUpdate() {
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) {
-    console.error("User not found");
-    return;
-  }
+    async function confirmUpdate() {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) { console.error("User not found"); return; }
 
-  const fairId = sessionStorage.getItem("fair_id");
-  if (!fairId) {
-    console.error("No fair_id found in sessionStorage.");
-    alert("Fair ID missing. Please start over.");
-    return;
-  }
-const { data: allowed } = await supabase
-  .rpc('check_fair_permission', {
-    p_fair_id: parseInt(fairId, 10),
-    p_permission: 'edit_fair_info'
-  });
+      const fairId = sessionStorage.getItem("fair_id");
+      if (!fairId) { alert("Fair ID missing. Please start over."); return; }
 
-if (!allowed) {
-  alert('You do not have permission to update this fair.');
-  return;
-}
-  const draft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
+      const { data: allowed } = await supabase.rpc('check_fair_permission', { p_fair_id: parseInt(fairId,10), p_permission: 'edit_fair_info' });
+      if (!allowed) { alert('You do not have permission to update this fair.'); return; }
 
-  const updateData = {};
+      const draft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
+      const updateData = {};
+      if (draft.newFairName)    updateData.name    = draft.newFairName;
+      if (draft.newFairAddress) updateData.address = draft.newFairAddress;
+      if (draft.newFairCity)    updateData.city    = draft.newFairCity;
+      if (draft.newFairState)   updateData.state   = draft.newFairState;
+      if (draft.newFairZip)     updateData.zip     = draft.newFairZip;
+      if (draft.newFairWebsite) updateData.website = draft.newFairWebsite;
+      if (updatedFairData.hours?.trim()) updateData.hours = updatedFairData.hours.trim();
 
-  if (draft.newFairName) updateData.name = draft.newFairName;
-  if (draft.newFairAddress) updateData.address = draft.newFairAddress;
-  if (draft.newFairCity) updateData.city = draft.newFairCity;
-  if (draft.newFairState) updateData.state = draft.newFairState;
-  if (draft.newFairZip) updateData.zip = draft.newFairZip;
-  if (draft.newFairWebsite) updateData.website = draft.newFairWebsite;
-
-  if (updatedFairData.hours && updatedFairData.hours.trim() !== "") {
-    updateData.hours = updatedFairData.hours.trim();
-  }
-
-  if (updatedFairData.weekends && updatedFairData.weekends.length > 0) {
-    updatedFairData.weekends.forEach(w => {
-      if (w.week === 1) {
-        updateData.start_date = w.start;
-        updateData.end_date = w.end;
-      } else {
-        updateData[`week${w.week}_start_date`] = w.start;
-        updateData[`week${w.week}_end_date`] = w.end;
+      if (updatedFairData.weekends?.length) {
+        updatedFairData.weekends.forEach(w => {
+          if (w.week === 1) { updateData.start_date = w.start; updateData.end_date = w.end; }
+          else { updateData[`week${w.week}_start_date`] = w.start; updateData[`week${w.week}_end_date`] = w.end; }
+        });
       }
-    });
-  }
 
-  const finalImage = sessionStorage.getItem("fair_image_url");
-  if (finalImage) {
-    updateData.image_url = finalImage;
-  }
+      const finalImage = sessionStorage.getItem("fair_image_url");
+      if (finalImage) updateData.image_url = finalImage;
 
-const { error } = await supabase.rpc("update_my_admin_fair", {
-  p_user_id: user.id,
-  p_fair_id: parseInt(fairId, 10),
-  p_name: updateData.name ?? null,
-  p_address: updateData.address ?? null,
-  p_city: updateData.city ?? null,
-  p_state: updateData.state ?? null,
-  p_zip: updateData.zip ?? null,
-  p_website: updateData.website ?? null,
-  p_hours: updateData.hours ?? null,
-  p_start_date: updateData.start_date ?? null,
-  p_end_date: updateData.end_date ?? null,
-  p_week2_start_date: updateData.week2_start_date ?? null,
-  p_week2_end_date: updateData.week2_end_date ?? null,
-  p_week3_start_date: updateData.week3_start_date ?? null,
-  p_week3_end_date: updateData.week3_end_date ?? null,
-  p_week4_start_date: updateData.week4_start_date ?? null,
-  p_week4_end_date: updateData.week4_end_date ?? null,
-  p_week5_start_date: updateData.week5_start_date ?? null,
-  p_week5_end_date: updateData.week5_end_date ?? null,
-  p_week6_start_date: updateData.week6_start_date ?? null,
-  p_week6_end_date: updateData.week6_end_date ?? null,
-  p_week7_start_date: updateData.week7_start_date ?? null,
-  p_week7_end_date: updateData.week7_end_date ?? null,
-  p_week8_start_date: updateData.week8_start_date ?? null,
-  p_week8_end_date: updateData.week8_end_date ?? null,
-  p_week9_start_date: updateData.week9_start_date ?? null,
-  p_week9_end_date: updateData.week9_end_date ?? null,
-  p_week10_start_date: updateData.week10_start_date ?? null,
-  p_week10_end_date: updateData.week10_end_date ?? null,
-  p_image_url: updateData.image_url ?? null
-});
+      // Save fair info
+      const { error: fairError } = await supabase.rpc("update_my_admin_fair", {
+        p_user_id: user.id, p_fair_id: parseInt(fairId,10),
+        p_name: updateData.name ?? null, p_address: updateData.address ?? null,
+        p_city: updateData.city ?? null, p_state: updateData.state ?? null,
+        p_zip: updateData.zip ?? null, p_website: updateData.website ?? null,
+        p_hours: updateData.hours ?? null,
+        p_start_date: updateData.start_date ?? null, p_end_date: updateData.end_date ?? null,
+        p_week2_start_date: updateData.week2_start_date ?? null, p_week2_end_date: updateData.week2_end_date ?? null,
+        p_week3_start_date: updateData.week3_start_date ?? null, p_week3_end_date: updateData.week3_end_date ?? null,
+        p_week4_start_date: updateData.week4_start_date ?? null, p_week4_end_date: updateData.week4_end_date ?? null,
+        p_week5_start_date: updateData.week5_start_date ?? null, p_week5_end_date: updateData.week5_end_date ?? null,
+        p_week6_start_date: updateData.week6_start_date ?? null, p_week6_end_date: updateData.week6_end_date ?? null,
+        p_week7_start_date: updateData.week7_start_date ?? null, p_week7_end_date: updateData.week7_end_date ?? null,
+        p_week8_start_date: updateData.week8_start_date ?? null, p_week8_end_date: updateData.week8_end_date ?? null,
+        p_week9_start_date: updateData.week9_start_date ?? null, p_week9_end_date: updateData.week9_end_date ?? null,
+        p_week10_start_date: updateData.week10_start_date ?? null, p_week10_end_date: updateData.week10_end_date ?? null,
+        p_image_url: updateData.image_url ?? null
+      });
 
-  if (error) {
-    console.error("Error updating fair:", error);
-    alert("Update failed");
-    return;
-  }
+      if (fairError) { console.error("Error updating fair:", fairError); alert("Fair update failed. Please try again."); return; }
 
-  if (error) {
-    console.error("Error updating fair:", error);
-    alert("Update failed");
-    return;
-  }
+      // Delete removed contacts
+      const deletedIds = updatedFairData.deletedContactIds || [];
+      for (const cid of deletedIds) {
+        const { error } = await supabase.rpc('fair_delete_contact', { fair_id: parseInt(fairId,10), id: cid });
+        if (error) console.error('Error deleting contact', cid, error);
+      }
 
-  sessionStorage.removeItem("updatedFairData");
-  sessionStorage.removeItem("update_fair_draft");
+      // Upsert all contacts
+      const contacts = updatedFairData.contacts || [];
+      for (const c of contacts) {
+        const { error } = await supabase.rpc('fair_upsert_contact', {
+          p_fair_id:      parseInt(fairId,10),
+          p_id:           c.id || null,
+          p_contact_type: c.contact_type || 'general',
+          p_label:        c.label        || null,
+          p_name:         c.name         || null,
+          p_email:        c.email        || null,
+          p_phone:        c.phone        || null,
+          p_is_default:   c.is_default   ?? false,
+          p_is_public:    c.is_public    ?? true,
+          p_sort_order:   0
+        });
+        if (error) console.error('Error upserting contact', c, error);
+      }
 
-  alert("Fair updated successfully!");
-  window.location.href = "/index.html";
-}
+      sessionStorage.removeItem("updatedFairData");
+      sessionStorage.removeItem("update_fair_draft");
 
-   function cancelUpdate() {
-  window.location.href = 'fair_update.html?fair_id=' + sessionStorage.getItem("fair_id");
-}
+      alert("Fair updated successfully!");
+      window.location.href = "/index.html";
+    }
+
+    function cancelUpdate() {
+      window.location.href = 'fair_update.html?fair_id=' + sessionStorage.getItem("fair_id");
+    }
 
     window.onload = displayFairPreview;
   </script>
-
 </body>
 </html>

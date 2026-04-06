@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fair Outreach | FairQuest Admin</title>
+  <title>Vendor & Performer Outreach | FairQuest Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/fq_theme.css" />
@@ -11,7 +11,6 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body { font-family: 'Domine', serif; background: #0a0a0a; color: #f0e6d2; margin: 0; padding: 0; }
-
     .topnav { background: #1a1208; border-bottom: 1px solid #3d2e0e; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
     .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
@@ -22,24 +21,20 @@
     .topnav-links a.active { background: rgba(241,223,153,0.18); color: #f1df99; font-weight: bold; }
     .topnav-links .nav-logout { background: rgba(180,50,50,0.18); color: #f4a0a0; margin-left: 8px; border: 1px solid rgba(180,50,50,0.3); }
     .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
-
     .page-body { padding: 16px 20px 80px; max-width: 1100px; margin: 0 auto; }
     .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
     .breadcrumb a { color: #bb9457; text-decoration: none; }
     .breadcrumb a:hover { text-decoration: underline; }
     .breadcrumb span { color: #f0e6d2; }
     h1 { font-family: 'Cinzel', serif; font-size: 22px; color: #f1df99; margin: 8px 0 16px; }
-
     .card { background: rgba(241,223,153,0.88); padding: 22px 24px; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,0.4); margin-bottom: 20px; color: #3b1f1f; text-align: left; }
     .card h2 { font-family: 'Cinzel', serif; font-size: 16px; margin: 0 0 14px; color: #3b1f1f; }
-
     .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
     .stat-box { background: rgba(241,223,153,0.1); border: 1px solid rgba(241,223,153,0.18); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: background 0.15s; }
     .stat-box:hover { background: rgba(241,223,153,0.18); }
     .stat-box.active-filter { background: rgba(187,122,40,0.25); border-color: rgba(187,122,40,0.5); }
     .stat-num { font-family: 'Cinzel', serif; font-size: 28px; color: #f1df99; line-height: 1; }
     .stat-label { font-size: 12px; color: #bb9457; margin-top: 5px; }
-
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
     .btn { background-color: #4CAF50; color: #fff; padding: 10px 16px; border: none; border-radius: 8px; font-size: 14px; font-family: 'Domine', serif; cursor: pointer; transition: background 0.15s; text-decoration: none; display: inline-block; }
     .btn:hover { background-color: #43a047; }
@@ -48,113 +43,97 @@
     .btn-dark:hover { background-color: #222; }
     .btn-gold { background-color: #bb7a28; }
     .btn-gold:hover { background-color: #a06820; }
-
     .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
     .filter-bar input[type="text"], .filter-bar select { padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.2); font-size: 14px; font-family: 'Domine', serif; background: rgba(255,255,255,0.88); color: #111; }
     .filter-bar input[type="text"] { flex: 1; min-width: 180px; }
-
     .select-bar { display: flex; align-items: center; gap: 14px; padding: 9px 14px; background: rgba(0,0,0,0.06); border-radius: 8px; margin-bottom: 10px; font-size: 14px; color: #3b1f1f; }
     .select-bar label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold; }
     .selected-count { color: #6d4c2a; font-size: 13px; margin-left: auto; }
-
-    .fair-list { display: flex; flex-direction: column; gap: 8px; }
-    .fair-row { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 12px 14px; transition: background 0.1s; }
-    .fair-row:hover { background: rgba(255,255,255,0.8); }
-    .fair-row.selected-row { background: rgba(187,122,40,0.1); border-color: rgba(187,122,40,0.35); }
-    .fair-row input[type="checkbox"] { width: 17px; height: 17px; cursor: pointer; flex-shrink: 0; accent-color: #bb7a28; }
-    .fair-meta { flex: 1 1 auto; min-width: 0; }
-    .fair-name { font-weight: bold; font-size: 15px; color: #3b1f1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .fair-sub { font-size: 13px; color: #5c3a1e; display: flex; flex-wrap: wrap; gap: 7px; margin-top: 3px; align-items: center; }
-
+    .vp-list { display: flex; flex-direction: column; gap: 8px; }
+    .vp-row { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 12px 14px; transition: background 0.1s; }
+    .vp-row:hover { background: rgba(255,255,255,0.8); }
+    .vp-row.selected-row { background: rgba(187,122,40,0.1); border-color: rgba(187,122,40,0.35); }
+    .vp-row input[type="checkbox"] { width: 17px; height: 17px; cursor: pointer; flex-shrink: 0; accent-color: #bb7a28; }
+    .vp-meta { flex: 1 1 auto; min-width: 0; }
+    .vp-name { font-weight: bold; font-size: 15px; color: #3b1f1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vp-sub { font-size: 13px; color: #5c3a1e; display: flex; flex-wrap: wrap; gap: 7px; margin-top: 3px; align-items: center; }
     .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: bold; }
-    .pill-gold     { background: rgba(212,175,55,0.28); color: #7a5a00; border: 1px solid rgba(212,175,55,0.5); }
-    .pill-silver   { background: rgba(180,180,180,0.25); color: #444; border: 1px solid rgba(180,180,180,0.4); }
-    .pill-basic    { background: rgba(100,100,100,0.15); color: #555; border: 1px solid rgba(100,100,100,0.3); }
+    .pill-vendor   { background: rgba(100,100,220,0.18); color: #1a1a6c; border: 1px solid rgba(100,100,220,0.3); }
+    .pill-performer{ background: rgba(187,122,40,0.2); color: #5c3a1e; border: 1px solid rgba(187,122,40,0.35); }
     .pill-never    { background: rgba(100,100,100,0.08); color: #888; border: 1px dashed rgba(0,0,0,0.2); }
     .pill-no_response { background: rgba(200,200,200,0.3); color: #555; border: 1px solid rgba(0,0,0,0.15); }
     .pill-interested  { background: rgba(240,180,20,0.25); color: #7a5200; border: 1px solid rgba(240,180,20,0.4); }
     .pill-signed_up   { background: rgba(76,175,80,0.22); color: #1a5c1e; border: 1px solid rgba(76,175,80,0.4); }
     .pill-declined    { background: rgba(180,50,50,0.18); color: #6b1414; border: 1px solid rgba(180,50,50,0.3); }
     .pill-followup    { background: rgba(220,80,30,0.18); color: #7a2000; border: 1px solid rgba(220,80,30,0.35); }
-
-    /* STATUS DROPDOWN */
     .status-dropdown-wrap { position: relative; display: inline-block; }
     .status-btn { background: none; border: none; padding: 0; cursor: pointer; font-family: 'Domine', serif; font-size: 11px; }
     .status-btn:disabled { cursor: default; opacity: 0.7; }
-    .status-menu {
-      display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 50;
-      background: #fff; border: 1px solid rgba(0,0,0,0.15); border-radius: 8px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.18); min-width: 160px; overflow: hidden;
-    }
+    .status-menu { display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 50; background: #fff; border: 1px solid rgba(0,0,0,0.15); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); min-width: 160px; overflow: hidden; }
     .status-menu.open { display: block; }
     .status-menu-item { padding: 9px 14px; font-size: 13px; color: #3b1f1f; cursor: pointer; font-family: 'Domine', serif; transition: background 0.1s; white-space: nowrap; }
     .status-menu-item:hover { background: rgba(187,122,40,0.1); }
     .status-menu-item.current { font-weight: bold; background: rgba(187,122,40,0.08); }
-
-    .fair-actions { display: flex; gap: 7px; flex-shrink: 0; align-items: center; }
+    .vp-actions { display: flex; gap: 7px; flex-shrink: 0; align-items: center; }
     .btn-sm { padding: 7px 11px; border: none; border-radius: 7px; font-size: 13px; font-family: 'Domine', serif; cursor: pointer; transition: background 0.15s; color: #fff; }
     .btn-sm-dark { background: #2f2f2f; }
     .btn-sm-dark:hover { background: #1a1a1a; }
     .btn-sm-gold { background: #bb7a28; }
     .btn-sm-gold:hover { background: #a06820; }
-
     .send-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1208; border-top: 2px solid #bb7a28; padding: 12px 24px; display: flex; align-items: center; gap: 14px; z-index: 200; transform: translateY(100%); transition: transform 0.22s ease; }
     .send-bar.visible { transform: translateY(0); }
     .send-bar-text { color: #f1df99; font-size: 15px; flex: 1; }
     .send-bar-text strong { font-family: 'Cinzel', serif; }
-
     .empty-msg { font-size: 14px; color: #5c3a1e; text-align: center; padding: 24px 0; }
-
     @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
     #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; gap: 16px; }
     #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
     .spinner { border: 5px solid rgba(255,255,255,0.15); border-top: 5px solid #bb9457; border-radius: 50%; width: 52px; height: 52px; animation: spin 0.9s linear infinite; }
-
-    @media (max-width: 600px) { .fair-actions { display: none; } .topnav-links a { font-size: 12px; padding: 5px 8px; } }
+    @media (max-width: 600px) { .vp-actions { display: none; } .topnav-links a { font-size: 12px; padding: 5px 8px; } }
   </style>
 </head>
 <body>
-
   <nav class="topnav">
-    <a class="topnav-logo" href="/home.html">
-      <img src="/images/logo.png" alt="FairQuest" />
-      <span>FairQuest</span>
-    </a>
+    <a class="topnav-logo" href="/home.html"><img src="/images/logo.png" alt="FairQuest" /><span>FairQuest</span></a>
     <div class="topnav-links">
       <a href="/index.html">🏡 Home</a>
-      <a href="/admin/admin_dashboard.html">🛡️ Admin Panel</a>
-      <a href="/fair_admin.html">🏰 Fair Admin</a>
-      <a href="outreach.html" class="active">📣 Outreach</a>
-      <a href="outreach_templates.html">✉️ Templates</a>
+      <a href="/admin/index.html">🛡️ Admin Panel</a>
+      <a href="/outreach/outreach.html">📣 Fair Outreach</a>
+      <a href="outreach_vendors.html" class="active">🧺 Vendor Outreach</a>
+      <a href="/outreach/outreach_templates.html">✉️ Templates</a>
       <a href="#" class="nav-logout" id="navLogout">Log Out</a>
     </div>
   </nav>
 
-  <div id="loadingOverlay"><div class="spinner"></div><p>Loading fairs…</p></div>
+  <div id="loadingOverlay"><div class="spinner"></div><p>Loading vendors & performers…</p></div>
 
   <div class="page-body">
     <div class="breadcrumb">
-      <a href="/home.html">Home</a> › <a href="/admin/index.html">Admin Panel</a> › <span>Fair Outreach</span>
+      <a href="/home.html">Home</a> › <a href="/admin/index.html">Admin Panel</a> › <span>Vendor & Performer Outreach</span>
     </div>
-    <h1>📣 Fair Outreach</h1>
+    <h1>🧺 Vendor & Performer Outreach</h1>
 
     <div class="stat-strip">
-      <div class="stat-box active-filter" id="statBoxAll"        onclick="quickFilter('all')">       <div class="stat-num" id="statTotal">—</div>     <div class="stat-label">Total Fairs</div></div>
-      <div class="stat-box"              id="statBoxNever"       onclick="quickFilter('never')">      <div class="stat-num" id="statNever">—</div>      <div class="stat-label">Never Contacted</div></div>
-      <div class="stat-box"              id="statBoxInterested"  onclick="quickFilter('interested')"> <div class="stat-num" id="statInterested">—</div>  <div class="stat-label">Interested</div></div>
-      <div class="stat-box"              id="statBoxSigned"      onclick="quickFilter('signed_up')">  <div class="stat-num" id="statSigned">—</div>      <div class="stat-label">Signed Up</div></div>
-      <div class="stat-box"              id="statBoxFollowUp"    onclick="quickFilter('followup')">   <div class="stat-num" id="statFollowUp">—</div>    <div class="stat-label">Follow-Up Due</div></div>
+      <div class="stat-box active-filter" id="statBoxAll"       onclick="quickFilter('all')">      <div class="stat-num" id="statTotal">—</div>    <div class="stat-label">Total</div></div>
+      <div class="stat-box"             id="statBoxNever"      onclick="quickFilter('never')">     <div class="stat-num" id="statNever">—</div>     <div class="stat-label">Never Contacted</div></div>
+      <div class="stat-box"             id="statBoxInterested" onclick="quickFilter('interested')"><div class="stat-num" id="statInterested">—</div> <div class="stat-label">Interested</div></div>
+      <div class="stat-box"             id="statBoxSigned"     onclick="quickFilter('signed_up')"> <div class="stat-num" id="statSigned">—</div>     <div class="stat-label">Signed Up</div></div>
+      <div class="stat-box"             id="statBoxFollowUp"   onclick="quickFilter('followup')">  <div class="stat-num" id="statFollowUp">—</div>   <div class="stat-label">Follow-Up Due</div></div>
     </div>
 
     <div class="card">
       <div class="btn-row">
         <a href="/admin/index.html" class="btn btn-dark">⬅ Back to Admin Panel</a>
-        <button class="btn btn-gold" id="btnTemplates">✉️ Manage Templates</button>
+        <button class="btn btn-gold" id="btnTemplates">✉️ Templates</button>
         <button class="btn btn-dark" id="btnRefresh">↺ Refresh</button>
       </div>
       <div class="filter-bar">
-        <input type="text" id="searchInput" placeholder="Search by fair name or state…" />
-        <select id="filterState"><option value="">All States</option></select>
+        <input type="text" id="searchInput" placeholder="Search by name, email or state…" />
+        <select id="filterType">
+          <option value="">All Types</option>
+          <option value="vendor">Vendors</option>
+          <option value="performer">Performers</option>
+        </select>
         <select id="filterResponse">
           <option value="">All Statuses</option>
           <option value="never">Never Contacted</option>
@@ -163,25 +142,19 @@
           <option value="signed_up">Signed Up</option>
           <option value="declined">Declined</option>
         </select>
-        <select id="filterTier">
-          <option value="">All Tiers</option>
-          <option value="gold">Gold</option>
-          <option value="silver">Silver</option>
-          <option value="basic">Basic</option>
-        </select>
       </div>
       <div class="select-bar">
         <label><input type="checkbox" id="chkSelectAll" /> Select All Visible</label>
         <span class="selected-count" id="selectedCount">0 selected</span>
       </div>
-      <div class="fair-list" id="fairList">
-        <div class="empty-msg" id="emptyMsg" style="display:none;">No fairs match your filters.</div>
+      <div class="vp-list" id="vpList">
+        <div class="empty-msg" id="emptyMsg" style="display:none;">No vendors or performers match your filters.</div>
       </div>
     </div>
   </div>
 
   <div class="send-bar" id="sendBar">
-    <div class="send-bar-text"><strong id="sendBarCount">0</strong> fair(s) selected</div>
+    <div class="send-bar-text"><strong id="sendBarCount">0</strong> selected</div>
     <button class="btn btn-gold" id="btnSendSelected">📨 Compose & Send Email →</button>
     <button class="btn btn-dark" id="btnClearSelection">✕ Clear</button>
   </div>
@@ -192,8 +165,7 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
-    let allFairs = [], selectedIds = new Set(), activeQuickFilter = 'all';
-    let openMenuFairId = null;
+    let allVPs = [], selectedIds = new Set(), activeQuickFilter = 'all', openMenuId = null;
 
     const showLoader = () => document.getElementById('loadingOverlay').style.display = 'flex';
     const hideLoader = () => document.getElementById('loadingOverlay').style.display = 'none';
@@ -210,186 +182,129 @@
       try { return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return null; }
     }
 
-    function tierPill(tier) {
-      const t = (tier||'').toLowerCase();
-      if (t === 'gold')   return `<span class="pill pill-gold">⭐ Gold</span>`;
-      if (t === 'silver') return `<span class="pill pill-silver">Silver</span>`;
-      if (t === 'basic')  return `<span class="pill pill-basic">Basic</span>`;
-      return '';
+    function typePill(vp) {
+      const isPerformer = vp.application_type === true;
+      return isPerformer
+        ? `<span class="pill pill-performer">🎭 Performer</span>`
+        : `<span class="pill pill-vendor">🧺 Vendor</span>`;
     }
 
-    function respPillHtml(fair) {
-  if (!fair.last_sent_at) return `<span class="pill pill-never">Never contacted</span>`;
-  const r = fair.last_response_status || 'no_response';
-  const labels = { no_response:'No Response', interested:'Interested', signed_up:'Signed Up ✓', declined:'Declined' };
-  return `<span class="pill pill-${r}">${labels[r]||r}</span>`;
-}
+    function respPillHtml(vp) {
+      if (!vp.last_sent_at) return `<span class="pill pill-never">Never contacted</span>`;
+      const r = vp.last_response_status || 'no_response';
+      const labels = { no_response:'No Response', interested:'Interested', signed_up:'Signed Up ✓', declined:'Declined' };
+      return `<span class="pill pill-${r}">${labels[r]||r}</span>`;
+    }
 
-function emailBadge(fair) {
-  const email = fair.contact_email || fair.default_email || null;
-  if (email) return `<span style="font-size:12px; color:#3b6b1a; background:rgba(76,175,80,0.15); border:1px solid rgba(76,175,80,0.3); border-radius:999px; padding:1px 8px;">📧 ${email}</span>`;
-  return `<span style="font-size:12px; color:#8b1a1a; background:rgba(180,50,50,0.1); border:1px dashed rgba(180,50,50,0.3); border-radius:999px; padding:1px 8px;">No email yet</span>`;
-}
-
-    // Build the inline status changer — only shown if emails have been sent
-    function buildStatusChanger(fair) {
-      if (!fair.last_sent_at || !fair.last_log_id) return '';
-      const current = fair.last_response_status || 'no_response';
+    function buildStatusChanger(vp) {
+      if (!vp.last_sent_at || !vp.last_log_id) return '';
+      const current = vp.last_response_status || 'no_response';
       const labels = { no_response:'No Response', interested:'Interested', signed_up:'Signed Up ✓', declined:'Declined' };
       return `
-        <div class="status-dropdown-wrap" id="sdw-${fair.fair_id}">
-          <button class="status-btn pill pill-${current}" id="sbtn-${fair.fair_id}"
-            onclick="toggleStatusMenu(event, ${fair.fair_id})">
+        <div class="status-dropdown-wrap" id="sdw-${vp.vp_id}">
+          <button class="status-btn pill pill-${current}" id="sbtn-${vp.vp_id}" onclick="toggleStatusMenu(event,${vp.vp_id})">
             ${labels[current]} ▾
           </button>
-          <div class="status-menu" id="smenu-${fair.fair_id}">
+          <div class="status-menu" id="smenu-${vp.vp_id}">
             ${STATUS_OPTIONS.map(o => `
-              <div class="status-menu-item ${o.value === current ? 'current' : ''}"
-                onclick="changeStatus(event, ${fair.fair_id}, ${fair.last_log_id}, '${o.value}')">
+              <div class="status-menu-item ${o.value===current?'current':''}" data-val="${o.value}"
+                onclick="changeStatus(event,${vp.vp_id},${vp.last_log_id},'${o.value}')">
                 ${o.label}
               </div>`).join('')}
           </div>
         </div>`;
     }
 
-    function toggleStatusMenu(e, fairId) {
+    function toggleStatusMenu(e, id) {
       e.stopPropagation();
-      const menu = document.getElementById(`smenu-${fairId}`);
+      const menu = document.getElementById(`smenu-${id}`);
       const isOpen = menu.classList.contains('open');
-      // Close any open menu first
-      if (openMenuFairId && openMenuFairId !== fairId) {
-        document.getElementById(`smenu-${openMenuFairId}`)?.classList.remove('open');
-      }
+      if (openMenuId && openMenuId !== id) document.getElementById(`smenu-${openMenuId}`)?.classList.remove('open');
       menu.classList.toggle('open', !isOpen);
-      openMenuFairId = isOpen ? null : fairId;
+      openMenuId = isOpen ? null : id;
     }
 
-    async function changeStatus(e, fairId, logId, newStatus) {
+    async function changeStatus(e, vpId, logId, newStatus) {
       e.stopPropagation();
-      const menu = document.getElementById(`smenu-${fairId}`);
-      const btn  = document.getElementById(`sbtn-${fairId}`);
-      menu.classList.remove('open');
-      openMenuFairId = null;
-
-      btn.disabled = true;
-      btn.textContent = 'Saving…';
-
-      const { error } = await sb.rpc('outreach_update_response', {
-        p_log_id:         logId,
-        p_response_status: newStatus,
-        p_notes:           null,
-        p_follow_up_after: null
-      });
-
-      if (error) {
-        console.error(error);
-        btn.disabled = false;
-        btn.textContent = 'Error — retry';
-        return;
-      }
-
-      // Update local data so re-renders stay consistent
-      const fair = allFairs.find(f => f.fair_id === fairId);
-      if (fair) fair.last_response_status = newStatus;
-
-      // Re-render just this row's status area
+      document.getElementById(`smenu-${vpId}`)?.classList.remove('open');
+      openMenuId = null;
+      const btn = document.getElementById(`sbtn-${vpId}`);
+      btn.disabled = true; btn.textContent = 'Saving…';
+      const { error } = await sb.rpc('outreach_update_response', { p_log_id: logId, p_response_status: newStatus, p_notes: null, p_follow_up_after: null });
+      if (error) { console.error(error); btn.disabled = false; btn.textContent = 'Error'; return; }
+      const vp = allVPs.find(v => v.vp_id === vpId);
+      if (vp) vp.last_response_status = newStatus;
       const labels = { no_response:'No Response', interested:'Interested', signed_up:'Signed Up ✓', declined:'Declined' };
       btn.className = `status-btn pill pill-${newStatus}`;
       btn.textContent = `${labels[newStatus]} ▾`;
       btn.disabled = false;
-
-      // Update the menu's "current" highlight
-      menu.querySelectorAll('.status-menu-item').forEach(item => {
-        item.classList.toggle('current', item.dataset.val === newStatus);
-      });
-      menu.querySelectorAll('.status-menu-item').forEach((item, i) => {
-        item.dataset.val = STATUS_OPTIONS[i].value;
-      });
-
-      // Refresh the response pill in fair-sub
-      const row = document.querySelector(`.fair-row[data-id="${fairId}"]`);
-      if (row) {
-        const pillSpan = row.querySelector('.resp-pill');
-        if (pillSpan) pillSpan.outerHTML = respPillHtml(fair).replace('<span', '<span class="resp-pill"').replace('class="pill', 'class="resp-pill pill');
-      }
-
       updateStats();
     }
 
     function getVisible() {
       const search = document.getElementById('searchInput').value.toLowerCase();
-      const state  = document.getElementById('filterState').value.toLowerCase();
+      const type   = document.getElementById('filterType').value;
       const resp   = document.getElementById('filterResponse').value;
-      const tier   = document.getElementById('filterTier').value.toLowerCase();
-      return allFairs.filter(f => {
-        if (search && !(f.fair_name||'').toLowerCase().includes(search) && !(f.state||'').toLowerCase().includes(search)) return false;
-        if (state  && (f.state||'').toLowerCase() !== state) return false;
-        if (tier   && (f.fair_tier||'').toLowerCase() !== tier) return false;
-        const rv = f.last_sent_at ? (f.last_response_status||'no_response') : 'never';
+      return allVPs.filter(vp => {
+        if (search && !(vp.vp_name||'').toLowerCase().includes(search) && !(vp.contact_email||'').toLowerCase().includes(search) && !(vp.state||'').toLowerCase().includes(search)) return false;
+        if (type === 'vendor'    && vp.application_type === true) return false;
+        if (type === 'performer' && vp.application_type !== true) return false;
+        const rv = vp.last_sent_at ? (vp.last_response_status||'no_response') : 'never';
         if (resp && rv !== resp) return false;
-        if (activeQuickFilter === 'never'      && f.last_sent_at) return false;
-        if (activeQuickFilter === 'interested' && f.last_response_status !== 'interested') return false;
-        if (activeQuickFilter === 'signed_up'  && f.last_response_status !== 'signed_up') return false;
-        if (activeQuickFilter === 'followup'   && !f.follow_up_due) return false;
+        if (activeQuickFilter === 'never'      && vp.last_sent_at) return false;
+        if (activeQuickFilter === 'interested' && vp.last_response_status !== 'interested') return false;
+        if (activeQuickFilter === 'signed_up'  && vp.last_response_status !== 'signed_up') return false;
+        if (activeQuickFilter === 'followup'   && !vp.follow_up_due) return false;
         return true;
       });
     }
 
-    function buildRow(fair) {
+    function buildRow(vp) {
       const div = document.createElement('div');
-      div.className = 'fair-row' + (selectedIds.has(fair.fair_id) ? ' selected-row' : '');
-      div.dataset.id = fair.fair_id;
-      const lastSent = fair.last_sent_at ? `Last emailed ${fmtDate(fair.last_sent_at)} · ${fair.total_emails_sent} sent` : 'No emails sent yet';
-      const fuBadge  = fair.follow_up_due ? `<span class="pill pill-followup">⚠ Follow-Up Due</span>` : '';
-
+      div.className = 'vp-row' + (selectedIds.has(vp.vp_id) ? ' selected-row' : '');
+      div.dataset.id = vp.vp_id;
+      const lastSent = vp.last_sent_at ? `Last emailed ${fmtDate(vp.last_sent_at)} · ${vp.total_emails_sent} sent` : 'No emails sent yet';
+      const fuBadge  = vp.follow_up_due ? `<span class="pill pill-followup">⚠ Follow-Up Due</span>` : '';
       div.innerHTML = `
-        <input type="checkbox" data-id="${fair.fair_id}" ${selectedIds.has(fair.fair_id)?'checked':''} />
-        <div class="fair-meta">
-          <div class="fair-name">${fair.fair_name||'—'}</div>
-          <div class="fair-sub">
-            <span>${fair.city||'—'}, ${fair.state||'—'}</span>
-            ${tierPill(fair.fair_tier)}
-            <span class="resp-pill-wrap">${respPillHtml(fair)}</span>
-${emailBadge(fair)}
+        <input type="checkbox" data-id="${vp.vp_id}" ${selectedIds.has(vp.vp_id)?'checked':''} />
+        <div class="vp-meta">
+          <div class="vp-name">${vp.vp_name||'—'}</div>
+          <div class="vp-sub">
+            <span>${vp.contact_name||'—'} · ${vp.contact_email||'—'}</span>
+            ${typePill(vp)}
+            <span class="resp-pill-wrap">${respPillHtml(vp)}</span>
             ${fuBadge}
             <span style="opacity:0.65;">${lastSent}</span>
           </div>
         </div>
-        <div class="fair-actions">
-          ${buildStatusChanger(fair)}
-          <button class="btn-sm btn-sm-dark" onclick="viewHistory(${fair.fair_id},event)">📋 History</button>
-          <button class="btn-sm btn-sm-gold" onclick="sendToOne(${fair.fair_id},event)">📨 Send</button>
+        <div class="vp-actions">
+          ${buildStatusChanger(vp)}
+          <button class="btn-sm btn-sm-dark" onclick="viewHistory(${vp.vp_id},event)">📋 History</button>
+          <button class="btn-sm btn-sm-gold" onclick="sendToOne(${vp.vp_id},event)">📨 Send</button>
         </div>`;
-
       div.querySelector('input[type="checkbox"]').addEventListener('change', function() {
-        if (this.checked) selectedIds.add(fair.fair_id); else selectedIds.delete(fair.fair_id);
+        if (this.checked) selectedIds.add(vp.vp_id); else selectedIds.delete(vp.vp_id);
         div.classList.toggle('selected-row', this.checked);
         updateSelectionUI(); syncSelectAll();
       });
-
-      // Tag menu items with their value for current-highlight refresh
-      div.querySelectorAll('.status-menu-item').forEach((item, i) => {
-        item.dataset.val = STATUS_OPTIONS[i].value;
-      });
-
       return div;
     }
 
     function renderList() {
-      const list  = document.getElementById('fairList');
+      const list = document.getElementById('vpList');
       const empty = document.getElementById('emptyMsg');
-      list.querySelectorAll('.fair-row').forEach(r => r.remove());
+      list.querySelectorAll('.vp-row').forEach(r => r.remove());
       const visible = getVisible();
       if (!visible.length) { empty.style.display='block'; }
-      else { empty.style.display='none'; visible.forEach(f => list.insertBefore(buildRow(f), empty)); }
+      else { empty.style.display='none'; visible.forEach(vp => list.insertBefore(buildRow(vp), empty)); }
       syncSelectAll();
     }
 
     function syncSelectAll() {
       const v = getVisible();
       const chk = document.getElementById('chkSelectAll');
-      chk.checked = v.length > 0 && v.every(f => selectedIds.has(f.fair_id));
-      chk.indeterminate = !chk.checked && v.some(f => selectedIds.has(f.fair_id));
+      chk.checked = v.length > 0 && v.every(vp => selectedIds.has(vp.vp_id));
+      chk.indeterminate = !chk.checked && v.some(vp => selectedIds.has(vp.vp_id));
     }
 
     function updateSelectionUI() {
@@ -400,11 +315,11 @@ ${emailBadge(fair)}
     }
 
     function updateStats() {
-      document.getElementById('statTotal').textContent     = allFairs.length;
-      document.getElementById('statNever').textContent     = allFairs.filter(f=>!f.last_sent_at).length;
-      document.getElementById('statInterested').textContent= allFairs.filter(f=>f.last_response_status==='interested').length;
-      document.getElementById('statSigned').textContent    = allFairs.filter(f=>f.last_response_status==='signed_up').length;
-      document.getElementById('statFollowUp').textContent  = allFairs.filter(f=>f.follow_up_due).length;
+      document.getElementById('statTotal').textContent     = allVPs.length;
+      document.getElementById('statNever').textContent     = allVPs.filter(v=>!v.last_sent_at).length;
+      document.getElementById('statInterested').textContent= allVPs.filter(v=>v.last_response_status==='interested').length;
+      document.getElementById('statSigned').textContent    = allVPs.filter(v=>v.last_response_status==='signed_up').length;
+      document.getElementById('statFollowUp').textContent  = allVPs.filter(v=>v.follow_up_due).length;
     }
 
     function quickFilter(type) {
@@ -415,56 +330,43 @@ ${emailBadge(fair)}
       renderList();
     }
 
-    function populateStateFilter() {
-      const sel = document.getElementById('filterState');
-      sel.innerHTML = '<option value="">All States</option>';
-      [...new Set(allFairs.map(f=>f.state).filter(Boolean))].sort().forEach(s => {
-        const o = document.createElement('option'); o.value=s.toLowerCase(); o.textContent=s; sel.appendChild(o);
-      });
-    }
-
-    function viewHistory(fairId, e) {
+    function viewHistory(vpId, e) {
       e&&e.stopPropagation();
-      const f = allFairs.find(x=>x.fair_id===fairId);
-      window.location.href=`outreach_history.html?fair_id=${fairId}&fair_name=${encodeURIComponent(f?.fair_name||'')}`;
+      const vp = allVPs.find(x=>x.vp_id===vpId);
+      window.location.href=`outreach_vendors_history.html?vp_id=${vpId}&vp_name=${encodeURIComponent(vp?.vp_name||'')}`;
     }
-    function sendToOne(fairId, e) { e&&e.stopPropagation(); selectedIds.clear(); selectedIds.add(fairId); navigateToCompose(); }
-    function navigateToCompose()  { if (!selectedIds.size) return; window.location.href=`outreach_compose.html?fair_ids=${[...selectedIds].join(',')}`; }
+    function sendToOne(vpId, e) { e&&e.stopPropagation(); selectedIds.clear(); selectedIds.add(vpId); navigateToCompose(); }
+    function navigateToCompose() { if (!selectedIds.size) return; window.location.href=`outreach_vendors_compose.html?vp_ids=${[...selectedIds].join(',')}`; }
 
-    // Close any open status menu when clicking elsewhere
     document.addEventListener('click', () => {
-      if (openMenuFairId) {
-        document.getElementById(`smenu-${openMenuFairId}`)?.classList.remove('open');
-        openMenuFairId = null;
-      }
+      if (openMenuId) { document.getElementById(`smenu-${openMenuId}`)?.classList.remove('open'); openMenuId = null; }
     });
 
-    async function loadFairs() {
+    async function loadVPs() {
       showLoader();
       const { data:{user} } = await sb.auth.getUser();
       if (!user) { window.location.href='/index.html'; return; }
-      const { data, error } = await sb.rpc('outreach_get_fairs_summary');
+      const { data, error } = await sb.rpc('outreach_get_vendors_performers_summary');
       if (error) { console.error(error); hideLoader(); return; }
-      allFairs = Array.isArray(data) ? data : [];
-      updateStats(); populateStateFilter(); quickFilter('all');
+      allVPs = Array.isArray(data) ? data : [];
+      updateStats(); quickFilter('all');
       hideLoader();
     }
 
     document.getElementById('searchInput').addEventListener('input', renderList);
-    document.getElementById('filterState').addEventListener('change', renderList);
+    document.getElementById('filterType').addEventListener('change', renderList);
     document.getElementById('filterResponse').addEventListener('change', renderList);
-    document.getElementById('filterTier').addEventListener('change', renderList);
     document.getElementById('chkSelectAll').addEventListener('change', function() {
-      const v=getVisible(); if(this.checked) v.forEach(f=>selectedIds.add(f.fair_id)); else v.forEach(f=>selectedIds.delete(f.fair_id));
+      const v=getVisible(); if(this.checked) v.forEach(vp=>selectedIds.add(vp.vp_id)); else v.forEach(vp=>selectedIds.delete(vp.vp_id));
       renderList(); updateSelectionUI();
     });
     document.getElementById('btnSendSelected').addEventListener('click', navigateToCompose);
     document.getElementById('btnClearSelection').addEventListener('click', () => { selectedIds.clear(); renderList(); updateSelectionUI(); });
-    document.getElementById('btnTemplates').addEventListener('click', () => window.location.href='outreach_templates.html');
-    document.getElementById('btnRefresh').addEventListener('click', () => { selectedIds.clear(); loadFairs(); });
+    document.getElementById('btnTemplates').addEventListener('click', () => window.location.href='/outreach/outreach_templates.html');
+    document.getElementById('btnRefresh').addEventListener('click', () => { selectedIds.clear(); loadVPs(); });
     document.getElementById('navLogout').addEventListener('click', async(e) => { e.preventDefault(); await sb.auth.signOut(); window.location.href='/index.html'; });
 
-    loadFairs();
+    loadVPs();
   </script>
 </body>
 </html>

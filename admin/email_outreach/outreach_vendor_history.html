@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outreach History | Vendor & Performer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Domine', serif; background: #0a0a0a; color: #f0e6d2; margin: 0; padding: 0; }
+    .topnav { background: #1a1208; border-bottom: 1px solid #3d2e0e; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100; }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a { color: #c8aa6e; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: background 0.15s; }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links .nav-logout { background: rgba(180,50,50,0.18); color: #f4a0a0; margin-left: 8px; border: 1px solid rgba(180,50,50,0.3); }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+    .page-body { padding: 16px 20px 60px; max-width: 900px; margin: 0 auto; }
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+    h1 { font-family: 'Cinzel', serif; font-size: 22px; color: #f1df99; margin: 8px 0 4px; }
+    .subtitle { font-size: 14px; color: #bb9457; margin-bottom: 18px; }
+    .card { background: rgba(241,223,153,0.88); padding: 22px 24px; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,0.4); margin-bottom: 16px; color: #3b1f1f; }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .btn { background-color: #4CAF50; color: #fff; padding: 10px 16px; border: none; border-radius: 8px; font-size: 14px; font-family: 'Domine', serif; cursor: pointer; transition: background 0.15s; text-decoration: none; display: inline-block; }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #222; }
+    .btn-gold { background-color: #bb7a28; }
+    .btn-gold:hover { background-color: #a06820; }
+    .log-list { display: flex; flex-direction: column; gap: 14px; }
+    .log-entry { background: rgba(255,255,255,0.65); border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; }
+    .log-header { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; cursor: pointer; user-select: none; }
+    .log-header:hover { background: rgba(255,255,255,0.5); }
+    .log-header-main { flex: 1; min-width: 0; }
+    .log-subject { font-weight: bold; font-size: 15px; color: #3b1f1f; margin-bottom: 4px; }
+    .log-meta { font-size: 13px; color: #5c3a1e; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .log-chevron { font-size: 18px; color: #5c3a1e; flex-shrink: 0; transition: transform 0.2s; margin-top: 2px; }
+    .log-entry.open .log-chevron { transform: rotate(180deg); }
+    .log-body { display: none; padding: 0 16px 16px; border-top: 1px solid rgba(0,0,0,0.08); }
+    .log-entry.open .log-body { display: block; }
+    .log-body-label { font-size: 12px; font-weight: bold; color: #5c3a1e; text-transform: uppercase; letter-spacing: 0.05em; margin: 14px 0 6px; }
+    .email-text { background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 14px 16px; font-size: 14px; color: #1a1a1a; white-space: pre-wrap; line-height: 1.7; max-height: 320px; overflow-y: auto; }
+    .log-status-row { margin-top: 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .log-status-row label { font-size: 13px; font-weight: bold; color: #3b1f1f; }
+    .status-select { font-size: 13px; padding: 7px 11px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.2); font-family: 'Domine', serif; background: rgba(255,255,255,0.9); color: #111; cursor: pointer; }
+    .save-status-btn { padding: 7px 14px; background: #bb7a28; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-family: 'Domine', serif; cursor: pointer; }
+    .save-status-btn:hover { background: #a06820; }
+    .save-status-btn:disabled { background: #666; cursor: not-allowed; }
+    .save-msg { font-size: 13px; }
+    .save-msg.ok  { color: #1a5c1e; font-weight: bold; }
+    .save-msg.err { color: #8b1a1a; }
+    .notes-input { width: 100%; font-size: 13px; padding: 8px 11px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.15); font-family: 'Domine', serif; background: rgba(255,255,255,0.9); color: #111; resize: vertical; min-height: 60px; }
+    .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: bold; }
+    .pill-sent       { background: rgba(76,175,80,0.18); color: #1a5c1e; border: 1px solid rgba(76,175,80,0.35); }
+    .pill-failed     { background: rgba(180,50,50,0.15); color: #6b1414; border: 1px solid rgba(180,50,50,0.3); }
+    .pill-no_response{ background: rgba(200,200,200,0.35); color: #555; border: 1px solid rgba(0,0,0,0.15); }
+    .pill-interested { background: rgba(240,180,20,0.25); color: #7a5200; border: 1px solid rgba(240,180,20,0.4); }
+    .pill-signed_up  { background: rgba(76,175,80,0.22); color: #1a5c1e; border: 1px solid rgba(76,175,80,0.4); }
+    .pill-declined   { background: rgba(180,50,50,0.18); color: #6b1414; border: 1px solid rgba(180,50,50,0.3); }
+    .empty-msg { font-size: 14px; color: #5c3a1e; text-align: center; padding: 30px 0; }
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; gap: 16px; }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner { border: 5px solid rgba(255,255,255,0.15); border-top: 5px solid #bb9457; border-radius: 50%; width: 52px; height: 52px; animation: spin 0.9s linear infinite; }
+  </style>
+</head>
+<body>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html"><img src="/images/logo.png" alt="FairQuest" /><span>FairQuest</span></a>
+    <div class="topnav-links">
+      <a href="/home.html">🏡 Home</a>
+      <a href="/admin/index.html">🛡️ Admin Panel</a>
+      <a href="outreach_vendors.html">🧺 Vendor Outreach</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div id="loadingOverlay"><div class="spinner"></div><p>Loading history…</p></div>
+
+  <div class="page-body">
+    <div class="breadcrumb">
+      <a href="/home.html">Home</a> › <a href="/admin/index.html">Admin Panel</a> › <a href="outreach_vendors.html">Vendor Outreach</a> › <span id="bcName">History</span>
+    </div>
+    <h1>📋 Outreach History</h1>
+    <div class="subtitle" id="subtitle">Loading…</div>
+
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn btn-dark" id="btnBack">⬅ Back</button>
+        <button class="btn btn-gold" id="btnSendNew">📨 Send New Email</button>
+      </div>
+    </div>
+
+    <div class="log-list" id="logList">
+      <div class="empty-msg" id="emptyMsg" style="display:none;">No emails sent to this vendor or performer yet.</div>
+    </div>
+  </div>
+
+  <script>
+    const sb = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    const params = new URLSearchParams(window.location.search);
+    const vpId   = Number(params.get('vp_id'));
+    const vpName = params.get('vp_name') || 'This Vendor/Performer';
+
+    const showLoader = () => document.getElementById('loadingOverlay').style.display='flex';
+    const hideLoader = () => document.getElementById('loadingOverlay').style.display='none';
+
+    function fmtDate(ts) {
+      if (!ts) return '—';
+      try { return new Date(ts).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' }); } catch { return ts; }
+    }
+
+    function sendStatusPill(status) {
+      const labels = { sent:'Sent ✓', failed:'Failed', bounced:'Bounced' };
+      return `<span class="pill pill-${status||'sent'}">${labels[status]||status||'Sent'}</span>`;
+    }
+
+    function respStatusPill(status) {
+      if (!status || status === 'no_response') return `<span class="pill pill-no_response">No Response</span>`;
+      const labels = { interested:'Interested', signed_up:'Signed Up ✓', declined:'Declined' };
+      return `<span class="pill pill-${status}">${labels[status]||status}</span>`;
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function buildLogEntry(log) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `
+        <div class="log-header">
+          <div class="log-header-main">
+            <div class="log-subject">${log.subject||'(No subject)'}</div>
+            <div class="log-meta">
+              <span>${fmtDate(log.sent_at)}</span>
+              ${sendStatusPill(log.status)}
+              ${respStatusPill(log.response_status)}
+              <span style="opacity:0.7;">To: ${log.recipient_email||'—'}${log.contact_name?` (${log.contact_name})`:''}</span>
+              ${log.template_title?`<span style="opacity:0.7;">Template: ${log.template_title}</span>`:''}
+            </div>
+          </div>
+          <span class="log-chevron">▾</span>
+        </div>
+        <div class="log-body">
+          <div class="log-body-label">Email Body</div>
+          <div class="email-text">${escHtml(log.body_sent||'')}</div>
+
+          <div class="log-status-row">
+            <label>Response Status:</label>
+            <select class="status-select" data-log-id="${log.log_id}">
+              <option value="no_response" ${!log.response_status||log.response_status==='no_response'?'selected':''}>No Response</option>
+              <option value="interested"  ${log.response_status==='interested'?'selected':''}>Interested</option>
+              <option value="signed_up"   ${log.response_status==='signed_up'?'selected':''}>Signed Up</option>
+              <option value="declined"    ${log.response_status==='declined'?'selected':''}>Declined</option>
+            </select>
+            <button class="save-status-btn" data-log-id="${log.log_id}">Save</button>
+            <span class="save-msg" data-log-id="${log.log_id}"></span>
+          </div>
+
+          <div style="margin-top:10px;">
+            <div class="log-body-label">Private Notes</div>
+            <textarea class="notes-input" data-log-id="${log.log_id}" placeholder="Add notes…">${log.notes||''}</textarea>
+          </div>
+
+          ${log.follow_up_after?`<div style="margin-top:10px;font-size:13px;color:#5c3a1e;">📅 Follow-up: <strong>${fmtDate(log.follow_up_after)}</strong></div>`:''}
+        </div>`;
+
+      entry.querySelector('.log-header').addEventListener('click', () => entry.classList.toggle('open'));
+
+      entry.querySelector('.save-status-btn').addEventListener('click', async function() {
+        const logId    = Number(this.dataset.logId);
+        const sel      = entry.querySelector(`.status-select[data-log-id="${logId}"]`);
+        const notes    = entry.querySelector(`.notes-input[data-log-id="${logId}"]`);
+        const msgEl    = entry.querySelector(`.save-msg[data-log-id="${logId}"]`);
+        this.disabled  = true; this.textContent = 'Saving…'; msgEl.textContent=''; msgEl.className='save-msg';
+        const { error } = await sb.rpc('outreach_update_response', { p_log_id: logId, p_response_status: sel.value, p_notes: notes.value.trim()||null, p_follow_up_after: null });
+        this.disabled = false; this.textContent = 'Save';
+        if (error) { console.error(error); msgEl.textContent='Save failed.'; msgEl.className='save-msg err'; return; }
+        msgEl.textContent='✅ Saved!'; msgEl.className='save-msg ok';
+        setTimeout(()=>{ msgEl.textContent=''; }, 2500);
+        const metaDiv = entry.querySelector('.log-meta');
+        const oldPill = metaDiv.querySelector('[class*="pill-no_response"],[class*="pill-interested"],[class*="pill-signed_up"],[class*="pill-declined"]');
+        if (oldPill) oldPill.outerHTML = respStatusPill(sel.value);
+      });
+
+      return entry;
+    }
+
+    async function loadHistory() {
+      showLoader();
+      const { data:{user} } = await sb.auth.getUser();
+      if (!user) { window.location.href='/index.html'; return; }
+      if (!vpId) { document.getElementById('subtitle').textContent='No vendor selected.'; hideLoader(); return; }
+
+      document.getElementById('bcName').textContent = vpName;
+      document.getElementById('subtitle').textContent = `All outreach emails sent to ${vpName}`;
+      document.title = `${vpName} — Outreach History | FairQuest`;
+
+      const { data, error } = await sb.rpc('outreach_get_vendor_performer_history', { p_vp_id: vpId });
+      if (error) { console.error(error); document.getElementById('subtitle').textContent='Could not load history.'; hideLoader(); return; }
+
+      const logs  = Array.isArray(data) ? data : [];
+      const list  = document.getElementById('logList');
+      const empty = document.getElementById('emptyMsg');
+
+      if (!logs.length) { empty.style.display='block'; }
+      else {
+        logs.forEach(log => list.insertBefore(buildLogEntry(log), empty));
+        list.querySelector('.log-entry')?.classList.add('open');
+      }
+
+      hideLoader();
+    }
+
+    document.getElementById('btnBack').addEventListener('click', () => window.location.href='outreach_vendors.html');
+    document.getElementById('btnSendNew').addEventListener('click', () => window.location.href=`outreach_vendors_compose.html?vp_ids=${vpId}`);
+    document.getElementById('navLogout').addEventListener('click', async(e) => { e.preventDefault(); await sb.auth.signOut(); window.location.href='/index.html'; });
+
+    loadHistory();
+  </script>
+</body>
+</html>

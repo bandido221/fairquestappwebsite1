@@ -623,32 +623,37 @@ body{
 </div>
         </div>
 
-        <div class="profile-fields">
-          <div class="field-box">
-            <div class="field-label">Display Name</div>
-            <div class="field-value" id="field-display-name"></div>
-          </div>
+    <div class="profile-fields">
+  <div class="field-box">
+    <div class="field-label">Name</div>
+    <div class="field-value" id="field-display-name"></div>
+  </div>
 
-          <div class="field-box">
-            <div class="field-label">Bio</div>
-            <div class="field-value" id="field-bio"></div>
-          </div>
+  <div class="field-box">
+    <div class="field-label">Username</div>
+    <div class="field-value" id="field-username"></div>
+  </div>
 
-          <div class="field-box">
-            <div class="field-label">Website URL</div>
-            <div class="field-value" id="field-website-url"></div>
-          </div>
+  <div class="field-box">
+    <div class="field-label">City</div>
+    <div class="field-value" id="field-city"></div>
+  </div>
 
-          <div class="field-box">
-            <div class="field-label">City</div>
-            <div class="field-value" id="field-city"></div>
-          </div>
+  <div class="field-box">
+    <div class="field-label">State</div>
+    <div class="field-value" id="field-state"></div>
+  </div>
 
-          <div class="field-box">
-            <div class="field-label">State</div>
-            <div class="field-value" id="field-state"></div>
-          </div>
-        </div>
+  <div class="field-box">
+    <div class="field-label">Website URL</div>
+    <div class="field-value" id="field-website-url"></div>
+  </div>
+
+  <div class="field-box full" style="grid-column: 1 / -1;">
+    <div class="field-label">Bio</div>
+    <div class="field-value" id="field-bio"></div>
+  </div>
+</div>
       </div>
     </div>
 
@@ -1356,6 +1361,7 @@ async function loadProfile(){
   document.getElementById('profile-username').textContent = profile.username ? `@${profile.username}` : '@user';
 
   setField('field-display-name', profile.display_name);
+setField('field-username', profile.username);
   setField('field-bio', profile.bio);
   setField('field-website-url', profile.website_url);
   setField('field-city', profile.city);

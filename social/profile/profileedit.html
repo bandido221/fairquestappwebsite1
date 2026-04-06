@@ -372,54 +372,46 @@ textarea{
         </div>
       </div>
 
-      <div class="form-grid">
-        <div class="field-box">
-          <div class="field-label">Display Name</div>
-          <input type="text" id="display_name" maxlength="150">
-        </div>
+   <div class="form-grid">
+  <div class="field-box">
+    <div class="field-label">Name</div>
+    <input type="text" id="display_name" maxlength="150" placeholder="Your display name">
+  </div>
 
-        <div class="field-box">
-          <div class="field-label">Website URL</div>
-          <input type="text" id="website_url" maxlength="500">
-        </div>
+  <div class="field-box">
+    <div class="field-label">Username</div>
+    <input type="text" id="username" maxlength="50" placeholder="Unique username">
+    <div style="font-size:12px; color:#bb9457; margin-top:4px;">Must be unique — this is how others find you.</div>
+  </div>
 
-        <div class="field-box full">
-          <div class="field-label">Bio</div>
-          <textarea id="bio" maxlength="2000"></textarea>
-        </div>
+  <div class="field-box">
+    <div class="field-label">City</div>
+    <input type="text" id="city" maxlength="100" placeholder="Your city">
+  </div>
 
-        <div class="field-box">
-          <div class="field-label">Location</div>
-          <input type="text" id="location" maxlength="255">
-        </div>
+  <div class="field-box">
+    <div class="field-label">State</div>
+    <input type="text" id="state" maxlength="100" placeholder="Your state">
+  </div>
 
-        <div class="field-box">
-          <div class="field-label">Location Source</div>
-          <select id="location_source">
-            <option value="">—</option>
-            <option value="manual">manual</option>
-            <option value="gps">gps</option>
-          </select>
-        </div>
+  <div class="field-box">
+    <div class="field-label">Website URL</div>
+    <input type="text" id="website_url" maxlength="500" placeholder="https://yourwebsite.com">
+  </div>
 
-        <div class="field-box">
-          <div class="field-label">City</div>
-          <input type="text" id="city" maxlength="100">
-        </div>
+  <div class="field-box">
+    <div class="field-label">Profile Privacy</div>
+    <div class="toggle-row" style="margin-top:10px;">
+      <input type="checkbox" id="allow_profile_public">
+      <label for="allow_profile_public">Make profile public</label>
+    </div>
+  </div>
 
-        <div class="field-box">
-          <div class="field-label">State</div>
-          <input type="text" id="state" maxlength="100">
-        </div>
-
-        <div class="field-box full">
-          <div class="field-label">Profile Privacy</div>
-          <div class="toggle-row">
-            <input type="checkbox" id="allow_profile_public">
-            <label for="allow_profile_public">Allow profile public</label>
-          </div>
-        </div>
-      </div>
+  <div class="field-box full">
+    <div class="field-label">Bio</div>
+    <textarea id="bio" maxlength="2000" placeholder="Tell the realm about yourself…"></textarea>
+  </div>
+</div>
 
       <div id="status-box" class="status-box"></div>
 
@@ -725,21 +717,19 @@ async function loadProfileEdit(){
 
   const row = data || {};
 
-  document.getElementById('display_name').value = row.display_name || '';
-  document.getElementById('bio').value = row.bio || '';
-  document.getElementById('location').value = row.location || '';
-  document.getElementById('website_url').value = row.website_url || '';
-  document.getElementById('city').value = row.city || '';
-  document.getElementById('state').value = row.state || '';
-  document.getElementById('location_source').value = row.location_source || '';
-  document.getElementById('allow_profile_public').checked = row.allow_profile_public === true;
+document.getElementById('display_name').value = row.display_name || '';
+document.getElementById('username').value = row.username || '';
+document.getElementById('bio').value = row.bio || '';
+document.getElementById('website_url').value = row.website_url || '';
+document.getElementById('city').value = row.city || '';
+document.getElementById('state').value = row.state || '';
+document.getElementById('allow_profile_public').checked = row.allow_profile_public === true;
 
-  uploadedProfileImageUrl = row.profile_image_url || null;
-  uploadedCoverImageUrl = row.cover_image_url || null;
+uploadedProfileImageUrl = row.profile_image_url || null;
+uploadedCoverImageUrl = row.cover_image_url || null;
 
-  document.getElementById('profile-image-preview').src = uploadedProfileImageUrl || 'https://via.placeholder.com/140?text=User';
-  document.getElementById('cover-image-preview').src = uploadedCoverImageUrl || 'https://via.placeholder.com/1200x260?text=Cover+Image';
-
+document.getElementById('profile-image-preview').src = uploadedProfileImageUrl || '/images/default_avatar.png';
+document.getElementById('cover-image-preview').src = uploadedCoverImageUrl || '/images/default_cover.png';
   document.getElementById('loading-box').style.display = 'none';
   document.getElementById('form-wrap').style.display = 'block';
 }
@@ -754,19 +744,20 @@ async function saveProfileEdit(){
   try{
     const profileImageUrl = await uploadProfileImageToStorage();
     const coverImageUrl = await uploadCoverImageToStorage();
-
-    const payload = {
-      p_display_name: document.getElementById('display_name').value.trim() || null,
-      p_bio: document.getElementById('bio').value.trim() || null,
-      p_profile_image_url: profileImageUrl || null,
-      p_cover_image_url: coverImageUrl || null,
-      p_location: document.getElementById('location').value.trim() || null,
-      p_website_url: document.getElementById('website_url').value.trim() || null,
-      p_allow_profile_public: document.getElementById('allow_profile_public').checked,
-      p_city: document.getElementById('city').value.trim() || null,
-      p_state: document.getElementById('state').value.trim() || null,
-      p_location_source: document.getElementById('location_source').value || null
-    };
+    
+const payload = {
+  p_display_name: document.getElementById('display_name').value.trim() || null,
+  p_username: document.getElementById('username').value.trim() || null,
+  p_bio: document.getElementById('bio').value.trim() || null,
+  p_profile_image_url: profileImageUrl || null,
+  p_cover_image_url: coverImageUrl || null,
+  p_location: null,
+  p_website_url: document.getElementById('website_url').value.trim() || null,
+  p_allow_profile_public: document.getElementById('allow_profile_public').checked,
+  p_city: document.getElementById('city').value.trim() || null,
+  p_state: document.getElementById('state').value.trim() || null,
+  p_location_source: null
+};
 
     const { error } = await supabaseClient.rpc('save_my_profile_edit', payload);
 

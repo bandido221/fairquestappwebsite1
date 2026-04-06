@@ -97,6 +97,19 @@ margin-bottom:18px;
 box-shadow:0 4px 10px rgba(0,0,0,0.35);
 }
 
+.pinned-post{
+border:1px solid rgba(187,148,87,0.5);
+background:#1a1508;
+}
+
+.pinned-post .post-author-block::before{
+content:"📌 Pinned";
+display:block;
+font-size:11px;
+color:#bb9457;
+margin-bottom:2px;
+}
+
 .post-author{
 font-weight:bold;
 margin-bottom:2px;
@@ -1462,7 +1475,7 @@ return;
 }
 
 const div = document.createElement("div");
-div.className = "post";
+div.className = "post" + (p.is_pinned ? " pinned-post" : "");
 div.setAttribute("data-post-id", p.id);
 
 const reactionPopupHtml = reactionTypes.map(r => `
@@ -1506,10 +1519,11 @@ div.innerHTML = `
       ${
         p.author_id === currentUserId
           ? `
-            <button type="button" class="post-menu-btn" data-action="delete-post" data-post-id="${p.id}">Delete post</button>
-            <button type="button" class="post-menu-btn" data-action="edit-post" data-post-id="${p.id}">Edit post</button>
-            <button type="button" class="post-menu-btn" data-action="edit-audience" data-post-id="${p.id}">Edit audience</button>
-          `
+       <button type="button" class="post-menu-btn" data-action="delete-post" data-post-id="${p.id}">Delete post</button>
+<button type="button" class="post-menu-btn" data-action="edit-post" data-post-id="${p.id}">Edit post</button>
+<button type="button" class="post-menu-btn" data-action="edit-audience" data-post-id="${p.id}">Edit audience</button>
+${p.is_pinned ? `<button type="button" class="post-menu-btn" data-action="unpin-post" data-post-id="${p.id}">📌 Unpin post</button>` : `<button type="button" class="post-menu-btn" data-action="pin-post" data-post-id="${p.id}">📌 Pin post</button>`}
+   `
           : `
             <button type="button" class="post-menu-btn" data-action="interested-post" data-post-id="${p.id}">Interested</button>
             <button type="button" class="post-menu-btn" data-action="not-interested-post" data-post-id="${p.id}">Not interested</button>
@@ -1941,7 +1955,19 @@ if(action === 'report-post'){
     return;
   }
 
-  if(action === 'unsave-post'){
+  if(action === 'pin-post'){
+  await supabaseClient.from('social.post_post').update({ is_pinned: true }).eq('id', postId);
+  await loadFeed();
+  return;
+}
+
+if(action === 'unpin-post'){
+  await supabaseClient.rpc('unpin_social_post', { p_post_id: postId });
+  await loadFeed();
+  return;
+}
+
+if(action === 'unsave-post'){
     const { error } = await supabaseClient.rpc('set_post_preference',{
       p_post_id: postId,
       p_action: 'unsave'

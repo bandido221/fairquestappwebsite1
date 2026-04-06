@@ -84,6 +84,24 @@ button.action {
   <button class="secondary" onclick="logout()">Logout</button>
 </div>
 
+<div class="card" style="max-width:800px; margin:0 auto 20px;">
+  <h3>⚡ Quick Assign Fair Admin</h3>
+  <p style="color:#aaa; font-size:14px;">Use this when someone emails you directly and you need to assign them manually.</p>
+  <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+    <input type="email" id="quickEmail" placeholder="User email (e.g. fairfieldirf@gmail.com)"
+      style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;" />
+    <input type="text" id="quickFairName" placeholder="Search fair name…"
+      style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;"
+      oninput="searchFairs()" />
+    <select id="quickFairSelect"
+      style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;">
+      <option value="">— Select fair after searching —</option>
+    </select>
+    <button class="action approve" onclick="quickAssign()">⚡ Assign as Fair Admin</button>
+    <div id="quickStatus" style="font-size:14px; margin-top:4px;"></div>
+  </div>
+</div>
+
 <div id="list">Loading…</div>
 
 <script>
@@ -118,7 +136,63 @@ button.action {
   return true;
 }
 
+async function searchFairs() {
+  const query = document.getElementById('quickFairName').value.trim();
+  const sel   = document.getElementById('quickFairSelect');
+  sel.innerHTML = '<option value="">— Select fair —</option>';
+  if (query.length < 2) return;
 
+  const { data, error } = await supabase
+    .from('renaissance_fairs')
+    .select('id, name, city, state')
+    .ilike('name', `%${query}%`)
+    .limit(10);
+
+  if (error) { console.error(error); return; }
+  (data||[]).forEach(f => {
+    const o = document.createElement('option');
+    o.value = f.id;
+    o.textContent = `${f.name} — ${f.city}, ${f.state}`;
+    sel.appendChild(o);
+  });
+}
+
+async function quickAssign() {
+  const email  = document.getElementById('quickEmail').value.trim();
+  const fairId = document.getElementById('quickFairSelect').value;
+  const status = document.getElementById('quickStatus');
+
+  if (!email || !fairId) { status.textContent = '⚠ Please enter an email and select a fair.'; return; }
+
+  const { data: users, error: userErr } = await supabase
+    .from('app_users')
+    .select('id')
+    .eq('email', email)
+    .limit(1);
+
+  if (userErr || !users?.length) {
+    status.textContent = '❌ User not found. Make sure they have a FairQuest account.';
+    return;
+  }
+
+  const userId = users[0].id;
+
+  const { error } = await supabase.rpc('assign_fair_admin', {
+    p_user_id: userId,
+    p_fair_id: parseInt(fairId)
+  });
+
+  if (error) {
+    console.error(error);
+    status.textContent = '❌ Error assigning admin: ' + error.message;
+    return;
+  }
+
+  status.textContent = '✅ Admin assigned successfully!';
+  document.getElementById('quickEmail').value = '';
+  document.getElementById('quickFairName').value = '';
+  document.getElementById('quickFairSelect').innerHTML = '<option value="">— Select fair after searching —</option>';
+}
   async function load(){
     var ok = await requireAdminLogin();
     if (!ok) return;

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Complete Your Profile | FairQuest</title>
   <link rel="stylesheet" href="/css/style.css" />
-<link rel="stylesheet" href="/css/fq_theme.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
@@ -13,7 +13,11 @@
       color: #f0e6d2;
       font-family: 'Domine', serif;
       text-align: center;
-      padding: 40px;
+      padding: 40px 16px;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 24px;
     }
     .form-container {
       background: rgba(251, 241, 200, 0.88);
@@ -23,122 +27,382 @@
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      text-align: left;
     }
-    input[type="text"] {
+
+    /* ── avatar ── */
+    .avatar-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .avatar-img {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #aa8452;
+      background: #222;
+    }
+    .img-btn {
+      border: none;
+      border-radius: 999px;
+      background: #111;
+      color: #f0e6d2;
+      padding: 9px 18px;
+      font-family: 'Domine', serif;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .img-btn:hover { background: #222; }
+
+    /* ── fields ── */
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-weight: bold;
+      color: #3b1f1f;
+      margin-bottom: 6px;
+    }
+    .field label .req { color: #7a2020; }
+    .field input {
       width: 100%;
-      padding: 10px;
-      margin: 10px 0 20px;
+      padding: 10px 12px;
       border: 1px solid #aa8452;
       border-radius: 6px;
       background: #fdf7e1;
       color: #3b1f1f;
-      font-size: 16px;
+      font-family: 'Domine', serif;
+      font-size: 1rem;
+      box-sizing: border-box;
     }
+    .field input::placeholder { color: #9a8060; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ── warning ── */
     .warning {
-      color: red;
+      color: #7a2020;
       font-weight: bold;
-      font-size: 14px;
-      margin-bottom: 10px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      line-height: 1.5;
     }
-    button {
+
+    /* ── status ── */
+    .status-box {
+      display: none;
+      margin-top: 14px;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .status-box.error   { display: block; background: #7a2020; color: #fff; }
+    .status-box.success { display: block; background: #1f5f2a; color: #fff; }
+
+    /* ── buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .save-btn {
+      flex: 1;
       background-color: #4CAF50;
       color: white;
       padding: 12px 20px;
       border: none;
       border-radius: 6px;
       font-size: 16px;
+      font-family: 'Domine', serif;
       cursor: pointer;
-      margin: 8px;
     }
-    .logout-button {
+    .save-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    .logout-btn {
       background-color: #b73239;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-family: 'Domine', serif;
+      cursor: pointer;
+    }
+
+    @media (max-width: 480px) {
+      .two-col { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 
 <body>
-
   <h1>Complete Your Profile</h1>
 
   <div class="form-container">
-    <p><strong>Choose a Username</strong></p>
-    <p class="warning">This app is family-friendly. 🚨 Inappropriate usernames will result in permanent account deletion without warning.</p>
 
-    <input type="text" id="username" placeholder="Enter a family-friendly username" />
-    <div id="errorMessage" class="warning" style="display:none;"></div>
+    <!-- avatar -->
+    <div class="avatar-wrap">
+      <img id="avatarPreview" class="avatar-img"
+        src="https://via.placeholder.com/110?text=👤" alt="Profile photo">
+      <input type="file" id="avatarFile" accept="image/*" style="display:none;">
+      <button type="button" class="img-btn" onclick="document.getElementById('avatarFile').click()">
+        📷 Choose Profile Photo
+      </button>
+    </div>
 
-    <button onclick="submitUsername()">Save Username</button>
-    <button class="logout-button" onclick="logout()">🚪 Log Out</button>
+    <!-- username -->
+    <div class="field">
+      <label>Username <span class="req">*</span></label>
+      <input type="text" id="username" maxlength="50"
+        placeholder="Choose a unique username">
+    </div>
+
+    <p class="warning">
+      🚨 This app is family-friendly. Inappropriate usernames will result
+      in permanent account deletion without warning.
+    </p>
+
+    <!-- name -->
+    <div class="two-col">
+      <div class="field">
+        <label>First Name <span class="req">*</span></label>
+        <input type="text" id="firstName" maxlength="100" placeholder="First name">
+      </div>
+      <div class="field">
+        <label>Last Name <span class="req">*</span></label>
+        <input type="text" id="lastName" maxlength="100" placeholder="Last name">
+      </div>
+    </div>
+
+    <!-- location -->
+    <div class="two-col">
+      <div class="field">
+        <label>City <span style="font-weight:normal;font-size:12px;">(optional)</span></label>
+        <input type="text" id="city" maxlength="100" placeholder="Your city">
+      </div>
+      <div class="field">
+        <label>State <span style="font-weight:normal;font-size:12px;">(optional)</span></label>
+        <input type="text" id="state" maxlength="100" placeholder="Your state">
+      </div>
+    </div>
+
+    <div id="statusBox" class="status-box"></div>
+
+    <div class="btn-row">
+      <button class="save-btn" id="saveBtn" onclick="submitSetup()">
+        Save &amp; Continue
+      </button>
+      <button class="logout-btn" onclick="logout()">🚪 Log Out</button>
+    </div>
+
   </div>
 
   <script>
-    const supabase = window.supabase.createClient(
+    const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
     const badWords = [
-      'fuck','shit','bitch','asshole','slut','nigger','fag','dick','cock','cunt','pussy','whore',
-      'bastard','rape','cum','anal','suck','motherfucker','fuk','fck','sh1t','f u c k','s h i t'
+      'fuck','shit','bitch','asshole','slut','nigger','fag','dick','cock',
+      'cunt','pussy','whore','bastard','rape','cum','anal','suck',
+      'motherfucker','fuk','fck','sh1t','f u c k','s h i t'
     ];
 
-    async function submitUsername() {
-      const username = document.getElementById('username').value.trim();
-      const errorBox = document.getElementById('errorMessage');
-      errorBox.style.display = 'none';
+    let selectedImageFile = null;
 
-      if (!username) {
-        errorBox.textContent = '❌ Please enter a username.';
-        errorBox.style.display = 'block';
+    /* ── status ── */
+    function showStatus(msg, type) {
+      const box = document.getElementById('statusBox');
+      box.className = 'status-box ' + type;
+      box.textContent = msg;
+    }
+    function clearStatus() {
+      const box = document.getElementById('statusBox');
+      box.className = 'status-box';
+      box.textContent = '';
+    }
+
+    /* ── image picker ── */
+    document.getElementById('avatarFile').addEventListener('change', function(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showStatus('Please choose an image file.', 'error');
         return;
       }
-
-      const usernameLower = username.toLowerCase();
-
-      if (badWords.some(word => usernameLower.includes(word))) {
-        errorBox.textContent = '❌ Please choose a family-appropriate username.';
-        errorBox.style.display = 'block';
+      if (file.size > 5 * 1024 * 1024) {
+        showStatus('Image must be 5 MB or smaller.', 'error');
         return;
       }
+      selectedImageFile = file;
+      const reader = new FileReader();
+      reader.onload = e => document.getElementById('avatarPreview').src = e.target.result;
+      reader.readAsDataURL(file);
+    });
 
-      const { data: existingUser, error: existError } = await supabase
+    /* ── compress ── */
+    async function compressImage(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = e => img.src = e.target.result;
+        reader.onerror = reject;
+        img.onload = function() {
+          const MAX = 600;
+          let w = img.width, h = img.height;
+          if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } }
+          else        { if (h > MAX) { w *= MAX/h; h = MAX; } }
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(w);
+          canvas.height = Math.round(h);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.75);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /* ── upload image ── */
+    async function uploadImage(userId) {
+      if (!selectedImageFile) return null;
+      const blob = await compressImage(selectedImageFile);
+      if (!blob) return null;
+      const path = `${userId}/avatar-${Date.now()}.jpg`;
+      const { error } = await supabaseClient.storage
+        .from('social-profile-images')
+        .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+      if (error) throw error;
+      const { data } = supabaseClient.storage
+        .from('social-profile-images')
+        .getPublicUrl(path);
+      return data?.publicUrl || null;
+    }
+
+    /* ── already set up? ── */
+    async function checkAlreadySetup() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = '/user_login.html'; return; }
+      const { data: au } = await supabaseClient
         .from('app_users')
-        .select('id')
-        .eq('username', username)
-        .single();
+        .select('username')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      if (au?.username) window.location.href = '/profile/index.html';
+    }
 
-      if (existingUser) {
-        errorBox.textContent = '❌ Username already taken. Please choose another.';
-        errorBox.style.display = 'block';
+    /* ── submit ── */
+    async function submitSetup() {
+      clearStatus();
+
+      const username  = document.getElementById('username').value.trim();
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName  = document.getElementById('lastName').value.trim();
+      const city      = document.getElementById('city').value.trim() || null;
+      const state     = document.getElementById('state').value.trim() || null;
+
+      // validate
+      if (!username || !firstName || !lastName) {
+        showStatus('❌ Username, first name and last name are required.', 'error');
+        return;
+      }
+      if (badWords.some(w => username.toLowerCase().includes(w))) {
+        showStatus('❌ Please choose a family-appropriate username.', 'error');
         return;
       }
 
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        errorBox.textContent = '❌ Session expired. Please log in again.';
-        errorBox.style.display = 'block';
-        return;
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      try {
+        // check username taken
+        const { data: taken } = await supabaseClient
+          .from('app_users')
+          .select('id')
+          .eq('username', username)
+          .maybeSingle();
+        if (taken) {
+          showStatus('❌ Username already taken. Please choose another.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Save & Continue';
+          return;
+        }
+
+        // get session
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) {
+          showStatus('❌ Session expired. Please log in again.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Save & Continue';
+          return;
+        }
+
+        // upload image if selected
+        const profileImageUrl = await uploadImage(user.id);
+
+        // check if row exists
+        const { data: existing } = await supabaseClient
+          .from('app_users')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        const payload = {
+          username:          username,
+          first_name:        firstName,
+          last_name:         lastName,
+          city:              city,
+          state:             state,
+          profile_image_url: profileImageUrl || undefined,
+        };
+
+        let saveError;
+        if (existing) {
+          const { error } = await supabaseClient
+            .from('app_users')
+            .update(payload)
+            .eq('id', user.id);
+          saveError = error;
+        } else {
+          const { error } = await supabaseClient
+            .from('app_users')
+            .insert([{ id: user.id, email: user.email, ...payload }]);
+          saveError = error;
+        }
+
+        if (saveError) {
+          showStatus('❌ Error saving: ' + saveError.message, 'error');
+          btn.disabled = false;
+          btn.textContent = 'Save & Continue';
+          return;
+        }
+
+        showStatus('✓ Profile saved!', 'success');
+        setTimeout(() => window.location.href = '/profile/index.html', 700);
+
+      } catch(err) {
+        console.error(err);
+        showStatus('❌ ' + (err.message || 'Something went wrong.'), 'error');
+        btn.disabled = false;
+        btn.textContent = 'Save & Continue';
       }
-
-      const { error: updateError } = await supabase
-        .from('app_users')
-        .update({ username: username })
-        .eq('id', user.id);
-
-      if (updateError) {
-        errorBox.textContent = '❌ Error saving username. Please try again.';
-        errorBox.style.display = 'block';
-        return;
-      }
-
-      window.location.href = '/profile/index.html';
     }
 
     async function logout() {
-      await supabase.auth.signOut();
+      await supabaseClient.auth.signOut();
       window.location.href = '/user_login.html';
     }
-  </script>
 
+    checkAlreadySetup();
+  </script>
 </body>
 </html>

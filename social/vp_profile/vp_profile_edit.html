@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit VP Page | FairQuest Social</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Domine:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --gold:        #c6a96f;
+  --gold-bright: #e0b96a;
+  --gold-dark:   #aa8425;
+  --bg:          #000;
+  --card:        rgba(214,197,126,0.88);
+  --card-dark:   #111;
+  --input-bg:    rgba(255,255,255,0.05);
+  --input-border:rgba(198,169,111,0.2);
+  --text-dark:   #111;
+  --text-light:  #f0e6d2;
+  --text-muted:  rgba(198,169,111,0.55);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+
+body {
+  font-family: 'Domine', serif;
+  background: var(--bg);
+  color: var(--text-light);
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+/* header */
+.header {
+  background: #111;
+  border-bottom: 2px solid var(--gold-dark);
+  padding: 14px 18px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.header-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.3rem;
+  color: var(--gold-bright);
+}
+.back-btn {
+  background: transparent;
+  border: 1px solid rgba(198,169,111,0.25);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: 'Domine', serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.back-btn:hover { color: var(--gold); border-color: var(--gold-dark); }
+
+/* page wrap */
+.page-wrap {
+  max-width: 860px;
+  margin: 28px auto;
+  padding: 0 16px;
+}
+
+/* status */
+#statusMsg {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+}
+
+/* card */
+.card {
+  background: rgba(20,12,4,0.9);
+  border: 1px solid rgba(170,132,37,0.2);
+  border-radius: 18px;
+  padding: 26px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(6px);
+}
+
+/* section head */
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(198,169,111,0.12);
+}
+.section-head h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  color: var(--gold-bright);
+}
+.section-icon { font-size: 1.1rem; }
+
+/* form grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+}
+.form-grid .full { grid-column: 1 / -1; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label {
+  font-size: 0.73rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-family: 'Cinzel', serif;
+}
+
+.field input,
+.field textarea {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text-light);
+  font-family: 'Domine', serif;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--gold-dark);
+  box-shadow: 0 0 0 3px rgba(170,132,37,0.12);
+}
+.field input::placeholder,
+.field textarea::placeholder { color: rgba(198,169,111,0.25); }
+.field textarea { min-height: 120px; resize: vertical; }
+.field textarea.tall { min-height: 180px; }
+
+.field-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* char counter */
+.char-wrap { position: relative; }
+.char-count {
+  position: absolute;
+  bottom: 10px; right: 12px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.char-count.over { color: #f87171; }
+
+/* preview strip */
+.preview-strip {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 14px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  margin-top: 4px;
+}
+.preview-cover {
+  width: 120px; height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #1a1006;
+  border: 1px solid rgba(198,169,111,0.1);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: rgba(198,169,111,0.3);
+  overflow: hidden;
+}
+.preview-cover img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+.preview-avatar {
+  width: 60px; height: 60px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #1a1006;
+  border: 1px solid rgba(198,169,111,0.1);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  overflow: hidden;
+}
+.preview-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+.preview-text { font-size: 0.78rem; color: var(--text-muted); }
+
+/* image upload */
+.upload-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.upload-btn {
+  background: rgba(198,169,111,0.08);
+  border: 1px dashed rgba(198,169,111,0.3);
+  border-radius: 8px;
+  color: var(--gold);
+  padding: 9px 16px;
+  font-family: 'Domine', serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.upload-btn:hover { background: rgba(198,169,111,0.14); border-style: solid; }
+input[type="file"] { display: none; }
+
+/* toggles */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid rgba(198,169,111,0.07);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label { font-size: 0.92rem; }
+.toggle-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+.toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.toggle input { opacity:0; width:0; height:0; position:absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #555;
+  transition: transform 0.2s, background 0.2s;
+}
+.toggle input:checked + .toggle-track { background: rgba(170,132,37,0.4); border-color: var(--gold-dark); }
+.toggle input:checked + .toggle-track::after { transform: translateX(20px); background: var(--gold-bright); }
+
+/* buttons */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.btn {
+  padding: 13px 26px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #7a5800, var(--gold-dark));
+  color: #fff8e7;
+  box-shadow: 0 2px 12px rgba(170,132,37,0.3);
+}
+.btn-primary:hover { background: linear-gradient(135deg, #8a6500, #c99a2e); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-ghost {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid rgba(198,169,111,0.2);
+}
+.btn-ghost:hover { border-color: var(--gold-dark); background: rgba(198,169,111,0.05); }
+
+/* toast */
+.toast-wrap {
+  position: fixed;
+  bottom: 28px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  pointer-events: none;
+}
+.toast {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  animation: toastIn 0.3s ease;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+.toast.ok  { background: rgba(26,107,58,0.95); color: #86efac; border: 1px solid #1a6b3a; }
+.toast.err { background: rgba(127,29,29,0.95); color: #fca5a5; border: 1px solid #7f1d1d; }
+@keyframes toastIn {
+  from { opacity:0; transform: translateY(10px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* view link */
+.view-page-link {
+  color: var(--gold-bright);
+  text-decoration: none;
+  font-family: 'Cinzel', serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.07em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+}
+.view-page-link:hover { color: #fff; }
+
+@media (max-width: 600px) {
+  .card { padding: 16px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .full { grid-column: 1; }
+  .btn-row { flex-direction: column; }
+  .btn { justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <a id="backLink" href="#" class="back-btn">← Back to Page</a>
+    <div class="header-title">Edit VP Page</div>
+    <a id="viewPageLink" href="#" class="view-page-link" style="display:none;">View Page ↗</a>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <div id="statusMsg">Loading…</div>
+
+  <div id="mainContent" style="display:none;">
+
+    <!-- ── IDENTITY ── -->
+    <div class="card">
+      <div class="section-head">
+        <span class="section-icon">🎭</span>
+        <h2>Page Identity</h2>
+      </div>
+
+      <div class="form-grid">
+        <div class="field full">
+          <label>PAGE NAME</label>
+          <input type="text" id="displayName" placeholder="Your business or stage name" maxlength="120" />
+        </div>
+        <div class="field full">
+          <label>TAGLINE</label>
+          <div class="char-wrap">
+            <input type="text" id="tagline" placeholder="A short punchy line…" maxlength="120" />
+            <span class="char-count" id="taglineCount">0 / 120</span>
+          </div>
+        </div>
+        <div class="field full">
+          <label>BIO</label>
+          <div class="char-wrap">
+            <textarea class="tall" id="bio" placeholder="Tell your full story — who you are, what you do, your history…" maxlength="2000"></textarea>
+            <span class="char-count" id="bioCount">0 / 2000</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── IMAGES ── -->
+    <div class="card">
+      <div class="section-head">
+        <span class="section-icon">🖼️</span>
+        <h2>Images</h2>
+      </div>
+
+      <!-- preview -->
+      <div class="preview-strip">
+        <div class="preview-cover" id="coverPreview">🌄
+          <img id="coverPreviewImg" src="" alt="" style="display:none;"
+            onerror="this.style.display='none';">
+        </div>
+        <div class="preview-avatar" id="avatarPreview">🎭
+          <img id="avatarPreviewImg" src="" alt="" style="display:none;"
+            onerror="this.style.display='none';">
+        </div>
+        <div class="preview-text">Live preview — paste URLs below or upload a file</div>
+      </div>
+
+      <div class="form-grid" style="margin-top:18px;">
+        <div class="field full">
+          <label>COVER IMAGE</label>
+          <input type="url" id="coverUrl" placeholder="https://…/cover.jpg" />
+          <div class="upload-row">
+            <button class="upload-btn" onclick="document.getElementById('coverFile').click()">📁 Upload Cover</button>
+            <input type="file" id="coverFile" accept="image/*" onchange="uploadImage(event,'cover')">
+            <span id="coverUploadStatus" style="font-size:0.78rem; color:var(--text-muted);"></span>
+          </div>
+          <span class="field-hint">Recommended: 1200 × 400 px</span>
+        </div>
+        <div class="field full">
+          <label>AVATAR / LOGO</label>
+          <input type="url" id="avatarUrl" placeholder="https://…/avatar.jpg" />
+          <div class="upload-row">
+            <button class="upload-btn" onclick="document.getElementById('avatarFile').click()">📁 Upload Avatar</button>
+            <input type="file" id="avatarFile" accept="image/*" onchange="uploadImage(event,'avatar')">
+            <span id="avatarUploadStatus" style="font-size:0.78rem; color:var(--text-muted);"></span>
+          </div>
+          <span class="field-hint">Recommended: square, at least 300 × 300 px</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DETAILS ── -->
+    <div class="card">
+      <div class="section-head">
+        <span class="section-icon">📍</span>
+        <h2>Details</h2>
+      </div>
+      <div class="form-grid">
+        <div class="field full">
+          <label>LOCATION TEXT</label>
+          <input type="text" id="locationText" placeholder="e.g. Central Iowa · Travels Nationwide" maxlength="120" />
+          <span class="field-hint">Shown on your page. Keep it vague if you prefer privacy.</span>
+        </div>
+        <div class="field full">
+          <label>WEBSITE</label>
+          <input type="url" id="websiteUrl" placeholder="https://yoursite.com" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="card">
+      <div class="section-head">
+        <span class="section-icon">⚙️</span>
+        <h2>Page Settings</h2>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Page is published</div>
+          <div class="toggle-sub">When off, your page is hidden from everyone except you</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="isPublished" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- SAVE -->
+    <div class="btn-row">
+      <a id="cancelBtn" href="#" class="btn btn-ghost">Cancel</a>
+      <button class="btn btn-primary" id="saveBtn" onclick="savePage()">💾 Save Page</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const sb = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+let myUserId  = null;
+let vpaId     = null;
+let existing  = null;
+let uploading = false;
+
+function getParam(n){ return new URL(location.href).searchParams.get(n); }
+function nullIfEmpty(v){ const s = String(v||'').trim(); return s==='' ? null : s; }
+
+/* ── TOAST ── */
+function toast(msg, type='ok'){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity 0.4s'; }, 2800);
+  setTimeout(() => el.remove(), 3300);
+}
+
+/* ── CHAR COUNTERS ── */
+function initChar(inputId, countId, max){
+  const el = document.getElementById(inputId);
+  const cnt = document.getElementById(countId);
+  const update = () => {
+    const len = el.value.length;
+    cnt.textContent = `${len} / ${max}`;
+    cnt.classList.toggle('over', len > max);
+  };
+  el.addEventListener('input', update);
+  update();
+}
+
+/* ── IMAGE PREVIEW ── */
+function initPreview(urlId, previewImgId, placeholderEl){
+  const input = document.getElementById(urlId);
+  const img   = document.getElementById(previewImgId);
+  const placeholder = document.getElementById(placeholderEl);
+
+  const update = () => {
+    const url = input.value.trim();
+    if(url.startsWith('http')){
+      img.src = url;
+      img.style.display = 'block';
+      if(placeholder) placeholder.style.fontSize = '0';
+    } else {
+      img.style.display = 'none';
+      if(placeholder) placeholder.style.fontSize = '';
+    }
+  };
+  input.addEventListener('input', update);
+  update();
+}
+
+/* ── IMAGE UPLOAD ── */
+async function uploadImage(event, type){
+  const file = event.target.files[0];
+  if(!file || !myUserId) return;
+
+  const statusEl = document.getElementById(type === 'cover' ? 'coverUploadStatus' : 'avatarUploadStatus');
+  const urlInput = document.getElementById(type === 'cover' ? 'coverUrl' : 'avatarUrl');
+
+  statusEl.textContent = 'Uploading…';
+  uploading = true;
+
+  /* resize */
+  const resized = await resizeImage(file, type === 'cover' ? 1400 : 600);
+
+  const ext  = 'jpg';
+  const path = `${myUserId}/vp_${type}_${vpaId}_${Date.now()}.${ext}`;
+
+  const { error: upErr } = await sb.storage
+    .from('social-profile-images')
+    .upload(path, resized, { upsert: true });
+
+  if(upErr){
+    statusEl.textContent = 'Upload failed.';
+    uploading = false;
+    return;
+  }
+
+  const { data: urlData } = sb.storage.from('social-profile-images').getPublicUrl(path);
+  const publicUrl = urlData.publicUrl;
+
+  urlInput.value = publicUrl;
+  urlInput.dispatchEvent(new Event('input'));
+  statusEl.textContent = '✓ Uploaded';
+  uploading = false;
+
+  /* reset file input */
+  event.target.value = '';
+}
+
+async function resizeImage(file, maxSize){
+  return new Promise(resolve => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; };
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if(w > h){ if(w > maxSize){ h *= maxSize/w; w = maxSize; } }
+      else      { if(h > maxSize){ w *= maxSize/h; h = maxSize; } }
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(w); canvas.height = Math.round(h);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => resolve(new File([blob], 'image.jpg', { type:'image/jpeg' })), 'image/jpeg', 0.85);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ── LOAD ── */
+async function loadPage(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){
+    document.getElementById('statusMsg').innerHTML = `
+      <div style="text-align:center; padding:48px;">
+        <div style="font-size:2rem; margin-bottom:12px;">🔒</div>
+        <div style="font-family:'Cinzel',serif; color:var(--gold-bright); margin-bottom:16px;">Sign In Required</div>
+        <a href="/user_login.html" style="color:var(--gold);">Go to Login</a>
+      </div>`;
+    return;
+  }
+  myUserId = session.user.id;
+
+  const { data: prof, error } = await sb.rpc('get_vp_social_profile', { p_vpa_id: vpaId });
+
+  if(error || !prof){
+    document.getElementById('statusMsg').textContent = 'Page not found.';
+    return;
+  }
+
+  if(!prof.is_owner){
+    document.getElementById('statusMsg').textContent = 'You do not own this page.';
+    return;
+  }
+
+  existing = prof;
+
+  /* set back / view links */
+  const profileUrl = `/social/vp_profile/vp_profile.html?vpa_id=${vpaId}`;
+  document.getElementById('backLink').href   = profileUrl;
+  document.getElementById('cancelBtn').href  = profileUrl;
+  document.getElementById('viewPageLink').href = profileUrl;
+  document.getElementById('viewPageLink').style.display = 'inline-flex';
+
+  /* populate fields */
+  document.getElementById('displayName').value   = prof.display_name  || '';
+  document.getElementById('tagline').value        = prof.tagline       || '';
+  document.getElementById('bio').value            = prof.bio           || '';
+  document.getElementById('coverUrl').value       = prof.cover_image_url || '';
+  document.getElementById('avatarUrl').value      = prof.avatar_url    || '';
+  document.getElementById('locationText').value   = prof.location_text || '';
+  document.getElementById('websiteUrl').value     = prof.website_url   || '';
+  document.getElementById('isPublished').checked  = !!prof.is_published;
+
+  /* init char counters */
+  initChar('tagline', 'taglineCount', 120);
+  initChar('bio',     'bioCount',     2000);
+
+  /* init previews */
+  initPreview('coverUrl',  'coverPreviewImg',  'coverPreview');
+  initPreview('avatarUrl', 'avatarPreviewImg', 'avatarPreview');
+
+  document.getElementById('statusMsg').style.display  = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+}
+
+/* ── SAVE ── */
+async function savePage(){
+  if(uploading){ toast('Please wait for upload to finish.', 'err'); return; }
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving…';
+
+  const { error } = await sb.rpc('save_vp_social_profile', {
+    p_vpa_id:           vpaId,
+    p_display_name:     nullIfEmpty(document.getElementById('displayName').value),
+    p_tagline:          nullIfEmpty(document.getElementById('tagline').value),
+    p_bio:              nullIfEmpty(document.getElementById('bio').value),
+    p_avatar_url:       nullIfEmpty(document.getElementById('avatarUrl').value),
+    p_cover_image_url:  nullIfEmpty(document.getElementById('coverUrl').value),
+    p_website_url:      nullIfEmpty(document.getElementById('websiteUrl').value),
+    p_location_text:    nullIfEmpty(document.getElementById('locationText').value),
+    p_is_published:     document.getElementById('isPublished').checked,
+  });
+
+  btn.disabled = false;
+  btn.innerHTML = '💾 Save Page';
+
+  if(error){
+    toast('Save failed: ' + error.message, 'err');
+    return;
+  }
+
+  toast('Page saved! ✓', 'ok');
+}
+
+/* ── INIT ── */
+async function init(){
+  vpaId = parseInt(getParam('vpa_id'));
+  if(!vpaId || isNaN(vpaId)){
+    document.getElementById('statusMsg').textContent = 'Missing vpa_id.';
+    return;
+  }
+  await loadPage();
+}
+
+init();
+</script>
+</body>
+</html>

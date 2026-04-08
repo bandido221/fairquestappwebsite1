@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VP Page | FairQuest Social</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Domine:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --gold:        #c6a96f;
+  --gold-bright: #e0b96a;
+  --gold-dark:   #aa8425;
+  --bg:          #000;
+  --card:        rgba(214,197,126,0.88);
+  --card-dark:   #111;
+  --text-dark:   #111;
+  --text-light:  #f0e6d2;
+  --text-muted:  #888;
+  --post-bg:     #111;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Domine', serif; background: var(--bg); color: var(--text-light); min-height: 100vh; }
+
+/* preview banner */
+#preview-banner {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: #7f1d1d;
+  color: #fca5a5;
+  text-align: center;
+  padding: 10px;
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  z-index: 9999;
+}
+
+.header {
+  background: #111;
+  border-bottom: 2px solid var(--gold-dark);
+  padding: 14px 18px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-inner {
+  max-width: 1400px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.header-title { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--gold-bright); flex: 1; text-align: center; }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.header-icon-btn {
+  border: none; background: #1f2125; color: var(--text-light);
+  border-radius: 999px; padding: 10px 14px; cursor: pointer; font-size: 1rem; transition: background 0.2s;
+}
+.header-icon-btn:hover { background: #2a2d31; }
+
+.social-layout {
+  display: grid; grid-template-columns: 280px minmax(0, 1fr);
+  gap: 22px; max-width: 1400px; margin: 24px auto; padding: 0 16px 60px; align-items: start;
+}
+
+.social-sidebar {
+  background: var(--card); border-radius: 18px; padding: 18px 14px;
+  position: sticky; top: 80px; color: var(--text-dark);
+}
+.sidebar-title { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--text-dark); margin-bottom: 16px; }
+.sidebar-nav { display: flex; flex-direction: column; gap: 10px; }
+.sidebar-btn {
+  width: 100%; border: none; border-radius: 14px; background: var(--card-dark);
+  color: var(--text-light); padding: 14px 16px; font-family: 'Domine', serif;
+  font-size: 1rem; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background 0.2s;
+}
+.sidebar-btn:hover { background: #222; }
+.sidebar-btn.active { background: var(--gold-dark); color: #000; font-weight: bold; }
+.sidebar-icon {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;
+}
+
+.vp-sidebar-info { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 10px; }
+.vp-info-row { display: flex; align-items: flex-start; gap: 8px; font-size: 0.88rem; color: var(--text-dark); }
+.vp-info-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.vp-info-text { line-height: 1.4; word-break: break-word; }
+.vp-info-text a { color: var(--gold-dark); text-decoration: none; }
+.vp-info-text a:hover { text-decoration: underline; }
+
+.social-main { min-width: 0; }
+.content-card { background: var(--card); border-radius: 18px; padding: 0; margin-bottom: 20px; overflow: hidden; color: var(--text-dark); }
+.content-card-inner { padding: 18px; }
+
+.vp-cover { width: 100%; height: 280px; object-fit: cover; display: block; }
+.vp-cover-placeholder {
+  width: 100%; height: 280px;
+  background: linear-gradient(135deg, #1a1006 0%, #2d1f0a 50%, #1a1006 100%);
+  display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+}
+.vp-cover-placeholder::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(198,169,111,0.12) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 50%, rgba(170,132,37,0.08) 0%, transparent 55%);
+}
+.vp-cover-pattern { font-size: 5rem; opacity: 0.12; position: relative; z-index: 1; letter-spacing: 0.5rem; }
+
+.vp-profile-top { display: flex; gap: 20px; align-items: flex-start; margin-top: -70px; padding: 0 20px; flex-wrap: wrap; }
+.vp-avatar-wrap { position: relative; flex-shrink: 0; }
+.vp-avatar { width: 148px; height: 148px; border-radius: 16px; object-fit: cover; border: 5px solid var(--card); background: #222; box-shadow: 0 6px 20px rgba(0,0,0,0.5); display: block; }
+.vp-avatar-placeholder {
+  width: 148px; height: 148px; border-radius: 16px; border: 5px solid var(--card);
+  background: linear-gradient(135deg, #2d1f0a, #1a1006); display: flex; align-items: center; justify-content: center; font-size: 3.5rem; box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+}
+.vp-type-badge {
+  position: absolute; bottom: -8px; right: -8px;
+  background: var(--gold-dark); color: #000; font-family: 'Cinzel', serif; font-size: 0.65rem;
+  letter-spacing: 0.1em; padding: 3px 8px; border-radius: 999px; border: 2px solid var(--card); white-space: nowrap;
+}
+.vp-main-info { flex: 1; min-width: 220px; padding-top: 78px; }
+.vp-name { font-family: 'Cinzel', serif; font-size: 1.9rem; color: var(--text-dark); line-height: 1.2; margin-bottom: 4px; }
+.vp-tagline { color: #444; font-size: 0.95rem; margin-bottom: 6px; }
+.vp-category-pill { display: inline-block; padding: 3px 10px; background: rgba(0,0,0,0.1); border-radius: 999px; font-size: 0.78rem; color: #333; font-family: 'Cinzel', serif; letter-spacing: 0.07em; }
+.vp-actions { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 78px; align-items: flex-start; }
+.vp-divider { height: 1px; background: rgba(0,0,0,0.12); margin: 16px 0; }
+
+.action-btn {
+  border: none; border-radius: 999px; padding: 11px 20px; font-family: 'Domine', serif;
+  font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 7px; text-decoration: none;
+}
+.action-btn.primary { background: var(--gold-dark); color: #000; font-weight: bold; }
+.action-btn.primary:hover { background: var(--gold-bright); }
+.action-btn.secondary { background: var(--card-dark); color: var(--text-light); }
+.action-btn.secondary:hover { background: #222; }
+
+.section-title { font-family: 'Cinzel', serif; font-size: 1.3rem; color: var(--text-dark); margin-bottom: 16px; }
+
+.composer { background: var(--card-dark); border-radius: 14px; padding: 14px; margin-bottom: 16px; }
+.composer-row { display: flex; align-items: center; gap: 12px; }
+.composer-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: #333; flex-shrink: 0; }
+.composer-input {
+  flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px; padding: 12px 18px; color: var(--text-light); font-family: 'Domine', serif; font-size: 0.95rem; cursor: pointer; text-align: left; transition: background 0.2s;
+}
+.composer-input:hover { background: rgba(255,255,255,0.09); }
+.composer-expanded { margin-top: 12px; display: none; }
+.composer-textarea {
+  width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px; padding: 14px; color: var(--text-light); font-family: 'Domine', serif; font-size: 1rem; min-height: 100px; resize: vertical; outline: none;
+}
+.composer-textarea:focus { border-color: var(--gold-dark); }
+.composer-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+.composer-cancel { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--text-muted); border-radius: 8px; padding: 8px 16px; font-family: 'Domine', serif; cursor: pointer; }
+.composer-submit { background: var(--gold-dark); border: none; color: #000; border-radius: 8px; padding: 8px 20px; font-family: 'Cinzel', serif; font-size: 0.82rem; letter-spacing: 0.08em; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+.composer-submit:hover { background: var(--gold-bright); }
+.composer-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.post { background: var(--post-bg); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 16px; margin-bottom: 14px; color: var(--text-light); }
+.post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.post-page-avatar { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; background: #333; flex-shrink: 0; }
+.post-page-avatar-placeholder { width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg, #2d1f0a, #1a1006); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.post-author-block { flex: 1; min-width: 0; }
+.post-author { font-weight: bold; color: var(--gold-bright); font-size: 0.95rem; }
+.post-time { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+.post-content { font-size: 1rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--text-light); margin-bottom: 12px; }
+
+.post-reactions { display: flex; align-items: center; gap: 6px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; }
+.reaction-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; padding: 6px 14px; color: var(--text-muted); font-family: 'Domine', serif; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.15s; }
+.reaction-btn:hover { background: rgba(255,255,255,0.09); color: var(--text-light); }
+.reaction-btn.reacted { background: rgba(170,132,37,0.2); border-color: var(--gold-dark); color: var(--gold-bright); }
+.reaction-count { font-size: 0.8rem; color: var(--text-muted); }
+.comment-toggle-btn { background: transparent; border: none; color: var(--text-muted); font-family: 'Domine', serif; font-size: 0.85rem; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: color 0.15s; margin-left: auto; }
+.comment-toggle-btn:hover { color: var(--gold-bright); }
+
+.comments-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); display: none; }
+.comment-input-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; }
+.comment-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: #333; flex-shrink: 0; }
+.comment-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 9px 16px; color: var(--text-light); font-family: 'Domine', serif; font-size: 0.9rem; outline: none; resize: none; min-height: 38px; }
+.comment-input:focus { border-color: var(--gold-dark); }
+.comment-submit-btn { background: var(--gold-dark); border: none; color: #000; border-radius: 999px; padding: 8px 16px; font-family: 'Domine', serif; font-size: 0.85rem; cursor: pointer; font-weight: bold; white-space: nowrap; align-self: flex-end; }
+.comment { display: flex; gap: 10px; margin-bottom: 10px; }
+.comment-body { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 9px 13px; flex: 1; }
+.comment-author { font-size: 0.82rem; font-weight: bold; color: var(--gold-bright); margin-bottom: 3px; }
+.comment-text { font-size: 0.9rem; line-height: 1.45; color: var(--text-light); }
+.comment-time { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+
+.loading-state { text-align: center; padding: 32px; color: var(--text-dark); font-size: 0.95rem; }
+.empty-state { text-align: center; padding: 24px; background: var(--card-dark); border-radius: 14px; color: var(--text-muted); font-size: 0.9rem; }
+.not-published { text-align: center; padding: 48px 24px; color: var(--text-dark); }
+.not-published .icon { font-size: 3rem; margin-bottom: 14px; }
+.not-published h2 { font-family: 'Cinzel', serif; font-size: 1.2rem; margin-bottom: 8px; }
+.not-published p { color: #555; font-size: 0.9rem; }
+.load-more-btn { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; color: var(--text-muted); font-family: 'Domine', serif; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
+.load-more-btn:hover { background: rgba(255,255,255,0.07); color: var(--text-light); }
+.login-prompt { background: rgba(170,132,37,0.1); border: 1px solid rgba(170,132,37,0.25); border-radius: 12px; padding: 14px 18px; text-align: center; color: var(--gold); font-size: 0.9rem; margin-bottom: 16px; }
+.login-prompt a { color: var(--gold-bright); font-weight: bold; text-decoration: none; }
+
+@media (max-width: 900px) { .social-layout { grid-template-columns: 220px minmax(0,1fr); gap: 14px; } }
+@media (max-width: 700px) {
+  .social-layout { grid-template-columns: 1fr; padding: 0 10px 40px; }
+  .social-sidebar { position: static; }
+  .vp-cover, .vp-cover-placeholder { height: 200px; }
+  .vp-profile-top { margin-top: -50px; flex-direction: column; align-items: center; text-align: center; }
+  .vp-avatar, .vp-avatar-placeholder { width: 110px; height: 110px; }
+  .vp-main-info, .vp-actions { padding-top: 0; width: 100%; justify-content: center; }
+  .vp-name { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="preview-banner">👁 VISITOR PREVIEW — This is how others see your page</div>
+
+<div class="header" id="mainHeader">
+  <div class="header-inner">
+    <div class="header-title">FairQuest Social</div>
+    <div class="header-actions">
+      <button class="header-icon-btn" onclick="window.location.href='/social/index.html'">🏠</button>
+      <button class="header-icon-btn" onclick="window.location.href='/social/notifications.html'">🔔</button>
+      <button class="header-icon-btn" onclick="window.location.href='/social/friends/friends.html'">👥</button>
+      <button class="header-icon-btn" onclick="goMyProfile()">👤</button>
+    </div>
+  </div>
+</div>
+
+<div class="social-layout">
+  <aside class="social-sidebar">
+    <h2 class="sidebar-title">VP Page</h2>
+    <div class="sidebar-nav">
+      <button class="sidebar-btn active" onclick="scrollToSection('posts-card')"><span class="sidebar-icon">📝</span><span>Posts</span></button>
+      <button class="sidebar-btn" onclick="scrollToSection('about-card')"><span class="sidebar-icon">ℹ️</span><span>About</span></button>
+    </div>
+    <div class="vp-sidebar-info" id="sidebarInfo" style="display:none;">
+      <div class="vp-info-row" id="sidebarCategory" style="display:none;"><span class="vp-info-icon">🏷️</span><span class="vp-info-text" id="sidebarCategoryVal"></span></div>
+      <div class="vp-info-row" id="sidebarLocation" style="display:none;"><span class="vp-info-icon">📍</span><span class="vp-info-text" id="sidebarLocationVal"></span></div>
+      <div class="vp-info-row" id="sidebarWebsite" style="display:none;"><span class="vp-info-icon">🌐</span><span class="vp-info-text"><a id="sidebarWebsiteVal" href="#" target="_blank" rel="noopener"></a></span></div>
+    </div>
+  </aside>
+
+  <main class="social-main">
+
+    <div class="content-card" id="statusCard"><div class="loading-state" id="statusMsg">Loading…</div></div>
+
+    <div class="content-card" id="profileCard" style="display:none;">
+      <div id="coverWrap">
+        <div class="vp-cover-placeholder" id="coverPlaceholder"><div class="vp-cover-pattern">🎪 🎭 🎪</div></div>
+        <img id="coverImg" class="vp-cover" src="" alt="Cover" style="display:none;" onerror="this.style.display='none'; document.getElementById('coverPlaceholder').style.display='flex';">
+      </div>
+      <div class="content-card-inner">
+        <div class="vp-profile-top">
+          <div class="vp-avatar-wrap">
+            <div class="vp-avatar-placeholder" id="avatarPlaceholder">🎭</div>
+            <img id="avatarImg" class="vp-avatar" src="" alt="Avatar" style="display:none;" onerror="this.style.display='none'; document.getElementById('avatarPlaceholder').style.display='flex';">
+            <span class="vp-type-badge" id="typeBadge">Vendor</span>
+          </div>
+          <div class="vp-main-info">
+            <h1 class="vp-name" id="vpName">—</h1>
+            <div class="vp-tagline" id="vpTagline"></div>
+            <span class="vp-category-pill" id="vpCategory"></span>
+          </div>
+          <div class="vp-actions" id="vpActions"></div>
+        </div>
+        <div class="vp-divider"></div>
+        <div id="bioSection" style="display:none;">
+          <p id="vpBio" style="color:#333; line-height:1.65; font-size:0.95rem;"></p>
+          <div class="vp-divider"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="loginPrompt" class="login-prompt" style="display:none;"><a href="/user_login.html">Sign in</a> to react and comment on posts.</div>
+
+    <div class="content-card content-card-inner" id="posts-card" style="display:none; padding:18px;">
+      <h2 class="section-title">Posts</h2>
+      <div id="composerWrap" style="display:none;">
+        <div class="composer">
+          <div class="composer-row">
+            <img id="composerAvatar" class="composer-avatar" src="" alt="">
+            <button class="composer-input" onclick="expandComposer()">Post as <span id="composerPageName">your page</span>…</button>
+          </div>
+          <div class="composer-expanded" id="composerExpanded">
+            <textarea class="composer-textarea" id="composerText" placeholder="Share an update, photo URL, or announcement…" maxlength="2000"></textarea>
+            <div class="composer-footer">
+              <button class="composer-cancel" onclick="collapseComposer()">Cancel</button>
+              <button class="composer-submit" id="composerSubmit" onclick="submitPost()">Post</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="postsContainer"><div class="loading-state">Loading posts…</div></div>
+      <button class="load-more-btn" id="loadMoreBtn" onclick="loadMorePosts()" style="display:none;">Load more posts</button>
+    </div>
+
+    <div class="content-card content-card-inner" id="about-card" style="display:none; padding:18px;">
+      <h2 class="section-title">About</h2>
+      <div id="aboutContent" style="color:#222; line-height:1.7;"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const sb = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+let myUserId       = null;
+let myAvatarUrl    = null;
+let vpaId          = null;
+let vpProfile      = null;
+let isOwner        = false;
+let postsOffset    = 0;
+const postsLimit   = 10;
+let postsHasMore   = true;
+let postsLoading   = false;
+let composerOpen   = false;
+let isPosting      = false;
+let visitorPreview = false;
+
+function getParam(n){ return new URL(location.href).searchParams.get(n); }
+function scrollToSection(id){ document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' }); }
+function safe(v){ return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtTime(v){
+  if(!v) return '';
+  const d = new Date(v);
+  return isNaN(d) ? '' : d.toLocaleDateString(undefined,{ year:'numeric', month:'short', day:'numeric' });
+}
+
+async function getSession(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session) return false;
+  myUserId = session.user.id;
+  const { data: au } = await sb.from('app_users').select('username, profile_image_url').eq('id', myUserId).maybeSingle();
+  myAvatarUrl = au?.profile_image_url || null;
+  return true;
+}
+
+async function goMyProfile(){
+  if(!myUserId){ window.location.href = '/user_login.html?redirect=' + encodeURIComponent(location.href); return; }
+  window.location.href = '/social/profile/profile.html?user_id=' + myUserId;
+}
+
+/* ── VISITOR PREVIEW ── */
+function toggleVisitorPreview(){
+  visitorPreview = !visitorPreview;
+  const btn    = document.getElementById('previewBtn');
+  const banner = document.getElementById('preview-banner');
+  const header = document.getElementById('mainHeader');
+
+  if(visitorPreview){
+    document.getElementById('editPageBtn').style.display  = 'none';
+    document.getElementById('composerWrap').style.display = 'none';
+    collapseComposer();
+    if(!myUserId) document.getElementById('loginPrompt').style.display = 'block';
+
+    btn.textContent = '✕ Exit Preview';
+    btn.style.cssText += '; background:#7f1d1d !important; color:#fca5a5 !important;';
+    banner.style.display = 'block';
+    header.style.marginTop = '40px';
+
+    // re-render posts without interact controls
+    postsOffset = 0; postsHasMore = true;
+    document.getElementById('postsContainer').innerHTML = '<div class="loading-state">Refreshing…</div>';
+    loadMorePosts();
+
+  } else {
+    document.getElementById('editPageBtn').style.display  = 'inline-flex';
+    document.getElementById('composerWrap').style.display = 'block';
+    document.getElementById('loginPrompt').style.display  = 'none';
+
+    btn.textContent = '👁 Preview as Visitor';
+    btn.style.cssText = '';
+    banner.style.display = 'none';
+    header.style.marginTop = '';
+
+    // re-render posts with interact controls
+    postsOffset = 0; postsHasMore = true;
+    document.getElementById('postsContainer').innerHTML = '<div class="loading-state">Refreshing…</div>';
+    loadMorePosts();
+  }
+}
+
+/* ── LOAD PROFILE ── */
+async function loadProfile(){
+  const { data, error } = await sb.rpc('get_vp_social_profile', { p_vpa_id: vpaId });
+  if(error || !data){ document.getElementById('statusMsg').textContent = 'Page not found.'; return false; }
+  if(data.profile_visible === false){
+    document.getElementById('statusCard').innerHTML = `<div class="not-published"><div class="icon">🔒</div><h2>This page isn't published yet</h2><p>Check back soon.</p></div>`;
+    return false;
+  }
+  vpProfile = data;
+  isOwner   = !!data.is_owner;
+  renderProfile();
+  return true;
+}
+
+function renderProfile(){
+  document.getElementById('statusCard').style.display = 'none';
+  document.getElementById('profileCard').style.display = 'block';
+  document.getElementById('posts-card').style.display  = 'block';
+  document.getElementById('about-card').style.display  = 'block';
+
+  if(vpProfile.cover_image_url){
+    const img = document.getElementById('coverImg');
+    img.src = vpProfile.cover_image_url; img.style.display = 'block';
+    document.getElementById('coverPlaceholder').style.display = 'none';
+  }
+  if(vpProfile.avatar_url){
+    const img = document.getElementById('avatarImg');
+    img.src = vpProfile.avatar_url; img.style.display = 'block';
+    document.getElementById('avatarPlaceholder').style.display = 'none';
+  }
+
+  const isPerformer = vpProfile.application_type === true;
+  document.getElementById('typeBadge').textContent = isPerformer ? 'Performer' : 'Vendor';
+  document.getElementById('avatarPlaceholder').textContent = isPerformer ? '🎭' : '🛒';
+  document.getElementById('vpName').textContent     = vpProfile.display_name || '—';
+  document.getElementById('vpTagline').textContent  = vpProfile.tagline || '';
+  document.getElementById('vpCategory').textContent = vpProfile.category || '';
+  document.title = (vpProfile.display_name || 'VP Page') + ' | FairQuest';
+
+  if(vpProfile.bio){ document.getElementById('bioSection').style.display = 'block'; document.getElementById('vpBio').textContent = vpProfile.bio; }
+
+  document.getElementById('sidebarInfo').style.display = 'flex';
+  if(vpProfile.category){ document.getElementById('sidebarCategory').style.display = 'flex'; document.getElementById('sidebarCategoryVal').textContent = vpProfile.category; }
+  if(vpProfile.location_text){ document.getElementById('sidebarLocation').style.display = 'flex'; document.getElementById('sidebarLocationVal').textContent = vpProfile.location_text; }
+  if(vpProfile.website_url){
+    document.getElementById('sidebarWebsite').style.display = 'flex';
+    const a = document.getElementById('sidebarWebsiteVal');
+    a.href = vpProfile.website_url;
+    a.textContent = vpProfile.website_url.replace(/^https?:\/\//, '');
+  }
+
+  let aboutHtml = '';
+  if(vpProfile.bio)           aboutHtml += `<p style="margin-bottom:12px;">${safe(vpProfile.bio)}</p>`;
+  if(vpProfile.location_text) aboutHtml += `<p style="margin-bottom:8px;">📍 ${safe(vpProfile.location_text)}</p>`;
+  if(vpProfile.website_url)   aboutHtml += `<p>🌐 <a href="${safe(vpProfile.website_url)}" target="_blank" rel="noopener" style="color:var(--gold-dark);">${safe(vpProfile.website_url)}</a></p>`;
+  document.getElementById('aboutContent').innerHTML = aboutHtml || '<p style="color:#888;">No details yet.</p>';
+
+  const actionsDiv = document.getElementById('vpActions');
+  if(isOwner){
+    actionsDiv.innerHTML = `
+      <a id="editPageBtn" href="/social/vp_profile/vp_edit.html?vpa_id=${vpaId}" class="action-btn primary">✏️ Edit Page</a>
+      <button id="previewBtn" class="action-btn secondary" onclick="toggleVisitorPreview()">👁 Preview as Visitor</button>`;
+    const composerWrap = document.getElementById('composerWrap');
+    composerWrap.style.display = 'block';
+    const ca = document.getElementById('composerAvatar');
+    if(vpProfile.avatar_url){ ca.src = vpProfile.avatar_url; } else { ca.style.display = 'none'; }
+    document.getElementById('composerPageName').textContent = vpProfile.display_name || 'your page';
+  } else {
+    actionsDiv.innerHTML = '';
+    if(!myUserId) document.getElementById('loginPrompt').style.display = 'block';
+  }
+}
+
+/* ── COMPOSER ── */
+function expandComposer(){
+  if(visitorPreview) return;
+  composerOpen = true;
+  document.getElementById('composerExpanded').style.display = 'block';
+  document.getElementById('composerText').focus();
+}
+function collapseComposer(){
+  composerOpen = false;
+  document.getElementById('composerExpanded').style.display = 'none';
+  document.getElementById('composerText').value = '';
+}
+
+async function submitPost(){
+  if(isPosting || visitorPreview) return;
+  const content = document.getElementById('composerText').value.trim();
+  if(!content) return;
+  isPosting = true;
+  const btn = document.getElementById('composerSubmit');
+  btn.disabled = true; btn.textContent = 'Posting…';
+  const { error } = await sb.rpc('create_social_post', {
+    p_content:  content,
+    p_audience: 'public',
+    p_vpa_id:   vpaId
+  });
+  isPosting = false; btn.disabled = false; btn.textContent = 'Post';
+  if(error){ alert('Post failed: ' + error.message); return; }
+  collapseComposer();
+  postsOffset = 0; postsHasMore = true;
+  document.getElementById('postsContainer').innerHTML = '<div class="loading-state">Refreshing…</div>';
+  await loadMorePosts();
+}
+
+/* ── POSTS ── */
+async function loadMorePosts(){
+  if(postsLoading || !postsHasMore) return;
+  postsLoading = true;
+  const container = document.getElementById('postsContainer');
+  if(postsOffset === 0) container.innerHTML = '<div class="loading-state">Loading posts…</div>';
+  const { data, error } = await sb.rpc('get_vp_posts', { p_vpa_id: vpaId, p_limit: postsLimit, p_offset: postsOffset });
+  postsLoading = false;
+  if(error){ container.innerHTML = `<div class="empty-state">Could not load posts.</div>`; return; }
+  const rows = Array.isArray(data) ? data : [];
+  if(postsOffset === 0) container.innerHTML = '';
+  if(rows.length === 0 && postsOffset === 0){
+    container.innerHTML = `<div class="empty-state">No posts yet.</div>`;
+    document.getElementById('loadMoreBtn').style.display = 'none';
+    return;
+  }
+  rows.forEach(p => container.insertAdjacentHTML('beforeend', renderPost(p)));
+  if(rows.length < postsLimit){ postsHasMore = false; document.getElementById('loadMoreBtn').style.display = 'none'; }
+  else { postsOffset += postsLimit; document.getElementById('loadMoreBtn').style.display = 'block'; }
+}
+
+function renderPost(p){
+  const avatarHtml = p.vp_avatar_url
+    ? `<img class="post-page-avatar" src="${safe(p.vp_avatar_url)}" alt="Page">`
+    : `<div class="post-page-avatar-placeholder">🎭</div>`;
+
+  const canInteract = myUserId && !visitorPreview;
+
+  const reactionsHtml = canInteract
+    ? `<button class="reaction-btn" onclick="toggleReact('${p.id}', this)">❤️ <span class="reaction-count">${p.reaction_count || 0}</span></button>`
+    : `<span style="font-size:0.82rem; color:var(--text-muted);">❤️ ${p.reaction_count || 0}</span>`;
+
+  return `
+    <div class="post" id="post-${p.id}">
+      <div class="post-header">
+        ${avatarHtml}
+        <div class="post-author-block">
+          <div class="post-author">${safe(p.vp_display_name || p.author_name || 'Page')}</div>
+          <div class="post-time">${fmtTime(p.created_at)}</div>
+        </div>
+      </div>
+      <div class="post-content">${safe(p.content || '')}</div>
+      <div class="post-reactions">
+        ${reactionsHtml}
+        ${canInteract
+          ? `<button class="comment-toggle-btn" onclick="toggleComments('${p.id}', this)">💬 ${p.comment_count || 0} Comments</button>`
+          : `<span style="font-size:0.82rem; color:var(--text-muted); margin-left:auto;">💬 ${p.comment_count || 0}</span>`
+        }
+      </div>
+      ${canInteract ? `
+      <div class="comments-section" id="comments-${p.id}">
+        <div class="comment-input-row">
+          <img class="comment-avatar" src="${myAvatarUrl || ''}" alt="" onerror="this.style.display='none'">
+          <textarea class="comment-input" id="comment-input-${p.id}" placeholder="Write a comment…" rows="1"></textarea>
+          <button class="comment-submit-btn" onclick="submitComment('${p.id}')">Post</button>
+        </div>
+        <div id="comments-list-${p.id}"></div>
+      </div>` : ''}
+    </div>`;
+}
+
+async function toggleReact(postId, btn){
+  if(!myUserId || visitorPreview) return;
+  const countEl = btn.querySelector('.reaction-count');
+  const reacted  = btn.classList.contains('reacted');
+  if(reacted){
+    await sb.from('social.react_post_reaction').delete().eq('post_id', postId).eq('user_id', myUserId);
+    btn.classList.remove('reacted');
+    countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
+  } else {
+    const { data: rt } = await sb.from('social.react_type').select('id').eq('name','love').maybeSingle();
+    if(!rt) return;
+    await sb.from('social.react_post_reaction').upsert([{ post_id: postId, user_id: myUserId, reaction_type_id: rt.id }]);
+    btn.classList.add('reacted');
+    countEl.textContent = parseInt(countEl.textContent) + 1;
+  }
+}
+
+async function toggleComments(postId, btn){
+  if(visitorPreview) return;
+  const section = document.getElementById('comments-' + postId);
+  if(!section) return;
+  const isOpen = section.style.display === 'block';
+  section.style.display = isOpen ? 'none' : 'block';
+  if(!isOpen){ btn.style.color = 'var(--gold-bright)'; await loadComments(postId); }
+  else { btn.style.color = ''; }
+}
+
+async function loadComments(postId){
+  const list = document.getElementById('comments-list-' + postId);
+  if(!list) return;
+  list.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:6px 0;">Loading…</div>';
+  const { data, error } = await sb.from('social.comment_post_comment').select('id, content, author_id, created_at, status').eq('post_id', postId).eq('status','active').order('created_at',{ ascending:true }).limit(30);
+  if(error || !data){ list.innerHTML = ''; return; }
+  if(data.length === 0){ list.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:6px 0;">No comments yet.</div>'; return; }
+  const authorIds = [...new Set(data.map(c => c.author_id))];
+  const { data: authors } = await sb.from('app_users').select('id, username, profile_image_url').in('id', authorIds);
+  const authorMap = {};
+  (authors||[]).forEach(a => { authorMap[a.id] = a; });
+  list.innerHTML = data.map(c => {
+    const a = authorMap[c.author_id] || {};
+    return `<div class="comment"><img class="comment-avatar" src="${a.profile_image_url||''}" alt="" onerror="this.style.display='none'"><div class="comment-body"><div class="comment-author">@${safe(a.username||'user')}</div><div class="comment-text">${safe(c.content)}</div><div class="comment-time">${fmtTime(c.created_at)}</div></div></div>`;
+  }).join('');
+}
+
+async function submitComment(postId){
+  if(!myUserId || visitorPreview) return;
+  const input = document.getElementById('comment-input-' + postId);
+  const content = input?.value.trim();
+  if(!content) return;
+  input.value = ''; input.disabled = true;
+  const { error } = await sb.rpc('create_post_comment', { p_post_id: postId, p_content: content, p_parent_comment_id: null });
+  input.disabled = false;
+  if(error){ alert('Comment failed: ' + error.message); return; }
+  await loadComments(postId);
+  const countBtn = document.querySelector(`#post-${postId} .comment-toggle-btn`);
+  if(countBtn){ const match = countBtn.textContent.match(/\d+/); const cur = match ? parseInt(match[0]) : 0; countBtn.textContent = `💬 ${cur + 1} Comments`; }
+}
+
+window.addEventListener('scroll', () => {
+  if(!postsHasMore || postsLoading) return;
+  if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 600) loadMorePosts();
+});
+
+async function init(){
+  vpaId = parseInt(getParam('vpa_id'));
+  if(!vpaId || isNaN(vpaId)){ document.getElementById('statusMsg').textContent = 'Missing vpa_id in URL.'; return; }
+  await getSession();
+  const ok = await loadProfile();
+  if(!ok) return;
+  await loadMorePosts();
+}
+
+init();
+</script>
+</body>
+</html>

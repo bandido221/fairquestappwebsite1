@@ -1038,15 +1038,20 @@ cursor:pointer;
           <div class="post-modal-user">
             <div class="post-modal-user-left">
               <img id="modal-profile-image" class="composer-avatar" src="" alt="Profile">
-              <div class="post-modal-user-info">
-                <div id="modal-user-name">User</div>
-                <select id="post-audience">
-                  <option value="public">Public</option>
-                  <option value="friends">Friends</option>
-                  <option value="close_friends">Close Friends</option>
-                  <option value="family">Family</option>
-                </select>
-              </div>
+           <div class="post-modal-user-info">
+  <div id="modal-user-name">User</div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+    <select id="post-audience">
+      <option value="public">Public</option>
+      <option value="friends">Friends</option>
+      <option value="close_friends">Close Friends</option>
+      <option value="family">Family</option>
+    </select>
+    <select id="post-as-vpa" style="display:none;">
+      <option value="">Post as Myself</option>
+    </select>
+  </div>
+</div>
             </div>
           </div>
 
@@ -1127,6 +1132,7 @@ const supabaseClient = window.supabase.createClient(
 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
 );
 let currentUserId = null;
+let myVpAccountsForPost = [];
 let notificationsChannel = null;
 let relationshipRequestsChannel = null;
 let commentsChannel = null;
@@ -1484,21 +1490,30 @@ const reactionPopupHtml = reactionTypes.map(r => `
 
 div.innerHTML = `
 <div class="post-header">
-  <div class="post-header-left">
-    <img class="post-avatar"
-    src="${p.author_profile_image_url || 'https://via.placeholder.com/40'}">
-    <div class="post-author-block">
-      <div class="post-author">
-        <a href="/social/profile/profile.html?user_id=${encodeURIComponent(p.author_id)}" style="color:#f5f5f5; text-decoration:none;">
-          ${p.author_name || 'User'}
-        </a>
-      </div>
-      <div class="post-time">
-        ${formatPostDate(p.created_at)}
-        · ${formatAudienceIcon(p.audience)} ${formatAudienceLabel(p.audience)}
-      </div>
+<div class="post-header-left">
+  <img class="post-avatar"
+src="${
+  p.vpa_id && !p.shared_post_id
+    ? (p.vp_avatar_url || 'https://via.placeholder.com/40')
+    : (p.author_profile_image_url || 'https://via.placeholder.com/40')
+}">
+  <div class="post-author-block">
+    <div class="post-author">
+      ${p.vpa_id && !p.shared_post_id
+        ? `<a href="/social/vp_profile/vp_profile.html?vpa_id=${p.vpa_id}" style="color:#f5f5f5; text-decoration:none;">
+            ${p.vp_display_name || p.author_name || 'VP Page'}
+           </a>`
+        : `<a href="/social/profile/profile.html?user_id=${encodeURIComponent(p.author_id)}" style="color:#f5f5f5; text-decoration:none;">
+            ${p.author_name || 'User'}
+           </a>`
+      }
+    </div>
+    <div class="post-time">
+      ${formatPostDate(p.created_at)}
+      · ${formatAudienceIcon(p.audience)} ${formatAudienceLabel(p.audience)}
     </div>
   </div>
+</div>
 
   <div class="post-header-right">
     <button
@@ -1537,6 +1552,24 @@ ${p.is_pinned ? `<button type="button" class="post-menu-btn" data-action="unpin-
     </div>
   </div>
 </div>
+${p.shared_from_vpa_id ? `
+<div style="font-size:0.82rem; color:#bb9457; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+  ${p.shared_from_vp_avatar
+    ? `<img src="${p.shared_from_vp_avatar}" style="width:22px; height:22px; border-radius:6px; object-fit:cover;">`
+    : ''}
+  <span>
+    <a href="/social/profile/profile.html?user_id=${encodeURIComponent(p.author_id)}"
+       style="color:#f5f5f5; text-decoration:none; font-weight:bold;">
+      ${p.author_name || 'User'}
+    </a>
+    shared a post from
+    <a href="/social/vp_profile/vp_profile.html?vpa_id=${p.shared_from_vpa_id}"
+       style="color:#bb9457; text-decoration:none; font-weight:bold;">
+      ${p.shared_from_vp_name || 'a VP page'}
+    </a>
+  </span>
+</div>
+` : ''}
 <div class="post-content">
 ${p.is_edited ? `<div style="font-size:12px;color:#aaa;margin-bottom:4px;">edited</div>` : ""}
 ${p.content || ""}
@@ -1561,6 +1594,14 @@ ${reactionPopupHtml}
 </div>
 </div>
 <button class="post-action-btn comment-btn" type="button" data-post-id="${p.id}">💬 Comment</button>
+${p.vpa_id && !p.shared_post_id && p.allow_sharing
+  ? `<button class="post-action-btn share-btn" type="button"
+       data-post-id="${p.id}"
+       data-vpa-id="${p.vpa_id}">
+       🔁 Share
+     </button>`
+  : ''
+}
 </div>
 <div class="post-comment-preview" id="comment-preview-${p.id}" style="margin-top:10px;"></div>
 <div class="post-comments" id="comments-${p.id}" style="display:none;">
@@ -2059,15 +2100,22 @@ clearPostImageSelection();
 }
 
 function closePostModal(){
-document.getElementById("post-modal-overlay").style.display = "none";
-document.getElementById("post-content").value = "";
-document.getElementById("post-audience").value = "public";
-document.getElementById("create-post-btn").textContent = "Post";
+  document.getElementById("post-modal-overlay").style.display = "none";
+  document.getElementById("post-content").value = "";
+  document.getElementById("post-audience").value = "public";
+  document.getElementById("create-post-btn").textContent = "Post";
 
-editingPostId = null;
-editingPostOriginalImageUrl = null;
+  // reset VP selector back to personal
+  const vpSelect = document.getElementById('post-as-vpa');
+  if(vpSelect) vpSelect.value = '';
 
-clearPostImageSelection();
+  // reset avatar and name back to personal
+  loadCurrentUserProfile();
+
+  editingPostId = null;
+  editingPostOriginalImageUrl = null;
+
+  clearPostImageSelection();
 }
 function openEditPostModal(postId){
 const postEl = document.querySelector(`.post[data-post-id="${postId}"]`);
@@ -2437,10 +2485,14 @@ return;
 
 }
 
+const selectedVpaId = document.getElementById('post-as-vpa')?.value || '';
+const vpaIdForPost = selectedVpaId ? parseInt(selectedVpaId) : null;
+
 const { error } = await supabaseClient.rpc('create_social_post', {
-p_content: content,
-p_audience: audience,
-p_image_url: imageUrl
+  p_content:   content,
+  p_audience:  audience,
+  p_image_url: imageUrl,
+  p_vpa_id:    vpaIdForPost
 });
 
 if(error){
@@ -2492,15 +2544,83 @@ showPostImagePreview(selectedPostImage);
 });
 }
 
+async function loadMyVPAccountsForComposer(){
+  const logged = await checkUser();
+  if(!logged) return;
+
+  const { data, error } = await supabaseClient
+    .from('vendor_performer_applications')
+    .select('id, name, application_type, approval_status')
+    .eq('user_id', currentUserId)
+    .eq('approval_status', 'approved')
+    .order('id', { ascending: true });
+
+  if(error || !data || data.length === 0) return;
+
+  myVpAccountsForPost = data;
+
+  const select = document.getElementById('post-as-vpa');
+  if(!select) return;
+
+  // clear and rebuild options
+  select.innerHTML = '<option value="">👤 Post as Myself</option>';
+
+  data.forEach(app => {
+    const icon = app.application_type === true ? '🎭' : '🛒';
+    const opt = document.createElement('option');
+    opt.value = app.id;
+    opt.textContent = `${icon} Post as ${app.name}`;
+    select.appendChild(opt);
+  });
+
+// show the selector
+  select.style.display = 'inline-block';
+
+  // swap composer identity when VP is selected
+  select.addEventListener('change', async function(){
+    const selectedVpaId = select.value;
+    const composerAvatar = document.getElementById('composer-profile-image');
+    const modalAvatar    = document.getElementById('modal-profile-image');
+    const modalName      = document.getElementById('modal-user-name');
+
+    if(!selectedVpaId){
+      // back to personal identity
+      const { data } = await supabaseClient.rpc('get_profile_page_data');
+      const profile = data?.profile || {};
+      const img = profile.profile_image_url || 'https://via.placeholder.com/60x60?text=U';
+      const name = profile.username || 'User';
+      composerAvatar.src = img;
+      modalAvatar.src    = img;
+      modalName.textContent = name;
+    } else {
+      // switch to VP identity
+      const vp = myVpAccountsForPost.find(a => String(a.id) === String(selectedVpaId));
+      if(!vp) return;
+
+      // get vp social profile for avatar
+      const { data: vpProf } = await supabaseClient
+        .rpc('get_vp_social_profile', { p_vpa_id: parseInt(selectedVpaId) });
+
+      const avatar = vpProf?.avatar_url || 'https://via.placeholder.com/60x60?text=VP';
+      const name   = vpProf?.display_name || vp.name;
+
+      composerAvatar.src    = avatar;
+      modalAvatar.src       = avatar;
+      modalName.textContent = name;
+    }
+  });
+}
+
 async function initSocialPage(){
-await loadReactionTypes();
-await loadCurrentUserProfile();
-await loadUnreadNotificationCount();
-await loadPendingFriendRequestCount();
-await loadFeed();
-await startNotificationRealtime();
-await startRelationshipRequestsRealtime();
-await startCommentsRealtime();
+  await loadReactionTypes();
+  await loadCurrentUserProfile();
+  await loadMyVPAccountsForComposer();
+  await loadUnreadNotificationCount();
+  await loadPendingFriendRequestCount();
+  await loadFeed();
+  await startNotificationRealtime();
+  await startRelationshipRequestsRealtime();
+  await startCommentsRealtime();
 }
 window.addEventListener("focus", async function(){
 await loadUnreadNotificationCount();
@@ -2510,6 +2630,40 @@ window.addEventListener("scroll", function(){
 maybeLoadMoreFeed();
 });
 initSocialPage();
+
+document.addEventListener('click', async function(e){
+  const shareBtn = e.target.closest('.share-btn');
+  if(!shareBtn) return;
+
+  const postId = shareBtn.dataset.postId;
+  const vpaId  = parseInt(shareBtn.dataset.vpaId);
+
+  shareBtn.disabled = true;
+  shareBtn.textContent = '⏳ Sharing…';
+
+  const { data, error } = await supabaseClient.rpc('share_vp_post', {
+    p_post_id: postId,
+    p_vpa_id:  vpaId
+  });
+
+  if(error){
+    console.error(error);
+    alert('Share failed: ' + error.message);
+    shareBtn.disabled = false;
+    shareBtn.textContent = '🔁 Share';
+    return;
+  }
+
+  if(data?.reason === 'already_shared'){
+    showToast('You already shared this post');
+    shareBtn.textContent = '✓ Shared';
+    return;
+  }
+
+  showToast('Post shared to your feed!');
+  shareBtn.textContent = '✓ Shared';
+  shareBtn.disabled = true;
+});
 
 document.addEventListener("click", async function(e){
 const reaction = e.target.closest(".reaction-popup span");

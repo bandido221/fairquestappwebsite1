@@ -628,16 +628,23 @@
     async function loadProfilePage() {
       const { data, error } = await supabaseClient.rpc('get_profile_page_data');
 
-      if (error || !data) {
-        document.getElementById('profileCard').innerHTML = `
-          <div class="card-title">👤 Account</div>
-          <div style="background:rgba(180,30,30,0.12); border:1px solid rgba(180,30,30,0.25); border-radius:10px; padding:16px; text-align:center;">
-            <p style="color:#8b1a1a !important; font-size:15px; font-weight:bold;">⚠️ We couldn't load your profile.</p>
-            <p style="color:#8b1a1a !important; font-size:13px; margin-top:6px;">Please refresh the page or <a href="/how_to/help_center.html" style="color:#8b1a1a;">contact support</a>.</p>
-          </div>`;
-        hideLoader();
-        return;
-      }
+ if (error || !data) {
+  // check if user is logged in at all
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    window.location.href = '/user_login.html?redirect=/profile/index.html';
+    return;
+  }
+  // logged in but no profile data — send to setup
+  window.location.href = '/profile/setup.html';
+  return;
+}
+
+// also redirect if username not set yet
+if (!data.profile?.username) {
+  window.location.href = '/profile/setup.html';
+  return;
+}
 
       const p = data.profile;
       const r = data.roles;

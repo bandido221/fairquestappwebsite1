@@ -293,14 +293,14 @@
         return;
       }
 
-      if (!adminRow) {
-        openErrorModal(
-          "Access denied. This account is not an admin.",
-          "No matching row found in admins table for email: " + email
-        );
-        await supabase.auth.signOut();
-        return;
-      }
+     if (!adminRow) {
+  openErrorModal(
+    "Access denied. This account is not an admin.",
+    "No matching row found in admins table for email: " + email
+  );
+  await window.supabaseClient.auth.signOut();  // ✅ fixed
+  return;
+}
 
       window.location.href = 'admin_dashboard.html';
     } catch (e) {

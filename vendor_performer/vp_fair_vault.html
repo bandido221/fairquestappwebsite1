@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Fair Vault | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Domine:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Domine', serif;
+      background: #0d0a04;
+      color: #f1df99;
+      min-height: 100vh;
+      padding-top: 60px;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: rgba(13,10,4,0.97);
+      border-bottom: 2px solid #bb9457;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 999;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img { width: 32px; border-radius: 6px; }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      color: #f1df99;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: #c9a84c;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.2s;
+    }
+    .nav-btn:hover { background: rgba(201,168,76,0.12); }
+
+    /* ── PAGE ── */
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(20px, 5vw, 30px);
+      color: #f1df99;
+      margin-bottom: 4px;
+    }
+    .page-header .fair-name {
+      font-size: 14px;
+      color: #c9a84c;
+      opacity: 0.85;
+    }
+
+    /* ── STORAGE BAR ── */
+    .storage-card {
+      background: rgba(214,197,126,0.88);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      color: #111;
+    }
+    .storage-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .storage-label {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #111;
+    }
+    .storage-numbers { font-size: 13px; color: #111; }
+    .storage-bar-bg {
+      height: 10px;
+      background: rgba(0,0,0,0.15);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .storage-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: #8a6a1a;
+      transition: width 0.5s ease;
+    }
+    .storage-bar-fill.warn { background: #b85c00; }
+    .storage-bar-fill.full { background: #c0392b; }
+    .tier-badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Cinzel', serif;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .tier-badge.gold { background: #d4af37; color: #3b1f00; }
+    .tier-badge.silver { background: #a8a8a8; color: #1a1a1a; }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: #c9a84c;
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #c9a84c;
+      color: #111;
+      border-color: #c9a84c;
+    }
+    .tab-btn:hover:not(.active) { background: rgba(201,168,76,0.1); }
+
+    /* ── UPLOAD ZONE ── */
+    .upload-zone {
+      border: 2px dashed rgba(201,168,76,0.4);
+      border-radius: 14px;
+      padding: 28px 16px;
+      text-align: center;
+      margin-bottom: 20px;
+      transition: border-color 0.2s, background 0.2s;
+      cursor: pointer;
+    }
+    .upload-zone.dragover {
+      border-color: #c9a84c;
+      background: rgba(201,168,76,0.07);
+    }
+    .upload-icon { font-size: 32px; margin-bottom: 8px; }
+    .upload-zone p {
+      font-size: 14px;
+      color: #c9a84c;
+      margin-bottom: 12px;
+    }
+    .upload-zone .size-note {
+      font-size: 12px;
+      color: #a89060;
+      margin-bottom: 14px;
+    }
+    .upload-btn-label {
+      display: inline-block;
+      background: #c9a84c;
+      color: #111;
+      font-weight: 700;
+      font-family: 'Domine', serif;
+      padding: 10px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .upload-btn-label:hover { background: #e6c85c; }
+    #fileInput { display: none; }
+
+    /* ── UPLOAD PROGRESS ── */
+    .upload-progress {
+      display: none;
+      background: rgba(214,197,126,0.15);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .upload-progress p { font-size: 13px; color: #c9a84c; margin-bottom: 8px; }
+    .progress-bar-bg {
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: #c9a84c;
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* ── FILE LIST ── */
+    .files-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .file-card {
+      background: rgba(214,197,126,0.88);
+      border-radius: 14px;
+      padding: 16px;
+      color: #111;
+    }
+    .file-card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .file-thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid rgba(0,0,0,0.15);
+    }
+    .file-thumb-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: #111;
+      word-break: break-all;
+      margin-bottom: 3px;
+    }
+    .file-nickname {
+      font-size: 13px;
+      color: #3b1f1f;
+      font-style: italic;
+      margin-bottom: 3px;
+    }
+    .file-meta {
+      font-size: 11px;
+      color: #5c3a1e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .file-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .file-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.7);
+      color: #111;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Domine', serif;
+      transition: background 0.15s;
+    }
+    .file-btn:hover { background: rgba(255,255,255,0.95); }
+    .file-btn.danger {
+      border-color: rgba(180,30,30,0.3);
+      background: rgba(180,30,30,0.1);
+      color: #c0392b;
+    }
+    .file-btn.danger:hover { background: rgba(180,30,30,0.22); }
+
+    /* ── EDIT NICKNAME INLINE ── */
+    .nickname-edit {
+      display: none;
+      margin-top: 10px;
+      background: rgba(255,255,255,0.6);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .nickname-edit input,
+    .nickname-edit textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.2);
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      background: #fff;
+      color: #111;
+      margin-bottom: 8px;
+    }
+    .nickname-edit textarea { resize: vertical; min-height: 60px; }
+    .edit-actions { display: flex; gap: 8px; }
+    .save-btn {
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #c9a84c;
+      color: #111;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Domine', serif;
+      font-size: 13px;
+    }
+    .save-btn:hover { background: #e6c85c; }
+    .cancel-btn {
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2);
+      background: transparent;
+      color: #111;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Domine', serif;
+      font-size: 13px;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #a89060;
+      font-size: 14px;
+    }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+    /* ── LOCKED CARD ── */
+    .locked-card {
+      background: rgba(214,197,126,0.88);
+      border-radius: 14px;
+      padding: 32px 20px;
+      text-align: center;
+      color: #111;
+    }
+    .locked-card h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .locked-card p { font-size: 14px; color: #3b1f1f; }
+
+    /* ── LOADER ── */
+    #loadingOverlay {
+      position: fixed; inset: 0;
+      background: rgba(13,10,4,0.92);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .spinner {
+      border: 4px solid rgba(201,168,76,0.2);
+      border-top: 4px solid #c9a84c;
+      border-radius: 50%;
+      width: 44px; height: 44px;
+      animation: spin 0.85s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loadingOverlay p {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      color: #c9a84c;
+    }
+
+    /* ── IMAGE GRID ── */
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .image-grid-card {
+      background: rgba(214,197,126,0.88);
+      border-radius: 12px;
+      overflow: hidden;
+      color: #111;
+    }
+    .image-grid-card img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      display: block;
+    }
+    .image-grid-info {
+      padding: 8px 10px;
+    }
+    .image-grid-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #111;
+      word-break: break-all;
+      margin-bottom: 2px;
+    }
+    .image-grid-nick {
+      font-size: 11px;
+      color: #3b1f1f;
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+    .image-grid-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .image-grid-actions .file-btn { font-size: 11px; padding: 5px 10px; }
+
+    @media (max-width: 480px) {
+      .image-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p>Loading your vault…</p>
+</div>
+
+<nav class="topnav">
+  <a class="topnav-logo" href="/index.html">
+    <img src="/images/logo.png" alt="FairQuest" />
+    <span>FairQuest</span>
+  </a>
+  <div style="display:flex; gap:8px;">
+    <a id="backBtn" href="#" class="nav-btn">← Back</a>
+    <a href="/index.html" class="nav-btn">🏡 Home</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="page-header">
+    <h1>📁 My Fair Vault</h1>
+    <div class="fair-name" id="fairNameDisplay">Loading…</div>
+  </div>
+
+  <!-- STORAGE BAR -->
+  <div class="storage-card" id="storageCard" style="display:none;">
+    <div class="storage-top">
+      <div class="storage-label">
+        Storage
+        <span class="tier-badge" id="tierBadge"></span>
+      </div>
+      <div class="storage-numbers" id="storageNumbers"></div>
+    </div>
+    <div class="storage-bar-bg">
+      <div class="storage-bar-fill" id="storageBarFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- LOCKED STATE -->
+  <div class="locked-card" id="lockedCard" style="display:none;">
+    <h2>🔒 Silver or Gold Tier Required</h2>
+    <p>The Fair Vault is available to Silver and Gold tier members. Upgrade your tier to access document and image storage for each fair.</p>
+  </div>
+
+  <!-- MAIN VAULT (shown when tier ok) -->
+  <div id="vaultContent" style="display:none;">
+
+ <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tabImages" onclick="switchTab('images')">📷 Upload Image</button>
+      <button class="tab-btn" id="tabDocuments" onclick="switchTab('documents')">📄 Upload Document</button>
+    </div>
+
+ <div class="upload-zone" id="uploadZone">
+      <div class="upload-icon" id="uploadTabIcon">📷</div>
+      <p id="uploadZoneText">Drag & drop here or click to upload</p>
+      <div class="size-note" id="uploadSizeNote"></div>
+    </div>
+    <input type="file" id="fileInput" multiple style="display:none;" />
+
+    <!-- PROGRESS -->
+    <div class="upload-progress" id="uploadProgress">
+      <p id="progressText">Uploading…</p>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+    </div>
+
+    <!-- FILES -->
+    <div id="imagesPanel">
+      <div class="image-grid" id="imagesGrid"></div>
+    </div>
+
+    <div id="documentsPanel" style="display:none;">
+      <div class="files-list" id="documentsList"></div>
+    </div>
+
+  </div><!-- /vaultContent -->
+
+</div><!-- /page -->
+
+<script>
+const sb = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+const params     = new URLSearchParams(location.search);
+const VPA_ID     = parseInt(params.get('vpa_id'), 10);
+const VP_TYPE    = params.get('type') || 'vendor';
+const FAIR_NAME  = decodeURIComponent(params.get('fair_name') || 'Your Fair');
+
+let currentTab   = 'images';
+let allFiles     = [];
+let storageData  = {};
+let userId       = null;
+
+document.getElementById('fairNameDisplay').textContent = FAIR_NAME;
+document.getElementById('backBtn').href =
+  VP_TYPE === 'performer'
+    ? '/vendor_performer/performer/dashboard.html'
+    : '/vendor_performer/vendor/dashboard.html';
+
+// ── INIT ──
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    window.location.href = '/user_login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
+    return;
+  }
+  userId = session.user.id;
+
+  if (!VPA_ID) {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('lockedCard').style.display = 'block';
+    return;
+  }
+
+  await loadStorageInfo();
+  await loadFiles();
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// ── STORAGE INFO ──
+async function loadStorageInfo() {
+  const { data, error } = await sb.rpc('get_vp_storage_usage', { p_vpa_id: VPA_ID });
+  if (error || !data || data.length === 0) {
+    document.getElementById('lockedCard').style.display = 'block';
+    return;
+  }
+
+  storageData = data[0];
+  const tier       = storageData.tier;
+  const usedKb     = storageData.total_kb;
+  const maxKb      = storageData.max_storage_kb;
+  const pct        = Math.min(100, Math.round((usedKb / maxKb) * 100));
+  const usedMb     = (usedKb / 1024).toFixed(1);
+  const maxMb      = (maxKb / 1024).toFixed(0);
+
+  document.getElementById('storageCard').style.display = 'block';
+  document.getElementById('vaultContent').style.display = 'block';
+
+  const badge = document.getElementById('tierBadge');
+  badge.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+  badge.className   = 'tier-badge ' + tier;
+
+  document.getElementById('storageNumbers').textContent = `${usedMb} MB / ${maxMb} MB`;
+
+  const fill = document.getElementById('storageBarFill');
+  fill.style.width = pct + '%';
+  fill.className   = 'storage-bar-fill' + (pct >= 95 ? ' full' : pct >= 75 ? ' warn' : '');
+
+  const maxFileMb = (storageData.max_file_kb / 1024).toFixed(0);
+  document.getElementById('uploadSizeNote').textContent =
+    `Max file size: ${maxFileMb}MB · Storage: ${usedMb}MB of ${maxMb}MB used`;
+}
+
+// ── LOAD FILES ──
+async function loadFiles() {
+  const { data, error } = await sb.rpc('get_vp_fair_documents', { p_vpa_id: VPA_ID });
+
+  if (error) {
+    if (error.message && error.message.includes('tier required')) {
+      document.getElementById('lockedCard').style.display = 'block';
+      document.getElementById('vaultContent').style.display = 'none';
+      document.getElementById('storageCard').style.display = 'none';
+    }
+    return;
+  }
+
+  allFiles = data || [];
+  renderTab();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabImages').className    = 'tab-btn' + (tab === 'images'    ? ' active' : '');
+  document.getElementById('tabDocuments').className = 'tab-btn' + (tab === 'documents' ? ' active' : '');
+  document.getElementById('imagesPanel').style.display    = tab === 'images'    ? 'block' : 'none';
+  document.getElementById('documentsPanel').style.display = tab === 'documents' ? 'block' : 'none';
+
+  document.getElementById('uploadTabIcon').textContent  = tab === 'images' ? '📷' : '📄';
+  document.getElementById('uploadZoneText').textContent =
+    tab === 'images' ? 'Drag & drop images here or click to upload' : 'Drag & drop documents here or click to upload';
+
+  const fileInput = document.getElementById('fileInput');
+  fileInput.accept = tab === 'images' ? 'image/*' : '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip';
+  fileInput.click();
+
+  renderTab();
+}
+
+function renderTab() {
+  const images = allFiles.filter(f => f.file_type === 'image');
+  const docs   = allFiles.filter(f => f.file_type === 'document');
+
+  renderImages(images);
+  renderDocuments(docs);
+}
+
+async function downloadAll(type) {
+  const files = allFiles.filter(f => f.file_type === type);
+  if (!files.length) return;
+  for (const f of files) {
+    const url = await getSignedUrl(f.file_path);
+    if (!url) continue;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = f.file_name;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    await new Promise(r => setTimeout(r, 400));
+  }
+}
+
+// ── SIGNED URL ──
+async function getSignedUrl(filePath) {
+  const { data, error } = await sb.storage
+    .from('vp-fair-documents')
+    .createSignedUrl(filePath, 60 * 60); // 1 hour
+  if (error) { alert('Could not get download link.'); return null; }
+  return data.signedUrl;
+}
+
+async function renderImages(images) {
+  const grid = document.getElementById('imagesGrid');
+  grid.innerHTML = '';
+
+  if (images.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <div class="empty-icon">📷</div>
+      <p>No images uploaded yet.</p>
+    </div>`;
+    return;
+  }
+
+  if (images.length >= 2) {
+    const dlAll = document.createElement('div');
+    dlAll.style.cssText = 'grid-column:1/-1; margin-bottom:8px;';
+    dlAll.innerHTML = `
+      <button class="file-btn" style="width:100%; padding:10px; font-size:13px; background:rgba(201,168,76,0.2); border-color:rgba(201,168,76,0.4); color:#f1df99;"
+        onclick="downloadAll('image')">⬇ Download All Images (${images.length})</button>`;
+    grid.appendChild(dlAll);
+  }
+
+  for (const f of images) {
+    const url = await getSignedUrl(f.file_path);
+    const card = document.createElement('div');
+    card.className = 'image-grid-card';
+    card.id = 'card-' + f.id;
+    card.innerHTML = `
+      <img src="${url || ''}" alt="${f.file_name}" onerror="this.style.display='none'" />
+      <div class="image-grid-info">
+        <div class="image-grid-name">${f.nickname || f.file_name}</div>
+        ${f.nickname ? `<div class="image-grid-nick">${f.file_name}</div>` : ''}
+        <div class="image-grid-actions">
+          <button class="file-btn" onclick="downloadFile('${f.file_path}')">⬇ Download</button>
+          <button class="file-btn" onclick="toggleEdit('${f.id}')">✏️ Edit</button>
+          <button class="file-btn danger" onclick="confirmDelete('${f.id}','${f.file_name.replace(/'/g,"\\'")}')">🗑</button>
+        </div>
+        <div class="nickname-edit" id="edit-${f.id}">
+          <input type="text" id="nick-${f.id}" placeholder="Nickname / label" value="${f.nickname || ''}" />
+          <textarea id="notes-${f.id}" placeholder="Notes (optional)">${f.notes || ''}</textarea>
+          <div class="edit-actions">
+            <button class="save-btn" onclick="saveMeta('${f.id}')">Save</button>
+            <button class="cancel-btn" onclick="toggleEdit('${f.id}')">Cancel</button>
+          </div>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  }
+}
+
+async function renderDocuments(docs) {
+  const list = document.getElementById('documentsList');
+  list.innerHTML = '';
+
+  if (docs.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📄</div>
+      <p>No documents uploaded yet.</p>
+    </div>`;
+    return;
+  }
+
+  if (docs.length >= 2) {
+    const dlAll = document.createElement('div');
+    dlAll.innerHTML = `
+      <button class="file-btn" style="width:100%; padding:10px; font-size:13px; background:rgba(201,168,76,0.2); border-color:rgba(201,168,76,0.4); color:#f1df99; margin-bottom:12px;"
+        onclick="downloadAll('document')">⬇ Download All Documents (${docs.length})</button>`;
+    list.appendChild(dlAll);
+  }
+
+  for (const f of docs) {
+    const icon = getDocIcon(f.mime_type);
+    const sizeMb = f.file_size_kb ? (f.file_size_kb / 1024).toFixed(1) + ' MB' : '';
+    const dateStr = new Date(f.uploaded_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+
+    const card = document.createElement('div');
+    card.className = 'file-card';
+    card.id = 'card-' + f.id;
+    card.innerHTML = `
+      <div class="file-card-top">
+        <div class="file-thumb-icon">${icon}</div>
+        <div class="file-info">
+          <div class="file-name">${f.nickname || f.file_name}</div>
+          ${f.nickname ? `<div class="file-nickname">${f.file_name}</div>` : ''}
+          <div class="file-meta">${sizeMb}${sizeMb ? ' · ' : ''}${dateStr}</div>
+        </div>
+      </div>
+      <div class="file-actions">
+        <button class="file-btn" onclick="downloadFile('${f.file_path}')">⬇ Download</button>
+        <button class="file-btn" onclick="toggleEdit('${f.id}')">✏️ Edit Label</button>
+        <button class="file-btn danger" onclick="confirmDelete('${f.id}','${f.file_name.replace(/'/g,"\\'")}')">🗑 Delete</button>
+      </div>
+      <div class="nickname-edit" id="edit-${f.id}">
+        <input type="text" id="nick-${f.id}" placeholder="Nickname / label" value="${f.nickname || ''}" />
+        <textarea id="notes-${f.id}" placeholder="Notes (optional)">${f.notes || ''}</textarea>
+        <div class="edit-actions">
+          <button class="save-btn" onclick="saveMeta('${f.id}')">Save</button>
+          <button class="cancel-btn" onclick="toggleEdit('${f.id}')">Cancel</button>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  }
+}
+
+function getDocIcon(mime) {
+  if (!mime) return '📄';
+  if (mime.includes('pdf')) return '📕';
+  if (mime.includes('word') || mime.includes('docx')) return '📝';
+  if (mime.includes('excel') || mime.includes('sheet')) return '📊';
+  if (mime.includes('zip') || mime.includes('compressed')) return '🗜️';
+  return '📄';
+}
+
+// ── DOWNLOAD ──
+async function downloadFile(filePath) {
+  const url = await getSignedUrl(filePath);
+  if (url) window.open(url, '_blank');
+}
+
+// ── TOGGLE EDIT ──
+function toggleEdit(id) {
+  const el = document.getElementById('edit-' + id);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+// ── SAVE META ──
+async function saveMeta(id) {
+  const nickname = document.getElementById('nick-' + id).value.trim();
+  const notes    = document.getElementById('notes-' + id).value.trim();
+
+  const { error } = await sb.rpc('update_vp_document_meta', {
+    p_id: id,
+    p_nickname: nickname || null,
+    p_notes: notes || null
+  });
+
+  if (error) { alert('Could not save. Please try again.'); return; }
+
+  // update local data
+  const idx = allFiles.findIndex(f => f.id === id);
+  if (idx > -1) {
+    allFiles[idx].nickname = nickname;
+    allFiles[idx].notes    = notes;
+  }
+
+  toggleEdit(id);
+  renderTab();
+}
+
+// ── DELETE ──
+function confirmDelete(id, fileName) {
+  const ok = confirm(
+    `Are you sure you want to delete "${fileName}"?\n\nThis will remove the file and it may not be possible to recover it.`
+  );
+  if (ok) deleteFile(id);
+}
+
+async function deleteFile(id) {
+  const { error } = await sb.rpc('soft_delete_vp_document', { p_id: id });
+  if (error) { alert('Could not delete. Please try again.'); return; }
+
+  allFiles = allFiles.filter(f => f.id !== id);
+  renderTab();
+  await loadStorageInfo(); // refresh storage bar
+}
+
+// ── IMAGE COMPRESSION ──
+function compressImage(file, maxWidthPx = 1200, quality = 0.8) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const scale  = Math.min(1, maxWidthPx / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => resolve(blob), 'image/webp', quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── UPLOAD HANDLER ──
+async function handleFiles(files) {
+  if (!files || files.length === 0) return;
+
+  const maxFileKb = storageData.max_file_kb || 5120;
+  const maxStorKb = storageData.max_storage_kb || 51200;
+  const usedKb    = storageData.total_kb || 0;
+
+  for (const file of Array.from(files)) {
+    const isImage = file.type.startsWith('image/');
+    const fileTab = isImage ? 'images' : 'documents';
+
+    // check if file matches current tab
+    if (fileTab !== currentTab) {
+      alert(`"${file.name}" is ${isImage ? 'an image' : 'a document'}. Please switch to the ${isImage ? 'Images' : 'Documents'} tab to upload it.`);
+      continue;
+    }
+
+    // size check (before compression)
+    const fileSizeKb = Math.round(file.size / 1024);
+    if (fileSizeKb > maxFileKb * 1.5) { // allow some headroom before compression
+      alert(`"${file.name}" is too large. Maximum file size is ${(maxFileKb/1024).toFixed(0)}MB.`);
+      continue;
+    }
+
+    // storage check
+    if (usedKb + fileSizeKb > maxStorKb) {
+      alert(`Not enough storage. You have ${((maxStorKb - usedKb)/1024).toFixed(1)}MB remaining.`);
+      continue;
+    }
+
+    showProgress(`Uploading ${file.name}…`, 10);
+
+    let uploadBlob = file;
+    let finalName  = file.name;
+    let mimeType   = file.type;
+
+    // compress images
+    if (isImage) {
+      showProgress(`Compressing ${file.name}…`, 30);
+      uploadBlob = await compressImage(file);
+      finalName  = file.name.replace(/\.[^/.]+$/, '') + '.webp';
+      mimeType   = 'image/webp';
+    }
+
+    const finalSizeKb = Math.round(uploadBlob.size / 1024);
+
+    // check compressed size
+    if (finalSizeKb > maxFileKb) {
+      alert(`"${file.name}" is still too large after compression (${(finalSizeKb/1024).toFixed(1)}MB). Maximum is ${(maxFileKb/1024).toFixed(0)}MB.`);
+      hideProgress();
+      continue;
+    }
+
+    showProgress(`Uploading…`, 60);
+
+    const filePath = `${userId}/${VPA_ID}/${Date.now()}_${finalName}`;
+
+    const { error: upErr } = await sb.storage
+      .from('vp-fair-documents')
+      .upload(filePath, uploadBlob, { contentType: mimeType, upsert: false });
+
+    if (upErr) {
+      alert(`Upload failed for "${file.name}". Please try again.`);
+      hideProgress();
+      continue;
+    }
+
+    showProgress('Saving record…', 85);
+
+    const { error: dbErr } = await sb.from('vp_fair_documents').insert({
+      user_id:       userId,
+      vpa_id:        VPA_ID,
+      fair_id:       null,
+      file_name:     file.name,
+      file_path:     filePath,
+      file_type:     isImage ? 'image' : 'document',
+      file_size_kb:  finalSizeKb,
+      mime_type:     mimeType,
+      default_label: isImage ? 'Image' : 'Document',
+      nickname:      null,
+      notes:         null
+    });
+
+    if (dbErr) {
+      // cleanup orphan in bucket
+      await sb.storage.from('vp-fair-documents').remove([filePath]);
+      alert(`Could not save record for "${file.name}". Please try again.`);
+      hideProgress();
+      continue;
+    }
+
+    showProgress('Done!', 100);
+    await new Promise(r => setTimeout(r, 400));
+    hideProgress();
+  }
+
+  await loadFiles();
+  await loadStorageInfo();
+}
+
+function showProgress(text, pct) {
+  document.getElementById('uploadProgress').style.display = 'block';
+  document.getElementById('progressText').textContent     = text;
+  document.getElementById('progressBarFill').style.width  = pct + '%';
+}
+function hideProgress() {
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('progressBarFill').style.width  = '0%';
+}
+
+// ── DRAG & DROP ──
+const zone = document.getElementById('uploadZone');
+zone.style.cursor = 'pointer';
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+zone.addEventListener('click', function(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  const fileInput = document.getElementById('fileInput');
+  fileInput.accept = currentTab === 'images' ? 'image/*' : '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip';
+  fileInput.click();
+});
+document.getElementById('fileInput').addEventListener('change', e => {
+  handleFiles(e.target.files);
+  e.target.value = ''; // reset so same file can be re-uploaded
+});
+
+// ── START ──
+init();
+</script>
+</body>
+</html>

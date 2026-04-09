@@ -13,13 +13,13 @@
 
   <style>
     body {
-      font-family: 'Domine', serif;
-      background: #000;
-      color: #f0e6d2;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-    }
+  font-family: 'Domine', serif;
+  background: #0d0a04;
+  color: #f1df99;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+}
 
     h1, h2, h3 {
       font-family: 'Cinzel', serif;
@@ -50,34 +50,37 @@
       transform: scale(1.05);
     }
 
-    .container {
-      max-width: 980px;
-      margin: 0 auto;
-      background: rgba(214, 197, 126, 0.88);
-      color: #2f1a12;
-      border: 2px solid #aa8425;
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-      padding: 24px;
-      text-align: left;
-    }
+   .container {
+  max-width: 980px;
+  margin: 0 auto;
+  background: rgba(241, 223, 153, 0.93);
+  color: #111;
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 16px;
+  box-shadow:
+    0 2px 0 rgba(201,168,76,0.35),
+    0 8px 28px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+  padding: 24px;
+  text-align: left;
+}
 
     .page-header {
       text-align: center;
       margin-bottom: 24px;
     }
 
-    .page-header h1 {
-      color: #4a250f;
-      margin-bottom: 8px;
-      font-size: 30px;
-    }
+  .page-header h1 {
+  color: #111;
+  margin-bottom: 8px;
+  font-size: 30px;
+}
 
-    .page-header p {
-      margin: 0;
-      color: #5f3d24;
-      font-size: 16px;
-    }
+.page-header p {
+  margin: 0;
+  color: #111;
+  font-size: 16px;
+}
 
     .top-actions {
       display: flex;
@@ -126,28 +129,28 @@
       opacity: 0.75;
     }
 
-    .section-card {
-      background: rgba(255, 248, 220, 0.55);
-      border: 1px solid rgba(120, 81, 19, 0.28);
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 18px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
-    }
+   .section-card {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 18px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+}
 
-    .section-title {
-      color: #4a250f;
-      margin-bottom: 14px;
-      font-size: 22px;
-      text-align: center;
-    }
+.section-title {
+  color: #111;
+  margin-bottom: 14px;
+  font-size: 22px;
+  text-align: center;
+}
 
-    .loading {
-      text-align: center;
-      font-size: 18px;
-      color: #2f1a12;
-      padding: 30px 10px;
-    }
+   .loading {
+  text-align: center;
+  font-size: 18px;
+  color: #111;
+  padding: 30px 10px;
+}
 
     .summary-grid {
       display: grid;
@@ -155,27 +158,28 @@
       gap: 12px;
     }
 
-    .summary-item {
-      background: rgba(255,255,255,0.40);
-      border-radius: 10px;
-      padding: 12px;
-      text-align: center;
-    }
+   .summary-item {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
 
-    .label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #6a4a1d;
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
 
-    .value {
-      font-size: 16px;
-      color: #2c1710;
-      word-break: break-word;
-    }
+.value {
+  font-size: 16px;
+  color: #111;
+  word-break: break-word;
+}
 
     .badge-row {
       display: flex;
@@ -210,33 +214,32 @@
       gap: 12px;
     }
 
-    .weekend-row {
-      background: rgba(255,255,255,0.40);
-      border-radius: 12px;
-      padding: 14px;
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
-    }
+.weekend-row {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid #b9913a;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
 
-    .weekend-left {
+.weekend-name {
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 6px;
+  font-size: 17px;
+}
+
+.weekend-meta {
+  color: #111;
+  font-size: 14px;
+  line-height: 1.45;
+}
+  .weekend-left {
       flex: 1;
     }
-
-    .weekend-name {
-      font-weight: 700;
-      color: #2f1a12;
-      margin-bottom: 6px;
-      font-size: 17px;
-    }
-
-    .weekend-meta {
-      color: #5a4335;
-      font-size: 14px;
-      line-height: 1.45;
-    }
-
     .weekend-right {
       min-width: 260px;
       display: flex;
@@ -278,19 +281,21 @@
     }
 
     .total-box {
-      background: rgba(255,255,255,0.40);
-      border-radius: 12px;
-      padding: 14px;
-      text-align: center;
-    }
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
 
-    .empty-box {
-      background: rgba(255,255,255,0.40);
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      color: #5a4335;
-    }
+.empty-box {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  color: #111;
+}
 
     .error-box {
       background: rgba(192, 57, 43, 0.18);
@@ -311,13 +316,14 @@
       margin-bottom: 16px;
     }
 
-    .muted-box {
-      background: rgba(255,255,255,0.35);
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      color: #5a4335;
-    }
+ .muted-box {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  color: #111;
+}
 
     footer {
       margin-top: 40px;
@@ -458,51 +464,59 @@
         : `<span class="badge badge-active">Active</span>`;
     }
 
-    function renderWeekendRows(rows) {
-      if (!rows.length) {
-        return `<div class="empty-box">No weekends found for this fair.</div>`;
-      }
+  function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${mm}-${dd}-${yy}`;
+}
 
-      return rows.map(row => `
-        <div class="weekend-row">
-          <div class="weekend-left">
-            <div class="weekend-name">${escapeHtml(row.weekend_start_date)} to ${escapeHtml(row.weekend_end_date)}</div>
-            <div class="weekend-meta">Saved weekend record ID: ${escapeHtml(row.id)}</div>
-          </div>
+function renderWeekendRows(rows) {
+  if (!rows.length) {
+    return `<div class="empty-box">No weekends found for this fair.</div>`;
+  }
 
-          <div class="weekend-right">
-            <div class="price-row">
-              <div class="label">Weekend Price</div>
-              <input
-                id="price-${row.id}"
-                class="price-input"
-                type="number"
-                min="0"
-                step="0.01"
-                value="${row.weekend_price ?? ''}"
-                placeholder="Enter weekend price"
-              />
-            </div>
-
-            <div class="note-row">
-              <div class="label">Notes</div>
-              <textarea
-                id="note-${row.id}"
-                class="note-input"
-                rows="2"
-                placeholder="Optional note"
-              >${escapeHtml(row.notes || '')}</textarea>
-            </div>
-
-            <div class="weekend-actions">
-              <button class="btn-gold" type="button" onclick="saveWeekend('${row.id}')">Save</button>
-              <button class="${row.is_paid ? 'btn-dark' : 'btn-green'}" type="button" onclick="togglePaid('${row.id}', ${row.is_paid ? 'true' : 'false'})">
-                ${row.is_paid ? 'Paid' : 'Not Paid'}
-              </button>
-            </div>
-          </div>
+return rows.map(row => `
+    <div class="weekend-row">
+      <div class="weekend-left">
+        <div class="weekend-name">${formatDate(row.weekend_start_date)} to ${formatDate(row.weekend_end_date)}</div>
+        <div class="note-row" style="margin-top:10px;">
+          <div class="label">Notes</div>
+          <textarea
+            id="note-${row.id}"
+            class="note-input"
+            rows="2"
+            placeholder="Optional note"
+            style="font-size:13px;"
+          >${escapeHtml(row.notes || '')}</textarea>
         </div>
-      `).join('');
+      </div>
+
+      <div class="weekend-right">
+        <div class="price-row">
+          <div class="label">Weekend Price</div>
+          <input
+            id="price-${row.id}"
+            class="price-input"
+            type="number"
+            min="0"
+            step="0.01"
+            value="${row.weekend_price ?? ''}"
+            placeholder="Enter weekend price"
+          />
+        </div>
+
+        <div class="weekend-actions">
+          <button class="btn-gold" type="button" onclick="saveWeekend('${row.id}')">Save</button>
+          <button class="${row.is_paid ? 'btn-dark' : 'btn-green'}" type="button" onclick="togglePaid('${row.id}', ${row.is_paid ? 'true' : 'false'})">
+            ${row.is_paid ? 'Paid' : 'Not Paid'}
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
     }
 
     function renderPage(rows) {
@@ -559,9 +573,10 @@
           </div>
         </div>
 
-        <div class="section-card">
-          <h2 class="section-title">Documents / Images</h2>
-          <div class="muted-box">This page is ready for the weekend table. The document table page can be connected after vp_fair_info_document is created.</div>        </div>
+       <div class="section-card" id="vaultSection">
+          <h2 class="section-title">📁 Documents & Images</h2>
+          <div id="vaultInner"><div class="loading">Loading vault…</div></div>
+        </div>
       `;
     }
 
@@ -711,7 +726,408 @@
       showMessage(nextArchived ? 'Fair archived.' : 'Fair unarchived.');
     }
 
-    window.addEventListener('DOMContentLoaded', loadPage);
+    // ── VAULT ──
+    const VAULT_SB = window.supabaseClient;
+    let vaultFiles = [];
+    let vaultTab = 'images';
+    let vaultStorage = {};
+    let vaultUserId = null;
+    let vaultVpaId = null;
+    let vaultFairName = null;
+    let vaultSeasonYear = null;
+
+    async function initVault(vpaId, fairName, seasonYear) {
+      vaultVpaId = parseInt(vpaId, 10);
+      vaultFairName = fairName;
+      vaultSeasonYear = seasonYear || '';
+
+      const { data: { session } } = await VAULT_SB.auth.getSession();
+      if (!session) return;
+      vaultUserId = session.user.id;
+
+      await vaultLoadStorage();
+      await vaultLoadFiles();
+    }
+
+    async function vaultLoadStorage() {
+      const { data, error } = await VAULT_SB.rpc('get_vp_storage_usage', { p_vpa_id: vaultVpaId });
+      if (error || !data || !data.length) {
+        document.getElementById('vaultInner').innerHTML = `
+          <div class="muted-box" style="position:relative; overflow:hidden;">
+            <div style="filter:blur(2px); opacity:0.4; pointer-events:none;">
+              <div style="background:rgba(0,0,0,0.08); border-radius:10px; padding:12px; margin-bottom:10px; height:40px;"></div>
+              <div style="display:flex; gap:8px; margin-bottom:10px;">
+                <div style="flex:1; background:rgba(0,0,0,0.08); border-radius:8px; height:36px;"></div>
+                <div style="flex:1; background:rgba(0,0,0,0.08); border-radius:8px; height:36px;"></div>
+              </div>
+              <div style="background:rgba(0,0,0,0.08); border-radius:10px; height:80px;"></div>
+            </div>
+            <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
+              <div style="font-size:22px;">🔒</div>
+              <div style="font-family:'Cinzel',serif; font-size:15px; font-weight:700; color:#4a250f;">Silver or Gold Tier Required</div>
+              <div style="font-size:13px; color:#5a4335;">Upgrade your tier to store documents and images for this fair.</div>
+            </div>
+          </div>`;
+        return;
+      }
+
+      vaultStorage = data[0];
+      const tier   = vaultStorage.tier;
+      const usedKb = vaultStorage.total_kb;
+      const maxKb  = vaultStorage.max_storage_kb;
+      const pct    = Math.min(100, Math.round((usedKb / maxKb) * 100));
+      const usedMb = (usedKb / 1024).toFixed(1);
+      const maxMb  = (maxKb / 1024).toFixed(0);
+      const maxFileMb = (vaultStorage.max_file_kb / 1024).toFixed(0);
+
+      const fillClass = pct >= 95 ? 'full' : pct >= 75 ? 'warn' : '';
+      const tierColor = tier === 'gold' ? '#d4af37' : '#a8a8a8';
+      const tierText  = tier === 'gold' ? '#3b1f00' : '#1a1a1a';
+
+      document.getElementById('vaultInner').innerHTML = `
+        <div style="background:rgba(255,255,255,0.3); border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-family:'Cinzel',serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#4a250f;">
+              Storage
+              <span style="display:inline-block; margin-left:6px; padding:2px 8px; border-radius:99px; font-size:10px; background:${tierColor}; color:${tierText};">${tier.charAt(0).toUpperCase()+tier.slice(1)}</span>
+            </span>
+            <span style="font-size:12px; color:#5a4335;">${usedMb} MB / ${maxMb} MB</span>
+          </div>
+          <div style="height:8px; background:rgba(0,0,0,0.12); border-radius:99px; overflow:hidden;">
+            <div style="height:100%; width:${pct}%; border-radius:99px; background:${fillClass==='full'?'#c0392b':fillClass==='warn'?'#b85c00':'#8a6a1a'}; transition:width 0.5s;"></div>
+          </div>
+          <div style="font-size:11px; color:#5a4335; margin-top:5px;">Max file size: ${maxFileMb}MB</div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <button id="vTabImages" onclick="vaultSwitchTab('images')"
+            style="flex:1; padding:10px; border-radius:8px; border:2px solid #aa8425; background:#aa8425; color:#fff; font-family:'Cinzel',serif; font-size:13px; cursor:pointer;">
+            📷 Images
+          </button>
+          <button id="vTabDocs" onclick="vaultSwitchTab('documents')"
+            style="flex:1; padding:10px; border-radius:8px; border:2px solid rgba(120,81,19,0.3); background:transparent; color:#4a250f; font-family:'Cinzel',serif; font-size:13px; cursor:pointer;">
+            📄 Documents
+          </button>
+        </div>
+
+        <div id="vUploadZone"
+          style="border:2px dashed rgba(120,81,19,0.35); border-radius:12px; padding:22px 16px; text-align:center; margin-bottom:12px; cursor:pointer; transition:all 0.2s;"
+          ondragover="event.preventDefault(); this.style.background='rgba(120,81,19,0.08)'"
+          ondragleave="this.style.background=''"
+          ondrop="vaultHandleDrop(event)">
+          <div id="vUploadIcon" style="font-size:28px; margin-bottom:6px;">📷</div>
+          <div style="font-size:13px; color:#5a4335; margin-bottom:4px;" id="vUploadText">Click or drag to upload images</div>
+          <div style="font-size:11px; color:#8a6a40;">${maxFileMb}MB max per file</div>
+        </div>
+        <input type="file" id="vFileInput" multiple style="display:none;" accept="image/*" />
+
+        <div id="vProgress" style="display:none; background:rgba(255,255,255,0.3); border-radius:10px; padding:12px; margin-bottom:12px;">
+          <div id="vProgressText" style="font-size:13px; color:#4a250f; margin-bottom:6px;">Uploading…</div>
+          <div style="height:6px; background:rgba(0,0,0,0.12); border-radius:99px; overflow:hidden;">
+            <div id="vProgressFill" style="height:100%; width:0%; background:#8a6a1a; border-radius:99px; transition:width 0.3s;"></div>
+          </div>
+        </div>
+
+        <div id="vFilesPanel"></div>
+        <div id="vDocsPanel" style="display:none;"></div>
+      `;
+
+      document.getElementById('vUploadZone').addEventListener('click', () => {
+        const fi = document.getElementById('vFileInput');
+        fi.accept = vaultTab === 'images' ? 'image/*' : '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip';
+        fi.click();
+      });
+
+      document.getElementById('vFileInput').addEventListener('change', e => {
+        vaultHandleFiles(e.target.files);
+        e.target.value = '';
+      });
+
+      await vaultRenderFiles();
+    }
+
+    async function vaultLoadFiles() {
+      const { data, error } = await VAULT_SB.rpc('get_vp_fair_documents', { p_vpa_id: vaultVpaId });
+      if (error) return;
+      vaultFiles = (data || []).filter(f =>
+        f.fair_name_snapshot === vaultFairName &&
+        f.season_year === vaultSeasonYear
+      );
+      await vaultRenderFiles();
+    }
+
+    function vaultSwitchTab(tab) {
+      vaultTab = tab;
+      const imgBtn  = document.getElementById('vTabImages');
+      const docBtn  = document.getElementById('vTabDocs');
+      const fi      = document.getElementById('vFileInput');
+      const icon    = document.getElementById('vUploadIcon');
+      const txt     = document.getElementById('vUploadText');
+      if (!imgBtn) return;
+
+      if (tab === 'images') {
+        imgBtn.style.background = '#aa8425'; imgBtn.style.color = '#fff'; imgBtn.style.borderColor = '#aa8425';
+        docBtn.style.background = 'transparent'; docBtn.style.color = '#4a250f'; docBtn.style.borderColor = 'rgba(120,81,19,0.3)';
+        icon.textContent = '📷'; txt.textContent = 'Click or drag to upload images';
+        fi.accept = 'image/*';
+        document.getElementById('vFilesPanel').style.display = 'block';
+        document.getElementById('vDocsPanel').style.display  = 'none';
+      } else {
+        docBtn.style.background = '#aa8425'; docBtn.style.color = '#fff'; docBtn.style.borderColor = '#aa8425';
+        imgBtn.style.background = 'transparent'; imgBtn.style.color = '#4a250f'; imgBtn.style.borderColor = 'rgba(120,81,19,0.3)';
+        icon.textContent = '📄'; txt.textContent = 'Click or drag to upload documents';
+        fi.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip';
+        document.getElementById('vFilesPanel').style.display = 'none';
+        document.getElementById('vDocsPanel').style.display  = 'block';
+      }
+      fi.click();
+    }
+
+    async function vaultRenderFiles() {
+      const images = vaultFiles.filter(f => f.file_type === 'image');
+      const docs   = vaultFiles.filter(f => f.file_type === 'document');
+      const fp = document.getElementById('vFilesPanel');
+      const dp = document.getElementById('vDocsPanel');
+      if (!fp) return;
+
+      // images
+      if (!images.length) {
+        fp.innerHTML = `<div style="text-align:center; padding:20px; color:#5a4335; font-size:13px;">No images uploaded yet.</div>`;
+      } else {
+        let html = '';
+        if (images.length >= 2) {
+          html += `<button onclick="vaultDownloadAll('image')"
+            style="width:100%; padding:9px; border-radius:8px; border:1.5px solid rgba(120,81,19,0.3); background:rgba(255,255,255,0.4); color:#4a250f; font-size:13px; font-weight:700; font-family:'Domine',serif; cursor:pointer; margin-bottom:10px;">
+            ⬇ Download All Images (${images.length})</button>`;
+        }
+        html += `<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px;">`;
+        for (const f of images) {
+          const url = await vaultSignedUrl(f.file_path);
+          html += `
+            <div style="background:rgba(255,255,255,0.4); border-radius:10px; overflow:hidden;">
+              <img src="${url||''}" style="width:100%; height:110px; object-fit:cover; display:block;" onerror="this.style.display='none'" />
+              <div style="padding:8px;">
+                <div style="font-size:11px; font-weight:700; color:#2f1a12; word-break:break-all; margin-bottom:4px;">${f.nickname||f.file_name}</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+                  <button onclick="vaultDownload('${f.file_path}','${f.file_name}')" style="font-size:12px; padding:6px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif; font-weight:700;">⬇ Download</button>
+                  <button onclick="vaultToggleEdit('${f.id}')" style="font-size:12px; padding:6px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif; font-weight:700;">✏️ Edit</button>
+                  <button onclick="vaultConfirmDelete('${f.id}','${f.file_name.replace(/'/g,"\\'")}','${f.file_path}')" style="font-size:12px; padding:6px 12px; border-radius:6px; border:1px solid rgba(180,30,30,0.2); background:rgba(180,30,30,0.08); color:#c0392b; cursor:pointer; font-family:'Domine',serif; font-weight:700;">🗑 Delete</button>
+                </div>
+                <div id="vedit-${f.id}" style="display:none; margin-top:6px;">
+                  <input id="vnick-${f.id}" type="text" placeholder="Nickname" value="${f.nickname||''}"
+                    style="width:100%; padding:5px 7px; border-radius:5px; border:1px solid #b9913a; font-size:11px; font-family:'Domine',serif; margin-bottom:4px; box-sizing:border-box;" />
+                  <textarea id="vnotes-${f.id}" placeholder="Notes" rows="2"
+                    style="width:100%; padding:5px 7px; border-radius:5px; border:1px solid #b9913a; font-size:11px; font-family:'Domine',serif; resize:vertical; box-sizing:border-box;">${f.notes||''}</textarea>
+                  <div style="display:flex; gap:4px; margin-top:4px;">
+                    <button onclick="vaultSaveMeta('${f.id}')" style="flex:1; padding:5px; border-radius:5px; border:none; background:#8a6a1a; color:#fff; font-size:11px; cursor:pointer; font-family:'Domine',serif;">Save</button>
+                    <button onclick="vaultToggleEdit('${f.id}')" style="flex:1; padding:5px; border-radius:5px; border:1px solid rgba(0,0,0,0.15); background:transparent; color:#2f1a12; font-size:11px; cursor:pointer; font-family:'Domine',serif;">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+        }
+        html += `</div>`;
+        fp.innerHTML = html;
+      }
+
+      // documents
+      if (!docs.length) {
+        dp.innerHTML = `<div style="text-align:center; padding:20px; color:#5a4335; font-size:13px;">No documents uploaded yet.</div>`;
+      } else {
+        let html = '';
+        if (docs.length >= 2) {
+          html += `<button onclick="vaultDownloadAll('document')"
+            style="width:100%; padding:9px; border-radius:8px; border:1.5px solid rgba(120,81,19,0.3); background:rgba(255,255,255,0.4); color:#4a250f; font-size:13px; font-weight:700; font-family:'Domine',serif; cursor:pointer; margin-bottom:10px;">
+            ⬇ Download All Documents (${docs.length})</button>`;
+        }
+        for (const f of docs) {
+          const icon = vaultDocIcon(f.mime_type);
+          const sizeMb = f.file_size_kb ? (f.file_size_kb/1024).toFixed(1)+' MB' : '';
+          const dateStr = new Date(f.uploaded_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+          html += `
+            <div style="background:rgba(255,255,255,0.4); border-radius:10px; padding:12px; margin-bottom:8px; display:flex; gap:10px; align-items:flex-start;">
+              <div style="font-size:28px; flex-shrink:0;">${icon}</div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:13px; font-weight:700; color:#2f1a12; word-break:break-all;">${f.nickname||f.file_name}</div>
+                ${f.nickname ? `<div style="font-size:11px; color:#5a4335; font-style:italic;">${f.file_name}</div>` : ''}
+                <div style="font-size:11px; color:#6a4a1d; margin-top:2px;">${sizeMb}${sizeMb?' · ':''}${dateStr}</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+                  <button onclick="vaultDownload('${f.file_path}','${f.file_name}')" style="font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif;">⬇ Download</button>
+                  <button onclick="vaultToggleEdit('${f.id}')" style="font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif;">✏️ Edit</button>
+                  <button onclick="vaultConfirmDelete('${f.id}','${f.file_name.replace(/'/g,"\\'")}','${f.file_path}')" style="font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid rgba(180,30,30,0.2); background:rgba(180,30,30,0.08); color:#c0392b; cursor:pointer; font-family:'Domine',serif;">🗑 Delete</button>
+                </div>
+                <div id="vedit-${f.id}" style="display:none; margin-top:8px; background:rgba(255,255,255,0.5); border-radius:8px; padding:10px;">
+                  <input id="vnick-${f.id}" type="text" placeholder="Nickname / label" value="${f.nickname||''}"
+                    style="width:100%; padding:7px 9px; border-radius:6px; border:1px solid #b9913a; font-size:13px; font-family:'Domine',serif; margin-bottom:6px; box-sizing:border-box;" />
+                  <textarea id="vnotes-${f.id}" placeholder="Notes (optional)" rows="2"
+                    style="width:100%; padding:7px 9px; border-radius:6px; border:1px solid #b9913a; font-size:13px; font-family:'Domine',serif; resize:vertical; box-sizing:border-box;">${f.notes||''}</textarea>
+                  <div style="display:flex; gap:6px; margin-top:6px;">
+                    <button onclick="vaultSaveMeta('${f.id}')" style="flex:1; padding:7px; border-radius:6px; border:none; background:#8a6a1a; color:#fff; font-size:13px; cursor:pointer; font-family:'Domine',serif;">Save</button>
+                    <button onclick="vaultToggleEdit('${f.id}')" style="flex:1; padding:7px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:transparent; color:#2f1a12; font-size:13px; cursor:pointer; font-family:'Domine',serif;">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+        }
+        dp.innerHTML = html;
+      }
+    }
+
+    async function vaultSignedUrl(filePath) {
+      const { data, error } = await VAULT_SB.storage.from('vp-fair-documents').createSignedUrl(filePath, 3600);
+      if (error) return null;
+      return data.signedUrl;
+    }
+
+    async function vaultDownload(filePath, fileName) {
+      const url = await vaultSignedUrl(filePath);
+      if (!url) { alert('Could not get download link.'); return; }
+      const a = document.createElement('a');
+      a.href = url; a.download = fileName; a.target = '_blank';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      showMessage('✅ Download started.');
+    }
+
+    async function vaultDownloadAll(type) {
+      const files = vaultFiles.filter(f => f.file_type === type);
+      for (const f of files) {
+        await vaultDownload(f.file_path, f.file_name);
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+
+    function vaultToggleEdit(id) {
+      const el = document.getElementById('vedit-' + id);
+      if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+
+    async function vaultSaveMeta(id) {
+      const nickname = document.getElementById('vnick-'  + id)?.value.trim() || null;
+      const notes    = document.getElementById('vnotes-' + id)?.value.trim() || null;
+      const { error } = await VAULT_SB.rpc('update_vp_document_meta', { p_id: id, p_nickname: nickname, p_notes: notes });
+      if (error) { alert('Could not save. Please try again.'); return; }
+      const idx = vaultFiles.findIndex(f => f.id === id);
+      if (idx > -1) { vaultFiles[idx].nickname = nickname; vaultFiles[idx].notes = notes; }
+      await vaultRenderFiles();
+    }
+
+    function vaultConfirmDelete(id, fileName, filePath) {
+      if (!confirm(`Are you sure you want to delete "${fileName}"?\n\nThis will remove the file and it may not be possible to recover it.`)) return;
+      vaultDeleteFile(id);
+    }
+
+    async function vaultDeleteFile(id) {
+      const { error } = await VAULT_SB.rpc('soft_delete_vp_document', { p_id: id });
+      if (error) { alert('Could not delete. Please try again.'); return; }
+      vaultFiles = vaultFiles.filter(f => f.id !== id);
+      await vaultRenderFiles();
+      await vaultLoadStorage();
+    }
+
+    function vaultHandleDrop(e) {
+      e.preventDefault();
+      document.getElementById('vUploadZone').style.background = '';
+      vaultHandleFiles(e.dataTransfer.files);
+    }
+
+    function vaultDocIcon(mime) {
+      if (!mime) return '📄';
+      if (mime.includes('pdf')) return '📕';
+      if (mime.includes('word') || mime.includes('docx')) return '📝';
+      if (mime.includes('excel') || mime.includes('sheet')) return '📊';
+      if (mime.includes('zip')) return '🗜️';
+      return '📄';
+    }
+
+    function vaultCompressImage(file, maxPx = 1200, quality = 0.8) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const scale = Math.min(1, maxPx / img.width);
+            const canvas = document.createElement('canvas');
+            canvas.width  = Math.round(img.width  * scale);
+            canvas.height = Math.round(img.height * scale);
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(blob => resolve(blob), 'image/webp', quality);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function vaultHandleFiles(files) {
+      if (!files || !files.length) return;
+      const maxFileKb = vaultStorage.max_file_kb || 5120;
+      const maxStorKb = vaultStorage.max_storage_kb || 51200;
+      const usedKb    = vaultStorage.total_kb || 0;
+
+      for (const file of Array.from(files)) {
+        const isImage   = file.type.startsWith('image/');
+        const fileTab   = isImage ? 'images' : 'documents';
+        if (fileTab !== vaultTab) {
+          alert(`"${file.name}" is ${isImage?'an image':'a document'}. Please switch to the ${isImage?'Images':'Documents'} tab.`);
+          continue;
+        }
+        const fileSizeKb = Math.round(file.size / 1024);
+        if (fileSizeKb > maxFileKb * 1.5) { alert(`"${file.name}" is too large. Max is ${(maxFileKb/1024).toFixed(0)}MB.`); continue; }
+        if (usedKb + fileSizeKb > maxStorKb) { alert(`Not enough storage.`); continue; }
+
+        vaultShowProgress(`Uploading ${file.name}…`, 10);
+
+        let blob = file, finalName = file.name, mime = file.type;
+        if (isImage) {
+          vaultShowProgress(`Compressing…`, 30);
+          blob = await vaultCompressImage(file);
+          finalName = file.name.replace(/\.[^/.]+$/, '') + '.webp';
+          mime = 'image/webp';
+        }
+
+        const finalKb = Math.round(blob.size / 1024);
+        if (finalKb > maxFileKb) { alert(`Still too large after compression.`); vaultHideProgress(); continue; }
+
+        vaultShowProgress('Uploading…', 60);
+        const filePath = `${vaultUserId}/${vaultVpaId}/${Date.now()}_${finalName}`;
+        const { error: upErr } = await VAULT_SB.storage.from('vp-fair-documents').upload(filePath, blob, { contentType: mime, upsert: false });
+        if (upErr) { alert(`Upload failed for "${file.name}".`); vaultHideProgress(); continue; }
+
+        vaultShowProgress('Saving…', 85);
+        const { error: dbErr } = await VAULT_SB.from('vp_fair_documents').insert({
+          user_id: vaultUserId, vpa_id: vaultVpaId, fair_id: null,
+          file_name: file.name, file_path: filePath,
+          file_type: isImage ? 'image' : 'document',
+          file_size_kb: finalKb, mime_type: mime,
+          default_label: isImage ? 'Image' : 'Document',
+          fair_name_snapshot: vaultFairName,
+          season_year: vaultSeasonYear,
+          nickname: null, notes: null
+        });
+        if (dbErr) { await VAULT_SB.storage.from('vp-fair-documents').remove([filePath]); alert(`Could not save record.`); vaultHideProgress(); continue; }
+
+        vaultShowProgress('Done!', 100);
+        await new Promise(r => setTimeout(r, 400));
+        vaultHideProgress();
+      }
+      await vaultLoadFiles();
+      await vaultLoadStorage();
+    }
+
+    function vaultShowProgress(text, pct) {
+      const p = document.getElementById('vProgress');
+      if (p) { p.style.display = 'block'; document.getElementById('vProgressText').textContent = text; document.getElementById('vProgressFill').style.width = pct + '%'; }
+    }
+    function vaultHideProgress() {
+      const p = document.getElementById('vProgress');
+      if (p) { p.style.display = 'none'; document.getElementById('vProgressFill').style.width = '0%'; }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadPage();
+      const { vpaId, fairName, seasonYear } = getParams();
+      if (vpaId && fairName) await initVault(vpaId, fairName, seasonYear);
+    });
   </script>
 
   <footer>

@@ -525,17 +525,17 @@
     <p>Loading your profile…</p>
   </div>
 
-  <!-- TOP NAV -->
-  <nav class="topnav">
-    <a class="topnav-logo" href="/home.html">
-      <img src="/images/logo.png" alt="FairQuest" />
-      <span>FairQuest</span>
-    </a>
-    <div class="topnav-right">
-      <a href="/fairs/explore.html" class="nav-btn">🎪 Explore Fairs</a>
-      <a href="/index.html" class="nav-btn nav-btn-home">🏡 Home</a>
-    </div>
-  </nav>
+<nav class="topnav">
+  <a class="topnav-logo" href="/home.html">
+    <img src="/images/logo.png" alt="FairQuest" />
+    <span>FairQuest</span>
+  </a>
+  <div class="topnav-right" id="menuRight">
+    <a href="/fairs/explore.html" class="nav-btn">🎪 Fairs</a>
+    <a href="#" class="nav-btn" id="topMenuSocialButton" onclick="openSocial()" style="display:none;">👥 Social</a>
+  </div>
+</nav>
+<div id="menuEmail" style="background:#111; text-align:center; font-size:0.9rem; font-weight:bold; color:#d4af37; padding:4px 0; border-bottom: 2px solid #bb9457;"></div>
 
   <!-- PAGE -->
   <div class="page">
@@ -772,6 +772,40 @@ if (!data.profile?.username) {
 
     loadProfilePage();
   </script>
+<script>
+async function updateMenuBar() {
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const menuRight = document.getElementById("menuRight");
+  if (!menuRight) return;
 
+  const isLoggedIn = sessionData?.session?.user != null;
+
+  if (!isLoggedIn) {
+    menuRight.innerHTML = `
+      <a href="/fairs/explore.html" class="nav-btn">🎪 Fairs</a>
+      <a href="/user_login.html" class="nav-btn">Sign In</a>
+    `;
+    return;
+  }
+
+  const email = sessionData.session.user.email;
+  document.getElementById("menuEmail").innerHTML = email;
+
+  menuRight.innerHTML = `
+    <a href="/fairs/explore.html" class="nav-btn">🎪 Fairs</a>
+    <a href="#" class="nav-btn" id="topMenuSocialButton" onclick="openSocial()">👥 Social</a>
+    <a href="/profile/index.html" class="nav-btn">👤 Profile</a>
+    <a href="/profile/index.html?tab=applications" class="nav-btn">📋 Applications</a>
+    <a href="#" class="nav-btn" onclick="logout()">Logout</a>
+  `;
+}
+
+async function logout() {
+  await supabaseClient.auth.signOut();
+  window.location.href = '/index.html';
+}
+
+updateMenuBar();
+</script>
 </body>
 </html>

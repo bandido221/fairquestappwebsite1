@@ -16,230 +16,344 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Normalize & baseline consistency across browsers */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+  :root {
+    --gold:        #c9a84c;
+    --gold-light:  #f1df99;
+    --gold-dark:   #8a6a1a;
+    --parchment:   rgba(241, 223, 153, 0.93);
+    --bg:          #0d0a04;
+    --card-radius: 16px;
+  }
 
-body, h1, h2, p, a, span, strong, li, select, input, button {
-  font-family: 'Domine', serif;
-  font-weight: normal;
-  color: #f5e7e7;
-}
+  body {
+    font-family: 'Domine', serif;
+    background: var(--bg);
+    color: var(--gold-light);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding: 0;
+    text-align: center;
+  }
 
-a {
-  color: #0047ab;
-  text-decoration: none;
-}
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
 
-a:hover {
-  text-decoration: underline;
-}
+  /* ── TOP NAV ── */
+  .topnav {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: rgba(13, 10, 4, 0.95);
+    border-bottom: 1px solid rgba(201,168,76,0.25);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 56px;
+  }
+  .topnav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .topnav-logo img {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(201,168,76,0.3);
+  }
+  .topnav-logo span {
+    font-family: 'Cinzel', serif;
+    font-size: 17px;
+    color: var(--gold-light);
+    letter-spacing: 0.05em;
+  }
+  .topnav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-btn {
+    font-family: 'Domine', serif;
+    font-size: 13px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(201,168,76,0.3);
+    background: transparent;
+    color: var(--gold);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .nav-btn:hover {
+    background: rgba(201,168,76,0.12);
+    border-color: rgba(201,168,76,0.55);
+    color: var(--gold-light);
+  }
 
-    body {
-      background-color: #000;
-      font-family: 'Domine', serif;
-      color: #f0e6d2;
-      padding: 40px;
-      text-align: center;
-    }
-    h1 {
-      font-family: 'Cinzel', serif;
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-    }
-    h2 {
-      font-family: 'Cinzel', serif;
-      font-size: 1.8rem;
-      margin: 30px 0 10px;
-    }
-    select, input[type="text"] {
-      font-family: 'Domine', serif;
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: none;
-      font-weight: bold;
-      font-size: 1rem;
-      margin: 10px;
-      background-color: #bb9457;
-      color: black;
-    }
-    select:hover, input[type="text"]:hover {
-      background-color: #f2e1c1;
-    }
-    .dropdowns {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-.card {
-  background: rgba(214,197,126,0.88);
-  color: #3b1f1f;
-  border: 2px solid #aa8425;
-  border-radius: 12px;
-  padding: 20px;
-  max-width: 700px;
-  margin: 20px auto;
-  text-align: left;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
+  /* ── PAGE WRAP ── */
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 740px;
+    margin: 0 auto;
+    padding: 28px 16px 60px;
+  }
 
-.card * {
-  color: #3b1f1f !important;
-}
+  /* ── HEADER ── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .page-header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(22px, 6vw, 34px);
+    font-weight: 700;
+    color: var(--gold-light);
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .page-header p {
+    font-size: 14px;
+    color: var(--gold);
+    opacity: 0.85;
+  }
 
+  /* ── FILTERS ── */
+  .filters {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .filters select,
+  .filters input[type="text"] {
+    font-family: 'Domine', serif;
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(201,168,76,0.4);
+    background: rgba(201,168,76,0.12);
+    color: var(--gold-light);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    min-width: 160px;
+  }
+  .filters select option {
+    background: #1a1208;
+    color: var(--gold-light);
+  }
+  .filters select:hover,
+  .filters input[type="text"]:hover,
+  .filters select:focus,
+  .filters input[type="text"]:focus {
+    border-color: rgba(201,168,76,0.7);
+    background: rgba(201,168,76,0.18);
+  }
+  .filters input[type="text"]::placeholder {
+    color: rgba(241,223,153,0.5);
+  }
 
-    .top-banner {
-      width: 100%;
-      max-width: 600px;
-      display: block;
-      margin: 0 auto 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-    .logo {
-      width: 120px;
-      display: block;
-      margin: 0 auto 20px;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
-    }
-    .card-image {
-      width: 100%;
-      height: 180px;
-      background-color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .card-image img {
-      height: 100%;
-      width: auto;
-      object-fit: contain;
-      object-position: center;
-    }
-    .card-content {
-      padding: 16px;
-    }
-    .badge {
-      display: inline-block;
-      background-color: #bb9457;
-      color: black;
-      font-weight: bold;
-      border-radius: 6px;
-      padding: 4px 10px;
-      margin: 2px 4px;
-    }
-    .fair-link {
-      display: inline-block;
-      background-color: #bb9457;
-      color: black;
-      font-weight: bold;
-      padding: 8px 14px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-size: 1.2rem;
-      transition: background-color 0.2s ease;
-      margin-bottom: 10px;
-    }
-    .fair-link:hover {
-      background-color: #f2e1c1;
-      color: #000;
-    }
-    .nav-button {
-  display: inline-block;
-  background-color: #bb9457;
-  color: black;
-  text-decoration: none;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-weight: bold;
-  margin: 10px;
-  font-size: 1rem;
-}
-.nav-button:hover {
-  background-color: #f2e1c1;
-}
-/* NEW: centered message when there is no image */
-.no-image-msg {
-  font-weight: 600;
-  font-size: 1rem;
-  text-align: center;
-  padding: 0 8px;
-}
-.website-btn{
-  display:inline-block;
-  background:#2e7d32;
-  color:#fff;
-  padding:8px 14px;
-  border-radius:6px;
-  text-decoration:none;
-  font-weight:bold;
-}
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(201,168,76,0.25);
+  }
 
-.website-btn:hover{
-  background:#1b5e20;
-}
+  /* ── CARDS ── */
+  .card {
+    background: var(--parchment);
+    border-radius: var(--card-radius);
+    padding: 0;
+    margin-bottom: 16px;
+    box-shadow:
+      0 2px 0 rgba(201,168,76,0.35),
+      0 8px 28px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+    border: 1px solid rgba(201,168,76,0.4);
+    overflow: hidden;
+    text-align: left;
+  }
+  .card, .card * { color: #111 !important; }
 
-    .nav-home, .nav-add {
-      display: inline-block;
-      background-color: #bb9457;
-      color: black;
-      text-decoration: none;
-      padding: 10px 16px;
-      border-radius: 10px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-    .nav-home:hover, .nav-add:hover {
-      background-color: #f2e1c1;
-    }
-  </style>
+  .card-image {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    background: rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .no-image-msg {
+    font-size: 13px;
+    color: #888 !important;
+    font-style: italic;
+  }
+
+  .card-content {
+    padding: 18px 20px;
+  }
+
+  .fair-link {
+    font-family: 'Cinzel', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #111 !important;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 8px;
+    transition: opacity 0.15s;
+  }
+  .fair-link:hover { opacity: 0.75; text-decoration: underline; }
+
+  .badge {
+    display: inline-block;
+    background: rgba(201,168,76,0.3);
+    border: 1px solid rgba(201,168,76,0.5);
+    color: #111 !important;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 3px 9px;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .card-content p {
+    font-size: 13px;
+    color: #333 !important;
+    margin-bottom: 5px;
+    line-height: 1.5;
+  }
+
+  .website-btn {
+    display: inline-block;
+    background: #2e7d32;
+    color: #fff !important;
+    padding: 6px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .website-btn:hover { background: #1b5e20; }
+
+  /* ── BANNER & LOGO ── */
+  .top-banner {
+    width: 100%;
+    max-width: 600px;
+    display: block;
+    margin: 20px auto 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .logo {
+    width: 80px;
+    display: block;
+    margin: 0 auto 16px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  }
+
+  /* ── HOW TO USE ── */
+  .how-to {
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    text-align: left;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--gold);
+    line-height: 1.6;
+  }
+  .how-to h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--gold-light);
+    margin-bottom: 8px;
+    letter-spacing: 0.06em;
+  }
+</style>
 </head>
 <body>
-  <img src="/images/banner.png" alt="FairQuest Banner" class="top-banner" />
-  <header>
-    <img src="/images/logo.png" alt="FairQuest Logo" class="logo" />
-    <h1>🎪 Explore Renaissance Fairs</h1>
-    <p>Select a state or month, or search below:</p>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right" id="menuRight">
+      <a href="/index.html" class="nav-btn">🏠 Home</a>
+      <a href="/profile/index.html" class="nav-btn">👤 Profile</a>
+    </div>
+  </nav>
 
-    <div class="dropdowns">
+  <div class="page-wrap">
+    <img src="/images/banner.png" alt="FairQuest Banner" class="top-banner" />
+
+    <div class="page-header">
+      <h1>🎪 Explore Renaissance Fairs</h1>
+      <p>Select a state or month, or search by name below</p>
+    </div>
+
+    <div class="how-to">
+      <h2>How to Use This Page</h2>
+      This page lists active Renaissance fairs in our database. Use the state or month filters to narrow
+      results, or type a fair name in the search box. Each entry includes dates, location, and links to
+      official sites when available. If something looks out of date, let us know.
+    </div>
+
+    <div class="filters">
       <select id="stateDropdown">
-        <option value="">Select a state</option>
+        <option value="">🗺️ Select a state</option>
       </select>
       <select id="monthDropdown">
-        <option value="">Select a month</option>
+        <option value="">📅 Select a month</option>
       </select>
-      <a class="nav-button" href="/index.html">🏠 Home</a>
+      <input type="text" id="searchInput" placeholder="🔍 Search fairs by name..." />
     </div>
-    
 
-  </header>
-
-  <!-- Content section for AdSense "publisher-content" signal -->
-  <section style="max-width:760px;margin:28px auto 12px;padding:0 18px;text-align:left;">
-    <h2 style="font-family:'Cinzel',serif;margin:0 0 10px 0;font-size:1.6rem;">How to Use This Page</h2>
-    <p>
-      This page lists active Renaissance fairs in our database. Use the state or month filters to narrow
-      results, or type a fair name in the search box. Each fair entry includes dates, location, and links
-      to official sites when available. If something looks out of date, tell us—entries are edited by
-      anybody and we update records as organizers publish changes after we verify that the chnges are accurate.
-    </p>
-  </section>
-
-  <input
-  type="text"
-  id="searchInput"
-  placeholder="🔍 Search fairs by name..."
-
-  style="width: 50%; font-size: 1.1rem; background-color: white; color: black; border: 2px solid #bb9457; border-radius: 8px; padding: 10px;"
-/>
-  <div id="resultsContainer"></div>
+    <div class="section-label" id="sectionLabel">✨ Featured Fairs</div>
+    <div id="resultsContainer"></div>
+  </div>
   <script>
     const { createClient } = supabase;
     const supabaseClient = createClient(
@@ -291,17 +405,10 @@ a:hover {
     }
 
     function updateFeatured() {
-  const hotSpringsFair = allFairs.find(fair =>
-    fair.name.toLowerCase().includes("hot springs")
-  );
-
   resultsContainer.innerHTML = '';
-
-  if (hotSpringsFair) {
-    resultsContainer.appendChild(renderFairCard(hotSpringsFair));
-  } else {
-    resultsContainer.innerHTML = '<p>No Hot Springs fair found.</p>';
-  }
+  const shuffled = [...allFairs].sort(() => Math.random() - 0.5);
+  const featured = shuffled.slice(0, 5);
+  featured.forEach(fair => resultsContainer.appendChild(renderFairCard(fair)));
 }
 
     function renderFairCard(fair) {
@@ -358,16 +465,23 @@ function formatDateMMDDYY(dateStr){
   return `${mm}-${dd}-${yyyy.slice(-2)}`;
 }
 
-    searchInput.addEventListener("input", () => {
-      const query = searchInput.value.toLowerCase().trim();
-      resultsContainer.innerHTML = '';
-      if (query.length === 0) {
-        updateFeatured();
-        return;
-      }
-      const matches = allFairs.filter(fair => fair.name.toLowerCase().includes(query));
-      matches.forEach(fair => resultsContainer.appendChild(renderFairCard(fair)));
-    });
+   searchInput.addEventListener("input", () => {
+  const query = searchInput.value.toLowerCase().trim();
+  resultsContainer.innerHTML = '';
+  const label = document.getElementById('sectionLabel');
+  if (query.length === 0) {
+    label.textContent = '✨ Featured Fairs';
+    updateFeatured();
+    return;
+  }
+  label.textContent = '🔍 Search Results';
+  const matches = allFairs.filter(fair => fair.name.toLowerCase().includes(query));
+  if (matches.length === 0) {
+    resultsContainer.innerHTML = `<p style="color:var(--gold);text-align:center;padding:20px;">No fairs found matching "${query}"</p>`;
+    return;
+  }
+  matches.forEach(fair => resultsContainer.appendChild(renderFairCard(fair)));
+});
 
     loadFairs();
   </script>
@@ -410,5 +524,6 @@ function formatDateMMDDYY(dateStr){
   </script>
  
   
+</div><!-- /page-wrap -->
 </body>
 </html>

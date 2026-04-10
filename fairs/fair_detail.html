@@ -18,17 +18,236 @@
   <title>Fair Details | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <style>
+ <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
     body {
-      background-color: #000;
       font-family: 'Domine', serif;
-      color: #f8eaea; 
-      padding: 40px;
-      text-align: center;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
     }
-    h1, h2 {
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── TOP NAV ── */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 0 20px;
+      height: 56px;
+      flex-wrap: wrap;
+    }
+    .top-nav a,
+    .top-nav button {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .top-nav a:hover,
+    .top-nav button:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
+    }
+
+    /* ── PAGE WRAPPER ── */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 740px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+      text-align: left;
+    }
+
+    h1 {
       font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 34px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+      text-align: center;
+      margin-bottom: 6px;
     }
+
+    .page-subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: var(--gold);
+      opacity: 0.85;
+      margin-bottom: 24px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--parchment);
+      border-radius: var(--card-radius);
+      padding: 22px 20px;
+      margin-bottom: 18px;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
+    }
+    .card, .card * { color: #111 !important; }
+
+    .card h2 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(18px, 4vw, 24px);
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: #111 !important;
+    }
+
+    .card h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #111 !important;
+    }
+
+    .card p {
+      margin: 8px 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .card ul {
+      padding-left: 18px;
+      margin-top: 6px;
+    }
+
+    .card ul li {
+      font-size: 14px;
+      margin-bottom: 4px;
+      color: #111 !important;
+    }
+
+    /* fair image */
+    #fairImage {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      border: 2px solid rgba(201,168,76,0.4);
+    }
+
+    .no-image-msg {
+      font-size: 13px;
+      color: #555 !important;
+      text-align: center;
+      padding: 8px 0 12px;
+      font-style: italic;
+    }
+
+    /* website button */
+    .website-btn {
+      display: inline-block;
+      background: #2e7d32;
+      color: #fff !important;
+      padding: 6px 14px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 13px;
+    }
+    .website-btn:hover { background: #1b5e20; }
+
+    /* vendor/performer links */
+    .link {
+      color: #1a3a6b !important;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* ── ACTION BUTTONS (apply & favorite) ── */
+    .action-btns {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .btn-action {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-action:hover {
+      background: rgba(255,255,255,1);
+      transform: translateY(-1px);
+    }
+    .btn-action:active { transform: scale(0.98); }
+    .btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-action.is-favorite {
+  background: #6d2b2b;
+  border-color: #4a1a1a;
+  color: #f1df99 !important;
+}
+.btn-action.is-favorite:hover {
+  background: #7d3535;
+  border-color: #5a2a2a;
+}
+    .hint {
+      font-size: 12px;
+      color: #555 !important;
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* ── BANNER & LOGO (keep for now) ── */
     .top-banner, .logo {
       display: block;
       margin: 0 auto 20px;
@@ -36,107 +255,13 @@
     .top-banner {
       max-width: 600px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     .logo {
       max-width: 100px;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
     }
-    .card {
-      background: #a0955e;
-      color: #222;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 700px;
-      margin: 20px auto;
-      text-align: left;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    }
-    .card, .card * {
-  color: #000 !important;
-}
-    /* NEW: centered message when there is no image */
-.no-image-msg {
-  font-weight: 600;
-  font-size: 1rem;
-  text-align: center;
-  padding: 8px 0;
-}
-
-  .card h2, .card h3 {
-  color: #000 !important;
-}
-/* Ensure the website link renders black too */
-#fairWebsite a {
-  color: #000 !important;
-}
-
-    .card p {
-      margin: 8px 0;
-    }
-    .update-btn {
-      margin-top: 20px;
-      background-color: #bb9457;
-      color: black;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .update-btn:hover {
-      background-color: #d8c6a5;
-    }
-    .link {
-      color: #2a2a2a;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    /* TOP NAV BUTTONS */
-    .top-nav {
-      max-width: 700px;
-      margin: 0 auto 16px;
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .website-btn{
-  display:inline-block;
-  background:#2e7d32;
-  color:#fff !important;
-  padding:8px 16px;
-  border-radius:6px;
-  text-decoration:none;
-  font-weight:bold;
-}
-
-.website-btn:hover{
-  background:#1b5e20;
-}
-
-    .top-nav a,
-    .top-nav button {
-      display: inline-block;
-      background-color: #bb9457;
-      color: #000;
-      text-decoration: none;
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      font-family: 'Domine', serif;
-      font-size: 1rem;
-    }
-    .top-nav a:hover,
-    .top-nav button:hover {
-      background-color: #d8c6a5;
-    }
-
-  </style>
+</style>
 </head>
 <body>
   <img src="/images/banner.png" alt="FairQuest Banner" class="top-banner" />
@@ -177,15 +302,21 @@
 <ul id="weekendsList"></ul>
 
 
-  <button class="update-btn" id="applyBtn" style="display:none;">
-  📄 Apply To This Fair
-</button>
-
-<div class="hint" id="applyHint" style="display:none; margin-top:10px;">
+<div class="action-btns">
+  <button class="btn-action" id="applyBtn" style="display:none;">
+    📄 Apply To This Fair
+  </button>
+  <button class="btn-action" id="favoriteBtn" style="display:none;">
+    ❤️ Save to Favorites
+  </button>
+</div>
+<div class="hint" id="applyHint" style="display:none;">
   To apply, you must be logged in and have an approved Vendor/Performer profile.
 </div>
-  </div>
 
+</div><!-- close fairCard -->
+
+<div class="page-wrap">
   <div class="card" id="vendorsCard" style="display:none">
     <h3>🧺  Vendors</h3>
     <ul id="vendorList"></ul>
@@ -195,6 +326,7 @@
     <h3>🎭  Performers</h3>
     <ul id="performerList"></ul>
   </div>
+</div>
 
   <script>
     const supabaseClient = window.supabase.createClient(
@@ -361,7 +493,7 @@ weekendFields.forEach(([startKey, endKey]) => {
   }
 
   // show button
-  applyBtn.style.display = 'inline-block';
+  // applyBtn.style.display = 'inline-block'; // hidden for now
 applyBtn.onclick = () => {
   // apply page will handle 1 identity vs dropdown for multiple identities
   window.location.href = `/fair_admin/fair_info/fair_apply.html?fair_id=${fairRow.id}`;
@@ -455,6 +587,60 @@ document.getElementById('fairWebsite').innerHTML = data.website
 
 loadFair();
 loadShowcase();
+setupFavoriteButton();
+
+async function setupFavoriteButton() {
+  const btn = document.getElementById('favoriteBtn');
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return; // not logged in — keep button hidden
+
+  btn.style.display = 'inline-block';
+
+  // Check current favorite status
+  const { data: isFav, error } = await supabaseClient.rpc('app_is_favorite', {
+    p_entity_type: 'fair',
+    p_entity_id: fairId.toString()
+  });
+
+  updateFavBtn(btn, isFav);
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    const currentlyFav = btn.classList.contains('is-favorite');
+
+    try {
+      if (currentlyFav) {
+        await supabaseClient.rpc('app_remove_favorite', {
+          p_entity_type: 'fair',
+          p_entity_id: fairId.toString()
+        });
+        updateFavBtn(btn, false);
+      } else {
+        await supabaseClient.rpc('app_add_favorite', {
+          p_entity_type: 'fair',
+          p_entity_id: fairId.toString()
+        });
+        updateFavBtn(btn, true);
+      }
+    } catch (e) {
+      console.error('Favorite toggle error:', e);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+function updateFavBtn(btn, isFav) {
+  if (isFav) {
+    btn.textContent = '💔 Remove from Favorites';
+    btn.classList.add('is-favorite');
+    btn.style.color = '#cc0000';
+  } else {
+    btn.textContent = '❤️ Save to Favorites';
+    btn.classList.remove('is-favorite');
+    btn.style.color = '';
+  }
+}
 
   </script>
 </body>

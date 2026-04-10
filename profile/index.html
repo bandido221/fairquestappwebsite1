@@ -566,7 +566,7 @@
     </div>
 
     <!-- ② CHARACTER CARD -->
-    <div class="card" id="characterCard" style="display:none;">
+    <div class="card" id="characterCard" style="display:none !important;">
       <div class="card-title">🛡️ Character</div>
       <div class="char-grid" id="charGrid"></div>
     </div>
@@ -578,9 +578,13 @@
         <div class="skeleton" style="height:60px; border-radius:12px;"></div>
         <div class="skeleton" style="height:60px; border-radius:12px;"></div>
       </div>
-      <button class="settings-btn" onclick="window.location.href='settings.html'">
-        ⚙️ Account Settings
-      </button>
+     <button class="settings-btn" onclick="window.location.href='/profile/my_favorites_fairs.html'">
+  ❤️ My Favorite Fairs
+</button>
+
+<button class="settings-btn" onclick="window.location.href='settings.html'">
+  ⚙️ Account Settings
+</button>
     </div>
 
     <!-- ④ UPDATES CARD -->
@@ -691,10 +695,10 @@ if (!data.profile?.username) {
 
       /* ── ② CHARACTER CARD ── */
       const hasChar = p.character_class || p.character_clan || p.character_alignment;
-      if (hasChar) {
-        const charCard = document.getElementById('characterCard');
-        const charGrid = document.getElementById('charGrid');
-        charCard.style.display = 'block';
+     if (hasChar) {
+  const charCard = document.getElementById('characterCard');
+  const charGrid = document.getElementById('charGrid');
+  // charCard.style.display = 'block'; // hidden for now
 
         const items = [
           { label: 'Class',     val: p.character_class     || '—' },

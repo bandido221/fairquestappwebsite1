@@ -231,17 +231,29 @@
     padding: 18px 20px;
   }
 
-  .fair-link {
-    font-family: 'Cinzel', serif;
-    font-size: 17px;
-    font-weight: 700;
-    color: #111 !important;
-    text-decoration: none;
-    display: block;
-    margin-bottom: 8px;
-    transition: opacity 0.15s;
-  }
-  .fair-link:hover { opacity: 0.75; text-decoration: underline; }
+ .fair-link {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111 !important;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 12px;
+  background: var(--gold);
+  border: 1.5px solid var(--gold-dark);
+  border-radius: 10px;
+  padding: 10px 16px;
+  box-shadow: 0 4px 0 var(--gold-dark), 0 6px 10px rgba(0,0,0,0.25);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.fair-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--gold-dark), 0 8px 14px rgba(0,0,0,0.3);
+}
+.fair-link:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--gold-dark), 0 3px 6px rgba(0,0,0,0.2);
+}
 
   .badge {
     display: inline-block;
@@ -312,9 +324,56 @@
     margin-bottom: 8px;
     letter-spacing: 0.06em;
   }
+
+.btn-fav {
+  font-family: 'Domine', serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--gold-dark);
+  background: var(--gold);
+  color: #111 !important;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+.btn-fav:hover { background: var(--gold-light); transform: translateY(-1px); }
+.btn-fav.is-favorite {
+  background: #6d2b2b;
+  border-color: #4a1a1a;
+  color: #f1df99 !important;
+}
+.btn-fav.is-favorite:hover { background: #7d3535; }
+.btn-fav:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: rgba(13,10,4,0.95);
+  border: 1px solid rgba(201,168,76,0.4);
+  color: var(--gold-light) !important;
+  font-family: 'Domine', serif;
+  font-size: 14px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  z-index: 999;
+  transition: transform 0.3s ease;
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
 </style>
 </head>
 <body>
+  <div class="toast" id="toast"></div>
   <nav class="topnav">
     <a class="topnav-logo" href="/index.html">
       <img src="/images/logo.png" alt="FairQuest" />
@@ -361,7 +420,26 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
-    const states = [
+    let currentUser = null;
+let userFavorites = new Set();
+
+async function initUser() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  currentUser = user;
+  if (user) {
+    const { data } = await supabaseClient.rpc('app_get_my_favorite_fairs');
+    if (data) data.forEach(f => userFavorites.add(String(f.fair_id)));
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+const states = [
       'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
     ];
 
@@ -433,11 +511,12 @@ const imageHtml = imgUrl
   : '';
 
 
+const isFav = userFavorites.has(String(fair.id));
+
 div.innerHTML = `
 <div class="card">
   ${imageHtml}
   <div class="card-content">
-
       <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
       <p><span class="badge">${fair.state}</span></p>
       <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
@@ -450,9 +529,16 @@ div.innerHTML = `
         <p><strong>📅 Weekends:</strong></p>
         ${weekends.map(date => `<p>${date}</p>`).join('')}
       ` : '<p><strong>📅 Weekends:</strong> None listed</p>'}
+      <button class="btn-fav ${isFav ? 'is-favorite' : ''}" data-fair-id="${fair.id}">
+        ${isFav ? '💔 Remove from Favorites' : '❤️ Save to Favorites'}
+      </button>
     </div>
   </div>
 `;
+
+// attach click handler
+const btn = div.querySelector('.btn-fav');
+btn.addEventListener('click', () => toggleFavorite(btn, String(fair.id)));
 
       return div;
     }
@@ -483,7 +569,46 @@ function formatDateMMDDYY(dateStr){
   matches.forEach(fair => resultsContainer.appendChild(renderFairCard(fair)));
 });
 
-    loadFairs();
+    async function toggleFavorite(btn, fairId) {
+  if (!currentUser) {
+    showToast('🔒 Please log in to save favorites');
+    return;
+  }
+
+  btn.disabled = true;
+  const isFav = btn.classList.contains('is-favorite');
+
+  try {
+    if (isFav) {
+      await supabaseClient.rpc('app_remove_favorite', {
+        p_entity_type: 'fair',
+        p_entity_id: fairId
+      });
+      userFavorites.delete(fairId);
+      btn.classList.remove('is-favorite');
+      btn.textContent = '❤️ Save to Favorites';
+      btn.style.color = '';
+      showToast('Removed from favorites');
+    } else {
+      await supabaseClient.rpc('app_add_favorite', {
+        p_entity_type: 'fair',
+        p_entity_id: fairId
+      });
+      userFavorites.add(fairId);
+      btn.classList.add('is-favorite');
+      btn.textContent = '💔 Remove from Favorites';
+      btn.style.color = '#f1df99';
+      showToast('✅ Added to favorites!');
+    }
+  } catch (e) {
+    console.error('toggleFavorite error:', e);
+    showToast('⚠️ Something went wrong');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+initUser().then(() => loadFairs());
   </script>
   <script>
     // Track all fair-related button clicks with GA4

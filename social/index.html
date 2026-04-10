@@ -1917,7 +1917,13 @@ if(action === 'report-post'){
   }
 
   if(action === 'pin-post'){
-  await supabaseClient.from('social.post_post').update({ is_pinned: true }).eq('id', postId);
+  const { error } = await supabaseClient.rpc('pin_social_post', { p_post_id: postId });
+  if(error){
+    alert(error.message.includes('already pinned')
+      ? '📌 Another post is already pinned. Please unpin it first.'
+      : 'Error pinning post: ' + error.message);
+    return;
+  }
   await loadFeed();
   return;
 }

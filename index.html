@@ -24,209 +24,368 @@
  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3110601517763616"
      crossorigin="anonymous"></script>
 
-  <style>
-    body {
-      font-family: 'Domine', serif;
-      background-color: #000;
-      color: #f0e6d2;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-    header { padding: 20px; }
-    .top-banner {
-      width: 100%;
-      max-width: 600px;
-      display: block;
-      margin: 0 auto 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-    .logo {
-      width: 120px;
-      display: block;
-      margin: 0 auto 20px;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-    }
-    h1 {
-      font-family: 'Cinzel', serif;
-      font-size: 2.5rem;
-      margin: 20px 0;
-    }
-    p {
-      font-size: 1.1rem;
-      max-width: 600px;
-      margin: 0 auto 30px auto;
-      padding: 0 10px;
-    }
-    .button-group {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-bottom: 40px;
-    }
-    .btn {
-      background-color: #bb9457;
-      color: black;
-      font-weight: bold;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .btn:hover {
-      background-color: #d2b277;
-    }
-    footer {
-      font-size: 0.8rem;
-      padding: 20px;
-      color: #aaa;
-    }
-    footer a {
-      color: #aa8452;
-      text-decoration: none;
-      margin: 0 8px;
-    }
-    footer a:hover { text-decoration: underline; }
-    .social-icons {
-      margin-top: 20px;
-    }
-    .social-icons a {
-      display: inline-block;
-      margin: 0 10px;
-      color: #f0e6d2;
-      font-size: 24px;
-      transition: color 0.3s;
-    }
-    .social-icons a:hover {
-      color: #bb9457;
-    }
-   @media (max-width: 768px) {
-  header { padding: 40px 10px; }
-  h1 { font-size: 2rem; }
-  .btn { margin-top: 10px; } /* no forced full width */
-  .button-group { flex-direction: column; align-items: center; }
-}
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
 
-
-    .explore-btn {
-  font-size: 1.3rem;
-  padding: 16px 32px;
-  background-color: #d4af37; /* gold highlight */
-}
-.explore-btn:hover {
-  background-color: #e6c85c;
-}
-
-.top-menu a {
-  color: #f0e6d2;
-  font-family: 'Cinzel', serif;
-  font-size: 1rem;
-  text-decoration: none;
-  font-weight: bold;
-  padding: 6px 10px;
-}
-
-.top-menu a:hover {
-  color: #d4af37;
-}
-
-body {
-  padding-top: 70px; /* push page down so menu does NOT overlap content */
-}
-.top-menu {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background: #111;
-  display: flex;
-  justify-content: center;
-  z-index: 9999;
-  border-bottom: 2px solid #bb9457;
-}
-.menu-inner {
-  width: 100%;
-  max-width: 760px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-}
-.menu-row-1 {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.menu-left,
-.menu-right {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-}
-
-.menu-email-bar {
-  width: 100%;
-  text-align: center;
-  margin-top: 4px;
-  font-size: 0.9rem;
-  font-weight: bold;
-  color: #d4af37;
-}
-
-/* ⭐ MOBILE FONT SHRINK */
-@media (max-width: 768px) {
-  .menu-left a,
-  .menu-right a {
-    font-size: 0.85rem;
-    padding: 4px 8px;
+  :root {
+    --gold:        #c9a84c;
+    --gold-light:  #f1df99;
+    --gold-dark:   #8a6a1a;
+    --parchment:   rgba(241, 223, 153, 0.93);
+    --parchment-2: rgba(214, 197, 126, 0.90);
+    --ink:         #1e1208;
+    --ink-2:       #3b1f1f;
+    --bg:          #0d0a04;
+    --card-radius: 16px;
   }
-}
 
-.menu-left a,
-.menu-right a {
-  color: #f0e6d2;
-  font-family: 'Cinzel', serif;
-  font-size: 1rem;
-  text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: bold;
-}
+  body {
+    font-family: 'Domine', serif;
+    background: var(--bg);
+    color: var(--gold-light);
+    margin: 0;
+    padding: 0;
+    padding-top: 70px;
+    text-align: center;
+    overflow-x: hidden;
+  }
 
-.menu-left a:hover,
-.menu-right a:hover {
-  background-color: #bb9457;
-  color: #000;
-}
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
 
-.menu-btn {
-  background-color: #333;
-  border: 1px solid #bb9457;
-}
-.button-row {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 15px;
-}
+  /* ── TOP MENU ── */
+  .top-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(13, 10, 4, 0.95);
+    display: flex;
+    justify-content: center;
+    z-index: 9999;
+    border-bottom: 1px solid rgba(201,168,76,0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
 
-.primary-buttons .btn {
-  font-size: 1.2rem;
-  background-color: #d4af37;
-}
+  .menu-inner {
+    width: 100%;
+    max-width: 760px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+  }
 
-.primary-buttons .btn:hover {
-  background-color: #e6c85c;
-}
+  .menu-row-1 {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
+  .menu-left, .menu-right {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+  }
 
-  </style>
+  .menu-left a, .menu-right a {
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-size: 0.95rem;
+    text-decoration: none;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    border: 1px solid rgba(201,168,76,0.3);
+    background: transparent;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+
+  .menu-left a:hover, .menu-right a:hover {
+    background: rgba(201,168,76,0.12);
+    border-color: rgba(201,168,76,0.55);
+    color: var(--gold-light);
+  }
+
+  .menu-btn {
+    background: rgba(201,168,76,0.10) !important;
+  }
+
+  .menu-email-bar {
+    width: 100%;
+    text-align: center;
+    margin-top: 4px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--gold);
+  }
+
+  @media (max-width: 768px) {
+    .menu-left a, .menu-right a {
+      font-size: 0.8rem;
+      padding: 5px 8px;
+    }
+  }
+
+  /* ── IMAGES ── */
+  .top-banner {
+    width: 100%;
+    max-width: 600px;
+    display: block;
+    margin: 0 auto 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    width: 120px;
+    display: block;
+    margin: 0 auto 20px;
+    filter: drop-shadow(0 2px 8px rgba(201,168,76,0.3));
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 2.5rem;
+    margin: 20px 0;
+    color: var(--gold-light);
+    position: relative;
+    z-index: 1;
+  }
+
+  p {
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto 30px auto;
+    padding: 0 10px;
+    color: var(--gold-light);
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (max-width: 768px) {
+    header { padding: 40px 10px; }
+    h1 { font-size: 2rem; }
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    background: transparent;
+    color: var(--gold);
+    font-weight: bold;
+    padding: 11px 22px;
+    border: 1.5px solid rgba(201,168,76,0.5);
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: 'Domine', serif;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    position: relative;
+    z-index: 1;
+  }
+
+  .btn:hover {
+    background: rgba(201,168,76,0.12);
+    border-color: rgba(201,168,76,0.7);
+    color: var(--gold-light);
+  }
+
+  .explore-btn {
+    font-size: 1.2rem;
+    padding: 14px 30px;
+    background: rgba(201,168,76,0.15);
+    border-color: var(--gold);
+    color: var(--gold-light);
+  }
+
+  .explore-btn:hover {
+    background: rgba(201,168,76,0.25);
+  }
+
+  .button-group, .button-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (max-width: 768px) {
+    .button-group { flex-direction: column; align-items: center; }
+  }
+
+  /* ── CARDS ── */
+  #nearbyFairsCard,
+  #spotlightCard1,
+  #spotlightCard2,
+  #earlyTesterCard,
+  .spotlight-wrapper > div {
+    background: var(--parchment) !important;
+    border-radius: var(--card-radius) !important;
+    box-shadow:
+      0 2px 0 rgba(201,168,76,0.35),
+      0 8px 28px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.3) !important;
+    border: 1px solid rgba(201,168,76,0.4) !important;
+    color: #111 !important;
+    position: relative;
+    z-index: 1;
+  }
+
+  #nearbyFairsCard *,
+  #spotlightCard1 *,
+  #spotlightCard2 *,
+  #earlyTesterCard * {
+    color: #111 !important;
+  }
+
+  /* ── SECTIONS ── */
+  #about-fairquest,
+  #about-fairquest + section,
+  section {
+    position: relative;
+    z-index: 1;
+    color: var(--gold-light);
+  }
+
+  #about-fairquest h2,
+  section h2 {
+    font-family: 'Cinzel', serif;
+    color: var(--gold-light);
+    font-size: 1.7rem;
+    margin-bottom: 12px;
+  }
+
+  #about-fairquest p,
+  section p {
+    color: var(--gold-light);
+  }
+
+  /* ── SELECT / INPUTS ── */
+  select, input[type="text"] {
+    background: rgba(241,223,153,0.15);
+    border: 1px solid rgba(201,168,76,0.4);
+    color: var(--gold-light);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: 'Domine', serif;
+  }
+
+  select option {
+    background: #1a1208;
+    color: var(--gold-light);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    font-size: 0.85rem;
+    padding: 20px;
+    color: var(--gold);
+    border-top: 1px solid rgba(201,168,76,0.15);
+    margin-top: 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  footer a {
+    color: var(--gold);
+    text-decoration: none;
+    margin: 0 8px;
+    opacity: 0.8;
+  }
+
+  footer a:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+
+  .social-icons {
+    margin-top: 20px;
+  }
+
+  .social-icons a {
+    display: inline-block;
+    margin: 0 10px;
+    color: var(--gold-light);
+    font-size: 24px;
+    transition: color 0.3s;
+  }
+
+  .social-icons a:hover {
+    color: var(--gold);
+  }
+
+  /* ── MODAL ── */
+  #resetPasswordModal .modal-content {
+    background: #fdf7e1;
+    color: #3b1f1f;
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: 12px;
+  }
+
+  #resetPasswordModal button {
+    background: #8a1a1a;
+  }
+
+  /* ── LOCATION FORM ── */
+  #locationForm {
+    background: rgba(13,10,4,0.8) !important;
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 10px;
+  }
+
+  #locationForm input {
+    background: rgba(241,223,153,0.15);
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--gold-light);
+    border-radius: 6px;
+    padding: 8px;
+  }
+
+  #locationForm button {
+    background: var(--gold) !important;
+    color: #111 !important;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  /* ── PRIMARY BUTTONS ROW ── */
+  .primary-buttons .btn {
+    font-size: 1.15rem;
+    background: rgba(201,168,76,0.15);
+    border-color: var(--gold);
+    color: var(--gold-light);
+  }
+
+  .primary-buttons .btn:hover {
+    background: rgba(201,168,76,0.28);
+  }
+</style>
 </head>
 
 <body>
@@ -381,10 +540,17 @@ function applyManualLocation() {
 }
 </script>
 
-<div id="spotlightCard"
-     style="background:rgba(214,197,126,0.88); border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.3);
-            margin:40px auto; padding:26px; max-width:700px; text-align:center; color:#000;">
-              Loading featured vendor/performer...
+<div style="display:flex; gap:20px; max-width:700px; margin:40px auto; flex-wrap:wrap;">
+  <div id="spotlightCard1"
+       style="background:rgba(214,197,126,0.88); border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.3);
+              padding:26px; text-align:center; color:#000; flex:1; min-width:280px;">
+    Loading featured vendor/performer...
+  </div>
+  <div id="spotlightCard2"
+       style="background:rgba(214,197,126,0.88); border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.3);
+              padding:26px; text-align:center; color:#000; flex:1; min-width:280px;">
+    Loading featured vendor/performer...
+  </div>
 </div>
 
 
@@ -702,7 +868,7 @@ async function loadNearbyFairsCard(options = {}) {
       const endDate = formatNearbyFairDate(f.end_date);
       const dateLine = (startDate && endDate) ? `${startDate} – ${endDate}` : "";
  return `
-<div style="text-align:left; padding:14px 16px; background:rgba(214,197,126,0.88); border-radius:10px; margin:10px 0; color:#000;">
+<div style="text-align:left; padding:14px 16px; background:rgba(30,18,8,0.75); border-radius:10px; margin:10px 0; color:#f1df99; border: 1px solid rgba(201,168,76,0.3);">
   <a href="/fairs/fair_detail.html?id=${f.id}" style="color:#000; font-weight:bold; text-decoration:none;">
     ${f.name}
   </a>
@@ -845,56 +1011,63 @@ async function loadNearbyFairsCard(options = {}) {
 }
 
 
- async function loadSpotlight() {
-  const card = document.getElementById("spotlightCard");
+function renderSpotlightCard(cardId, item) {
+  const card = document.getElementById(cardId);
   if (!card) return;
 
-  const { data, error } = await supabaseClient.rpc("get_next_web_spotlight");
-
-  if (error) {
-    console.error("Spotlight RPC error:", error);
-    card.innerHTML = "No spotlight available.";
-    return;
-  }
-
-  const item = Array.isArray(data) ? data[0] : data;
-
-  if (!item) {
-    card.innerHTML = "No spotlight available.";
-    return;
-  }
+  const websiteBtn = item.website
+    ? `<a href="${item.website}" target="_blank" rel="noopener"
+         style="display:inline-block; margin-top:6px; padding:12px 20px;
+                background-color:#d4af37; color:#000; font-weight:bold;
+                border-radius:8px; text-decoration:none;">
+         🌐 Visit Website
+       </a>`
+    : "";
 
   card.innerHTML = `
-    <h2 style="font-family:'Cinzel',serif; font-size:1.6rem; margin-bottom:12px;">
+    <h2 style="font-family:'Cinzel',serif; font-size:1.4rem; margin-bottom:12px;">
       🎉 Featured Vendor / Performer
     </h2>
-
- <p style="font-size:1.2rem; margin-bottom:12px; color:#000; font-weight:bold;">
-  ${item.name}
-</p>
-
+    <p style="font-size:1.1rem; margin-bottom:12px; color:#000; font-weight:bold;">
+      ${item.name}
+    </p>
     <img src="${item.photo_url}"
          alt="${item.name}"
          loading="lazy"
          decoding="async"
-         style="width:100%; border-radius:10px; margin-bottom:20px;" />
-
-    <p style="font-size:1rem; margin:0 auto 20px auto; max-width:600px;">
+         style="width:100%; height:220px; object-fit:contain; border-radius:10px; margin-bottom:20px; background:#000;" />
+    <p style="font-size:1rem; margin:0 auto 20px auto;">
       ${item.description}
     </p>
-
-    <a href="${item.website}" target="_blank" rel="noopener"
-       style="display:inline-block; margin-top:6px; padding:12px 20px;
-              background-color:#d4af37; color:#000; font-weight:bold;
-              border-radius:8px; text-decoration:none;">
-      🌐 Visit Website
-    </a>
+    ${websiteBtn}
   `;
 }
 
+async function loadSpotlights() {
+  const { data: data1, error: error1 } = await supabaseClient.rpc("get_next_web_spotlight");
 
+  if (error1) {
+    console.error("Spotlight card 1 error:", error1);
+    return;
+  }
 
-loadSpotlight();
+  const item1 = Array.isArray(data1) ? data1[0] : data1;
+  if (!item1) return;
+
+  renderSpotlightCard("spotlightCard1", item1);
+
+  const { data: data2, error: error2 } = await supabaseClient.rpc("get_next_web_spotlight", { exclude_id: item1.id });
+
+  if (error2) {
+    console.error("Spotlight card 2 error:", error2);
+    return;
+  }
+
+  const item2 = Array.isArray(data2) ? data2[0] : data2;
+  if (item2) renderSpotlightCard("spotlightCard2", item2);
+}
+
+loadSpotlights();
 </script>
 <script>
 

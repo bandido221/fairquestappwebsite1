@@ -290,18 +290,19 @@
     ["newFairName","newFairAddress","newFairCity","newFairState","newFairZip","newFairWebsite"].forEach(id => {
       if (saved[id]) document.getElementById(id).value = saved[id];
     });
-    if (saved.fair_image_url) {
+    if (saved.newFairDescription) document.getElementById('newFairDescription').value = saved.newFairDescription;
+if (saved.fair_image_url) {
       document.getElementById("currentFairImage").innerHTML = `<img src="${saved.fair_image_url}" style="max-width:250px;border-radius:6px;">`;
       document.getElementById("removeImageBtn").style.display = "inline-block";
       sessionStorage.setItem("fair_image_url", saved.fair_image_url);
     }
-    ["newFairName","newFairAddress","newFairCity","newFairState","newFairZip","newFairWebsite"].forEach(id => {
-      document.getElementById(id).addEventListener("input", () => {
-        const draft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
-        draft[id] = document.getElementById(id).value;
-        sessionStorage.setItem("update_fair_draft", JSON.stringify(draft));
-      });
-    });
+ ["newFairName","newFairAddress","newFairCity","newFairState","newFairZip","newFairWebsite","newFairDescription"].forEach(id => {
+  document.getElementById(id).addEventListener("input", () => {
+    const draft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
+    draft[id] = document.getElementById(id).value;
+    sessionStorage.setItem("update_fair_draft", JSON.stringify(draft));
+  });
+});
 
     async function loadAdminDashboard() {
       const { data: { user }, error: userError } = await sb.auth.getUser();
@@ -322,8 +323,10 @@
       document.getElementById('currentFairCity').textContent      = fairData.city    || 'N/A';
       document.getElementById('currentFairState').textContent     = fairData.state   || 'N/A';
       document.getElementById('currentFairZip').textContent       = fairData.zip     || 'N/A';
-      document.getElementById('currentFairWebsite').textContent   = fairData.website || 'N/A';
-      document.getElementById('currentFairImage').innerHTML = fairData.image_url
+    document.getElementById('currentFairWebsite').textContent     = fairData.website     || 'N/A';
+document.getElementById('currentFairDescription').textContent = fairData.description  || '';
+document.getElementById('currentFairHours').textContent       = fairData.hours        || '';
+document.getElementById('currentFairImage').innerHTML = fairData.image_url
         ? `<img src="${fairData.image_url}" style="max-width:250px;border-radius:6px;">` : '';
 
       if (fairData.hours && fairData.hours.includes("to")) {
@@ -400,7 +403,8 @@
         city:      document.getElementById('newFairCity').value      || document.getElementById('currentFairCity').textContent,
         state:     document.getElementById('newFairState').value     || document.getElementById('currentFairState').textContent,
         zip:       document.getElementById('newFairZip').value       || document.getElementById('currentFairZip').textContent,
-        website:   document.getElementById('newFairWebsite').value   || document.getElementById('currentFairWebsite').textContent,
+        website:     document.getElementById('newFairWebsite').value        || document.getElementById('currentFairWebsite').textContent,
+description: document.getElementById('newFairDescription').value    || document.getElementById('currentFairDescription').textContent,
         fairImage: fairImageURL,
         hours:     formattedHours || document.getElementById('currentFairHours').textContent,
         weekends:  [],

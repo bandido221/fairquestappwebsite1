@@ -264,10 +264,26 @@ dropdown.addEventListener('change', async () => {
   <button class="logout" onclick="logout()">Logout</button>
 
   <script>
-    const supabaseClient = window.supabase.createClient(
+const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
+
+    // ── AUTH GATE ── must be admin to view this page
+    (async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = '/admin/index.html';
+        return;
+      }
+      const { data: isAdmin } = await supabaseClient
+        .rpc('is_admin_by_email', { p_email: session.user.email });
+      if (!isAdmin) {
+        await supabaseClient.auth.signOut();
+        window.location.href = '/admin/index.html';
+      }
+    })();
+
 // Admin Upload Photo Logic
 
 async function savePhotoToApplication() {

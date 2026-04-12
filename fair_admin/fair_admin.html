@@ -288,15 +288,13 @@
 
   <!-- TOP NAV -->
   <nav class="topnav">
-    <a class="topnav-logo" href="/home.html">
+    <a class="topnav-logo" href="/index.html">
       <img src="/images/logo.png" alt="FairQuest" />
       <span>FairQuest</span>
     </a>
-    <div class="topnav-links">
+  <div class="topnav-links">
       <a href="fair_admin.html" class="active">🏰 My Fairs</a>
-      <a href="#" id="navDashboard">📊 Dashboard</a>
-      <a href="#" id="navApplications">📋 Applications</a>
-      <a href="#" id="navUpdateFair">✏️ Update Fair</a>
+      <a href="/profile/index.html">👤 My Profile</a>
       <a href="#" class="nav-logout" id="navLogout">Log Out</a>
     </div>
   </nav>
@@ -380,13 +378,9 @@
 
     let globalFairId = null;
 
-    // Wire nav links once we have a fairId
-    function wireNav(fairId) {
+   function wireNav(fairId) {
       if (!fairId) return;
       globalFairId = fairId;
-      document.getElementById('navDashboard').href = `fair_info/fair_dashboard.html?fair_id=${fairId}`;
-      document.getElementById('navApplications').href = `fair_info/fair_applications.html?fair_id=${fairId}`;
-      document.getElementById('navUpdateFair').href = `fair_update.html?fair_id=${fairId}`;
     }
 
     document.getElementById('navLogout').addEventListener('click', async (e) => {

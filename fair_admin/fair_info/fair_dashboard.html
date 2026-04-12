@@ -140,15 +140,16 @@
 <body>
 
   <nav class="topnav">
-    <a class="topnav-logo" href="/home.html">
+    <a class="topnav-logo" href="/index.html">
       <img src="/images/logo.png" alt="FairQuest" />
       <span>FairQuest</span>
     </a>
-    <div class="topnav-links">
+   <div class="topnav-links">
       <a href="../fair_admin.html">🏰 My Fairs</a>
       <a href="#" class="active">📊 Dashboard</a>
       <a href="#" id="navApplications">📋 Applications</a>
       <a href="#" id="navUpdateFair">✏️ Update Fair</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
     </div>
   </nav>
 
@@ -182,7 +183,7 @@
 
   <!-- Fair Info -->
   <div class="card" id="fairCard">
-    <a href="/home.html">
+    <a href="/index.html">
       <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
     </a>
     <h2>Fair Info</h2>
@@ -239,6 +240,12 @@
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
+
+    document.getElementById('navLogout').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await supabaseClient.auth.signOut();
+      window.location.href = '/index.html';
+    });
 
     function getFairIdFromUrl() {
       const params = new URLSearchParams(window.location.search);

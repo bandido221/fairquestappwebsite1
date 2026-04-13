@@ -221,6 +221,12 @@ ${data.photoUrl ? `<p><strong>Photo:</strong><br><img src="${data.photoUrl}" sty
 const { data: user } = await sb.auth.getUser();
       console.log("user ID going into insert:", user?.user?.id);
 
+      if (!user?.user?.id) {
+        msg.textContent = '❌ You must be logged in to submit an application.';
+        msg.className = 'error';
+        return;
+      }
+
       const { data: appData, error: insertError } = await sb
   .from('vendor_performer_applications')
   .insert([{
@@ -270,8 +276,11 @@ data.fairs.forEach(f => {
 
 // Insert known fairs
 if (fairRows.length > 0) {
+  console.log("Inserting fair rows:", JSON.stringify(fairRows));
+  console.log("App ID:", appData.id);
   const { error: fairError } = await sb.from('vendor_application_fairs').insert(fairRows);
   if (fairError) {
+    console.error("Fair insert error:", fairError);
     msg.textContent = '⚠️ Application saved, but failed to link fair(s): ' + fairError.message;
     msg.className = 'error';
     return;

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FairQuest — How It Works | Guide for Fair Owners</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Domine', serif;
+      background: #0d0d0d;
+      color: #f0e6d2;
+      margin: 0; padding: 0;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      background: #1a1208;
+      border-bottom: 2px solid #3d2e0e;
+      padding: 20px 40px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .site-header img { width: 48px; height: 48px; border-radius: 10px; }
+    .site-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 24px; color: #f1df99;
+      margin: 0;
+    }
+    .site-header p { margin: 2px 0 0; font-size: 14px; color: #bb9457; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1a1208 0%, #2a1e0a 100%);
+      border-bottom: 1px solid #3d2e0e;
+      padding: 60px 40px;
+      text-align: center;
+    }
+    .hero h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 32px; color: #f1df99;
+      margin: 0 0 16px;
+    }
+    .hero p {
+      font-size: 16px; color: #c8aa6e;
+      max-width: 640px; margin: 0 auto; line-height: 1.7;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* ── SECTION ── */
+    .section {
+      margin-bottom: 60px;
+    }
+    .section-label {
+      display: inline-block;
+      background: #bb7a28;
+      color: #fff;
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+    .section h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 22px; color: #f1df99;
+      margin: 0 0 8px;
+    }
+    .section .section-intro {
+      font-size: 15px; color: #c8aa6e;
+      line-height: 1.7; margin-bottom: 24px;
+    }
+
+    /* ── STEPS ── */
+    .steps { display: flex; flex-direction: column; gap: 20px; }
+    .step {
+      background: rgba(241, 223, 153, 0.08);
+      border: 1px solid rgba(241, 223, 153, 0.15);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex; gap: 20px; align-items: flex-start;
+    }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #bb7a28; color: #fff;
+      font-family: 'Cinzel', serif; font-size: 16px; font-weight: bold;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-body { flex: 1; }
+    .step-body h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 16px; color: #f1df99;
+      margin: 0 0 6px;
+    }
+    .step-body p {
+      font-size: 14px; color: #c8aa6e;
+      line-height: 1.7; margin: 0 0 14px;
+    }
+
+    /* ── IMAGE PLACEHOLDER ── */
+    .img-placeholder {
+      background: rgba(0,0,0,0.4);
+      border: 2px dashed rgba(241, 223, 153, 0.3);
+      border-radius: 10px;
+      padding: 30px 20px;
+      text-align: center;
+      color: rgba(241, 223, 153, 0.5);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+    .img-placeholder .ph-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+    .img-placeholder strong { display: block; color: rgba(241,223,153,0.7); font-size: 14px; margin-bottom: 4px; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: rgba(241, 223, 153, 0.1);
+      margin: 40px 0;
+    }
+
+    /* ── INFO CARD ── */
+    .info-card {
+      background: rgba(187, 122, 40, 0.12);
+      border: 1px solid rgba(187, 122, 40, 0.3);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    .info-card h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 15px; color: #f1df99;
+      margin: 0 0 8px;
+    }
+    .info-card p {
+      font-size: 14px; color: #c8aa6e;
+      line-height: 1.7; margin: 0;
+    }
+
+    /* ── GOLD BADGE ── */
+    .gold-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(241, 223, 153, 0.15);
+      border: 1px solid rgba(241, 223, 153, 0.3);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 13px; color: #f1df99;
+      margin-bottom: 16px;
+    }
+
+    /* ── TWO COL ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    @media (max-width: 600px) {
+      .two-col { grid-template-columns: 1fr; }
+      .step { flex-direction: column; }
+      .site-header { padding: 16px 20px; }
+      .hero { padding: 40px 20px; }
+      .hero h2 { font-size: 24px; }
+    }
+
+    .feature-box {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(241,223,153,0.15);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .feature-box h4 {
+      font-family: 'Cinzel', serif;
+      font-size: 14px; color: #f1df99;
+      margin: 0 0 6px;
+    }
+    .feature-box p {
+      font-size: 13px; color: #c8aa6e;
+      line-height: 1.6; margin: 0;
+    }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      background: #1a1208;
+      border-top: 1px solid #3d2e0e;
+      padding: 30px 40px;
+      text-align: center;
+      font-size: 13px; color: #bb9457;
+    }
+    .site-footer strong { color: #f1df99; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <img src="/images/logo.png" alt="FairQuest" onerror="this.style.display='none'" />
+    <div>
+      <h1>FairQuest</h1>
+      <p>Fair Owner & Vendor Guide</p>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h2>How FairQuest Works</h2>
+    <p>
+      A complete guide for fair owners and vendors — from setting up your fair to receiving applications,
+      tracking payments, and managing your vendor directory.
+    </p>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- PART 1: FOR THE FAIR OWNER -->
+    <!-- ══════════════════════════════════════ -->
+
+    <div class="section">
+      <span class="section-label">PART 1 — FOR THE FAIR OWNER</span>
+      <h2>Setting Up Your Fair on FairQuest</h2>
+      <p class="section-intro">
+        Once your fair is added to FairQuest and set up as a Gold tier fair, you'll have access to a full admin panel.
+        Here's how to get everything ready before your vendors start applying.
+      </p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Log In & Go to Your Dashboard</h3>
+            <p>
+              Log into FairQuest with your account. From the main menu go to <strong>My Fairs</strong>,
+              then click on your fair to open your <strong>Fair Dashboard</strong>. This is your main control center
+              for everything — fair info, applications, vendors, and payments.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the Fair Dashboard main page
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Update Your Fair Information</h3>
+            <p>
+              Click <strong>Update Fair</strong> to fill in your fair's details — name, address, dates for each weekend,
+              hours of operation, description, and your fair image. This is what vendors and attendees will see on
+              your public FairQuest page. Make sure your weekend dates are correct — they are used for pricing and payment tracking.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the Update Fair page showing fields and weekend dates
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Set Your Weekend Pricing</h3>
+            <p>
+              Go to <strong>Vendor &amp; Performer Directory → Manage Weekend Pricing</strong>.
+              For each weekend you added, set three prices:
+            </p>
+            <div class="two-col">
+              <div class="feature-box">
+                <h4>🧺 Artisan / Craft Vendors</h4>
+                <p>The price vendors pay your fair per weekend</p>
+              </div>
+              <div class="feature-box">
+                <h4>🍖 Food Vendors</h4>
+                <p>The price food vendors pay your fair per weekend (usually different from artisan vendors)</p>
+              </div>
+              <div class="feature-box">
+                <h4>🎭 Performers</h4>
+                <p>The fee your fair pays performers per weekend</p>
+              </div>
+              <div class="feature-box">
+                <h4>📅 3-Day Weekends</h4>
+                <p>You can set a different price for longer weekends — the system shows the number of days automatically</p>
+              </div>
+            </div>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the Weekend Pricing page
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Create Your Application Forms</h3>
+            <p>
+              Go to <strong>Applications → Manage Application Forms</strong>. You can create one form for each type:
+              Artisan/Craft Vendors, Food Vendors, and Performers. Each form has its own questions and contract.
+              You write your vendor rules and terms in plain text — vendors must read and agree before they can submit.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the Manage Application Forms page showing the three form types
+            </div>
+            <div class="img-placeholder" style="margin-top:10px;">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the form editor showing custom questions
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Tell Your Vendors to Create a FairQuest Account &amp; Apply</h3>
+            <p>
+              Once your forms are ready, tell your vendors and performers to create a free FairQuest account.
+              Once they log in, they can find your fair, click <strong>Apply</strong>, and submit their application
+              directly through the system. Their profile information is pulled automatically — they just answer your
+              custom questions, pick which weekends they want to attend, read and agree to your contract, and submit.
+            </p>
+            <div class="info-card">
+              <h3>📢 What to tell your vendors</h3>
+              <p>
+                "Create a free account at <strong>fairquest.com</strong>, search for our fair, and click Apply.
+                Your contact info will be filled in automatically. Just answer the questions, pick your weekends,
+                and agree to the contract. That's it!"
+              </p>
+            </div>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the vendor-facing apply page
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- PART 2: REVIEWING APPLICATIONS -->
+    <!-- ══════════════════════════════════════ -->
+
+    <div class="section">
+      <span class="section-label">PART 2 — REVIEWING APPLICATIONS</span>
+      <h2>Managing Incoming Applications</h2>
+      <p class="section-intro">
+        Once vendors start applying, you'll see everything in your Applications page.
+        Here's how to review and manage them.
+      </p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>View All Applications</h3>
+            <p>
+              From your dashboard click <strong>Applications</strong>. You'll see all submissions grouped by type —
+              Artisan Vendors, Food Vendors, and Performers. Each row shows the applicant's name, status, and when they applied.
+              Use the search and filters to find specific applicants quickly.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the Applications list page
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Review Each Application</h3>
+            <p>
+              Click <strong>Review Application</strong> on any row to see the full details — their answers,
+              uploaded files, mailing address, and whether they accepted the contract. You can approve or decline
+              from this page.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the Application Detail page
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Application Summary on Dashboard</h3>
+            <p>
+              Your dashboard always shows a live summary — how many vendors are in review, approved, or declined,
+              broken down by vendor type. So you can see at a glance where things stand.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the Applications Summary section on the dashboard
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- PART 3: VENDOR DIRECTORY -->
+    <!-- ══════════════════════════════════════ -->
+
+    <div class="section">
+      <span class="section-label">PART 3 — VENDOR DIRECTORY</span>
+      <h2>Managing Your Vendor &amp; Performer Directory</h2>
+      <p class="section-intro">
+        The Vendor &amp; Performer Directory is your master list of everyone who has applied to your fair.
+        It tracks who's new, who's returning, and who you want to invite back next year.
+      </p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>New vs Returning Applicants</h3>
+            <p>
+              Every applicant is automatically tagged as <strong>🆕 New</strong> or <strong>🔄 Returning</strong>.
+              The system tracks how many years they've applied to your fair. For your first year on FairQuest,
+              you can manually set the correct number of years for vendors who have been with you before the system existed.
+              After that, it updates automatically every year.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the Vendor Directory showing new/returning badges and years count
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Set Invite Status for Next Year</h3>
+            <p>
+              For each vendor or performer, you can set their invite status:
+            </p>
+            <div class="two-col">
+              <div class="feature-box">
+                <h4>✅ Will Invite</h4>
+                <p>This person will get an invitation to apply again next year</p>
+              </div>
+              <div class="feature-box">
+                <h4>🤔 Maybe</h4>
+                <p>Undecided — you can review and decide later</p>
+              </div>
+              <div class="feature-box" style="grid-column: 1 / -1;">
+                <h4>❌ Will Not Invite</h4>
+                <p>This person will not receive an invitation. Add a note explaining why for your own records.</p>
+              </div>
+            </div>
+            <div class="img-placeholder" style="margin-top:14px;">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of a vendor row showing invite status dropdown and notes field
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Add Notes Per Vendor</h3>
+            <p>
+              Add private notes to any vendor or performer — only your admin team can see these.
+              Use them to track important details like "great vendor, always on time" or "late payment last year".
+              All changes are logged automatically with who made the change and when.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the notes field on a vendor row
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- PART 4: PAYMENT TRACKING -->
+    <!-- ══════════════════════════════════════ -->
+
+    <div class="section">
+      <span class="section-label">PART 4 — PAYMENT TRACKING</span>
+      <h2>Tracking Payments</h2>
+      <p class="section-intro">
+        FairQuest does not process payments directly — vendors pay you through PayPal or however you prefer.
+        But FairQuest gives you a fast way to track who has paid, for which weekends, and save the PayPal reference.
+      </p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Payment Tracking Page</h3>
+            <p>
+              Go to <strong>Payment Tracking</strong> from your dashboard. You'll see every vendor and performer
+              with a row for each weekend they signed up for. Each row shows how much is due and the current payment status.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the Payment Tracking page
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Mark a Payment as Received</h3>
+            <p>
+              When a vendor sends payment (e.g. via PayPal), search for them by name or email.
+              Enter the amount paid, paste the PayPal reference or note, change the status to <strong>✅ Paid</strong>,
+              and click Save. The system records who marked it paid and when.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of marking a payment as paid with PayPal reference
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Performers Are Different</h3>
+            <p>
+              For performers, the payment direction is reversed — your fair pays them, not the other way around.
+              The payment tracking page shows this clearly, with "Fee" instead of "Due" and tracks how much
+              your fair has paid out to each performer per weekend.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of a performer payment row showing fee owed by fair
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- PART 5: FOR THE VENDOR -->
+    <!-- ══════════════════════════════════════ -->
+
+    <div class="section">
+      <span class="section-label">PART 5 — FOR VENDORS &amp; PERFORMERS</span>
+      <h2>How Vendors &amp; Performers Apply</h2>
+      <p class="section-intro">
+        This section explains the vendor experience — what they see and how they apply to your fair.
+      </p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Create a FairQuest Account</h3>
+            <p>
+              Vendors and performers go to <strong>fairquest.com</strong> and create a free account.
+              They fill in their profile — business name, description, photos, contact info, and type
+              (vendor, food vendor, or performer). This profile is used across all the fairs they apply to.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the vendor profile / account creation page
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Find the Fair &amp; Click Apply</h3>
+            <p>
+              Once logged in, the vendor finds your fair on FairQuest. Gold tier fairs show an
+              <strong>Apply</strong> button. They click it and the application opens — their
+              contact info and profile details are already filled in automatically.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the fair listing page showing the Apply button
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Fill Out the Application</h3>
+            <p>
+              The vendor answers your custom questions, selects which weekends they want to attend,
+              reads and accepts your contract, then submits. The whole process takes just a few minutes.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot of the vendor application form with weekend picker and contract
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Fair Admin Reviews &amp; Approves</h3>
+            <p>
+              After the vendor submits, the application appears in your admin Applications page.
+              You review it, approve or decline, and the vendor gets notified. Once approved,
+              they appear in your Vendor Directory and payment tracking automatically.
+            </p>
+            <div class="img-placeholder">
+              <span class="ph-icon">🖼️</span>
+              <strong>ADD IMAGE HERE</strong>
+              Screenshot showing the flow from submitted application to approved
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- QUICK REFERENCE -->
+    <!-- ══════════════════════════════════════ -->
+
+    <div class="section">
+      <span class="section-label">QUICK REFERENCE</span>
+      <h2>Gold Tier Features at a Glance</h2>
+      <p class="section-intro">Everything included with a Gold tier fair on FairQuest.</p>
+
+      <div class="two-col">
+        <div class="feature-box">
+          <h4>📋 Online Applications</h4>
+          <p>Custom forms for vendors, food vendors, and performers. Vendors apply in minutes.</p>
+        </div>
+        <div class="feature-box">
+          <h4>📄 Vendor Contracts</h4>
+          <p>Your terms and rules built into the form. Vendors must agree before submitting.</p>
+        </div>
+        <div class="feature-box">
+          <h4>📒 Vendor Directory</h4>
+          <p>Master list of all applicants with new/returning tracking, invite status, and notes.</p>
+        </div>
+        <div class="feature-box">
+          <h4>💳 Payment Tracking</h4>
+          <p>Track payments per vendor per weekend. Save PayPal references. Know who has paid.</p>
+        </div>
+        <div class="feature-box">
+          <h4>📊 Applications Dashboard</h4>
+          <p>Live summary of all applications — total, in review, approved, declined by type.</p>
+        </div>
+        <div class="feature-box">
+          <h4>📅 Multi-Weekend Pricing</h4>
+          <p>Set different prices per weekend, per vendor type. 3-day weekends supported.</p>
+        </div>
+        <div class="feature-box">
+          <h4>🔄 Returning Vendor Tracking</h4>
+          <p>Automatically tracks years at your fair. Manually adjust for pre-FairQuest history.</p>
+        </div>
+        <div class="feature-box">
+          <h4>📝 Change History</h4>
+          <p>Every change is logged — who changed what and when. Full audit trail.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <p><strong>FairQuest</strong> — The modern platform for Renaissance fair management.</p>
+    <p style="margin-top:6px;">Questions? Contact us at <strong>support@fairquest.com</strong></p>
+  </footer>
+
+</body>
+</html>

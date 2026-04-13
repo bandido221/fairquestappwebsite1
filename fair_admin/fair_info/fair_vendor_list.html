@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vendor & Performer Directory | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Domine', serif;
+      background: #0a0a0a;
+      color: #f0e6d2;
+      margin: 0; padding: 0;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      background: #1a1208;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links a.active { background: rgba(241,223,153,0.18); color: #f1df99; font-weight: bold; }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18); color: #f4a0a0;
+      margin-left: 8px; border: 1px solid rgba(180,50,50,0.3);
+    }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+
+    /* ── LAYOUT ── */
+    .page-body { padding: 16px 20px 50px; max-width: 1100px; margin: 0 auto; }
+
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+
+    h1 { font-family: 'Cinzel', serif; font-size: 22px; color: #f1df99; margin: 8px 0 16px; }
+
+    .card {
+      background: rgba(241, 223, 153, 0.88);
+      padding: 22px 24px; border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+      margin-bottom: 20px; color: #3b1f1f; text-align: left;
+    }
+    .card h2 { font-family: 'Cinzel', serif; font-size: 16px; margin: 0 0 14px; color: #3b1f1f; }
+
+    /* ── BUTTONS ── */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .btn {
+      background-color: #4CAF50; color: #fff;
+      padding: 10px 16px; border: none; border-radius: 8px;
+      font-size: 15px; font-family: 'Domine', serif;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn:hover { background-color: #43a047; }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #222; }
+    .btn-amber { background-color: #bb7a28; }
+    .btn-amber:hover { background-color: #a06820; }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 14px; align-items: center;
+    }
+    .filter-bar input[type="text"] {
+      flex: 1; min-width: 180px; padding: 9px 12px;
+      border-radius: 8px; border: 1px solid rgba(0,0,0,0.2);
+      font-size: 14px; font-family: 'Domine', serif;
+      background: rgba(255,255,255,0.85); color: #111;
+    }
+    .filter-bar select {
+      padding: 9px 12px; border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2); font-size: 14px;
+      font-family: 'Domine', serif; background: rgba(255,255,255,0.85);
+      color: #111; cursor: pointer;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: 'Cinzel', serif; font-size: 16px;
+      margin: 0 0 12px; color: #3b1f1f;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-count {
+      background: rgba(0,0,0,0.12); font-size: 12px;
+      padding: 2px 8px; border-radius: 999px; font-family: 'Domine', serif;
+    }
+
+    /* ── DIRECTORY ROWS ── */
+    .list { display: flex; flex-direction: column; gap: 10px; }
+
+    .dir-row {
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 10px; padding: 14px 16px;
+    }
+
+    .dir-row-top {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+
+    /* Avatar */
+    .avatar {
+      width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: bold; color: #fff;
+      text-transform: uppercase; font-family: 'Cinzel', serif;
+    }
+    .avatar-vendor    { background: #6d4c2a; }
+    .avatar-food      { background: #c0622a; }
+    .avatar-performer { background: #4a3a8f; }
+
+    .dir-meta { flex: 1 1 auto; min-width: 0; }
+    .dir-name {
+      font-weight: bold; font-size: 15px; color: #3b1f1f;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+    .dir-email { font-size: 13px; color: #5c3a1e; margin-bottom: 4px; }
+    .dir-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+    /* Badges */
+    .badge {
+      display: inline-block; padding: 2px 9px; border-radius: 999px;
+      font-size: 11px; font-weight: bold;
+    }
+    .badge-new       { background: rgba(76,175,80,0.2);  color: #1a5c1e; border: 1px solid rgba(76,175,80,0.4); }
+    .badge-returning { background: rgba(187,122,40,0.2); color: #5c3a1e; border: 1px solid rgba(187,122,40,0.4); }
+    .badge-yes       { background: rgba(76,175,80,0.2);  color: #1a5c1e; border: 1px solid rgba(76,175,80,0.4); }
+    .badge-maybe     { background: rgba(240,180,20,0.2); color: #7a5200; border: 1px solid rgba(240,180,20,0.4); }
+    .badge-never     { background: rgba(200,50,50,0.18); color: #8b1a1a; border: 1px solid rgba(200,50,50,0.3); }
+
+    /* Editable fields row */
+    .dir-row-edit {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-top: 12px; align-items: center;
+      padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.1);
+    }
+    .dir-row-edit label { font-size: 13px; font-weight: bold; color: #3b1f1f; }
+    .dir-row-edit select, .dir-row-edit input[type="number"] {
+      padding: 7px 10px; border-radius: 7px;
+      border: 1px solid rgba(0,0,0,0.2); font-size: 14px;
+      font-family: 'Domine', serif; background: rgba(255,255,255,0.9);
+      color: #111;
+    }
+    .dir-row-edit input[type="text"] {
+      flex: 1; min-width: 200px; padding: 7px 10px; border-radius: 7px;
+      border: 1px solid rgba(0,0,0,0.2); font-size: 14px;
+      font-family: 'Domine', serif; background: rgba(255,255,255,0.9);
+      color: #111;
+    }
+    .btn-save-row {
+      background: #4CAF50; color: #fff; border: none;
+      border-radius: 7px; padding: 7px 14px; font-size: 14px;
+      font-family: 'Domine', serif; cursor: pointer; transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-save-row:hover { background: #43a047; }
+    .save-status { font-size: 12px; color: #1a5c1e; font-weight: bold; min-width: 60px; }
+
+    .empty-msg {
+      text-align: center; padding: 20px 0;
+      font-size: 14px; color: #5c3a1e; opacity: 0.85;
+    }
+
+    /* ── LOADER ── */
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; flex-direction: column; gap: 16px;
+    }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner {
+      border: 5px solid rgba(255,255,255,0.15);
+      border-top: 5px solid #bb9457;
+      border-radius: 50%; width: 52px; height: 52px;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @media (max-width: 600px) {
+      .dir-row-top { flex-wrap: wrap; }
+      .topnav-links a { font-size: 12px; padding: 5px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="../fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" id="navApplications">📋 Applications</a>
+      <a href="#" id="navUpdateFair">✏️ Update Fair</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <!-- LOADER -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading directory…</p>
+  </div>
+
+  <div class="page-body">
+
+    <div class="breadcrumb">
+      <a href="../fair_admin.html">Admin Home</a> ›
+      <a href="#" id="breadDashboard">Dashboard</a> ›
+      <span>Vendor &amp; Performer Directory</span>
+    </div>
+
+    <h1 id="pageTitle">Vendor &amp; Performer Directory</h1>
+
+    <!-- CONTROLS CARD -->
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn btn-dark" id="btnBack">⬅ Back to Dashboard</button>
+        <button class="btn btn-amber" id="btnPricing">💰 Manage Weekend Pricing</button>
+<button class="btn btn-dark" id="btnPayments">💳 Payment Tracking</button>
+        <button class="btn btn-dark" id="btnRefresh">↺ Refresh</button>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" id="searchInput" placeholder="🔍  Search by name or email…" />
+        <select id="typeFilter">
+          <option value="">All Types</option>
+          <option value="vendor">Artisan / Craft Vendors</option>
+          <option value="food_vendor">Food Vendors</option>
+          <option value="performer">Performers</option>
+        </select>
+        <select id="inviteFilter">
+          <option value="">All Invite Statuses</option>
+          <option value="yes">✅ Will Invite</option>
+          <option value="maybe">🤔 Maybe</option>
+          <option value="never">❌ Will Not Invite</option>
+        </select>
+        <select id="yearFilter">
+          <option value="">All — New &amp; Returning</option>
+          <option value="new">🆕 New Only</option>
+          <option value="returning">🔄 Returning Only</option>
+        </select>
+      </div>
+      <p style="font-size:13px; color:#5c3a1e; margin:0;">
+        Set invite status and notes for each applicant. Changes save instantly.
+      </p>
+    </div>
+
+    <!-- VENDORS -->
+    <div class="card">
+      <h2 class="section-title">🧺 Artisan &amp; Craft Vendors <span class="section-count" id="vendorCount">0</span></h2>
+      <div id="vendorsList" class="list"></div>
+      <div id="vendorsEmpty" class="empty-msg" style="display:none;">No vendor records found.</div>
+    </div>
+
+    <!-- FOOD VENDORS -->
+    <div class="card">
+      <h2 class="section-title">🍖 Food Vendors <span class="section-count" id="foodCount">0</span></h2>
+      <div id="foodList" class="list"></div>
+      <div id="foodEmpty" class="empty-msg" style="display:none;">No food vendor records found.</div>
+    </div>
+
+    <!-- PERFORMERS -->
+    <div class="card">
+      <h2 class="section-title">🎭 Performers <span class="section-count" id="performersCount">0</span></h2>
+      <div id="performersList" class="list"></div>
+      <div id="performersEmpty" class="empty-msg" style="display:none;">No performer records found.</div>
+    </div>
+
+  </div><!-- /page-body -->
+
+  <script>
+    const SUPABASE_URL  = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    let allVendors = [], allFood = [], allPerformers = [];
+
+    function getFairId() {
+      const n = Number(new URLSearchParams(window.location.search).get('fair_id'));
+      return Number.isFinite(n) ? n : null;
+    }
+    function showLoader() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    function initials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      return parts.length === 1
+        ? parts[0][0].toUpperCase()
+        : (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+    }
+
+    function buildRow(item, fairId) {
+      const isNew = item.years_at_fair <= 1;
+      const avatarClass = item.type === 'food_vendor' ? 'avatar-food'
+                        : item.type === 'performer'   ? 'avatar-performer'
+                        : 'avatar-vendor';
+
+      const typeLabel = item.type === 'food_vendor' ? 'Food Vendor'
+                      : item.type === 'performer'   ? 'Performer'
+                      : 'Artisan Vendor';
+
+      const inviteLabel = item.invite_status === 'yes'   ? '✅ Will Invite'
+                        : item.invite_status === 'never' ? '❌ Will Not Invite'
+                        : '🤔 Maybe';
+
+      const div = document.createElement('div');
+      div.className = 'dir-row';
+      div.dataset.name   = (item.applicant_name  || '').toLowerCase();
+      div.dataset.email  = (item.applicant_email || '').toLowerCase();
+      div.dataset.type   = item.type || '';
+      div.dataset.invite = item.invite_status || '';
+      div.dataset.years  = item.years_at_fair || 1;
+
+      div.innerHTML = `
+        <div class="dir-row-top">
+          <div class="avatar ${avatarClass}">${initials(item.applicant_name)}</div>
+          <div class="dir-meta">
+            <div class="dir-name">${item.applicant_name || '—'}</div>
+            <div class="dir-email">${item.applicant_email || '—'}</div>
+            <div class="dir-badges">
+              <span class="badge ${isNew ? 'badge-new' : 'badge-returning'}">
+                ${isNew ? '🆕 New' : `🔄 Returning — ${item.years_at_fair} yr${item.years_at_fair > 1 ? 's' : ''}`}
+              </span>
+              <span class="badge badge-${item.invite_status || 'maybe'}">${inviteLabel}</span>
+              <span style="font-size:12px; color:#5c3a1e;">${typeLabel}</span>
+              ${item.first_year ? `<span style="font-size:12px; color:#5c3a1e;">First year: ${item.first_year}</span>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div class="dir-row-edit">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <label>Invite:</label>
+            <select class="sel-invite">
+              <option value="yes"   ${item.invite_status==='yes'   ? 'selected':''}>✅ Will Invite</option>
+              <option value="maybe" ${item.invite_status==='maybe' ? 'selected':''}>🤔 Maybe</option>
+              <option value="never" ${item.invite_status==='never' ? 'selected':''}>❌ Will Not Invite</option>
+            </select>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <label>Years:</label>
+            <input type="number" class="inp-years" min="1" max="99"
+              value="${item.years_at_fair || 1}" style="width:70px;" />
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; flex:1;">
+            <label>Notes:</label>
+            <input type="text" class="inp-notes"
+              placeholder="Add a note…" value="${item.notes || ''}" />
+          </div>
+          <button class="btn-save-row" data-id="${item.id}">💾 Save</button>
+          <span class="save-status"></span>
+        </div>`;
+
+      // Save button
+      div.querySelector('.btn-save-row').addEventListener('click', async () => {
+        const btn        = div.querySelector('.btn-save-row');
+        const statusEl   = div.querySelector('.save-status');
+        const invite     = div.querySelector('.sel-invite').value;
+        const years      = parseInt(div.querySelector('.inp-years').value, 10) || 1;
+        const notes      = div.querySelector('.inp-notes').value.trim();
+
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+        statusEl.textContent = '';
+
+        const { error } = await supabaseClient.rpc('update_fair_vendor_directory_entry', {
+          p_id:           item.id,
+          p_fair_id:      fairId,
+          p_invite_status: invite,
+          p_years_at_fair: years,
+          p_notes:        notes || null
+        });
+
+        if (error) {
+          statusEl.textContent = '❌ Error';
+          statusEl.style.color = '#8b1a1a';
+        } else {
+          statusEl.textContent = '✅ Saved';
+          statusEl.style.color = '#1a5c1e';
+          // Update local data + badges
+          item.invite_status = invite;
+          item.years_at_fair = years;
+          item.notes = notes;
+          div.dataset.invite = invite;
+          div.dataset.years  = years;
+          // Refresh badges
+          const isNowNew = years <= 1;
+          div.querySelector('.dir-badges').innerHTML = `
+            <span class="badge ${isNowNew ? 'badge-new' : 'badge-returning'}">
+              ${isNowNew ? '🆕 New' : `🔄 Returning — ${years} yr${years > 1 ? 's' : ''}`}
+            </span>
+            <span class="badge badge-${invite}">${
+              invite === 'yes' ? '✅ Will Invite' :
+              invite === 'never' ? '❌ Will Not Invite' : '🤔 Maybe'
+            }</span>
+            <span style="font-size:12px; color:#5c3a1e;">${typeLabel}</span>
+            ${item.first_year ? `<span style="font-size:12px; color:#5c3a1e;">First year: ${item.first_year}</span>` : ''}
+          `;
+          setTimeout(() => { statusEl.textContent = ''; }, 2500);
+        }
+        btn.disabled = false;
+        btn.textContent = '💾 Save';
+      });
+
+      return div;
+    }
+
+    function applyFilters(fairId) {
+      const search  = document.getElementById('searchInput').value.toLowerCase();
+      const typeF   = document.getElementById('typeFilter').value;
+      const inviteF = document.getElementById('inviteFilter').value;
+      const yearF   = document.getElementById('yearFilter').value;
+
+      function filterAndRender(listId, emptyId, countId, rows) {
+        const listEl  = document.getElementById(listId);
+        const emptyEl = document.getElementById(emptyId);
+        const countEl = document.getElementById(countId);
+        listEl.innerHTML = '';
+
+        const visible = rows.filter(item => {
+          const matchSearch = !search
+            || (item.applicant_name  || '').toLowerCase().includes(search)
+            || (item.applicant_email || '').toLowerCase().includes(search);
+          const matchType   = !typeF   || item.type === typeF;
+          const matchInvite = !inviteF || item.invite_status === inviteF;
+          const matchYear   = !yearF
+            || (yearF === 'new'       && item.years_at_fair <= 1)
+            || (yearF === 'returning' && item.years_at_fair > 1);
+          return matchSearch && matchType && matchInvite && matchYear;
+        });
+
+        countEl.textContent = visible.length;
+        if (visible.length === 0) { emptyEl.style.display = 'block'; return; }
+        emptyEl.style.display = 'none';
+        visible.forEach(item => listEl.appendChild(buildRow(item, fairId)));
+      }
+
+      filterAndRender('vendorsList',    'vendorsEmpty',    'vendorCount',    allVendors);
+      filterAndRender('foodList',       'foodEmpty',       'foodCount',      allFood);
+      filterAndRender('performersList', 'performersEmpty', 'performersCount', allPerformers);
+    }
+
+    async function loadPage() {
+      showLoader();
+      allVendors = []; allFood = []; allPerformers = [];
+
+      const fairId = getFairId();
+      if (!fairId) {
+        document.getElementById('pageTitle').textContent = 'Directory — Fair not found';
+        hideLoader(); return;
+      }
+
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) {
+        document.getElementById('pageTitle').textContent = 'Please log in to continue';
+        hideLoader(); return;
+      }
+
+      try {
+        const { data, error } = await supabaseClient.rpc('get_fair_vendor_directory', { p_fair_id: fairId });
+        if (error) throw error;
+
+        const rows = Array.isArray(data) ? data : [];
+        rows.forEach(r => {
+          if (r.type === 'food_vendor')  allFood.push(r);
+          else if (r.type === 'performer') allPerformers.push(r);
+          else allVendors.push(r);
+        });
+
+        // Get fair name for title
+        const { data: fairRows } = await supabaseClient
+          .rpc('get_admin_dashboard_fair_by_id', { p_fair_id: fairId });
+        const fairName = fairRows?.[0]?.name || '';
+        document.getElementById('pageTitle').textContent =
+          `Vendor & Performer Directory${fairName ? ' — ' + fairName : ''}`;
+
+        applyFilters(fairId);
+      } catch (e) {
+        console.error(e);
+        document.getElementById('pageTitle').textContent = 'Directory — Could not load. Please refresh.';
+      }
+
+      hideLoader();
+    }
+
+    async function init() {
+      const fairId = getFairId();
+
+      // Wire nav
+      if (fairId) {
+        document.getElementById('navDashboard').href    = `fair_dashboard.html?fair_id=${fairId}`;
+        document.getElementById('navApplications').href = `fair_applications.html?fair_id=${fairId}`;
+        document.getElementById('navUpdateFair').href   = `../fair_update.html?fair_id=${fairId}`;
+        document.getElementById('breadDashboard').href  = `fair_dashboard.html?fair_id=${fairId}`;
+      }
+
+      document.getElementById('btnBack').onclick = () => {
+        window.location.href = `fair_dashboard.html?fair_id=${fairId}`;
+      };
+     document.getElementById('btnPricing').onclick = () => {
+  window.location.href = `fair_weekend_pricing.html?fair_id=${fairId}`;
+};
+document.getElementById('btnPayments').onclick = () => {
+  window.location.href = `fair_vendor_payments.html?fair_id=${fairId}`;
+};
+      document.getElementById('btnRefresh').onclick = () => loadPage();
+
+      document.getElementById('navLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = '/index.html';
+      });
+
+      // Live filters
+      ['searchInput','typeFilter','inviteFilter','yearFilter'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => applyFilters(fairId));
+        document.getElementById(id).addEventListener('change', () => applyFilters(fairId));
+      });
+
+      await loadPage();
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weekend Pricing | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Domine', serif; background: #0a0a0a; color: #f0e6d2; margin: 0; padding: 0; }
+
+    .topnav {
+      background: #1a1208; border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a { color: #c8aa6e; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: background 0.15s; }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links a.active { background: rgba(241,223,153,0.18); color: #f1df99; font-weight: bold; }
+    .topnav-links .nav-logout { background: rgba(180,50,50,0.18); color: #f4a0a0; margin-left: 8px; border: 1px solid rgba(180,50,50,0.3); }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+
+    .page-body { padding: 16px 20px 50px; max-width: 960px; margin: 0 auto; }
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+    h1 { font-family: 'Cinzel', serif; font-size: 22px; color: #f1df99; margin: 8px 0 16px; }
+
+    .card {
+      background: rgba(241, 223, 153, 0.88); padding: 22px 24px; border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4); margin-bottom: 20px; color: #3b1f1f; text-align: left;
+    }
+    .card h2 { font-family: 'Cinzel', serif; font-size: 16px; margin: 0 0 14px; color: #3b1f1f; }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .btn { background-color: #4CAF50; color: #fff; padding: 10px 16px; border: none; border-radius: 8px; font-size: 15px; font-family: 'Domine', serif; cursor: pointer; transition: background 0.15s; }
+    .btn:hover { background-color: #43a047; }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #222; }
+
+    /* Weekend pricing rows */
+    .weekend-row {
+      background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 10px; padding: 16px; margin-bottom: 12px;
+    }
+    .weekend-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .weekend-num {
+      font-family: 'Cinzel', serif; font-size: 15px; font-weight: bold;
+      color: #3b1f1f; min-width: 80px;
+    }
+    .weekend-dates { font-size: 13px; color: #5c3a1e; }
+
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px; margin-bottom: 12px;
+    }
+    .pricing-field label {
+      display: block; font-size: 13px; font-weight: bold;
+      color: #3b1f1f; margin-bottom: 4px;
+    }
+    .pricing-field input {
+      width: 100%; padding: 8px 10px; border-radius: 7px;
+      border: 1px solid rgba(0,0,0,0.2); font-size: 14px;
+      font-family: 'Domine', serif; background: rgba(255,255,255,0.9); color: #111;
+    }
+    .pricing-field input:focus { outline: none; border-color: #bb7a28; box-shadow: 0 0 0 3px rgba(187,122,40,0.2); }
+
+    .notes-field { margin-bottom: 10px; }
+    .notes-field label { display: block; font-size: 13px; font-weight: bold; color: #3b1f1f; margin-bottom: 4px; }
+    .notes-field input {
+      width: 100%; padding: 8px 10px; border-radius: 7px;
+      border: 1px solid rgba(0,0,0,0.2); font-size: 14px;
+      font-family: 'Domine', serif; background: rgba(255,255,255,0.9); color: #111;
+    }
+
+    .row-footer { display: flex; align-items: center; gap: 10px; }
+    .btn-save-row {
+      background: #4CAF50; color: #fff; border: none; border-radius: 7px;
+      padding: 8px 16px; font-size: 14px; font-family: 'Domine', serif;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-save-row:hover { background: #43a047; }
+    .save-status { font-size: 13px; font-weight: bold; min-width: 80px; }
+
+    .hint-box {
+      background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.1);
+      border-left: 4px solid #bb7a28; border-radius: 0 8px 8px 0;
+      padding: 12px 16px; font-size: 13px; color: #3b1f1f;
+      line-height: 1.6; margin-bottom: 16px;
+    }
+
+    .empty-msg { text-align: center; padding: 20px 0; font-size: 14px; color: #5c3a1e; }
+
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; flex-direction: column; gap: 16px;
+    }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner { border: 5px solid rgba(255,255,255,0.15); border-top: 5px solid #bb9457; border-radius: 50%; width: 52px; height: 52px; animation: spin 0.9s linear infinite; }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="../fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" id="navApplications">📋 Applications</a>
+      <a href="#" id="navUpdateFair">✏️ Update Fair</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading weekend pricing…</p>
+  </div>
+
+  <div class="page-body">
+
+    <div class="breadcrumb">
+      <a href="../fair_admin.html">Admin Home</a> ›
+      <a href="#" id="breadDashboard">Dashboard</a> ›
+      <a href="#" id="breadDirectory">Vendor Directory</a> ›
+      <span>Weekend Pricing</span>
+    </div>
+
+    <h1 id="pageTitle">Weekend Pricing</h1>
+
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn btn-dark" id="btnBack">⬅ Back to Directory</button>
+        <button class="btn btn-dark" id="btnRefresh">↺ Refresh</button>
+      </div>
+      <div class="hint-box">
+        Set the price for each weekend by vendor type. <strong>Artisan/Craft Vendors</strong> and <strong>Food Vendors</strong> pay the fair. <strong>Performers</strong> are paid by the fair — enter the fee the fair will pay them. Leave at $0.00 if no charge or fee applies.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💰 Pricing Per Weekend</h2>
+      <div id="weekendsContainer"></div>
+      <div id="emptyMsg" class="empty-msg" style="display:none;">
+        No weekends found. Please add your fair dates in Update Fair first.
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL  = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    function getFairId() {
+      const n = Number(new URLSearchParams(window.location.search).get('fair_id'));
+      return Number.isFinite(n) ? n : null;
+    }
+    function showLoader() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    function formatDate(d) {
+      if (!d) return '—';
+      const date = new Date(d);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function buildWeekendRow(fairId, weekNum, startDate, endDate, existing) {
+      const ex = existing || {};
+      const div = document.createElement('div');
+      div.className = 'weekend-row';
+
+      const days = startDate && endDate
+        ? Math.round((new Date(endDate) - new Date(startDate)) / (1000*60*60*24)) + 1
+        : null;
+
+      div.innerHTML = `
+        <div class="weekend-header">
+          <div class="weekend-num">Weekend ${weekNum}</div>
+          <div class="weekend-dates">
+            ${formatDate(startDate)} → ${formatDate(endDate)}
+            ${days ? `<span style="margin-left:8px; font-size:12px; background:rgba(0,0,0,0.1); padding:2px 8px; border-radius:999px;">${days} days</span>` : ''}
+          </div>
+        </div>
+        <div class="pricing-grid">
+          <div class="pricing-field">
+            <label>🧺 Artisan/Craft Vendor ($)</label>
+            <input type="number" class="inp-vendor" min="0" step="0.01"
+              value="${ex.vendor_price ?? '0.00'}" placeholder="0.00" />
+          </div>
+          <div class="pricing-field">
+            <label>🍖 Food Vendor ($)</label>
+            <input type="number" class="inp-food" min="0" step="0.01"
+              value="${ex.food_vendor_price ?? '0.00'}" placeholder="0.00" />
+          </div>
+          <div class="pricing-field">
+            <label>🎭 Performer Fee (fair pays) ($)</label>
+            <input type="number" class="inp-performer" min="0" step="0.01"
+              value="${ex.performer_fee ?? '0.00'}" placeholder="0.00" />
+          </div>
+        </div>
+        <div class="notes-field">
+          <label>Notes (optional)</label>
+          <input type="text" class="inp-notes" placeholder="e.g. 3-day weekend, holiday pricing…"
+            value="${ex.notes || ''}" />
+        </div>
+        <div class="row-footer">
+          <button class="btn-save-row">💾 Save Weekend ${weekNum}</button>
+          <span class="save-status"></span>
+        </div>`;
+
+      div.querySelector('.btn-save-row').addEventListener('click', async () => {
+        const btn        = div.querySelector('.btn-save-row');
+        const statusEl   = div.querySelector('.save-status');
+        const vendorP    = parseFloat(div.querySelector('.inp-vendor').value)    || 0;
+        const foodP      = parseFloat(div.querySelector('.inp-food').value)      || 0;
+        const performerF = parseFloat(div.querySelector('.inp-performer').value) || 0;
+        const notes      = div.querySelector('.inp-notes').value.trim() || null;
+
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+        statusEl.textContent = '';
+
+        const { error } = await supabaseClient.rpc('upsert_fair_weekend_pricing', {
+          p_fair_id:          fairId,
+          p_week_number:      weekNum,
+          p_start_date:       startDate,
+          p_end_date:         endDate,
+          p_vendor_price:     vendorP,
+          p_food_vendor_price: foodP,
+          p_performer_fee:    performerF,
+          p_notes:            notes
+        });
+
+        if (error) {
+          statusEl.textContent = '❌ Error saving';
+          statusEl.style.color = '#8b1a1a';
+          console.error(error);
+        } else {
+          statusEl.textContent = '✅ Saved!';
+          statusEl.style.color = '#1a5c1e';
+          setTimeout(() => { statusEl.textContent = ''; }, 2500);
+        }
+        btn.disabled = false;
+        btn.textContent = `💾 Save Weekend ${weekNum}`;
+      });
+
+      return div;
+    }
+
+    async function loadPage() {
+      showLoader();
+      const fairId = getFairId();
+      if (!fairId) { hideLoader(); return; }
+
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) { hideLoader(); return; }
+
+      try {
+        // Load fair dates
+        const { data: fairRows } = await supabaseClient
+          .rpc('get_admin_dashboard_fair_by_id', { p_fair_id: fairId });
+        const fair = fairRows?.[0];
+        if (!fair) { hideLoader(); return; }
+
+        document.getElementById('pageTitle').textContent = `Weekend Pricing — ${fair.name || ''}`;
+
+        // Load existing pricing
+        const { data: pricing } = await supabaseClient
+          .rpc('get_fair_weekend_pricing', { p_fair_id: fairId });
+        const pricingMap = {};
+        (pricing || []).forEach(p => { pricingMap[p.week_number] = p; });
+
+        // Build rows from fair dates
+        const container = document.getElementById('weekendsContainer');
+        container.innerHTML = '';
+
+        const weeks = [
+          { num: 1,  start: fair.start_date,       end: fair.end_date },
+          { num: 2,  start: fair.week2_start_date,  end: fair.week2_end_date },
+          { num: 3,  start: fair.week3_start_date,  end: fair.week3_end_date },
+          { num: 4,  start: fair.week4_start_date,  end: fair.week4_end_date },
+          { num: 5,  start: fair.week5_start_date,  end: fair.week5_end_date },
+          { num: 6,  start: fair.week6_start_date,  end: fair.week6_end_date },
+          { num: 7,  start: fair.week7_start_date,  end: fair.week7_end_date },
+          { num: 8,  start: fair.week8_start_date,  end: fair.week8_end_date },
+          { num: 9,  start: fair.week9_start_date,  end: fair.week9_end_date },
+          { num: 10, start: fair.week10_start_date, end: fair.week10_end_date },
+        ].filter(w => w.start && w.end);
+
+        if (weeks.length === 0) {
+          document.getElementById('emptyMsg').style.display = 'block';
+        } else {
+          weeks.forEach(w => {
+            container.appendChild(buildWeekendRow(fairId, w.num, w.start, w.end, pricingMap[w.num]));
+          });
+        }
+
+      } catch (e) {
+        console.error(e);
+      }
+
+      hideLoader();
+    }
+
+    async function init() {
+      const fairId = getFairId();
+
+      document.getElementById('navDashboard').href    = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('navApplications').href = `fair_applications.html?fair_id=${fairId}`;
+      document.getElementById('navUpdateFair').href   = `../fair_update.html?fair_id=${fairId}`;
+      document.getElementById('breadDashboard').href  = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('breadDirectory').href  = `fair_vendor_list.html?fair_id=${fairId}`;
+
+      document.getElementById('btnBack').onclick    = () => { window.location.href = `fair_vendor_list.html?fair_id=${fairId}`; };
+      document.getElementById('btnRefresh').onclick = () => loadPage();
+
+      document.getElementById('navLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = '/index.html';
+      });
+
+      await loadPage();
+    }
+
+    init();
+  </script>
+</body>
+</html>

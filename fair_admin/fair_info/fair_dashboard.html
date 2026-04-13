@@ -192,12 +192,15 @@
       <div class="label">City/State:</div><div id="fairCityState">Loading...</div>
       <div class="label">Address:</div><div id="fairAddress">Loading...</div>
       <div class="label">Website:</div><div id="fairWebsite">Loading...</div>
+      <div class="label">Tier:</div><div id="fairTier">Loading...</div>
     </div>
 
-    <div class="btn-row">
+   <div class="btn-row">
       <button class="btn" id="btnBackToAdmin">⬅ Back to Admin Page</button>
       <button class="btn" id="btnUpdateFair">Update Fair</button>
       <button class="btn" id="btnApplications">Applications</button>
+      <button class="btn" id="btnVendorDirectory">📒 Vendor & Performer Directory</button>
+      <button class="btn" id="btnPayments">💳 Payment Tracking</button>
     </div>
   </div>
 
@@ -271,41 +274,23 @@
       hideLoader();
     }
 
-    async function requireFairAdmin(userId, fairId) {
+   async function requireFairAdmin(userId, fairId) {
       const { data, error } = await supabaseClient
-        .from('fair_admins')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('fair_id', fairId)
-        .limit(1);
-
+        .rpc('check_fair_permission', { p_fair_id: fairId, p_permission: 'edit_fair_info' });
       if (error) return false;
-      return Array.isArray(data) && data.length > 0;
+      return !!data;
     }
 
     async function loadFairInfo(fairId) {
       const { data, error } = await supabaseClient
-        .from('renaissance_fairs')
-        .select('id, name, address, city, state, website, fair_tier')
-        .eq('id', fairId)
-        .single();
-
-      if (error || !data) return null;
-      return data;
+        .rpc('get_admin_dashboard_fair_by_id', { p_fair_id: fairId });
+      if (error || !data?.[0]) return null;
+      return data[0];
     }
 
-     async function loadSubmissionStatusCounts(fairId) {
+    async function loadSubmissionStatusCounts(fairId) {
       const { data, error } = await supabaseClient
-        .from('fair_man_app_submission')
-        .select(`
-          id,
-          status,
-          vendor_performer_applications (
-            application_type,
-            is_food_vendor
-          )
-        `)
-        .eq('fair_id', fairId);
+        .rpc('fair_man_app_list_submissions', { p_fair_id: fairId });
 
       if (error || !Array.isArray(data)) return null;
 
@@ -315,31 +300,18 @@
         performers:{ total:0, review:0, approved:0, declined:0 },
       };
 
-      function bucket(row) {
-        const v = row.vendor_performer_applications;
-        if (!v) return null;
-
-        if (v.application_type === true) return counts.performers;
-        if (v.is_food_vendor === true) return counts.food;
-        return counts.vendors;
-      }
-
-      function bumpStatus(b, status) {
-        if (!b) return;
-        b.total++;
-
-        if (status === 'in_review') b.review++;
-        else if (status === 'approved') b.approved++;
-        else if (status === 'rejected') b.declined++;
-      }
-
       for (const row of data) {
-        bumpStatus(bucket(row), row.status);
+        const b = row.form_type === 'performer' ? counts.performers
+                : row.form_type === 'food_vendor' ? counts.food
+                : counts.vendors;
+        b.total++;
+        if (row.status === 'in_review') b.review++;
+        else if (row.status === 'approved') b.approved++;
+        else if (row.status === 'rejected') b.declined++;
       }
 
       return counts;
     }
-
 async function load() {
 
   const fairId = getFairIdFromUrl();
@@ -402,9 +374,17 @@ async function load() {
 
 
   // Lock Applications button if not gold
-  document.getElementById('btnApplications').onclick = () => {
+document.getElementById('btnApplications').onclick = () => {
     if (!isGold) { showComingSoon(); return; }
     window.location.href = `fair_applications.html?fair_id=${fairId}`;
+  };
+  document.getElementById('btnVendorDirectory').onclick = () => {
+    if (!isGold) { showComingSoon(); return; }
+    window.location.href = `fair_vendor_list.html?fair_id=${fairId}`;
+  };
+  document.getElementById('btnPayments').onclick = () => {
+    if (!isGold) { showComingSoon(); return; }
+    window.location.href = `fair_vendor_payments.html?fair_id=${fairId}`;
   };
 
   // Add unavailable overlay to appsCard if not gold
@@ -432,6 +412,9 @@ async function load() {
   document.getElementById('fairName').textContent = fair.name || 'N/A';
   document.getElementById('fairCityState').textContent = `${fair.city || 'N/A'}, ${fair.state || 'N/A'}`;
   document.getElementById('fairAddress').textContent = fair.address || 'N/A';
+  document.getElementById('fairTier').textContent = fair.fair_tier
+    ? fair.fair_tier.charAt(0).toUpperCase() + fair.fair_tier.slice(1)
+    : 'Standard';
 
   if (fair.website) {
     document.getElementById('fairWebsite').innerHTML =

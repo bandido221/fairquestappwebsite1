@@ -259,19 +259,21 @@
       contacts = contacts.filter(x => x._uid !== uid);
       document.querySelector(`.contact-row[data-uid="${uid}"]`)?.remove();
     }
-
-    function addContactRow(data = {}) {
+    
+function addContactRow(data = {}) {
+      const isNew = !data.id && !data.name && !data.email;
       const c = {
         _uid:         ++contactUid,
         id:           data.id   || null,
         contact_type: data.contact_type || 'general',
         label:        data.label        || '',
-        name:         data.name         || '',
-        email:        data.email        || '',
+        name:         data.name         || (isNew && loggedInUserInfo ? loggedInUserInfo.name  : ''),
+        email:        data.email        || (isNew && loggedInUserInfo ? loggedInUserInfo.email : ''),
         phone:        data.phone        || '',
-        is_default:   data.is_default   ?? (contacts.length === 0), // first one is default
+        is_default:   data.is_default   ?? (contacts.length === 0),
         is_public:    data.is_public    ?? true,
       };
+
       contacts.push(c);
       document.getElementById('contactsContainer').appendChild(buildContactRow(c));
     }
@@ -304,9 +306,20 @@ if (saved.fair_image_url) {
   });
 });
 
+   let loggedInUserInfo = null;
+
     async function loadAdminDashboard() {
       const { data: { user }, error: userError } = await sb.auth.getUser();
       if (userError || !user) { console.error("User not found"); return; }
+
+      // Load user profile for contact auto-fill
+      const { data: profile } = await sb.rpc('get_my_app_user_profile', { p_user_id: user.id });
+      if (profile?.[0]) {
+        loggedInUserInfo = {
+          name:  [profile[0].first_name, profile[0].last_name].filter(Boolean).join(' ') || profile[0].username || '',
+          email: profile[0].email || user.email || ''
+        };
+      }
 
       const fairId = new URLSearchParams(window.location.search).get("fair_id");
       if (!fairId) { console.error("No fair_id provided in URL."); return; }

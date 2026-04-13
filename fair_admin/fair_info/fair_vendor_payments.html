@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Tracking | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Domine', serif; background: #0a0a0a; color: #f0e6d2; margin: 0; padding: 0; }
+
+    .topnav {
+      background: #1a1208; border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a { color: #c8aa6e; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: background 0.15s; }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links a.active { background: rgba(241,223,153,0.18); color: #f1df99; font-weight: bold; }
+    .topnav-links .nav-logout { background: rgba(180,50,50,0.18); color: #f4a0a0; margin-left: 8px; border: 1px solid rgba(180,50,50,0.3); }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+
+    .page-body { padding: 16px 20px 50px; max-width: 1100px; margin: 0 auto; }
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+    h1 { font-family: 'Cinzel', serif; font-size: 22px; color: #f1df99; margin: 8px 0 16px; }
+
+    .card {
+      background: rgba(241, 223, 153, 0.88); padding: 22px 24px; border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4); margin-bottom: 20px; color: #3b1f1f; text-align: left;
+    }
+    .card h2 { font-family: 'Cinzel', serif; font-size: 16px; margin: 0 0 14px; color: #3b1f1f; }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .btn { background-color: #4CAF50; color: #fff; padding: 10px 16px; border: none; border-radius: 8px; font-size: 15px; font-family: 'Domine', serif; cursor: pointer; transition: background 0.15s; }
+    .btn:hover { background-color: #43a047; }
+    .btn-dark { background-color: #2f2f2f; }
+    .btn-dark:hover { background-color: #222; }
+
+    /* Search bar */
+    .search-bar {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; align-items: center;
+    }
+    .search-bar input[type="text"] {
+      flex: 1; min-width: 220px; padding: 10px 14px; border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2); font-size: 15px;
+      font-family: 'Domine', serif; background: rgba(255,255,255,0.9); color: #111;
+    }
+    .search-bar select {
+      padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.2);
+      font-size: 14px; font-family: 'Domine', serif;
+      background: rgba(255,255,255,0.9); color: #111; cursor: pointer;
+    }
+
+    /* Vendor payment card */
+    .vendor-payment-card {
+      background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 12px; padding: 16px; margin-bottom: 14px;
+    }
+    .vendor-payment-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .avatar {
+      width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: bold; color: #fff;
+      text-transform: uppercase; font-family: 'Cinzel', serif;
+    }
+    .avatar-vendor    { background: #6d4c2a; }
+    .avatar-food      { background: #c0622a; }
+    .avatar-performer { background: #4a3a8f; }
+
+    .vendor-name { font-weight: bold; font-size: 15px; color: #3b1f1f; }
+    .vendor-email { font-size: 13px; color: #5c3a1e; }
+    .vendor-type-pill {
+      font-size: 11px; font-weight: bold; padding: 2px 9px; border-radius: 999px;
+      background: rgba(0,0,0,0.1); color: #3b1f1f;
+    }
+
+    /* Weekend payment rows */
+    .weekend-payments { display: flex; flex-direction: column; gap: 8px; }
+    .payment-row {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 8px; padding: 10px 14px;
+    }
+    .payment-week-label {
+      font-size: 13px; font-weight: bold; color: #3b1f1f; min-width: 90px;
+    }
+    .payment-dates { font-size: 12px; color: #5c3a1e; min-width: 160px; }
+    .payment-amount { font-size: 13px; color: #3b1f1f; min-width: 100px; }
+
+    .payment-status-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 12px; font-weight: bold; min-width: 70px; text-align: center;
+    }
+    .status-paid    { background: rgba(76,175,80,0.22);   color: #1a5c1e; border: 1px solid rgba(76,175,80,0.4); }
+    .status-unpaid  { background: rgba(200,50,50,0.18);   color: #8b1a1a; border: 1px solid rgba(200,50,50,0.3); }
+    .status-pending { background: rgba(240,180,20,0.25);  color: #7a5200; border: 1px solid rgba(240,180,20,0.4); }
+    .status-waived  { background: rgba(0,0,0,0.08);       color: #3b1f1f; border: 1px solid rgba(0,0,0,0.15); }
+
+    .payment-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-left: auto; }
+    .payment-actions select {
+      padding: 6px 8px; border-radius: 6px; font-size: 13px;
+      font-family: 'Domine', serif; border: 1px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.9); color: #111;
+    }
+    .payment-actions input[type="text"] {
+      padding: 6px 8px; border-radius: 6px; font-size: 13px;
+      font-family: 'Domine', serif; border: 1px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.9); color: #111; width: 160px;
+    }
+    .payment-actions input[type="number"] {
+      padding: 6px 8px; border-radius: 6px; font-size: 13px;
+      font-family: 'Domine', serif; border: 1px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.9); color: #111; width: 90px;
+    }
+    .btn-save-payment {
+      background: #4CAF50; color: #fff; border: none; border-radius: 6px;
+      padding: 6px 12px; font-size: 13px; font-family: 'Domine', serif;
+      cursor: pointer; white-space: nowrap;
+    }
+    .btn-save-payment:hover { background: #43a047; }
+    .pay-status { font-size: 12px; font-weight: bold; min-width: 60px; }
+
+    /* Summary totals */
+    .summary-row {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px;
+      padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.12);
+      font-size: 13px; color: #3b1f1f;
+    }
+    .summary-item { font-weight: bold; }
+    .summary-item span { font-weight: normal; }
+
+    .empty-msg { text-align: center; padding: 20px 0; font-size: 14px; color: #5c3a1e; }
+
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; flex-direction: column; gap: 16px;
+    }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner { border: 5px solid rgba(255,255,255,0.15); border-top: 5px solid #bb9457; border-radius: 50%; width: 52px; height: 52px; animation: spin 0.9s linear infinite; }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="../fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" id="navApplications">📋 Applications</a>
+      <a href="#" id="navUpdateFair">✏️ Update Fair</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading payments…</p>
+  </div>
+
+  <div class="page-body">
+
+    <div class="breadcrumb">
+      <a href="../fair_admin.html">Admin Home</a> ›
+      <a href="#" id="breadDashboard">Dashboard</a> ›
+      <a href="#" id="breadDirectory">Vendor Directory</a> ›
+      <span>Payment Tracking</span>
+    </div>
+
+    <h1 id="pageTitle">Payment Tracking</h1>
+
+    <!-- CONTROLS -->
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn btn-dark" id="btnBack">⬅ Back to Directory</button>
+        <button class="btn btn-dark" id="btnRefresh">↺ Refresh</button>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="🔍  Search by name or email…" />
+        <select id="statusFilter">
+          <option value="">All Payment Statuses</option>
+          <option value="unpaid">Unpaid</option>
+          <option value="pending">Pending</option>
+          <option value="paid">Paid</option>
+          <option value="waived">Waived</option>
+        </select>
+        <select id="typeFilter">
+          <option value="">All Types</option>
+          <option value="vendor">Artisan Vendors</option>
+          <option value="food_vendor">Food Vendors</option>
+          <option value="performer">Performers</option>
+        </select>
+      </div>
+      <p style="font-size:13px; color:#5c3a1e; margin:0;">
+        Search by name or email to quickly find a vendor. Mark payments as received and save the PayPal reference.
+      </p>
+    </div>
+
+    <!-- PAYMENTS LIST -->
+    <div class="card">
+      <h2>💳 Payments by Vendor / Performer</h2>
+      <div id="paymentsContainer"></div>
+      <div id="emptyMsg" class="empty-msg" style="display:none;">No payment records found.</div>
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL  = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    let allPayments = [];
+
+    function getFairId() {
+      const n = Number(new URLSearchParams(window.location.search).get('fair_id'));
+      return Number.isFinite(n) ? n : null;
+    }
+    function showLoader() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    function initials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      return parts.length === 1 ? parts[0][0].toUpperCase() : (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+    }
+
+    function formatDate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function statusClass(s) {
+      if (s === 'paid')    return 'status-paid';
+      if (s === 'unpaid')  return 'status-unpaid';
+      if (s === 'pending') return 'status-pending';
+      if (s === 'waived')  return 'status-waived';
+      return 'status-unpaid';
+    }
+
+    function statusLabel(s) {
+      if (s === 'paid')    return '✅ Paid';
+      if (s === 'unpaid')  return '❌ Unpaid';
+      if (s === 'pending') return '⏳ Pending';
+      if (s === 'waived')  return '— Waived';
+      return s || 'Unpaid';
+    }
+
+    // Group payments by directory_id
+    function groupByVendor(payments) {
+      const map = new Map();
+      payments.forEach(p => {
+        if (!map.has(p.directory_id)) {
+          map.set(p.directory_id, {
+            directory_id:   p.directory_id,
+            applicant_name: p.applicant_name,
+            applicant_email:p.applicant_email,
+            type:           p.type,
+            payments:       []
+          });
+        }
+        map.get(p.directory_id).payments.push(p);
+      });
+      return Array.from(map.values());
+    }
+
+    function buildVendorCard(vendor, fairId) {
+      const avatarClass = vendor.type === 'food_vendor' ? 'avatar-food'
+                        : vendor.type === 'performer'   ? 'avatar-performer'
+                        : 'avatar-vendor';
+      const typeLabel = vendor.type === 'food_vendor' ? '🍖 Food Vendor'
+                      : vendor.type === 'performer'   ? '🎭 Performer'
+                      : '🧺 Artisan Vendor';
+      const isPerformer = vendor.type === 'performer';
+
+      const totalDue  = vendor.payments.reduce((s, p) => s + (parseFloat(p.amount_due)  || 0), 0);
+      const totalPaid = vendor.payments.reduce((s, p) => s + (parseFloat(p.amount_paid) || 0), 0);
+      const balance   = totalDue - totalPaid;
+
+      const card = document.createElement('div');
+      card.className = 'vendor-payment-card';
+      card.dataset.name   = (vendor.applicant_name  || '').toLowerCase();
+      card.dataset.email  = (vendor.applicant_email || '').toLowerCase();
+      card.dataset.type   = vendor.type || '';
+
+      card.innerHTML = `
+        <div class="vendor-payment-header">
+          <div class="avatar ${avatarClass}">${initials(vendor.applicant_name)}</div>
+          <div>
+            <div class="vendor-name">${vendor.applicant_name || '—'}</div>
+            <div class="vendor-email">${vendor.applicant_email || '—'}</div>
+          </div>
+          <span class="vendor-type-pill">${typeLabel}</span>
+        </div>
+        <div class="weekend-payments" id="payments-${vendor.directory_id}"></div>
+        <div class="summary-row">
+          <div class="summary-item">${isPerformer ? 'Total Fee Owed by Fair' : 'Total Due'}: <span>$${totalDue.toFixed(2)}</span></div>
+          <div class="summary-item">${isPerformer ? 'Total Paid Out' : 'Total Paid'}: <span>$${totalPaid.toFixed(2)}</span></div>
+          <div class="summary-item" style="color:${balance > 0 ? '#8b1a1a' : '#1a5c1e'};">
+            ${isPerformer ? 'Still Owed' : 'Balance'}: <span>$${Math.abs(balance).toFixed(2)}${balance > 0 ? ' remaining' : balance < 0 ? ' overpaid' : ' — all clear'}</span>
+          </div>
+        </div>`;
+
+      const paymentsContainer = card.querySelector(`#payments-${vendor.directory_id}`);
+
+      vendor.payments.forEach(p => {
+        const row = document.createElement('div');
+        row.className = 'payment-row';
+        row.dataset.status = p.payment_status || 'unpaid';
+
+        row.innerHTML = `
+          <div class="payment-week-label">Weekend ${p.week_number}</div>
+          <div class="payment-dates">${formatDate(p.start_date)} → ${formatDate(p.end_date)}</div>
+          <div class="payment-amount">${isPerformer ? 'Fee' : 'Due'}: <strong>$${parseFloat(p.amount_due || 0).toFixed(2)}</strong></div>
+          <span class="payment-status-badge ${statusClass(p.payment_status)}">${statusLabel(p.payment_status)}</span>
+          <div class="payment-actions">
+            <select class="sel-status">
+              <option value="unpaid"  ${p.payment_status==='unpaid'  ? 'selected':''}>❌ Unpaid</option>
+              <option value="pending" ${p.payment_status==='pending' ? 'selected':''}>⏳ Pending</option>
+              <option value="paid"    ${p.payment_status==='paid'    ? 'selected':''}>✅ Paid</option>
+              <option value="waived"  ${p.payment_status==='waived'  ? 'selected':''}>— Waived</option>
+            </select>
+            <input type="number" class="inp-amount-paid" min="0" step="0.01"
+              placeholder="${isPerformer ? 'Amount paid out' : 'Amount paid'}"
+              value="${parseFloat(p.amount_paid || 0).toFixed(2)}" />
+            <input type="text" class="inp-reference"
+              placeholder="PayPal ref / note"
+              value="${p.payment_reference || ''}" />
+            <button class="btn-save-payment" data-id="${p.id}">💾 Save</button>
+            <span class="pay-status"></span>
+          </div>`;
+
+        row.querySelector('.btn-save-payment').addEventListener('click', async () => {
+          const btn        = row.querySelector('.btn-save-payment');
+          const statusEl   = row.querySelector('.pay-status');
+          const newStatus  = row.querySelector('.sel-status').value;
+          const amountPaid = parseFloat(row.querySelector('.inp-amount-paid').value) || 0;
+          const reference  = row.querySelector('.inp-reference').value.trim() || null;
+
+          btn.disabled = true;
+          btn.textContent = 'Saving…';
+          statusEl.textContent = '';
+
+          const { error } = await supabaseClient.rpc('update_fair_vendor_payment', {
+            p_id:               p.id,
+            p_fair_id:          fairId,
+            p_payment_status:   newStatus,
+            p_amount_paid:      amountPaid,
+            p_payment_reference: reference,
+            p_payment_method:   reference ? 'paypal' : null,
+            p_notes:            null
+          });
+
+          if (error) {
+            statusEl.textContent = '❌ Error';
+            statusEl.style.color = '#8b1a1a';
+            console.error(error);
+          } else {
+            statusEl.textContent = '✅ Saved';
+            statusEl.style.color = '#1a5c1e';
+            // Update badge
+            p.payment_status = newStatus;
+            p.amount_paid = amountPaid;
+            row.querySelector('.payment-status-badge').className = `payment-status-badge ${statusClass(newStatus)}`;
+            row.querySelector('.payment-status-badge').textContent = statusLabel(newStatus);
+            row.dataset.status = newStatus;
+            setTimeout(() => { statusEl.textContent = ''; }, 2500);
+          }
+          btn.disabled = false;
+          btn.textContent = '💾 Save';
+        });
+
+        paymentsContainer.appendChild(row);
+      });
+
+      return card;
+    }
+
+    function applyFilters(fairId) {
+      const search  = document.getElementById('searchInput').value.toLowerCase();
+      const statusF = document.getElementById('statusFilter').value;
+      const typeF   = document.getElementById('typeFilter').value;
+
+      const container = document.getElementById('paymentsContainer');
+      container.innerHTML = '';
+
+      const grouped = groupByVendor(allPayments);
+
+      const visible = grouped.filter(v => {
+        const matchSearch = !search
+          || (v.applicant_name  || '').toLowerCase().includes(search)
+          || (v.applicant_email || '').toLowerCase().includes(search);
+        const matchType = !typeF || v.type === typeF;
+        const matchStatus = !statusF || v.payments.some(p => p.payment_status === statusF);
+        return matchSearch && matchType && matchStatus;
+      });
+
+      document.getElementById('emptyMsg').style.display = visible.length === 0 ? 'block' : 'none';
+      visible.forEach(v => container.appendChild(buildVendorCard(v, fairId)));
+    }
+
+    async function loadPage() {
+      showLoader();
+      allPayments = [];
+
+      const fairId = getFairId();
+      if (!fairId) { hideLoader(); return; }
+
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) { hideLoader(); return; }
+
+      try {
+        const { data: fairRows } = await supabaseClient
+          .rpc('get_admin_dashboard_fair_by_id', { p_fair_id: fairId });
+        const fairName = fairRows?.[0]?.name || '';
+        document.getElementById('pageTitle').textContent = `Payment Tracking${fairName ? ' — ' + fairName : ''}`;
+
+        const { data, error } = await supabaseClient.rpc('get_fair_vendor_payments', { p_fair_id: fairId });
+        if (error) throw error;
+
+        allPayments = Array.isArray(data) ? data : [];
+        applyFilters(fairId);
+
+      } catch (e) {
+        console.error(e);
+        document.getElementById('emptyMsg').style.display = 'block';
+        document.getElementById('emptyMsg').textContent = 'Could not load payments. Please refresh.';
+      }
+
+      hideLoader();
+    }
+
+    async function init() {
+      const fairId = getFairId();
+
+      document.getElementById('navDashboard').href    = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('navApplications').href = `fair_applications.html?fair_id=${fairId}`;
+      document.getElementById('navUpdateFair').href   = `../fair_update.html?fair_id=${fairId}`;
+      document.getElementById('breadDashboard').href  = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('breadDirectory').href  = `fair_vendor_list.html?fair_id=${fairId}`;
+
+      document.getElementById('btnBack').onclick    = () => { window.location.href = `fair_vendor_list.html?fair_id=${fairId}`; };
+      document.getElementById('btnRefresh').onclick = () => loadPage();
+
+      document.getElementById('navLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = '/index.html';
+      });
+
+      ['searchInput','statusFilter','typeFilter'].forEach(id => {
+        document.getElementById(id).addEventListener('input',  () => applyFilters(fairId));
+        document.getElementById(id).addEventListener('change', () => applyFilters(fairId));
+      });
+
+      await loadPage();
+    }
+
+    init();
+  </script>
+</body>
+</html>

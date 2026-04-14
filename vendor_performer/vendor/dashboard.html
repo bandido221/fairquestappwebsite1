@@ -585,35 +585,13 @@ async function loadDashboard(userId){
         <button class="delete-app" onclick="deleteApplication(${v.id},'${safeName}')">Delete</button>
       </div>
 
-      ${
-     ['gold','silver'].includes((v.tier || '').toLowerCase()) && v.approval_status === 'approved'
-        ? `
-        <div class="gold-tier-card">
-          <div class="gold-tier-title">${(v.tier||'').toLowerCase() === 'gold' ? 'Gold' : 'Silver'} Tier Tools</div>
-          <div class="gold-tier-note">These features are available for approved ${(v.tier||'').toLowerCase() === 'gold' ? 'Gold' : 'Silver'} tier vendors.</div>
-
-          <div class="sub-actions">
-            <button class="start-app"
-              onclick="window.location.href='/vendor_performer/vp_fair_vault.html?vpa_id=${v.id}&type=vendor'">
-              📁 My Vault
-            </button>
-
-            ${(v.tier||'').toLowerCase() === 'gold' ? `
-            <button class="start-app"
-              onclick="window.location.href='/vendor_performer/vendor/vp_vendor_detail_wizard.html?vpa_id=${v.id}'">
-              Create Online Page
-            </button>
-
-            <button class="start-app"
-              onclick="window.location.href='fair_applications.html?vpa_id=${v.id}'">
-              Fair Applications
-            </button>
-            ` : ''}
-          </div>
-        </div>
-        `
-        : ''
-      }`;
+     <div class="sub-actions" style="margin-top:14px;">
+        <button class="start-app"
+          onclick="window.location.href='fair_applications.html?vpa_id=${v.id}'">
+          Fair Applications
+        </button>
+      </div>
+        `;
        container.appendChild(box);
   }
 }

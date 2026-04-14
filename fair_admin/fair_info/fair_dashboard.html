@@ -267,10 +267,10 @@
       document.getElementById('fairCityState').textContent = '';
       document.getElementById('fairAddress').textContent = '';
       document.getElementById('fairWebsite').textContent = '';
-      document.getElementById('countVendors').textContent = '-';
-      document.getElementById('countFood').textContent = '-';
-      document.getElementById('countPerformers').textContent = '-';
-      document.getElementById('countTotal').textContent = '-';
+      ['v_total','v_review','v_approved','v_declined',
+       'f_total','f_review','f_approved','f_declined',
+       'p_total','p_review','p_approved','p_declined']
+        .forEach(id => { document.getElementById(id).textContent = '—'; });
       hideLoader();
     }
 

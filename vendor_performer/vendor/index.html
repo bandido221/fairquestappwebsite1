@@ -180,111 +180,84 @@
   </footer>
 
   <script>
-    const supabase = window.supabase.createClient(
+   const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
     window.addEventListener('DOMContentLoaded', async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await supabaseClient.auth.getSession();
       if (session?.user) {
         window.location.href = 'dashboard.html';
       }
     });
 
     async function signIn() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-  const msg = document.getElementById('authMessage');
-  if (error) {
-    msg.textContent = `❌ ${error.message}`;
-  } else {
-    msg.textContent = "";
-
-    if (data?.user?.id) {
-      await insertUserLog(data.user.id, 'vendor', 'sign_in', 'Vendor signed in.');
+      const msg = document.getElementById('authMessage');
+      if (error) {
+        msg.textContent = `❌ ${error.message}`;
+      } else {
+        msg.textContent = "";
+        if (data?.user?.id) {
+          await insertUserLog(data.user.id, 'vendor', 'sign_in', 'Vendor signed in.');
+        }
+        window.location.href = '/vendor_performer/vendor/dashboard.html';
+      }
     }
 
-    // 🛤️ Go to VENDOR dashboard after signing in
-    window.location.href = '/vendor_performer/vendor/dashboard.html';
-  }
-}
+    async function signUp() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
 
-
-
-async function signUp() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const { data, error } = await supabase.auth.signUp({ email, password });
-
-  const msg = document.getElementById('authMessage');
-  if (error) {
-    msg.textContent = `❌ ${error.message}`;
-  } else {
-    msg.textContent = '✅ Sign up successful! Please check your email to confirm.';
-
-    if (data?.user?.id) {
-      await insertUserLog(data.user.id, 'vendor', 'sign_up', 'Vendor signed up.');
-    }
-
-    // ✨ After signup, go back to main homepage
-    setTimeout(() => {
-      window.location.href = '/index.html';
-    }, 2000); // small delay so they see the success message
-  }
-}
-
-
-
-    function closePopupAndRedirect() {
-      document.getElementById('emailPopup').style.display = 'none';
-      window.location.href = '/index.html';
+      const msg = document.getElementById('authMessage');
+      if (error) {
+        msg.textContent = `❌ ${error.message}`;
+      } else {
+        msg.textContent = '✅ Sign up successful! Please check your email to confirm.';
+        if (data?.user?.id) {
+          await insertUserLog(data.user.id, 'vendor', 'sign_up', 'Vendor signed up.');
+        }
+        setTimeout(() => {
+          window.location.href = '/index.html';
+        }, 2000);
+      }
     }
 
     async function forgotPassword() {
-  const email = document.getElementById('email').value;
-  const message = document.getElementById('authMessage');
+      const email = document.getElementById('email').value;
+      const message = document.getElementById('authMessage');
+      if (!email) {
+        message.textContent = '❌ Please enter your email.';
+        return;
+      }
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://www.fairquestapp.com/reset-password.html'
+      });
+      if (error) {
+        message.textContent = `❌ ${error.message}`;
+      } else {
+        message.textContent = '✅ Password reset email sent. Check your inbox!';
+      }
+    }
 
-  if (!email) {
-    message.textContent = '❌ Please enter your email.';
-    return;
-  }
-
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://www.fairquestapp.com/reset-password.html'
-  });
-
-  if (error) {
-    message.textContent = `❌ ${error.message}`;
-  } else {
-    message.textContent = '✅ Password reset email sent. Check your inbox!';
-  }
-}
-
-function togglePassword() {
-  const passwordField = document.getElementById('password');
-  if (passwordField.type === 'password') {
-    passwordField.type = 'text';
-  } else {
-    passwordField.type = 'password';
-  }
-}
-async function insertUserLog(userId, userType, actionType, description) {
-  const { error } = await supabase.from('user_logs').insert({
-    user_id: userId,
-    user_type: userType,
-    action_type: actionType,
-    description: description
-  });
-
-  if (error) {
-    console.error('❌ Error inserting user log:', error.message);
-  } else {
-    console.log('✅ User log inserted successfully.');
-  }
-}
+    async function insertUserLog(userId, userType, actionType, description) {
+      const { error } = await supabaseClient.from('user_logs').insert({
+        user_id: userId,
+        user_type: userType,
+        action_type: actionType,
+        description: description
+      });
+      if (error) {
+        console.error('❌ Error inserting user log:', error.message);
+      } else {
+        console.log('✅ User log inserted successfully.');
+      }
+    }
 
   </script>
 </body>

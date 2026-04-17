@@ -123,6 +123,16 @@
       padding: 4px 10px;
       margin: 2px 4px;
     }
+    .unverified-notice {
+  background: #7a3b00;
+  color: #ffe0b2 !important;
+  border: 1px solid #ff8f00;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
   </style>
 </head>
 <body>
@@ -260,6 +270,11 @@ container.innerHTML += `
       ${imageHtml}
     </div>
     <div class="card-content">
+      ${!fair.verified ? `
+        <div class="unverified-notice">
+          ⚠️ This fair was submitted by a community member and has not yet been verified by FairQuest.
+        </div>
+      ` : ''}
       <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
       <p><span class="badge">${fair.state}</span></p>
       <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>

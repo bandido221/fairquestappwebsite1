@@ -291,6 +291,8 @@
   <button class="btn btn-dark" id="btnPreview" type="button">Preview</button>
 
   <button class="btn btn-dark" id="btnSetActive">Set As Active</button>
+  <button class="btn btn-danger" id="btnClearForm" type="button">🧹 Clear Form</button>
+<button class="btn btn-danger" id="btnDeleteForm" type="button">🗑 Delete Form</button>
 </div>
 <div class="divider"></div>
 <div id="formPreviewPane" style="display:none;">
@@ -301,16 +303,16 @@
 
   <div class="divider"></div>
 
-  <h3 style="margin:0;">Fields</h3>
-  <div id="formPreviewFields"></div>
-
-  <div class="divider"></div>
-
   <h3 style="margin:0;">Contract</h3>
   <div class="hint" style="margin-top:6px;">
     Applicants must accept this contract before submitting.
   </div>
   <div id="formPreviewContract" class="preview-row" style="max-height:320px; overflow:auto; white-space:pre-wrap;"></div>
+
+  <div class="divider"></div>
+
+  <h3 style="margin:0;">Fields</h3>
+  <div id="formPreviewFields"></div>
 
   <div class="divider"></div>
 </div>
@@ -377,14 +379,14 @@
 <div class="label">Type:</div>
 <div>
 <select id="fType">
-  <option value="text">Short Text</option>
-  <option value="textarea">Long Text</option>
-  <option value="number">Number</option>
-  <option value="date">Date</option>
-  <option value="checkbox">Yes / No</option>
-  <option value="select">Dropdown</option>
-  <option value="file">File Upload</option>
-  <option value="address">Address</option>
+  <option value="text">Short Text — single line answer (name, phone, website)</option>
+  <option value="textarea">Long Text — multi-line answer (descriptions, comments)</option>
+  <option value="number">Number — numerical answer only (booth size, quantity)</option>
+  <option value="date">Date — calendar date picker</option>
+  <option value="checkbox">Yes / No — single checkbox (agreements, confirmations)</option>
+  <option value="select">Dropdown — pick one or multiple from a list you create</option>
+  <option value="file">File Upload — applicant uploads a document or image</option>
+  <option value="address">Address — street, city, state, zip fields</option>
 </select>
 
   <div class="hint" style="margin-top:6px;">Choose what kind of answer you want the applicant to give.</div>
@@ -588,7 +590,6 @@ function buildPreviewFieldCard(field) {
 }
 
 async function openPreviewPane(fairId, formId) {
-  // Reload latest fields + contract from DB so preview reflects reality
   const res = await loadFormAndFields(fairId, formId);
   const contractText = await loadContractText(fairId, formId);
 
@@ -598,15 +599,15 @@ async function openPreviewPane(fairId, formId) {
 
   if (!pane || !fieldsWrap || !contractWrap) return;
 
+  contractWrap.textContent = contractText && contractText.trim()
+    ? contractText
+    : 'No contract text found for this form.';
+
   fieldsWrap.innerHTML = '';
   for (const f of res.fields) {
     if (f.is_active === false) continue;
     fieldsWrap.appendChild(buildPreviewFieldCard(f));
   }
-
-  contractWrap.textContent = contractText && contractText.trim()
-    ? contractText
-    : 'No contract text found for this form.';
 
   pane.style.display = '';
   pane.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -843,14 +844,14 @@ function buildInlineEditor(field) {
 <div class="label">Type:</div>
 <div>
   <select class="ie-type">
-    <option value="text">Short Text</option>
-    <option value="textarea">Long Text</option>
-    <option value="number">Number</option>
-    <option value="date">Date</option>
-    <option value="checkbox">Yes / No</option>
-    <option value="select">Dropdown</option>
-    <option value="file">File Upload</option>
-    <option value="address">Address</option>
+    <option value="text">Short Text — single line answer (name, phone, website)</option>
+    <option value="textarea">Long Text — multi-line answer (descriptions, comments)</option>
+    <option value="number">Number — numerical answer only (booth size, quantity)</option>
+    <option value="date">Date — calendar date picker</option>
+    <option value="checkbox">Yes / No — single checkbox (agreements, confirmations)</option>
+    <option value="select">Dropdown — pick one or multiple from a list you create</option>
+    <option value="file">File Upload — applicant uploads a document or image</option>
+    <option value="address">Address — street, city, state, zip fields</option>
   </select>
 </div>
 
@@ -1200,48 +1201,36 @@ applyTemplateButtonState(formId);
   setMsg('Inserting template...');
   try {
 
-          const template = [
-            { label: 'Contact Name (if different)', type: 'text', required: false, sort: 10, placeholder: 'Optional' },
-            { label: 'Phone Number', type: 'text', required: true, sort: 20, placeholder: 'Example: (555) 555-5555' },
-            { label: 'Mailing Address', type: 'address', required: true, sort: 30, placeholder: '' },
-            { label: 'Website (optional)', type: 'text', required: false, sort: 40, placeholder: 'https://...' },
-            { label: 'Facebook / Social Link (optional)', type: 'text', required: false, sort: 50, placeholder: 'https://...' },
-            { label: 'Description of goods you plan to sell', type: 'textarea', required: true, sort: 60, placeholder: 'Tell us what you sell...' },
-            
-           {
-  label: 'Which weekend(s) are you applying for?',
-  type: 'select',
-  required: true,
-  sort: 70,
-  help: 'Select all weekends you want to attend.',
-  config: { source: 'fair_weekends', mode: 'multi' }
-},
-
-            {
-              label: 'Upload proof of insurance (if required)',
-              type: 'file',
-              required: false,
-              sort: 80,
-              help: 'Upload insurance document if your fair requires it.'
-            },
-            {
-              label: 'I agree to follow the fair rules and policies',
-              type: 'checkbox',
-              required: true,
-              sort: 90,
-              help: 'Applicant must agree before submitting.'
-            }
-          ];
-
+  const template = [
+  {
+    label: 'Description of goods you plan to sell',
+    type: 'textarea',
+    required: true,
+    sort: 1,
+    placeholder: 'Tell us what you sell...'
+  },
+  {
+    label: 'Which weekend(s) are you applying for?',
+    type: 'select',
+    required: true,
+    sort: 2,
+    help: 'Select all weekends you want to attend.',
+    config: { source: 'fair_weekends', mode: 'multi' }
+  },
+  {
+    label: 'Upload proof of insurance (if required)',
+    type: 'file',
+    required: false,
+    sort: 3,
+    help: 'Upload insurance document if your fair requires it.'
+  }
+];
           for (const q of template) {
             await addFieldAuto(fairId, formId, q);
           }
 
-          const res = await loadFormAndFields(fairId, formId);
-          renderFields(res.fields, fairId, formId);
-          setMsg('Template inserted. Edit or delete any fields you want.');
-localStorage.setItem(templateKey(formId), '1');
-applyTemplateButtonState(formId);
+    localStorage.setItem(templateKey(formId), '1');
+window.location.reload();
         } catch (e) {
           console.error(e);
           setMsg('Template insert failed. Check console.');
@@ -1279,21 +1268,52 @@ document.getElementById('btnSaveForm').onclick = async () => {
   }
 };
 
-document.getElementById('btnPreview').onclick = async () => {
-  showLoader();
-  setMsg('Loading preview...');
-  try {
-    await openPreviewPane(fairId, formId);
-    setMsg('');
-  } catch (e) {
-    console.error(e);
-    setMsg('Preview failed. Check console.');
-  } finally {
-    hideLoader();
-  }
+document.getElementById('btnPreview').onclick = () => {
+  window.location.href = `fair_form_preview.html?fair_id=${fairId}&form_id=${formId}`;
 };
 document.getElementById('btnEditContract').onclick = () => {
   window.location.href = `fair_application_contract_edit.html?fair_id=${fairId}&form_id=${formId}`;
+};
+
+document.getElementById('btnClearForm').onclick = async () => {
+  if (!confirm('This will delete ALL fields from this form. The form itself will remain. Continue?')) return;
+
+  showLoader();
+  setMsg('Clearing form...');
+  try {
+    const res = await loadFormAndFields(fairId, formId);
+    for (const f of res.fields) {
+      await deleteField(fairId, formId, f.id);
+    }
+    localStorage.removeItem(templateKey(formId));
+    window.location.reload();
+  } catch (e) {
+    console.error(e);
+    setMsg('Clear failed. Check console.');
+    hideLoader();
+  }
+};
+
+document.getElementById('btnDeleteForm').onclick = async () => {
+  if (!confirm('Are you sure you want to delete this form? This cannot be undone from the fair dashboard.')) return;
+  if (!confirm('Second confirmation — delete this application form permanently?')) return;
+
+  showLoader();
+  setMsg('Deleting form...');
+  try {
+    await supabaseClient.rpc('fair_man_app_soft_delete_form', {
+      p_fair_id: fairId,
+      p_form_id: formId
+    });
+    setMsg('Form deleted.');
+    setTimeout(() => {
+      window.location.href = `fair_application_setup.html?fair_id=${fairId}`;
+    }, 1000);
+  } catch (e) {
+    console.error(e);
+    setMsg('Delete failed. Check console.');
+    hideLoader();
+  }
 };
 
 

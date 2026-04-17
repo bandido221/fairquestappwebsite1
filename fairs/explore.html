@@ -288,7 +288,16 @@
     margin-top: 4px;
   }
   .website-btn:hover { background: #1b5e20; }
-
+.unverified-notice {
+  background: #7a3b00;
+  color: #ffe0b2 !important;
+  border: 1px solid #ff8f00;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
   /* ── BANNER & LOGO ── */
   .top-banner {
     width: 100%;
@@ -350,6 +359,85 @@
 .btn-fav.is-favorite:hover { background: #7d3535; }
 .btn-fav:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── SUBMIT MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.show {
+  display: flex;
+}
+.modal-box {
+  background: #1a1208;
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 16px;
+  padding: 30px 28px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.modal-box h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  color: var(--gold-light);
+  margin-bottom: 12px;
+}
+.modal-box p {
+  font-size: 14px;
+  color: var(--gold);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+.modal-btn {
+  display: inline-block;
+  font-family: 'Domine', serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  margin: 4px;
+}
+.modal-btn-primary {
+  background: var(--gold);
+  color: #111;
+}
+.modal-btn-primary:hover { background: var(--gold-light); }
+.modal-btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.4);
+  color: var(--gold);
+}
+.modal-btn-secondary:hover { background: rgba(201,168,76,0.1); }
+
+/* ── SUBMIT FAIR BUTTON ── */
+.submit-fair-btn {
+  font-family: 'Domine', serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(201,168,76,0.5);
+  background: rgba(201,168,76,0.15);
+  color: var(--gold-light);
+  cursor: pointer;
+  transition: background 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.submit-fair-btn:hover {
+  background: rgba(201,168,76,0.28);
+}
+
 /* ── TOAST ── */
 .toast {
   position: fixed;
@@ -373,7 +461,18 @@
 </style>
 </head>
 <body>
-  <div class="toast" id="toast"></div>
+<div class="toast" id="toast"></div>
+
+  <!-- Submit Fair Modal -->
+  <div class="modal-overlay" id="submitModal">
+    <div class="modal-box">
+      <h2>🎪 Submit a Fair</h2>
+      <p>You need a FairQuest account to submit a new fair. It only takes a minute to sign up!</p>
+      <a href="/profile/index.html" class="modal-btn modal-btn-primary">Create Account / Log In</a>
+      <button class="modal-btn modal-btn-secondary" onclick="document.getElementById('submitModal').classList.remove('show')">Maybe Later</button>
+    </div>
+  </div>
+
   <nav class="topnav">
     <a class="topnav-logo" href="/index.html">
       <img src="/images/logo.png" alt="FairQuest" />
@@ -400,8 +499,12 @@
       official sites when available. If something looks out of date, let us know.
     </div>
 
+<div style="text-align:center; margin-bottom: 16px;">
+      <button class="submit-fair-btn" onclick="handleSubmitFair()">➕ Submit a Fair</button>
+    </div>
+
     <div class="filters">
-      <select id="stateDropdown">
+            <select id="stateDropdown">
         <option value="">🗺️ Select a state</option>
       </select>
       <select id="monthDropdown">
@@ -517,6 +620,11 @@ div.innerHTML = `
 <div class="card">
   ${imageHtml}
   <div class="card-content">
+      ${!fair.verified ? `
+        <div class="unverified-notice">
+          ⚠️ This fair was submitted by a community member and has not yet been verified by FairQuest.
+        </div>
+      ` : ''}
       <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
       <p><span class="badge">${fair.state}</span></p>
       <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
@@ -609,6 +717,14 @@ function formatDateMMDDYY(dateStr){
 }
 
 initUser().then(() => loadFairs());
+
+function handleSubmitFair() {
+  if (currentUser) {
+    window.location.href = '/fairs/add_fair.html';
+  } else {
+    document.getElementById('submitModal').classList.add('show');
+  }
+}
   </script>
   <script>
     // Track all fair-related button clicks with GA4

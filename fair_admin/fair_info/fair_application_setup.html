@@ -168,6 +168,8 @@
     .btn-view:hover { background: #1a1a1a; }
     .btn-edit  { background: #4CAF50; color: #fff; }
     .btn-edit:hover { background: #43a047; }
+    .btn-danger { background: #c0392b; color: #fff; }
+    .btn-danger:hover { background: #a93226; }
 
     /* Status message */
     .status-msg {
@@ -279,12 +281,15 @@
     };
 
     function pickActiveForm(forms, activeRows, type) {
-      const activeRow = activeRows.find(r => r.form_type === type);
-      if (!activeRow?.active_form_id) return null;
-      return forms.find(f => String(f.form_id) === String(activeRow.active_form_id)) || null;
-    }
+  const activeRow = activeRows.find(r => r.form_type === type);
+  const activeFormId = activeRow?.active_form_id || null;
+  // Return ALL forms for this type, marking which one is active
+  return forms
+    .filter(f => f.form_type === type)
+    .map(f => ({ ...f, isActive: String(f.form_id) === String(activeFormId) }));
+}
 
-    function buildCard({ fairId, type, form }) {
+    function buildCard({ fairId, type, form, isActive }) {
       const { label, icon } = TYPE_META[type] || { label: type, icon: '📄' };
       const card = document.createElement('div');
       card.className = 'form-type-card';
@@ -314,13 +319,21 @@
         </div>
         <div class="meta-line"><span class="meta-label">Form name:</span> ${form.title || 'Untitled'}</div>
         <div class="meta-line"><span class="meta-label">Last updated:</span> ${lastUpdated}</div>
-        <div style="margin-top:2px;"><span class="pill-active">● Active</span></div>
+        <div style="margin-top:2px;">
+          ${isActive
+            ? '<span class="pill-active">● Active</span>'
+            : '<span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:bold;background:rgba(0,0,0,0.1);color:#5c3a1e;border:1px solid rgba(0,0,0,0.2);">○ Inactive</span>'
+          }
+        </div>
         <div class="card-btns">
           <button class="btn-small btn-view" onclick="window.location.href='fair_form_preview.html?fair_id=${fairId}&form_id=${form.form_id}'">
             👁️ Preview Form
           </button>
           <button class="btn-small btn-edit" onclick="window.location.href='fair_form_edit.html?fair_id=${fairId}&form_id=${form.form_id}'">
             ✏️ Edit Form
+          </button>
+          <button class="btn-small btn-danger" onclick="deleteForm(${fairId}, '${form.form_id}')">
+            🗑 Delete
           </button>
         </div>`;
       return card;
@@ -329,10 +342,91 @@
     function renderCards(fairId, forms, activeRows) {
       const grid = document.getElementById('formsGrid');
       grid.innerHTML = '';
+      grid.style.gridTemplateColumns = '1fr';
+
       ['vendor', 'food_vendor', 'performer'].forEach(type => {
-        const form = pickActiveForm(forms, activeRows, type);
-        grid.appendChild(buildCard({ fairId, type, form }));
+        const { label, icon } = TYPE_META[type] || { label: type, icon: '📄' };
+        const activeRow = activeRows.find(r => r.form_type === type);
+        const activeFormId = activeRow?.active_form_id || null;
+        const typeForms = forms.filter(f => f.form_type === type);
+
+        // Section wrapper
+        const section = document.createElement('div');
+        section.className = 'form-type-card';
+        section.style.marginBottom = '0';
+
+        // Section header
+        section.innerHTML = `
+          <div class="form-type-header">
+            <span class="form-type-icon">${icon}</span>
+            <h3 class="form-type-title">${label}</h3>
+            <span style="margin-left:auto;font-size:13px;color:#5c3a1e;">${typeForms.length} form${typeForms.length !== 1 ? 's' : ''}</span>
+          </div>
+        `;
+
+        if (!typeForms.length) {
+          // Empty placeholder
+          section.innerHTML += `
+            <div class="empty-box">
+              <div class="empty-icon">📝</div>
+              <strong>No form created yet</strong>
+              Click "Create New Application Form" above to build your ${label.toLowerCase()} application.
+            </div>`;
+        } else {
+          // One row per form
+          for (const form of typeForms) {
+            const isActive = String(form.form_id) === String(activeFormId);
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.55);border:1px solid rgba(0,0,0,0.12);border-radius:10px;padding:12px 16px;flex-wrap:wrap;';
+            row.innerHTML = `
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:bold;font-size:15px;color:#3b1f1f;">${form.title || 'Untitled'}</div>
+                <div style="font-size:13px;color:#5c3a1e;margin-top:4px;">Version ${form.version}</div>
+              </div>
+              <div>
+                ${isActive
+                  ? '<span class="pill-active">● Active</span>'
+                  : '<span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:bold;background:rgba(0,0,0,0.1);color:#5c3a1e;border:1px solid rgba(0,0,0,0.2);">○ Inactive</span>'
+                }
+              </div>
+              <div class="card-btns" style="margin-top:0;">
+                <button class="btn-small btn-view" onclick="window.location.href='fair_form_preview.html?fair_id=${fairId}&form_id=${form.form_id}'">
+                  👁️ Preview
+                </button>
+                <button class="btn-small btn-edit" onclick="window.location.href='fair_form_edit.html?fair_id=${fairId}&form_id=${form.form_id}'">
+                  ✏️ Edit
+                </button>
+                <button class="btn-small btn-danger" onclick="deleteForm(${fairId}, '${form.form_id}')">
+                  🗑 Delete
+                </button>
+              </div>
+            `;
+            section.appendChild(row);
+          }
+        }
+
+        grid.appendChild(section);
       });
+    }
+
+    async function deleteForm(fairId, formId) {
+      if (!confirm('Are you sure you want to delete this form? This cannot be undone from the fair dashboard.')) return;
+      if (!confirm('Second confirmation — delete this application form permanently?')) return;
+
+      showLoader();
+      setMsg('Deleting form...');
+      try {
+        await supabaseClient.rpc('fair_man_app_soft_delete_form', {
+          p_fair_id: fairId,
+          p_form_id: formId
+        });
+        setMsg('Form deleted.');
+        await loadPage();
+      } catch (e) {
+        console.error(e);
+        setMsg('Delete failed. Check console.');
+        hideLoader();
+      }
     }
 
     async function loadPage() {

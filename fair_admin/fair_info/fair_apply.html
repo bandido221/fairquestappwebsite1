@@ -149,51 +149,83 @@
 
      <div class="divider"></div>
 
-    <h3 style="margin:0;">Contract</h3>
-    <div class="hint" style="margin-top:6px;">
-      Please read the contract before continuing with this application.
-    </div>
+   <h3 style="margin:0;">Contract</h3>
+<div style="margin-top:10px;padding:14px 16px;background:rgba(180,120,0,0.12);
+  border:1px solid rgba(180,120,0,0.35);border-radius:10px;color:#3b1f1f;font-size:14px;line-height:1.6;">
+  <strong>⚠️ Before you can continue with your application you must:</strong>
+  <ol style="margin:8px 0 0 18px;padding:0;display:grid;gap:6px;">
+    <li>Read the entire contract by scrolling to the bottom</li>
+    <li>Enter your initials to confirm you have read it</li>
+    <li>Check the agreement box</li>
+  </ol>
+  <div style="margin-top:8px;font-style:italic;">The application form will remain locked until all three steps are completed.</div>
+</div>
 
-    <div id="contractBox" style="
-      margin-top:12px;
-      background: rgba(255,255,255,0.65);
-      border: 1px solid rgba(0,0,0,0.18);
-      border-radius: 10px;
-      padding: 14px;
-      max-height: 320px;
-      overflow: auto;
-      color: #111;
-      white-space: pre-wrap;
-    ">Loading contract…</div>
+   <div id="contractBox" style="
+  margin-top:12px;
+  background: rgba(255,255,255,0.65);
+  border: 2px solid rgba(59,31,31,0.25);
+  border-radius: 10px;
+  padding: 14px;
+  max-height: 320px;
+  overflow-y: scroll;
+  color: #111;
+  white-space: pre-wrap;
+  line-height: 1.7;
+">Loading contract…</div>
 
-    <div style="margin-top:12px; display:flex; align-items:center; gap:10px;">
-      <input type="checkbox" id="chkAcceptContract" />
-      <label for="chkAcceptContract" style="font-weight:700;">
-        I have read, understand, and accept the contract
-      </label>
-    </div>
+<div id="scrollIndicator" style="text-align:center;font-size:13px;color:rgba(59,31,31,0.6);margin-top:8px;font-style:italic;">
+  ▼ Scroll to the bottom to continue
+</div>
+
+<div style="margin-top:16px; display:flex; align-items:center; gap:14px;">
+  <label style="font-weight:bold;color:#3b1f1f;white-space:nowrap;">Initials:</label>
+  <input type="text" id="contractInitials" maxlength="4" disabled
+    style="width:100px;text-align:center;text-transform:uppercase;font-size:20px;
+    font-family:'Cinzel',serif;padding:10px;border-radius:9px;
+    border:2px solid rgba(59,31,31,0.4);background:rgba(255,255,255,0.75);
+    color:#3b1f1f;letter-spacing:0.15em;"
+    placeholder="—"
+  />
+  <span style="font-size:13px;color:rgba(59,31,31,0.65);font-style:italic;">
+    Enter your initials to confirm you have read the contract above
+  </span>
+</div>
+
+<div id="agreeRow" style="margin-top:12px;display:flex;align-items:center;gap:12px;
+  padding:14px 16px;background:rgba(255,255,255,0.5);border-radius:10px;
+  border:1px solid rgba(59,31,31,0.2);opacity:0.55;">
+  <input type="checkbox" id="chkAcceptContract" disabled />
+  <label for="chkAcceptContract" style="font-weight:700;color:#3b1f1f;">
+    I have read and agree to the terms of this contract
+  </label>
+</div>
+
+<div id="contractWarningBox" style="display:none;margin-top:12px;padding:12px 16px;
+  background:rgba(180,50,50,0.12);border:1px solid rgba(180,50,50,0.4);
+  border-radius:10px;color:#6b1a1a;font-weight:bold;font-size:14px;">
+  ⚠️ You must scroll through the contract, enter your initials, and check the agreement box before continuing.
+</div>
 
     <div class="divider"></div>
 
     <div id="lockedApplicationArea" style="opacity:0.55; pointer-events:none;">
-      <h3 style="margin:0;">Your Vendor / Performer Profile</h3>
-      <div class="hint" style="margin-top:6px;">
-        If you have more than one approved profile, select the one you'd like to use for this application.
-      </div>
+     <h3 style="margin:0;">Vendor Information</h3>
 
-      <div class="grid" style="margin-top:12px;">
-        <div class="label">Your Profile:</div>
-        <div>
-          <select id="vpaSelect" style="display:none;"></select>
-          <div id="vpaSingle" style="display:none;"></div>
-        </div>
+<div class="grid" style="margin-top:12px;">
+  <div class="label">Your Profile:</div>
+  <div>
+    <select id="vpaSelect" style="display:none;"></select>
+    <div id="vpaSingle" style="display:none;"></div>
+  </div>
 
-        <div class="label">Applicant Type:</div><div id="vpaType">—</div>
-        <div class="label">Food Vendor?:</div><div id="vpaFood">—</div>
-        <div class="label">Email:</div><div id="vpaEmail">—</div>
-        <div class="label">Contact Name:</div><div id="vpaContact">—</div>
-        <div class="label">Form in Use:</div><div id="activeFormInfo">—</div>
-      </div>
+  <div class="label">Email:</div><div id="vpaEmail">—</div>
+  <div class="label">Contact Name:</div><div id="vpaContact">—</div>
+  <div class="label">Phone Number:</div><div id="vpaPhone">—</div>
+  <div class="label">Address:</div><div id="vpaAddress">—</div>
+</div>
+<div id="activeFormInfo" style="display:none;"></div>
+      <div id="missingProfileFields" style="margin-top:16px;"></div>
 
       <div class="divider"></div>
 
@@ -322,16 +354,16 @@ async function findExistingSubmission(fairId, vpaId) {
       return out;
     }
 
-    async function loadApprovedVpa(userId) {
-      const { data, error } = await supabaseClient
-        .from('vendor_performer_applications')
-        .select('id, name, contact_name, contact_email, application_type, is_food_vendor, approval_status')
-        .eq('user_id', userId)
-        .eq('approval_status', 'approved')
-        .order('id', { ascending: false });
-      if (error) throw error;
-      return Array.isArray(data) ? data : [];
-    }
+   async function loadApprovedVpa(userId) {
+  const { data, error } = await supabaseClient
+    .from('vendor_performer_applications')
+    .select('id, name, contact_name, contact_email, phone_number, street_address, city, state, zip_code, application_type, is_food_vendor, approval_status')
+    .eq('user_id', userId)
+    .eq('approval_status', 'approved')
+    .order('id', { ascending: false });
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
+}
 
     function getFormTypeFromVpa(vpa) {
       if (vpa.application_type === true) return 'performer';
@@ -339,14 +371,75 @@ async function findExistingSubmission(fairId, vpaId) {
       return 'vendor';
     }
 
-    function renderSelectedVpa(vpa) {
-      const type = (vpa.application_type === true) ? 'Performer' : 'Vendor';
-      const food = (vpa.is_food_vendor === true) ? 'Yes' : 'No';
-      document.getElementById('vpaType').textContent = type;
-      document.getElementById('vpaFood').textContent = food;
-      document.getElementById('vpaEmail').textContent = vpa.contact_email || '—';
-      document.getElementById('vpaContact').textContent = vpa.contact_name || '—';
+    function renderMissingProfileFields(vpa) {
+  const container = document.getElementById('missingProfileFields');
+  container.innerHTML = '';
+
+  const missing = [];
+  if (!vpa.phone_number) missing.push({ key: 'phone_number', label: 'Phone Number', type: 'text', placeholder: '(555) 555-5555' });
+  if (!vpa.street_address) missing.push({ key: 'street_address', label: 'Street Address', type: 'text', placeholder: '123 Main St' });
+  if (!vpa.city) missing.push({ key: 'city', label: 'City', type: 'text', placeholder: 'City' });
+  if (!vpa.state) missing.push({ key: 'state', label: 'State', type: 'text', placeholder: 'IA', maxlength: '2' });
+  if (!vpa.zip_code) missing.push({ key: 'zip_code', label: 'Zip Code', type: 'text', placeholder: '50314' });
+
+  if (!missing.length) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = '';
+  const notice = document.createElement('div');
+  notice.style.cssText = 'background:rgba(180,80,0,0.12);border:1px solid rgba(180,80,0,0.3);border-radius:10px;padding:14px 16px;margin-bottom:16px;color:#3b1f1f;font-size:14px;';
+  notice.innerHTML = '<strong>⚠️ Your profile is missing some required information.</strong> Please fill in the fields below before submitting your application.';
+  container.appendChild(notice);
+
+  for (const f of missing) {
+    const block = document.createElement('div');
+    block.style.cssText = 'margin-bottom:12px;';
+
+    const lbl = document.createElement('label');
+    lbl.style.cssText = 'display:block;font-weight:bold;margin-bottom:6px;color:#3b1f1f;';
+    lbl.textContent = f.label + ' *';
+    block.appendChild(lbl);
+
+    const inp = document.createElement('input');
+    inp.type = f.type;
+    inp.placeholder = f.placeholder || '';
+    inp.dataset.profileKey = f.key;
+    inp.style.cssText = 'width:100%;padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.25);box-sizing:border-box;font-size:15px;background:rgba(255,255,255,0.9);color:#111;';
+    if (f.maxlength) inp.maxLength = Number(f.maxlength);
+
+    inp.addEventListener('input', () => {
+  if (f.key === 'phone_number') {
+    const digits = inp.value.replace(/\D/g, '').slice(0, 10);
+    let formatted = digits;
+    if (digits.length >= 7) {
+      formatted = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+    } else if (digits.length >= 4) {
+      formatted = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+    } else if (digits.length >= 1) {
+      formatted = `(${digits}`;
     }
+    inp.value = formatted;
+    vpa[f.key] = formatted || null;
+  } else {
+    vpa[f.key] = inp.value.trim() || null;
+  }
+});
+
+    block.appendChild(inp);
+    container.appendChild(block);
+  }
+}
+
+function renderSelectedVpa(vpa) {
+  document.getElementById('vpaEmail').textContent = vpa.contact_email || '—';
+  document.getElementById('vpaContact').textContent = vpa.contact_name || '—';
+  document.getElementById('vpaPhone').textContent = vpa.phone_number || '(missing — fill in below)';
+  const addrParts = [vpa.street_address, vpa.city, vpa.state, vpa.zip_code].filter(Boolean);
+  document.getElementById('vpaAddress').textContent = addrParts.length ? addrParts.join(', ') : '(missing — fill in below)';
+  renderMissingProfileFields(vpa);
+}
 
     async function loadActiveForm(fairId, formType) {
       const { data, error } = await supabaseClient
@@ -608,6 +701,24 @@ function setApplicationLocked(isLocked) {
     formHint.textContent = 'You must accept the contract before filling out this application.';
   }
 }
+function compressImage(file, maxPx = 800, quality = 0.75) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => resolve(blob), 'image/webp', quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
     async function renderFieldsInto(container, fields, valuesMap, onChange, fairWeekendOptions, fileKeyBase) {
       container.innerHTML = '';
 
@@ -747,12 +858,13 @@ function setApplicationLocked(isLocked) {
           grid.appendChild(zip);
 
           control = grid;
-        } else if (t === 'file') {
-          const fileRow = el('div', { style: 'display:flex; gap:10px; align-items:center; flex-wrap:wrap;' });
-          const inp = el('input', { type: 'file' });
-          const meta = el('div', { className: 'hint', style: 'margin-top:0; color:#3b1f1f;' });
-          const btnClear = el('button', { className: 'btn btn-dark', style: 'padding:8px 12px; font-size:14px;', text: 'Clear' });
-
+} else if (t === 'file') {
+  const fileRow = el('div', { style: 'display:flex; gap:10px; align-items:center; flex-wrap:wrap;' });
+  const inp = el('input', { type: 'file' });
+  const meta = el('div', { className: 'hint', style: 'margin-top:0; color:#3b1f1f;' });
+  const btnClear = el('button', { className: 'btn btn-dark', style: 'padding:8px 12px; font-size:14px;', text: 'Clear' });
+  const imgPreview = el('img', { style: 'display:none; max-width:80px; max-height:80px; border-radius:8px; border:1px solid rgba(0,0,0,0.2); object-fit:cover;' });
+  const limitHint = el('div', { style: 'font-size:12px;color:rgba(59,31,31,0.6);font-style:italic;margin-top:4px;width:100%;', text: 'Images are automatically compressed. Non-image files (PDF, etc.) max 2MB.' });
           const fileKey = `${fileKeyBase}:file:${f.id}`;
 
           // Load persisted file (IndexedDB)
@@ -772,38 +884,76 @@ function setApplicationLocked(isLocked) {
             meta.textContent = 'Select a file (upload comes later).';
           }
 
-          inp.addEventListener('change', async () => {
-            const f0 = inp.files && inp.files[0] ? inp.files[0] : null;
-            if (!f0) {
-              meta.textContent = 'No file selected.';
-              onChange(f, null);
-              await idbDeleteFile(fileKey).catch(() => {});
-              return;
-            }
+         inp.addEventListener('change', async () => {
+  const f0 = inp.files && inp.files[0] ? inp.files[0] : null;
+  if (!f0) {
+    meta.textContent = 'No file selected.';
+    imgPreview.style.display = 'none';
+    onChange(f, null);
+    await idbDeleteFile(fileKey).catch(() => {});
+    return;
+  }
 
-            meta.textContent = `Saving: ${f0.name}…`;
-            try {
-              await idbPutFile(fileKey, f0, { name: f0.name, size: f0.size, type: f0.type });
-              meta.textContent = `Selected: ${f0.name}`;
-              onChange(f, { name: f0.name, size: f0.size, type: f0.type, persisted: true });
-            } catch (e) {
-              console.error(e);
-              meta.textContent = `Could not save file locally.`;
-              onChange(f, { name: f0.name, size: f0.size, type: f0.type, persisted: false });
-            }
-          });
+  const isImage = f0.type.startsWith('image/');
+  const maxNonImageBytes = 2 * 1024 * 1024; // 2MB
+
+  if (!isImage && f0.size > maxNonImageBytes) {
+    meta.textContent = `❌ File too large. Max 2MB for non-image files.`;
+    inp.value = '';
+    return;
+  }
+
+  meta.textContent = isImage ? 'Compressing image…' : `Saving: ${f0.name}…`;
+
+  try {
+    let blob = f0;
+    let finalName = f0.name;
+    let finalType = f0.type;
+
+    if (isImage) {
+      blob = await compressImage(f0);
+      finalName = f0.name.replace(/\.[^/.]+$/, '') + '.webp';
+      finalType = 'image/webp';
+      const kb = Math.round(blob.size / 1024);
+      meta.textContent = `Compressed to ${kb}KB — saving…`;
+    }
+
+    await idbPutFile(fileKey, blob, { name: finalName, size: blob.size, type: finalType });
+    meta.textContent = `Selected: ${finalName}${isImage ? ` (${Math.round(blob.size/1024)}KB)` : ''}`;
+    onChange(f, { name: finalName, size: blob.size, type: finalType, persisted: true });
+
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        imgPreview.src = e.target.result;
+        imgPreview.style.display = 'block';
+      };
+      reader.readAsDataURL(blob);
+    } else {
+      imgPreview.style.display = 'none';
+    }
+  } catch (e) {
+    console.error(e);
+    meta.textContent = 'Could not save file locally.';
+    onChange(f, { name: f0.name, size: f0.size, type: f0.type, persisted: false });
+  }
+});
 
           btnClear.addEventListener('click', async () => {
-            inp.value = '';
-            await idbDeleteFile(fileKey).catch(() => {});
-            meta.textContent = 'No file selected.';
-            onChange(f, null);
-          });
+  inp.value = '';
+  await idbDeleteFile(fileKey).catch(() => {});
+  meta.textContent = 'No file selected.';
+  imgPreview.style.display = 'none';
+  imgPreview.src = '';
+  onChange(f, null);
+});
 
-          fileRow.appendChild(inp);
-          fileRow.appendChild(btnClear);
-          fileRow.appendChild(meta);
-          control = fileRow;
+        fileRow.appendChild(inp);
+fileRow.appendChild(btnClear);
+fileRow.appendChild(meta);
+fileRow.appendChild(imgPreview);
+fileRow.appendChild(limitHint);
+control = fileRow;
         } else {
           control = el('input', { type: 'text', placeholder: f.placeholder || '' });
           control.value = (typeof existing === 'string') ? existing : (existing?.text || '');
@@ -913,21 +1063,53 @@ const contractBox = document.getElementById('contractBox');
 setApplicationLocked(true);
 
 chkAcceptContract.checked = false;
-chkAcceptContract.onchange = () => {
-  setApplicationLocked(!chkAcceptContract.checked);
+chkAcceptContract.disabled = true;
 
-  if (chkAcceptContract.checked) {
-    if (currentFields.length === 0) {
-      setMsg('');
-    } else {
-      btnReview.disabled = false;
-      setMsg('Saved locally.');
+function initContractScroll() {
+  const box = document.getElementById('contractBox');
+  const indicator = document.getElementById('scrollIndicator');
+  const initialsInput = document.getElementById('contractInitials');
+  const agreeRow = document.getElementById('agreeRow');
+  const chk = document.getElementById('chkAcceptContract');
+  let scrolled = false;
+
+  box.addEventListener('scroll', () => {
+    const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 30;
+    if (atBottom && !scrolled) {
+      scrolled = true;
+      indicator.style.opacity = '0';
+      initialsInput.disabled = false;
+      initialsInput.focus();
     }
-  } else {
-    btnReview.disabled = true;
-    setMsg('');
-  }
-};
+  });
+
+  initialsInput.addEventListener('input', () => {
+    const hasInitials = initialsInput.value.trim().length >= 1;
+    if (scrolled && hasInitials) {
+      chk.disabled = false;
+      agreeRow.style.opacity = '1';
+    } else {
+      chk.disabled = true;
+      chk.checked = false;
+      agreeRow.style.opacity = '0.55';
+      setApplicationLocked(true);
+    }
+  });
+
+  chk.onchange = () => {
+    setApplicationLocked(!chk.checked);
+    if (chk.checked) {
+      document.getElementById('contractWarningBox').style.display = 'none';
+      btnReview.disabled = currentFields.length === 0;
+      if (currentFields.length > 0) setMsg('Saved locally.');
+    } else {
+      btnReview.disabled = true;
+      setMsg('');
+    }
+  };
+}
+
+initContractScroll();
       let currentFormId = null;
       let currentDraftKey = null;
       let valuesMap = new Map();
@@ -963,32 +1145,61 @@ chkAcceptContract.onchange = () => {
           currentDraftKey = draftKey(fairId, String(selected.id), currentFormId);
 
           const formRow = await loadFormRow(currentFormId);
-          contractBox.textContent =
-            (formRow.contract_text && String(formRow.contract_text).trim() !== '')
-              ? String(formRow.contract_text)
-              : 'No contract text found for this application form.';
+         contractBox.textContent =
+  (formRow.contract_text && String(formRow.contract_text).trim() !== '')
+    ? String(formRow.contract_text)
+    : 'No contract text found for this application form.';
 
-          chkAcceptContract.checked = false;
-          setApplicationLocked(true);
+// Reset contract gate on each profile switch
+chkAcceptContract.checked = false;
+chkAcceptContract.disabled = true;
+document.getElementById('contractInitials').value = '';
+document.getElementById('contractInitials').disabled = true;
+document.getElementById('agreeRow').style.opacity = '0.55';
+document.getElementById('scrollIndicator').style.opacity = '1';
+document.getElementById('contractWarningBox').style.display = 'none';
+setApplicationLocked(true);
+initContractScroll();
 
           // ✅ If they already submitted (not pending), block applying again
           hideApplyMsgBox();
 
-          const existingSub = await findExistingSubmission(fairId, selected.id);
-          if (existingSub && String(existingSub.status || '').toLowerCase() !== 'pending') {
-            const human = prettySubmitStatus(existingSub.status);
-            showApplyMsgBox(
-              `You already applied to this fair with this profile.`,
-              `Current status: ${human}. If you need changes, use your dashboard to manage this application.`
-            );
+         const existingSub = await findExistingSubmission(fairId, selected.id);
+if (existingSub && String(existingSub.status || '').toLowerCase() !== 'pending') {
+  hideLoader();
 
-            btnReview.disabled = true;
-            formHint.textContent = 'This application is already submitted.';
-            fieldsWrap.innerHTML = '';
-            setMsg('');
-            hideLoader();
-            return;
-          }
+  // Determine dashboard URL based on VPA type
+  const isPerformer = selected.application_type === true;
+  const dashboardUrl = isPerformer
+    ? `/vendor_performer/performer/dashboard.html`
+    : `/vendor_performer/vendor/dashboard.html`;
+
+  // Show message then redirect
+  document.getElementById('fairTitle').textContent = 'Application Already Received';
+  document.getElementById('pageHint').textContent = '';
+
+  showApplyMsgBox(
+    '✅ Your application has been received.',
+    'You will receive an email notification once it has been reviewed and a decision has been made. Thank you for applying! You are being redirected to your dashboard…'
+  );
+
+  // Hide everything else
+  btnReview.disabled = true;
+  document.getElementById('lockedApplicationArea').style.display = 'none';
+  document.getElementById('contractBox').closest('.divider') && null;
+
+  // Hide contract section
+  const contractSection = document.getElementById('contractBox');
+  if (contractSection) contractSection.closest('div').style.display = 'none';
+
+  setMsg('');
+
+  setTimeout(() => {
+    window.location.href = dashboardUrl;
+  }, 4000);
+
+  return;
+}
 
           // Load draft from localStorage
           valuesMap = loadDraftMap(currentDraftKey);
@@ -1036,17 +1247,53 @@ chkAcceptContract.onchange = () => {
         };
       }
 
-      btnReview.onclick = () => {
-        if (!currentFormId || !currentDraftKey) return;
+    btnReview.onclick = async () => {
+  if (!currentFormId || !currentDraftKey) return;
 
-        // Validate required fields BEFORE allowing review
-        const missing = listMissingRequired(currentFields, valuesMap);
-        if (missing.length > 0) {
-          setMsg(`Missing required fields: ${missing.length}. Click a field name to jump to it.`);
-          openReqModal(missing);
-          return;
-        }
+  const chk = document.getElementById('chkAcceptContract');
+  const initials = (document.getElementById('contractInitials').value || '').trim();
+  if (!chk.checked || !initials) {
+    document.getElementById('contractWarningBox').style.display = 'block';
+    document.getElementById('contractBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  document.getElementById('contractWarningBox').style.display = 'none';
 
+  // Check missing profile fields first
+  const profileInputs = document.querySelectorAll('[data-profile-key]');
+  const missingProfile = [];
+  for (const inp of profileInputs) {
+    if (!inp.value.trim()) {
+      missingProfile.push(inp.previousElementSibling.textContent.replace(' *', ''));
+    }
+  }
+  if (missingProfile.length) {
+    setMsg(`Please fill in your missing profile info: ${missingProfile.join(', ')}`);
+    return;
+  }
+
+  // Save missing profile fields back to DB
+  if (profileInputs.length) {
+    const updates = {};
+    for (const inp of profileInputs) {
+      updates[inp.dataset.profileKey] = inp.value.trim();
+    }
+    const { error: updateErr } = await supabaseClient
+      .from('vendor_performer_applications')
+      .update(updates)
+      .eq('id', selected.id);
+    if (updateErr) {
+      setMsg('Could not save your profile info. Please try again.');
+      return;
+    }
+  }
+
+  const missing = listMissingRequired(currentFields, valuesMap);
+  if (missing.length > 0) {
+    setMsg(`Missing required fields: ${missing.length}. Click a field name to jump to it.`);
+    openReqModal(missing);
+    return;
+  }
         window.location.href =
           `fair_review.html?fair_id=${encodeURIComponent(String(fairId))}` +
           `&vpa_id=${encodeURIComponent(String(selected.id))}` +

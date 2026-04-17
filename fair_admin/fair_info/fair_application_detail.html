@@ -225,7 +225,10 @@
   <button class="btn btn-dark" id="btnBack">⬅ Back to Applications</button>
   <button class="btn btn-dark" id="btnRefresh">Refresh</button>
   <button class="btn btn-dark" id="btnPrintable">Printable Version</button>
+  <button class="btn btn-approve" id="btnApprove">✅ Approve</button>
+  <button class="btn btn-decline" id="btnDecline">❌ Decline</button>
 </div>
+<div class="hint" id="actionMsg" style="margin-top:8px;"></div>
 
 <div class="grid" style="margin-top:18px;">
 
@@ -407,54 +410,103 @@
       return Array.isArray(data) ? data : [];
     }
 
-    function jsonToDisplay(val) {
-      if (val === null || val === undefined) return 'N/A';
-      if (typeof val === 'string') return val;
-      try {
-        return JSON.stringify(val, null, 2);
-      } catch (_) {
-        return String(val);
-      }
+   function jsonToDisplay(val, fieldType, fieldConfig, fairRow) {
+  if (val === null || val === undefined) return 'N/A';
+
+  const t = String(fieldType || '').toLowerCase();
+
+  // File field
+  if (t === 'file') {
+    if (typeof val === 'object' && val.name) return `📎 ${val.name}`;
+    return 'N/A';
+  }
+
+  // Weekend multi-select
+  if (t === 'select') {
+    const cfg = typeof fieldConfig === 'string' ? JSON.parse(fieldConfig || '{}') : (fieldConfig || {});
+    if (cfg.source === 'fair_weekends' && Array.isArray(val)) {
+      return val.map(w => {
+        const num = parseInt(w.replace('weekend_', ''));
+        if (!fairRow) return `Weekend ${num}`;
+        const startKey = num === 1 ? 'start_date' : `week${num}_start_date`;
+        const endKey = num === 1 ? 'end_date' : `week${num}_end_date`;
+        const s = fairRow[startKey];
+        const e = fairRow[endKey];
+        if (s && e) {
+          const fmt = d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          return `Weekend ${num}: ${fmt(s)} — ${fmt(e)}`;
+        }
+        return `Weekend ${num}`;
+      }).join('\n');
+    }
+    if (Array.isArray(val)) return val.join(', ');
+  }
+
+  // Address
+  if (t === 'address' && typeof val === 'object') {
+    return [val.street, val.city, val.state, val.zip].filter(Boolean).join(', ');
+  }
+
+  // Checkbox
+  if (t === 'checkbox') return val === true ? 'Yes' : 'No';
+
+  if (typeof val === 'string') return val;
+  if (Array.isArray(val)) return val.join(', ');
+
+  try { return JSON.stringify(val, null, 2); } catch (_) { return String(val); }
+}
+
+   function renderAnswers(fields, values, fairRow) {
+  const wrap = document.getElementById('answersWrap');
+  const empty = document.getElementById('answersEmpty');
+
+  const map = new Map();
+  for (const v of values) {
+    map.set(v.field_id, v.value);
+  }
+
+  if (!Array.isArray(fields) || fields.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+
+  let shown = 0;
+
+  for (const f of fields) {
+    const card = document.createElement('div');
+    card.className = 'field';
+
+    const k = document.createElement('div');
+    k.className = 'k';
+    k.textContent = f.label || f.field_key || 'Field';
+    card.appendChild(k);
+
+    const val = map.has(f.id) ? map.get(f.id) : null;
+    const displayText = jsonToDisplay(val, f.field_type, f.config, fairRow);
+
+    // For file fields with image, show preview
+    if (String(f.field_type || '').toLowerCase() === 'file' && val && val.name) {
+      const fileRow = document.createElement('div');
+      fileRow.style.cssText = 'display:flex;align-items:center;gap:14px;flex-wrap:wrap;';
+      const txt = document.createElement('div');
+      txt.className = 'v';
+      txt.textContent = displayText;
+      fileRow.appendChild(txt);
+      card.appendChild(fileRow);
+    } else {
+      const v = document.createElement('div');
+      v.className = 'v';
+      v.style.whiteSpace = 'pre-wrap';
+      v.textContent = displayText;
+      card.appendChild(v);
     }
 
-    function renderAnswers(fields, values) {
-      const wrap = document.getElementById('answersWrap');
-      const empty = document.getElementById('answersEmpty');
+    wrap.appendChild(card);
+    shown++;
+  }
 
-      const map = new Map();
-      for (const v of values) {
-        map.set(v.field_id, v.value);
-      }
-
-      if (!Array.isArray(fields) || fields.length === 0) {
-        empty.style.display = 'block';
-        return;
-      }
-
-      let shown = 0;
-
-      for (const f of fields) {
-        const card = document.createElement('div');
-        card.className = 'field';
-
-        const k = document.createElement('div');
-        k.className = 'k';
-        k.textContent = f.label || f.field_key || 'Field';
-        card.appendChild(k);
-
-        const v = document.createElement('div');
-        v.className = 'v';
-
-        const val = map.has(f.id) ? map.get(f.id) : null;
-        v.textContent = jsonToDisplay(val);
-        card.appendChild(v);
-
-        wrap.appendChild(card);
-        shown++;
-      }
-
-      if (shown === 0) empty.style.display = 'block';
-    }
+  if (shown === 0) empty.style.display = 'block';
+}
 
     async function renderFiles(files) {
       const wrap = document.getElementById('filesWrap');
@@ -591,7 +643,17 @@ document.getElementById('formTitle').textContent = safeText(submission.fair_man_
         files = await loadSubmissionFiles(submission.id);
       } catch (_) { files = []; }
 
-      renderAnswers(fields, values);
+      let fairRow = null;
+      try {
+        const { data: fr } = await supabaseClient
+          .from('renaissance_fairs')
+          .select('start_date,end_date,week2_start_date,week2_end_date,week3_start_date,week3_end_date,week4_start_date,week4_end_date,week5_start_date,week5_end_date,week6_start_date,week6_end_date,week7_start_date,week7_end_date,week8_start_date,week8_end_date,week9_start_date,week9_end_date,week10_start_date,week10_end_date')
+          .eq('id', fairId)
+          .single();
+        fairRow = fr;
+      } catch (_) {}
+
+      renderAnswers(fields, values, fairRow);
       await renderFiles(files);
 
       hideLoader();
@@ -615,6 +677,47 @@ document.getElementById('btnPrintable').onclick = () => {
   const { fairId, submissionId } = getParams();
   if (!fairId || !submissionId) return;
   window.location.href = `fair_application_detail_print.html?fair_id=${fairId}&submission_id=${submissionId}`;
+};
+
+document.getElementById('btnApprove').onclick = async () => {
+  if (!confirm('Approve this application?')) return;
+  showLoader();
+  try {
+    const { submissionId } = getParams();
+    const { error } = await supabaseClient
+      .from('fair_man_app_submission')
+      .update({ status: 'approved', updated_at: new Date().toISOString() })
+      .eq('id', submissionId);
+    if (error) throw error;
+    document.getElementById('actionMsg').textContent = '✅ Application approved.';
+    await loadPage();
+  } catch (e) {
+    document.getElementById('actionMsg').textContent = 'Failed to approve. Check console.';
+    console.error(e);
+  } finally {
+    hideLoader();
+  }
+};
+
+document.getElementById('btnDecline').onclick = async () => {
+  const reason = prompt('Reason for declining (optional):');
+  if (reason === null) return; // cancelled
+  showLoader();
+  try {
+    const { submissionId } = getParams();
+    const { error } = await supabaseClient
+      .from('fair_man_app_submission')
+      .update({ status: 'rejected', updated_at: new Date().toISOString() })
+      .eq('id', submissionId);
+    if (error) throw error;
+    document.getElementById('actionMsg').textContent = '❌ Application declined.';
+    await loadPage();
+  } catch (e) {
+    document.getElementById('actionMsg').textContent = 'Failed to decline. Check console.';
+    console.error(e);
+  } finally {
+    hideLoader();
+  }
 };
 
 loadPage();

@@ -493,7 +493,7 @@ weekendFields.forEach(([startKey, endKey]) => {
   }
 
   // show button
-  // applyBtn.style.display = 'inline-block'; // hidden for now
+  applyBtn.style.display = 'inline-block';
 applyBtn.onclick = () => {
   // apply page will handle 1 identity vs dropdown for multiple identities
   window.location.href = `/fair_admin/fair_info/fair_apply.html?fair_id=${fairRow.id}`;
@@ -515,6 +515,17 @@ loadFair = async function() {
   }
 
   document.getElementById('fairName').textContent = data.name;
+
+  // Unverified notice
+  const existingNotice = document.getElementById('unverifiedNotice');
+  if (existingNotice) existingNotice.remove();
+  if (!data.verified) {
+    const notice = document.createElement('div');
+    notice.id = 'unverifiedNotice';
+    notice.style.cssText = 'background:#7a3b00;color:#ffe0b2;border:1px solid #ff8f00;border-radius:6px;padding:10px 14px;font-size:13px;font-weight:bold;margin-bottom:14px;';
+    notice.textContent = '⚠️ This fair was submitted by a community member and has not yet been verified by FairQuest.';
+    document.getElementById('fairCard').prepend(notice);
+  }
 
   if (data.description && data.description.trim() !== '') {
     document.getElementById('descriptionRow').style.display = 'block';

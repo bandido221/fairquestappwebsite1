@@ -591,6 +591,8 @@ async function loadDashboard(userId){
           Fair Applications
         </button>
       </div>
+
+      ${await buildFairApplicationsSection(v.id, userId)}
         `;
        container.appendChild(box);
   }
@@ -642,7 +644,62 @@ async function logout(){
   await sb.auth.signOut();
   location.href='index.html';
 }
+async function buildFairApplicationsSection(vpaId, userId) {
+  const { data: submissions } = await sb
+    .from('fair_man_app_submission')
+    .select(`
+      id, status, submitted_at,
+      fair_id, vendor_performer_application_id,
+      renaissance_fairs!inner(id, name, city, state)
+    `)
+    .eq('user_id', userId)
+    .eq('vendor_performer_application_id', vpaId)
+    .order('submitted_at', { ascending: false });
 
+  if (!submissions || !submissions.length) return '';
+
+  const rows = submissions.map(sub => {
+    const fair = sub.renaissance_fairs;
+    const cityState = [fair?.city, fair?.state].filter(Boolean).join(', ');
+
+    const statusBadge = {
+      pending:   `<span class="badge badge-pending">Draft</span>`,
+      in_review: `<span class="badge badge-pending">In Review</span>`,
+      approved:  `<span class="badge badge-approved">Approved</span>`,
+      rejected:  `<span class="badge badge-declined">Declined</span>`,
+      closed:    `<span class="badge badge-declined">Closed</span>`,
+    }[sub.status] || `<span class="badge badge-pending">${sub.status}</span>`;
+
+    const actionBtn = sub.status === 'approved'
+      ? `<button class="start-app" style="min-width:0;padding:10px 14px;font-size:14px;"
+           onclick="window.location.href='vendor_fair_information_preview.html?vpa_id=${vpaId}&fair_name=${encodeURIComponent(fair?.name)}'">
+           View Fair Info
+         </button>`
+      : `<button class="delete-app" style="min-width:0;padding:10px 14px;font-size:14px;opacity:0.6;cursor:not-allowed;" disabled>
+           Pending Review
+         </button>`;
+
+    return `
+      <div class="fair-card">
+        <div class="fair-card-top">
+          <div>
+            <div class="fair-card-name">${fair?.name || 'Fair'}</div>
+            <div class="fair-card-date">${cityState}</div>
+            <div style="margin-top:6px;">${statusBadge}</div>
+          </div>
+          ${actionBtn}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="fair-cards-wrap" style="margin-top:14px;">
+      <div class="fair-cards-title">Fairs With Online Applications</div>
+      <div class="fair-cards-list">${rows}</div>
+    </div>
+  `;
+}
 window.addEventListener('DOMContentLoaded',initDashboard);
 </script>
 

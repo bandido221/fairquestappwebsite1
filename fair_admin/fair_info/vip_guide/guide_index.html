@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fair Owner Guide | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Domine', serif;
+      background: #0d0a04;
+      color: #f1df99;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* TOP NAV */
+    .topnav {
+      background: #1a1208;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18); color: #f4a0a0;
+      margin-left: 8px; border: 1px solid rgba(180,50,50,0.3);
+    }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, #1a1208 0%, #2a1e0a 100%);
+      border-bottom: 1px solid #3d2e0e;
+      padding: 50px 32px;
+      text-align: center;
+    }
+    .hero-icon { font-size: 48px; margin-bottom: 12px; }
+    .hero h2 { font-family: 'Cinzel', serif; font-size: 28px; color: #f1df99; margin: 0 0 12px; }
+    .hero p { font-size: 15px; color: #c8aa6e; max-width: 580px; margin: 0 auto; line-height: 1.7; }
+
+    /* CONTENT */
+    .content { max-width: 820px; margin: 0 auto; padding: 36px 20px 80px; }
+
+    /* SECTION */
+    .section { margin-bottom: 52px; }
+    .section-label {
+      display: inline-block; background: #bb7a28; color: #fff;
+      font-family: 'Cinzel', serif; font-size: 11px;
+      padding: 3px 12px; border-radius: 999px;
+      letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .section h2 { font-family: 'Cinzel', serif; font-size: 20px; color: #f1df99; margin: 0 0 8px; }
+    .section-intro { font-size: 14px; color: #c8aa6e; line-height: 1.7; margin-bottom: 22px; }
+
+    /* GUIDE CARDS */
+    .guide-cards { display: flex; flex-direction: column; gap: 16px; }
+
+    .guide-card {
+      background: rgba(241,223,153,0.07);
+      border: 1px solid rgba(241,223,153,0.14);
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .guide-card:hover {
+      background: rgba(241,223,153,0.12);
+      border-color: rgba(241,223,153,0.3);
+    }
+
+    .guide-card-icon {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: #bb7a28;
+      color: #fff;
+      font-size: 22px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .guide-card-body { flex: 1; }
+    .guide-card-body h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      color: #f1df99;
+      margin: 0 0 6px;
+    }
+    .guide-card-body p {
+      font-size: 14px;
+      color: #c8aa6e;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .guide-card-arrow {
+      color: #bb7a28;
+      font-size: 20px;
+      align-self: center;
+      flex-shrink: 0;
+    }
+
+    /* COMING SOON CARD */
+    .guide-card.coming-soon {
+      opacity: 0.6;
+      cursor: default;
+      pointer-events: none;
+    }
+    .guide-card.coming-soon .guide-card-icon {
+      background: #555;
+    }
+
+    .divider { height: 1px; background: rgba(241,223,153,0.1); margin: 36px 0; }
+
+    /* FOOTER */
+    .site-footer {
+      background: #1a1208;
+      border-top: 1px solid #3d2e0e;
+      padding: 24px 32px;
+      text-align: center;
+      font-size: 13px;
+      color: #bb9457;
+    }
+    .site-footer strong { color: #f1df99; }
+
+    @media (max-width: 600px) {
+      .hero { padding: 36px 16px; }
+      .hero h2 { font-size: 22px; }
+      .topnav-links a { font-size: 12px; padding: 5px 8px; }
+      .guide-card { flex-direction: column; }
+      .guide-card-arrow { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="/fair_admin/fair_admin.html">🏰 My Fairs</a>
+      <a href="#" onclick="history.back()">⬅ Back to Dashboard</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-icon">📖</div>
+    <h2>Fair Owner Guide</h2>
+    <p>Everything you need to know about managing your fair on FairQuest. Select a guide below to get started.</p>
+  </div>
+
+  <div class="content">
+
+    <div class="section">
+      <span class="section-label">ALL GUIDES</span>
+      <h2>Choose a Guide</h2>
+      <p class="section-intro">Each guide covers a specific part of your fair management tools. Click on any guide to get started.</p>
+
+      <div class="guide-cards">
+
+        <a href="guide_sg_dashboard.html" class="guide-card">
+          <div class="guide-card-icon">📊</div>
+          <div class="guide-card-body">
+            <h3>Your Dashboard</h3>
+            <p>Learn how to navigate your fair dashboard, understand what each button does, and get the most out of your fair management tools.</p>
+          </div>
+          <div class="guide-card-arrow">›</div>
+        </a>
+
+        <a href="guide_g_applications.html" class="guide-card">
+          <div class="guide-card-icon">📋</div>
+          <div class="guide-card-body">
+            <h3>Managing Applications</h3>
+            <p>Learn how to review vendor and performer applications, approve or decline submissions, manage contracts, and set up your application forms.</p>
+          </div>
+          <div class="guide-card-arrow">›</div>
+        </a>
+
+        <a href="guide_g_vp_directory.html" class="guide-card">
+          <div class="guide-card-icon">📒</div>
+          <div class="guide-card-body">
+            <h3>Vendor & Performer Directory</h3>
+            <p>Learn how to view and manage your vendor and performer directory, track invite status, and keep your roster up to date.</p>
+          </div>
+          <div class="guide-card-arrow">›</div>
+        </a>
+
+        <a href="guide_g_payment.html" class="guide-card">
+          <div class="guide-card-icon">💳</div>
+          <div class="guide-card-body">
+            <h3>Payment Tracking</h3>
+            <p>Learn how to track vendor payments, mark payments as received, and manage your weekend pricing for each fair.</p>
+          </div>
+          <div class="guide-card-arrow">›</div>
+        </a>
+
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="site-footer">
+    <p><strong>FairQuest</strong> — The modern platform for Renaissance fair management.</p>
+    <p style="margin-top:6px;">Need help? Contact us at <strong>fairquestapp@gmail.com</strong></p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+    document.getElementById('navLogout').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await supabaseClient.auth.signOut();
+      window.location.href = '/index.html';
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Managing Applications | FairQuest Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Domine', serif;
+      background: #0d0a04;
+      color: #f1df99;
+      margin: 0; padding: 0;
+    }
+    .topnav {
+      background: #1a1208;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18); color: #f4a0a0;
+      margin-left: 8px; border: 1px solid rgba(180,50,50,0.3);
+    }
+    .hero {
+      background: linear-gradient(135deg, #1a1208 0%, #2a1e0a 100%);
+      border-bottom: 1px solid #3d2e0e;
+      padding: 50px 32px; text-align: center;
+    }
+    .hero-icon { font-size: 48px; margin-bottom: 12px; }
+    .hero h2 { font-family: 'Cinzel', serif; font-size: 28px; color: #f1df99; margin: 0 0 12px; }
+    .hero p { font-size: 15px; color: #c8aa6e; max-width: 580px; margin: 0 auto; line-height: 1.7; }
+    .hero-btns { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 24px; }
+    .link-btn {
+      display: inline-block; background: #bb7a28; color: #fff;
+      padding: 10px 20px; border-radius: 8px; text-decoration: none;
+      font-size: 14px; font-family: 'Domine', serif; transition: background 0.15s;
+    }
+    .link-btn:hover { background: #a06820; }
+    .content { max-width: 820px; margin: 0 auto; padding: 36px 20px 80px; }
+    .section { margin-bottom: 52px; }
+    .section-label {
+      display: inline-block; background: #bb7a28; color: #fff;
+      font-family: 'Cinzel', serif; font-size: 11px;
+      padding: 3px 12px; border-radius: 999px;
+      letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .section h2 { font-family: 'Cinzel', serif; font-size: 20px; color: #f1df99; margin: 0 0 8px; }
+    .section-intro { font-size: 14px; color: #c8aa6e; line-height: 1.7; margin-bottom: 22px; }
+    .steps { display: flex; flex-direction: column; gap: 18px; }
+    .step {
+      background: rgba(241,223,153,0.07);
+      border: 1px solid rgba(241,223,153,0.14);
+      border-radius: 12px; padding: 22px;
+      display: flex; gap: 18px; align-items: flex-start;
+    }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #bb7a28; color: #fff;
+      font-family: 'Cinzel', serif; font-size: 15px; font-weight: bold;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step-body { flex: 1; }
+    .step-body h3 { font-family: 'Cinzel', serif; font-size: 15px; color: #f1df99; margin: 0 0 6px; }
+    .step-body p { font-size: 14px; color: #c8aa6e; line-height: 1.7; margin: 0 0 12px; }
+    .step-body p:last-child { margin-bottom: 0; }
+    .tip-box {
+      background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.25);
+      border-radius: 10px; padding: 14px 18px; margin-top: 12px;
+      font-size: 13px; color: #a8d5a2; line-height: 1.6;
+    }
+    .tip-box strong { color: #c8f0c4; }
+    .info-box {
+      background: rgba(187,122,40,0.12); border: 1px solid rgba(187,122,40,0.3);
+      border-radius: 10px; padding: 16px 20px; margin-top: 12px;
+    }
+    .info-box h4 { font-family: 'Cinzel', serif; font-size: 14px; color: #f1df99; margin: 0 0 6px; }
+    .info-box p { font-size: 13px; color: #c8aa6e; line-height: 1.6; margin: 0; }
+    .warn-box {
+      background: rgba(200,50,50,0.1); border: 1px solid rgba(200,50,50,0.25);
+      border-radius: 10px; padding: 14px 18px; margin-top: 12px;
+      font-size: 13px; color: #f4a0a0; line-height: 1.6;
+    }
+    .divider { height: 1px; background: rgba(241,223,153,0.1); margin: 36px 0; }
+    .step-img {
+      width: 100%; max-width: 450px;
+      border-radius: 8px;
+      border: 1px solid rgba(241,223,153,0.25);
+      margin-top: 10px; display: block;
+      margin-left: auto; margin-right: auto;
+    }
+    .site-footer {
+      background: #1a1208; border-top: 1px solid #3d2e0e;
+      padding: 24px 32px; text-align: center;
+      font-size: 13px; color: #bb9457;
+    }
+    .site-footer strong { color: #f1df99; }
+    @media (max-width: 600px) {
+      .step { flex-direction: column; }
+      .hero { padding: 36px 16px; }
+      .hero h2 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="/fair_admin/fair_admin.html">🏰 My Fairs</a>
+      <a href="guide_index.html">📖 Guide Index</a>
+      <a href="#" onclick="history.back()">⬅ Back</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-icon">📋</div>
+    <h2>Managing Applications</h2>
+    <p>Here's how to set up your application forms, review vendor and performer submissions, and approve or decline applicants for your fair.</p>
+    <div class="hero-btns">
+      <a href="guide_sg_dashboard.html" class="link-btn">← Dashboard Guide</a>
+      <a href="guide_g_vp_directory.html" class="link-btn">📒 Directory Guide →</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="section">
+      <span class="section-label">PART 1 — SETTING UP YOUR FORMS</span>
+      <h2>Setting Up Your Application Forms</h2>
+      <p class="section-intro">Before vendors and performers can apply to your fair, you need to set up your application forms. You can create one form for each applicant type — Artisan/Craft Vendors, Food Vendors, and Performers.</p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Go to Applications & Click "Manage Application Forms"</h3>
+            <p>From your Fair Dashboard, click <strong>Applications</strong>. On the Applications page, click <strong>Manage Application Forms</strong> to set up or edit your forms.</p>
+            <img src="images/applications_page.png" alt="Applications page" class="step-img" />
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Create a New Application Form</h3>
+            <p>Click <strong>Create New Application Form</strong>. You'll be asked to:</p>
+            <p>
+              • <strong>Choose the applicant type</strong> — Artisan/Craft Vendor, Food Vendor, or Performer.<br>
+              • <strong>Give the form a name</strong> — this is for your reference only, e.g. "2026 Spring Vendor Application."
+            </p>
+            <div class="tip-box">
+              <strong>💡 Tip:</strong> You can create one form per applicant type. Each form has its own questions and contract.
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Add Your Questions</h3>
+            <p>Once your form is created, you can add custom questions that applicants must answer. These can be text fields, dropdowns, checkboxes, file uploads, address fields, and more. You can also mark questions as required.</p>
+            <div class="tip-box">
+              <strong>💡 Tip:</strong> Keep your questions focused on what you actually need to know — booth size, setup requirements, what they sell, etc. Too many questions can discourage applicants.
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Add Your Contract</h3>
+            <p>Each form has its own contract that applicants must read and accept before submitting. Click <strong>Edit Contract</strong> to paste or type your vendor contract in plain text. Include your booth fees, rules, conduct requirements, and cancellation policies.</p>
+            <div class="warn-box">
+              🚨 Applicants must check "I have read and accept the contract" before they can submit. Make sure your contract is complete and up to date before activating your form.
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Preview & Activate Your Form</h3>
+            <p>Before going live, click <strong>Preview Form</strong> to see exactly what applicants will see. When you're happy with it, make sure the form is set to <strong>Active</strong> — only active forms accept new applications.</p>
+            <div class="info-box">
+              <h4>💡 How Applicants Find Your Form</h4>
+              <p>Once your form is active, vendors and performers can find your fair through FairQuest and apply directly. They'll see your fair listed when they search for fairs accepting applications.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <span class="section-label">PART 2 — REVIEWING APPLICATIONS</span>
+      <h2>Reviewing & Managing Applications</h2>
+      <p class="section-intro">Once applications start coming in, here's how to review and manage them.</p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <h3>View All Applications</h3>
+            <p>From your dashboard click <strong>Applications</strong>. You'll see all incoming applications organized into three sections — <strong>Artisan & Craft Vendors</strong>, <strong>Food Vendors</strong>, and <strong>Performers</strong>. Each section shows a count of applications and their current status.</p>
+            <img src="images/applications_page.png" alt="Applications page showing all sections" class="step-img" />
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">7</div>
+          <div class="step-body">
+            <h3>Search & Filter Applications</h3>
+            <p>Use the <strong>Search</strong> bar to find a specific applicant by name or email. Use the <strong>Status filter</strong> to narrow down by:</p>
+            <p>
+              • <strong>Draft / Pending</strong> — started but not yet submitted.<br>
+              • <strong>In Review</strong> — submitted and waiting for your decision.<br>
+              • <strong>Approved</strong> — applications you have accepted.<br>
+              • <strong>Declined</strong> — applications you have declined.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">8</div>
+          <div class="step-body">
+            <h3>Open & Review an Application</h3>
+            <p>Click <strong>Review Application →</strong> on any row to open the full application. Here you can:</p>
+            <p>
+              • Read all the applicant's answers to your custom questions.<br>
+              • View their vendor or performer profile information.<br>
+              • See which weekends they selected.<br>
+              • Review whether they accepted your contract.<br>
+              • Check any files or images they uploaded.
+            </p>
+            <div class="img-placeholder" style="
+              background: rgba(0,0,0,0.4);
+              border: 2px dashed rgba(241,223,153,0.25);
+              border-radius: 10px; padding: 28px 20px;
+              text-align: center; margin-top: 12px;
+              color: rgba(241,223,153,0.45); font-size: 13px;">
+              <span style="font-size:30px; display:block; margin-bottom:8px;">🖼️</span>
+              <strong style="display:block; color:rgba(241,223,153,0.65); margin-bottom:4px;">ADD IMAGE HERE</strong>
+              Screenshot of the application detail page
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">9</div>
+          <div class="step-body">
+            <h3>Approve or Decline</h3>
+            <p>Once you've reviewed the application, you can either <strong>Approve</strong> or <strong>Decline</strong> it. The applicant will automatically receive an email notification with your decision.</p>
+            <div class="tip-box">
+              <strong>💡 Tip:</strong> Once an application is approved, it cannot be edited by the applicant. Make sure you've reviewed everything carefully before approving.
+            </div>
+            <div class="warn-box" style="margin-top:12px;">
+              🚨 Declining an application is permanent. The applicant will be notified by email. If you need to reverse a decision, contact us at <strong>fairquestapp@gmail.com</strong>.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="site-footer">
+    <p><strong>FairQuest</strong> — The modern platform for Renaissance fair management.</p>
+    <p style="margin-top:6px;">Need help? Contact us at <strong>fairquestapp@gmail.com</strong></p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+    document.getElementById('navLogout').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await supabaseClient.auth.signOut();
+      window.location.href = '/index.html';
+    });
+  </script>
+
+</body>
+</html>

@@ -129,14 +129,11 @@
 
     <div class="divider"></div>
 
-    <h3 style="margin:0;">Applicant</h3>
+    <h3 style="margin:0;">Vendor Information</h3>
     <div class="grid">
       <div class="label">Profile:</div><div id="vpaName">—</div>
-      <div class="label">Type:</div><div id="vpaType">—</div>
-      <div class="label">Food Vendor:</div><div id="vpaFood">—</div>
       <div class="label">Email:</div><div id="vpaEmail">—</div>
       <div class="label">Contact Name:</div><div id="vpaContact">—</div>
-      <div class="label">Form:</div><div id="formInfo">—</div>
     </div>
 
     <div class="divider"></div>
@@ -446,17 +443,11 @@
 
         vpaRow = await loadVpa(vpaId);
 
-        const type = (vpaRow.application_type === true) ? 'Performer' : 'Vendor';
-        const food = (vpaRow.is_food_vendor === true) ? 'Yes' : 'No';
-
         document.getElementById('vpaName').textContent = vpaRow.name || '—';
-        document.getElementById('vpaType').textContent = type;
-        document.getElementById('vpaFood').textContent = food;
         document.getElementById('vpaEmail').textContent = vpaRow.contact_email || '—';
         document.getElementById('vpaContact').textContent = vpaRow.contact_name || '—';
 
         formRow = await loadForm(formId);
-        document.getElementById('formInfo').textContent = `${formRow.title} (v${formRow.version})`;
 
         document.getElementById('contractBox').textContent =
           (formRow.contract_text && String(formRow.contract_text).trim() !== '')
@@ -483,30 +474,49 @@
           const box = el('div', { className: 'answerCard', id: `ans_${f.id}` });
           box.appendChild(el('div', { className: 'answerTitle', text: f.label + (f.is_required ? ' *' : '') }));
 
-          if (String(f.field_type || '').toLowerCase() === 'file') {
-            const fileKey = `${draftKey}:file:${f.id}`;
-            let fileLabel = '';
-            try {
-              const saved = await idbGetFile(fileKey);
-              if (saved && saved.meta && saved.meta.name) {
-                fileLabel = `Selected: ${saved.meta.name}`;
-                if (!v || !v.name) {
-                  valuesMap.set(f.id, { name: saved.meta.name, size: saved.meta.size, type: saved.meta.type, persisted: true });
-                  try {
-                    const obj = JSON.parse(localStorage.getItem(draftKey) || '{}');
-                    obj[f.id] = valuesMap.get(f.id);
-                    localStorage.setItem(draftKey, JSON.stringify(obj));
-                  } catch (_) {}
-                }
-              } else {
-                fileLabel = prettyValue(f.field_type, v) || '';
-              }
-            } catch (e) {
-              console.error(e);
-              fileLabel = prettyValue(f.field_type, v) || '';
-            }
+     if (String(f.field_type || '').toLowerCase() === 'file') {
+  const fileKey = `${draftKey}:file:${f.id}`;
+  let fileLabel = '';
+  let fileBlob = null;
+  let fileMime = '';
+  try {
+    const saved = await idbGetFile(fileKey);
+    if (saved && saved.meta && saved.meta.name) {
+      fileLabel = `Selected: ${saved.meta.name}`;
+      fileBlob = saved.blob || null;
+      fileMime = saved.meta.type || '';
+      if (!v || !v.name) {
+        valuesMap.set(f.id, { name: saved.meta.name, size: saved.meta.size, type: saved.meta.type, persisted: true });
+        try {
+          const obj = JSON.parse(localStorage.getItem(draftKey) || '{}');
+          obj[f.id] = valuesMap.get(f.id);
+          localStorage.setItem(draftKey, JSON.stringify(obj));
+        } catch (_) {}
+      }
+    } else {
+      fileLabel = prettyValue(f.field_type, v) || '';
+    }
+  } catch (e) {
+    console.error(e);
+    fileLabel = prettyValue(f.field_type, v) || '';
+  }
 
-            box.appendChild(el('div', { className: 'answerValue', text: fileLabel || '—' }));
+  const fileRow = document.createElement('div');
+  fileRow.style.cssText = 'display:flex;align-items:center;gap:14px;flex-wrap:wrap;';
+
+  const fileLabelEl = el('div', { className: 'answerValue', text: fileLabel || '—' });
+  fileRow.appendChild(fileLabelEl);
+
+  if (fileBlob && fileMime.startsWith('image/')) {
+    const img = document.createElement('img');
+    img.style.cssText = 'max-width:80px;max-height:80px;border-radius:8px;border:1px solid rgba(0,0,0,0.2);object-fit:cover;';
+    const url = URL.createObjectURL(fileBlob);
+    img.src = url;
+    img.onload = () => URL.revokeObjectURL(url);
+    fileRow.appendChild(img);
+  }
+
+  box.appendChild(fileRow);
           } else {
             box.appendChild(el('div', { className: 'answerValue', text: prettyValue(f.field_type, v) || '—' }));
           }
@@ -552,10 +562,13 @@
           return;
         }
 
-        showLoader();
+      showLoader();
         try {
           setMsg('Creating submission…');
           const submissionId = await createOrGetSubmission(fairId, vpaId);
+
+          setMsg('Uploading files…');
+          await uploadFilesFromIndexedDB(submissionId, fields, draftKey);
 
           setMsg('Submitting…');
           await submitToSupabase(submissionId, fields, valuesMap);
@@ -563,7 +576,7 @@
           // Clear draft after success
           await clearDraftAndFiles(draftKey, fields);
 
-                 setMsg('Submitted. Redirecting…');
+          setMsg('Submitted. Redirecting…');
           window.location.href = `/profile/index.html`;
         } catch (e) {
           console.error(e);
@@ -574,7 +587,39 @@
         }
       };
     }
+async function uploadFilesFromIndexedDB(submissionId, fields, draftKey) {
+  for (const f of fields) {
+    if (String(f.field_type || '').toLowerCase() !== 'file') continue;
 
+    const fileKey = `${draftKey}:file:${f.id}`;
+    let saved = null;
+    try { saved = await idbGetFile(fileKey); } catch (_) { continue; }
+
+    if (!saved || !saved.blob || !saved.meta) continue;
+
+    const ext = saved.meta.name.split('.').pop() || 'bin';
+    const storagePath = `submissions/${submissionId}/${f.id}.${ext}`;
+
+    const { error: upErr } = await supabaseClient.storage
+      .from('fair-application-files')
+      .upload(storagePath, saved.blob, {
+        contentType: saved.meta.type,
+        upsert: true
+      });
+
+    if (upErr) { console.error('File upload failed:', upErr); continue; }
+
+    await supabaseClient.from('fair_man_app_submission_file').insert({
+      submission_id: submissionId,
+      file_role: f.field_key || 'attachment',
+      storage_bucket: 'fair-application-files',
+      storage_path: storagePath,
+      original_name: saved.meta.name,
+      mime_type: saved.meta.type,
+      size_bytes: saved.meta.size
+    });
+  }
+}
     loadPage();
   </script>
 </body>

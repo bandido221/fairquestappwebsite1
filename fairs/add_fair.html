@@ -88,7 +88,16 @@
   </style>
 </head>
 <body>
+  <!-- Login gate -->
+  <div id="loginGate" style="display:none; max-width:500px; margin:60px auto; background:rgba(251,241,200,0.9); padding:30px; border-radius:12px; color:#3b1f1f; text-align:center;">
+    <h2 style="font-family:'Cinzel',serif; margin-bottom:16px;">🔒 Login Required</h2>
+    <p style="margin-bottom:20px;">You must be logged in to submit a fair.</p>
+    <a href="/profile/index.html" style="background:#5b2a86; color:#fff; padding:12px 20px; border-radius:8px; font-weight:bold; text-decoration:none;">Go to Login</a>
+  </div>
+
+  <div id="fairFormWrap" style="display:none;">
   <h1>🎪 Add a New Renaissance Fair</h1>
+  <p style="color:#bb9457; margin-bottom:20px;">Your submission will appear publicly while we review it. We may contact you if we have questions.</p>
   <form id="addFairForm">
     <label for="name">Fair Name *</label>
     <input type="text" id="name" required />
@@ -129,14 +138,15 @@
 
     <button type="button" class="submit" onclick="submitFair()">📬 Submit Fair</button>
   </form>
+  </div><!-- /fairFormWrap -->
 
   <script>
-    const supabase = window.supabase.createClient(
+    const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
-    async function submitFair() {
+async function submitFair() {
   const name = document.getElementById('name').value.trim();
   const address = document.getElementById('address').value.trim();
   const city = document.getElementById('city').value.trim();
@@ -162,10 +172,13 @@
     return;
   }
 
-  // 🆕 Get current logged in user (if any)
-  const user = (await supabase.auth.getUser()).data.user;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    alert('You must be logged in to submit a fair.');
+    return;
+  }
 
-  const { error } = await supabase.from('new_fair_addition').insert([
+  const { error } = await supabaseClient.from('renaissance_fairs').insert([
     {
       name,
       address,
@@ -176,8 +189,8 @@
       end_date,
       website,
       image_url,
-      pending: true,
-      user_id: user ? user.id : null, // 🆕 Save user_id if logged in, or null
+      verified: false,
+      submitted_by_user_id: user.id,
       ...weekends
     }
   ]);
@@ -185,7 +198,7 @@
   if (error) {
     alert('❌ ' + error.message);
   } else {
-    alert('✅ Fair submitted for review!');
+    alert('✅ Fair submitted! It will appear publicly while we review it.');
     window.location.href = 'explore.html';
   }
 }
@@ -216,7 +229,17 @@
       weekendCount++;
     }
 
-    addWeekend();
+   addWeekend();
+
+    // Login gate — show form only if logged in
+   (async () => {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (user) {
+        document.getElementById('fairFormWrap').style.display = 'block';
+      } else {
+        document.getElementById('loginGate').style.display = 'block';
+      }
+    })();
   </script>
 </body>
 </html>

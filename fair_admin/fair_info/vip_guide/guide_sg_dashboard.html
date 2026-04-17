@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Guide | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Domine', serif;
+      background: #0d0a04;
+      color: #f1df99;
+      margin: 0; padding: 0;
+    }
+    .topnav {
+      background: #1a1208;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18); color: #f4a0a0;
+      margin-left: 8px; border: 1px solid rgba(180,50,50,0.3);
+    }
+    .hero {
+      background: linear-gradient(135deg, #1a1208 0%, #2a1e0a 100%);
+      border-bottom: 1px solid #3d2e0e;
+      padding: 50px 32px; text-align: center;
+    }
+    .hero-icon { font-size: 48px; margin-bottom: 12px; }
+    .hero h2 { font-family: 'Cinzel', serif; font-size: 28px; color: #f1df99; margin: 0 0 12px; }
+    .hero p { font-size: 15px; color: #c8aa6e; max-width: 580px; margin: 0 auto; line-height: 1.7; }
+    .hero-btns { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 24px; }
+    .link-btn {
+      display: inline-block; background: #bb7a28; color: #fff;
+      padding: 10px 20px; border-radius: 8px; text-decoration: none;
+      font-size: 14px; font-family: 'Domine', serif; transition: background 0.15s;
+    }
+    .link-btn:hover { background: #a06820; }
+    .content { max-width: 820px; margin: 0 auto; padding: 36px 20px 80px; }
+    .section { margin-bottom: 52px; }
+    .section-label {
+      display: inline-block; background: #bb7a28; color: #fff;
+      font-family: 'Cinzel', serif; font-size: 11px;
+      padding: 3px 12px; border-radius: 999px;
+      letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .section h2 { font-family: 'Cinzel', serif; font-size: 20px; color: #f1df99; margin: 0 0 8px; }
+    .section-intro { font-size: 14px; color: #c8aa6e; line-height: 1.7; margin-bottom: 22px; }
+    .steps { display: flex; flex-direction: column; gap: 18px; }
+    .step {
+      background: rgba(241,223,153,0.07);
+      border: 1px solid rgba(241,223,153,0.14);
+      border-radius: 12px; padding: 22px;
+      display: flex; gap: 18px; align-items: flex-start;
+    }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #bb7a28; color: #fff;
+      font-family: 'Cinzel', serif; font-size: 15px; font-weight: bold;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step-body { flex: 1; }
+    .step-body h3 { font-family: 'Cinzel', serif; font-size: 15px; color: #f1df99; margin: 0 0 6px; }
+    .step-body p { font-size: 14px; color: #c8aa6e; line-height: 1.7; margin: 0 0 12px; }
+    .step-body p:last-child { margin-bottom: 0; }
+    .tip-box {
+      background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.25);
+      border-radius: 10px; padding: 14px 18px; margin-top: 12px;
+      font-size: 13px; color: #a8d5a2; line-height: 1.6;
+    }
+    .tip-box strong { color: #c8f0c4; }
+    .info-box {
+      background: rgba(187,122,40,0.12); border: 1px solid rgba(187,122,40,0.3);
+      border-radius: 10px; padding: 16px 20px; margin-top: 12px;
+    }
+    .info-box h4 { font-family: 'Cinzel', serif; font-size: 14px; color: #f1df99; margin: 0 0 6px; }
+    .info-box p { font-size: 13px; color: #c8aa6e; line-height: 1.6; margin: 0; }
+    .divider { height: 1px; background: rgba(241,223,153,0.1); margin: 36px 0; }
+    .step-img {
+      width: 100%; max-width: 450px;
+      border-radius: 8px;
+      border: 1px solid rgba(241,223,153,0.25);
+      margin-top: 10px; display: block;
+      margin-left: auto; margin-right: auto;
+    }
+    .site-footer {
+      background: #1a1208; border-top: 1px solid #3d2e0e;
+      padding: 24px 32px; text-align: center;
+      font-size: 13px; color: #bb9457;
+    }
+    .site-footer strong { color: #f1df99; }
+    @media (max-width: 600px) {
+      .step { flex-direction: column; }
+      .hero { padding: 36px 16px; }
+      .hero h2 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="/fair_admin/fair_admin.html">🏰 My Fairs</a>
+      <a href="guide_index.html">📖 Guide Index</a>
+      <a href="#" onclick="history.back()">⬅ Back</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-icon">📊</div>
+    <h2>Your Fair Dashboard</h2>
+    <p>Your Fair Dashboard is your control center for managing everything about your fair on FairQuest. Here's a walkthrough of what each section and button does.</p>
+    <div class="hero-btns">
+      <a href="guide_index.html" class="link-btn">← Back to Guide Index</a>
+      <a href="guide_g_applications.html" class="link-btn">📋 Managing Applications →</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="section">
+      <span class="section-label">THE DASHBOARD</span>
+      <h2>Understanding Your Fair Dashboard</h2>
+      <p class="section-intro">When you click on your fair from the Admin Home page, you land on your Fair Dashboard. This is where you can see your fair's information at a glance and access all your management tools.</p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Fair Info Card</h3>
+            <p>At the top of your dashboard you'll see your <strong>Fair Info</strong> card. This shows your fair's name, city and state, address, website, and your current plan level. Make sure this information is always up to date — this is what vendors, performers, and visitors see.</p>
+            <img src="images/fair_dashboard.png" alt="Fair Dashboard overview" class="step-img" />
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Back to Admin Page</h3>
+            <p>Click <strong>Back to Admin Page</strong> to return to your list of fairs. If you manage more than one fair, this is how you switch between them.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Update Fair</h3>
+            <p>Click <strong>Update Fair</strong> to edit your fair's information — name, address, dates, hours, description, image, and contacts. Keep this up to date so vendors, performers, and visitors always have accurate information.</p>
+            <div class="tip-box">
+              <strong>💡 Tip:</strong> Update your weekend dates as soon as they are confirmed for the season. Vendors and performers rely on these dates to plan their schedules.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <span class="section-label">ADVANCED TOOLS</span>
+      <h2>Your Advanced Management Tools</h2>
+      <p class="section-intro">The following tools give you full control over your fair's vendors, performers, applications, and payments. Each one is covered in its own detailed guide.</p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Applications</h3>
+            <p>Click <strong>Applications</strong> to review and manage all vendor and performer applications for your fair. You can approve or decline submissions, review contracts, and manage your application forms from here.</p>
+            <a href="guide_g_applications.html" class="link-btn" style="margin-top:10px; display:inline-block;">📋 Go to Applications Guide</a>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Vendor & Performer Directory</h3>
+            <p>Click <strong>Vendor & Performer Directory</strong> to view and manage everyone who has been approved to participate in your fair. You can track invite status, years at fair, new vs returning status, and add notes for each participant.</p>
+            <a href="guide_g_vp_directory.html" class="link-btn" style="margin-top:10px; display:inline-block;">📒 Go to Directory Guide</a>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <h3>Payment Tracking</h3>
+            <p>Click <strong>Payment Tracking</strong> to manage booth fee payments for your vendors and food vendors, and track performer fees. You can search by email, mark payments as received, and keep notes for each transaction.</p>
+            <a href="guide_g_payment.html" class="link-btn" style="margin-top:10px; display:inline-block;">💳 Go to Payment Guide</a>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">7</div>
+          <div class="step-body">
+            <h3>Applications Summary</h3>
+            <p>Below the Fair Info card you'll see the <strong>Applications Summary</strong> table. This gives you a quick overview of all your applications broken down by type — Vendors, Food Vendors, and Performers — with counts for Total, In Review, Approved, and Declined.</p>
+            <div class="tip-box">
+              <strong>💡 Tip:</strong> Check this summary regularly during your application season so you always know how many applications are waiting for your review.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <span class="section-label">COMING SOON</span>
+      <h2>Silver Plan Features</h2>
+      <p class="section-intro">Silver plan features are currently in development. Check back soon for updates on what's coming for Silver plan fair owners.</p>
+    </div>
+
+  </div>
+
+  <footer class="site-footer">
+    <p><strong>FairQuest</strong> — The modern platform for Renaissance fair management.</p>
+    <p style="margin-top:6px;">Need help? Contact us at <strong>fairquestapp@gmail.com</strong></p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+    document.getElementById('navLogout').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await supabaseClient.auth.signOut();
+      window.location.href = '/index.html';
+    });
+  </script>
+
+</body>
+</html>

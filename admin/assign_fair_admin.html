@@ -248,25 +248,38 @@ div.innerHTML=`
 
 ${!r.fair_id ? `
 <div style="margin-top:10px; padding:10px; background:#3b2a12; border-radius:6px;">
-<b>⚠ New Fair:</b> This fair does not exist in the system yet.<br>
-Add it to the <b>renaissance_fairs</b> table before approving.
+  <b>⚠ New Fair:</b> This fair does not exist in the system yet.<br>
+  If it already exists, search and link it below. Otherwise use "Create Fair".
+  <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+    <input type="text" id="linkSearch_${r.id}" placeholder="Search existing fair name…"
+      style="padding:8px; border-radius:6px; border:none; font-family:'Domine',serif; font-size:14px;"
+      oninput="searchLinkFairs('${r.id}')" />
+    <select id="linkSelect_${r.id}"
+      style="padding:8px; border-radius:6px; border:none; font-family:'Domine',serif; font-size:14px;">
+      <option value="">— Select fair —</option>
+    </select>
+    <button class="action approve" style="background:#1a6e8e;" onclick="linkExistingFair('${r.id}')">
+      🔗 Link to Existing Fair
+    </button>
+    <div id="linkStatus_${r.id}" style="font-size:13px;"></div>
+  </div>
 </div>
 ` : ``}
 
 <p><b>Submitted:</b> ${new Date(r.submitted_at).toLocaleString()}</p>
 
-${r.fair_id ? `
-<button class="action approve" onclick="approve('${r.id}','${r.user_id}','${r.fair_id}','${escapeQuotes(r.fair_name)}')">
-  Approve & Assign Admin
-</button>
-` : `
-<button class="action approve" onclick="createFair('${r.id}','${escapeQuotes(r.fair_name)}','${escapeQuotes(r.fair_city)}','${escapeQuotes(r.fair_state)}')">
-  Create Fair
-</button>
-`}
-        <button class="action reject" onclick="rejectReq('${r.id}')">
-          Reject
-        </button>
+<div id="actionBtns_${r.id}">
+  ${r.fair_id ? `
+  <button class="action approve" onclick="approve('${r.id}','${r.user_id}','${r.fair_id}','${escapeQuotes(r.fair_name)}')">
+    Approve & Assign Admin
+  </button>
+  ` : `
+  <button class="action approve" onclick="createFair('${r.id}','${escapeQuotes(r.fair_name)}','${escapeQuotes(r.fair_city)}','${escapeQuotes(r.fair_state)}')">
+    Create Fair
+  </button>
+  `}
+  <button class="action reject" onclick="rejectReq('${r.id}')">Reject</button>
+</div>
       `;
       list.appendChild(div);
     });
@@ -417,6 +430,48 @@ var r = await supabase.rpc(
 
   // start
   load();
+
+  async function searchLinkFairs(verificationId) {
+  const query = document.getElementById('linkSearch_' + verificationId).value.trim();
+  const sel = document.getElementById('linkSelect_' + verificationId);
+  sel.innerHTML = '<option value="">— Select fair —</option>';
+  if (query.length < 2) return;
+
+  const { data, error } = await supabase
+    .from('renaissance_fairs')
+    .select('id, name, city, state')
+    .ilike('name', `%${query}%`)
+    .limit(10);
+
+  if (error) { console.error(error); return; }
+  (data || []).forEach(f => {
+    const o = document.createElement('option');
+    o.value = f.id;
+    o.textContent = `${f.name} — ${f.city}, ${f.state}`;
+    sel.appendChild(o);
+  });
+}
+
+async function linkExistingFair(verificationId) {
+  const fairId = document.getElementById('linkSelect_' + verificationId).value;
+  const status = document.getElementById('linkStatus_' + verificationId);
+
+  if (!fairId) { status.textContent = '⚠ Please select a fair first.'; return; }
+
+  const { error } = await supabase.rpc('update_verification_fair_id', {
+    p_verification_id: verificationId,
+    p_fair_id: parseInt(fairId)
+  });
+
+  if (error) {
+    console.error(error);
+    status.textContent = '❌ Error: ' + error.message;
+    return;
+  }
+
+  status.textContent = '✅ Linked! Reloading…';
+  setTimeout(() => load(), 800);
+}
 </script>
 
 </body>

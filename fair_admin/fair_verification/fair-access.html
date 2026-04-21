@@ -285,16 +285,52 @@
   </div>
 
     <div class="step-title"><div class="step-num">1</div><div class="step-label">Your Fair Information</div></div>
-    <label>Fair Name *</label>
-    <input type="text" id="fairName" required placeholder="Start typing your fair name…" list="fairSuggestions" autocomplete="off" />
-    <datalist id="fairSuggestions"></datalist>
-    <input type="hidden" id="fairId" value="" />
 
-    <label>City *</label>
-    <input type="text" id="fairCity" required placeholder="City" />
+    <!-- SEARCH BOX -->
+    <div style="background:#1a1a1a; border:1px solid #444; border-radius:10px; padding:16px; margin-bottom:16px;">
+      <p style="margin:0 0 10px; font-size:13px; color:#bb9457; font-weight:bold;">Search for your fair:</p>
+      <input type="text" id="fairSearch" placeholder="Start typing your fair name…" autocomplete="off"
+        oninput="onFairSearchInput()"
+        style="border-radius:7px 7px 0 0; margin-bottom:0;" />
+      <div id="fairDropdown" style="display:none; background:#1a1a1a; border:1px solid #bb9457; border-top:none; border-radius:0 0 8px 8px; max-height:200px; overflow-y:auto;"></div>
+      <button type="button" onclick="showNewFairMode()"
+        style="margin-top:10px; width:100%; padding:9px; border-radius:7px; border:1px dashed #555; background:transparent; color:#bb9457; font-family:'Domine',serif; font-size:13px; cursor:pointer;">
+        🆕 My fair isn't listed here / I have a new fair
+      </button>
+    </div>
 
-    <label>State *</label>
-    <input type="text" id="fairState" required placeholder="e.g. IA" />
+    <!-- ALREADY CLAIMED WARNING -->
+    <div id="fairAlreadyClaimed" style="display:none; margin-bottom:16px; padding:16px; background:#3b1212; border:1px solid #5c1a1a; border-radius:8px; font-size:13px; line-height:1.8; color:#ffb3b3;">
+      <strong style="font-size:14px; color:#ff6b6b;">⚠ This fair already has an admin.</strong><br><br>
+      <strong id="fairAlreadyClaimedName" style="color:#f0e6d2;"></strong> is already being managed by someone on FairQuest.<br><br>
+      If you work with this fair, please contact them directly to be added to the team.<br><br>
+      <strong>If you believe someone has incorrectly claimed this fair</strong> and you are the rightful owner or representative, please email us at
+      <a href="mailto:fairquestapp@gmail.com" style="color:#ff9999;">fairquestapp@gmail.com</a>
+      with your name, your role at the fair, and any supporting information. We take these reports seriously and will investigate promptly.
+    </div>
+
+    <!-- SELECTED FAIR or NEW FAIR fields (hidden until action taken) -->
+    <div id="fairFields" style="display:none;">
+
+      <div id="fairMatchedBadge" style="display:none; margin-bottom:12px; padding:8px 12px; background:#123b1c; border:1px solid #1a5c2a; border-radius:6px; font-size:13px; color:#b3ffcf;">
+        ✅ Fair selected — name is locked. City and state have been filled in automatically.
+      </div>
+
+      <div id="newFairNotice" style="display:none; margin-bottom:12px; padding:8px 12px; background:#2a1a00; border:1px solid #664400; border-radius:6px; font-size:13px; color:#ffcc80;">
+        🆕 New fair — enter your fair's details below. If the name is slightly wrong, don't worry — you can correct it after you've been verified and added as an admin.
+      </div>
+
+      <input type="hidden" id="fairId" value="" />
+
+      <label>Fair Name *</label>
+      <input type="text" id="fairName" required placeholder="Fair name" autocomplete="off" />
+
+      <label>City *</label>
+      <input type="text" id="fairCity" required placeholder="City" />
+
+      <label>State *</label>
+      <input type="text" id="fairState" required placeholder="e.g. FL" />
+    </div>
 
     <label>Official Website (optional)</label>
     <input type="url" id="fairWebsite" placeholder="https://yourfair.com" />
@@ -523,35 +559,76 @@ function startNewApplication() {
 }
 
 // ── FAIR SUGGESTIONS ──
-let fairSuggestionMap = new Map();
+let fairSuggestionData = [];
 
-async function loadFairSuggestions(query) {
-  if ((query || "").trim().length < 2) {
-    document.getElementById("fairSuggestions").innerHTML = "";
-    fairSuggestionMap = new Map();
+async function onFairSearchInput() {
+  const query = document.getElementById("fairSearch").value.trim();
+  const dropdown = document.getElementById("fairDropdown");
+  if (query.length < 2) { dropdown.style.display = "none"; return; }
+
+  const { data, error } = await supa.rpc("search_fairs_public", { p_query: query });
+  if (error || !data || !data.length) { dropdown.style.display = "none"; return; }
+
+  fairSuggestionData = data;
+  dropdown.innerHTML = data.map((f, i) =>
+    `<div onclick="selectFair(${i})" style="padding:10px 12px; cursor:pointer; border-bottom:1px solid #2a2a2a; font-size:14px; color:#f0e6d2;"
+      onmouseover="this.style.background='#2a2a2a'" onmouseout="this.style.background=''">${f.name} — ${f.city}, ${f.state}</div>`
+  ).join("");
+  dropdown.style.display = "block";
+}
+
+async function selectFair(index) {
+  const f = fairSuggestionData[index];
+  document.getElementById("fairSearch").value = f.name;
+  document.getElementById("fairDropdown").style.display = "none";
+
+  // Check if this fair already has an admin
+  const { data, error } = await supa.rpc("check_fair_admin_status", { p_fair_id: f.id });
+  if (!error && data?.has_admin) {
+    // Show blocked message, hide the form fields
+    document.getElementById("fairFields").style.display = "none";
+    document.getElementById("fairAlreadyClaimed").style.display = "block";
+    document.getElementById("fairAlreadyClaimedName").textContent = f.name;
+    document.getElementById("btnSubmit").disabled = true;
     return;
   }
-  const { data, error } = await supa.rpc("search_renaissance_fairs_by_name", { p_query: query });
-  if (error || !data) { fairSuggestionMap = new Map(); return; }
-  fairSuggestionMap = new Map();
-  document.getElementById("fairSuggestions").innerHTML = data.map(f => {
-    const label = `${f.name} — ${f.city}, ${f.state}`;
-    fairSuggestionMap.set(label, f.id);
-    return `<option value="${label}"></option>`;
-  }).join("");
+
+  // Fair is available — proceed normally
+  document.getElementById("fairAlreadyClaimed").style.display = "none";
+  document.getElementById("fairName").value = f.name;
+  document.getElementById("fairName").readOnly = true;
+  document.getElementById("fairCity").value = f.city || "";
+  document.getElementById("fairState").value = f.state || "";
+  document.getElementById("fairId").value = String(f.id);
+
+  document.getElementById("fairFields").style.display = "block";
+  document.getElementById("fairMatchedBadge").style.display = "block";
+  document.getElementById("newFairNotice").style.display = "none";
 }
 
-function trySetFairIdFromInput() {
-  const label = document.getElementById("fairName").value.trim();
-  const id = fairSuggestionMap.get(label);
-  document.getElementById("fairId").value = id ? String(id) : "";
-}
-
-document.getElementById("fairName").addEventListener("input", async () => {
+function showNewFairMode() {
+  document.getElementById("fairDropdown").style.display = "none";
+  document.getElementById("fairAlreadyClaimed").style.display = "none";
+  document.getElementById("fairName").value = "";
+  document.getElementById("fairName").readOnly = false;
+  document.getElementById("fairCity").value = "";
+  document.getElementById("fairState").value = "";
   document.getElementById("fairId").value = "";
-  await loadFairSuggestions(document.getElementById("fairName").value);
+
+  document.getElementById("fairFields").style.display = "block";
+  document.getElementById("fairMatchedBadge").style.display = "none";
+  document.getElementById("newFairNotice").style.display = "block";
+  document.getElementById("fairName").focus();
+}
+
+// Close dropdown if clicking outside search box
+document.addEventListener("click", function(e) {
+  const search = document.getElementById("fairSearch");
+  const dropdown = document.getElementById("fairDropdown");
+  if (search && !search.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.style.display = "none";
+  }
 });
-document.getElementById("fairName").addEventListener("change", trySetFairIdFromInput);
 
 // ── PENDING LIST ──
 function renderPendingList(rows) {
@@ -715,8 +792,14 @@ function addAnotherFairFromModal() {
   document.getElementById("fairMsg").classList.add("hidden");
   document.getElementById("btnSubmit").disabled = true;
   document.getElementById("btnSubmit").textContent = "Submit Verification Request";
-  fairSuggestionMap = new Map();
-  document.getElementById("fairSuggestions").innerHTML = "";
+  fairSuggestionData = [];
+  document.getElementById("fairSearch").value = "";
+  document.getElementById("fairDropdown").innerHTML = "";
+  document.getElementById("fairFields").style.display = "none";
+  document.getElementById("fairMatchedBadge").style.display = "none";
+  document.getElementById("newFairNotice").style.display = "none";
+  document.getElementById("fairAlreadyClaimed").style.display = "none";
+  document.getElementById("fairName").readOnly = false;
   document.getElementById("stepFairForm").classList.remove("hidden");
 }
 

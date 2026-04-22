@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Tiers | FairQuest Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      background: #000;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    /* ── Top Nav ── */
+    .topnav {
+      background: #0d0a04;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topnav-brand {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: #f1df99;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .topnav-links { display: flex; gap: 6px; align-items: center; }
+    .topnav-links a {
+      color: #c8aa6e;
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18);
+      color: #f4a0a0;
+      border: 1px solid rgba(180,50,50,0.3);
+    }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+
+    /* ── Page Body ── */
+    .page-body {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 80px;
+    }
+
+    .page-title {
+      font-family: 'Cinzel', serif;
+      font-size: 26px;
+      color: #f1df99;
+      margin: 0 0 4px;
+    }
+    .page-subtitle {
+      color: #bb9457;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid #3d2e0e;
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: #bb9457;
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      padding: 12px 28px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn:hover { color: #f1df99; }
+    .tab-btn.active {
+      color: #f1df99;
+      border-bottom-color: #bb9457;
+    }
+
+    /* ── Controls Bar ── */
+    .controls-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+      max-width: 380px;
+    }
+    .search-wrap input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      border-radius: 8px;
+      border: 1px solid #3d2e0e;
+      background: #0d0a04;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      font-size: 14px;
+    }
+    .search-wrap input::placeholder { color: #7a6040; }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 15px;
+      pointer-events: none;
+      color: #7a6040;
+    }
+
+    .filter-select {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #3d2e0e;
+      background: #0d0a04;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-gold  { background: #bb9457; color: #000; }
+    .btn-gold:hover  { background: #d4a85f; }
+    .btn-dark  { background: #2a2218; color: #f0e6d2; border: 1px solid #3d2e0e; }
+    .btn-dark:hover  { background: #3a2f1e; }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .stat-chip {
+      background: rgba(241,223,153,0.08);
+      border: 1px solid rgba(241,223,153,0.18);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stat-chip strong { font-size: 20px; color: #f1df99; font-family: 'Cinzel', serif; }
+    .stat-chip span { color: #bb9457; }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: rgba(241,223,153,0.06);
+      border: 1px solid #3d2e0e;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead th {
+      background: #0d0a04;
+      color: #bb9457;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #3d2e0e;
+    }
+    tbody tr {
+      border-bottom: 1px solid rgba(61,46,14,0.5);
+      transition: background 0.12s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(241,223,153,0.05); }
+    tbody td {
+      padding: 12px 16px;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+    .col-id { color: #7a6040; font-size: 12px; width: 60px; }
+    .col-name { font-weight: bold; color: #f0e6d2; }
+    .col-sub { color: #bb9457; font-size: 12px; }
+    .col-type { width: 100px; }
+
+    /* ── Tier Badge ── */
+    .tier-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .tier-basic   { background: rgba(150,150,150,0.2);  color: #aaa; border: 1px solid rgba(150,150,150,0.3); }
+    .tier-silver  { background: rgba(180,200,220,0.2);  color: #8ab0d0; border: 1px solid rgba(180,200,220,0.35); }
+    .tier-gold    { background: rgba(240,180,20,0.2);   color: #d4a830; border: 1px solid rgba(240,180,20,0.4); }
+    .tier-unknown { background: rgba(150,150,150,0.1);  color: #666; border: 1px solid rgba(150,150,150,0.2); }
+
+    /* ── Tier Selector in row ── */
+    .tier-select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #3d2e0e;
+      background: #0d0a04;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .save-btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: none;
+      background: #bb9457;
+      color: #000;
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: background 0.12s;
+    }
+    .save-btn:hover { background: #d4a85f; }
+    .save-btn:disabled { background: #4a3c28; color: #7a6040; cursor: not-allowed; }
+    .row-msg { font-size: 12px; margin-left: 8px; }
+    .row-msg.ok  { color: #4caf50; }
+    .row-msg.err { color: #e74c3c; }
+
+    /* ── Loading / Empty ── */
+    .loading-msg, .empty-msg {
+      text-align: center;
+      padding: 40px 20px;
+      color: #7a6040;
+      font-size: 14px;
+    }
+    .spinner-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.1);
+      border-top: 4px solid #bb9457;
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      animation: spin 0.85s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: #2a1e0a;
+      border: 1px solid #bb9457;
+      border-radius: 10px;
+      padding: 14px 22px;
+      font-size: 14px;
+      color: #f1df99;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      z-index: 9999;
+      max-width: 340px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Type chip ── */
+    .type-chip {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .type-vendor       { background: rgba(76,175,80,0.15);  color: #5ab55e; border: 1px solid rgba(76,175,80,0.3); }
+    .type-food_vendor  { background: rgba(255,160,0,0.15);  color: #d48c10; border: 1px solid rgba(255,160,0,0.3); }
+    .type-performer    { background: rgba(156,39,176,0.15); color: #c07cd8; border: 1px solid rgba(156,39,176,0.3); }
+  </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a class="topnav-brand" href="/admin/admin_dashboard.html">🛡️ FairQuest Admin</a>
+  <div class="topnav-links">
+    <a href="/admin/admin_dashboard.html">🏠 Dashboard</a>
+    <a href="/admin/assign_fair_admin.html">🏰 Fair Admins</a>
+    <a href="/admin/app_users.html">👤 Users</a>
+    <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+  </div>
+</nav>
+
+<!-- PAGE BODY -->
+<div class="page-body">
+  <h1 class="page-title">⚙️ Manage Tiers</h1>
+  <p class="page-subtitle">View and change tier levels for fairs and vendors / performers.</p>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tabFairs" onclick="switchTab('fairs')">🎪 Fairs</button>
+    <button class="tab-btn" id="tabVPs" onclick="switchTab('vps')">🧺 Vendors & Performers</button>
+  </div>
+
+  <!-- ══════════════ FAIRS PANEL ══════════════ -->
+  <div id="panelFairs">
+    <!-- Stats -->
+    <div class="stats-row" id="fairStats">
+      <div class="stat-chip"><strong id="fsTotal">—</strong><span>Total Fairs</span></div>
+      <div class="stat-chip"><strong id="fsBasic">—</strong><span>Basic</span></div>
+      <div class="stat-chip"><strong id="fsSilver">—</strong><span>Silver</span></div>
+      <div class="stat-chip"><strong id="fsGold">—</strong><span>Gold</span></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="fairSearch" placeholder="Search fairs…" oninput="debounce(loadFairs, 350)()" />
+      </div>
+      <select class="filter-select" id="fairTierFilter" onchange="loadFairs()">
+        <option value="">All Tiers</option>
+        <option value="basic">Basic</option>
+        <option value="silver">Silver</option>
+        <option value="gold">Gold</option>
+      </select>
+      <button class="btn btn-dark" onclick="loadFairs()">🔄 Refresh</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fair Name</th>
+            <th>State</th>
+            <th>Current Tier</th>
+            <th>Change Tier</th>
+          </tr>
+        </thead>
+        <tbody id="fairTableBody">
+          <tr><td colspan="5"><div class="spinner-wrap"><div class="spinner"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════ VPS PANEL ══════════════ -->
+  <div id="panelVPs" style="display:none;">
+    <!-- Stats -->
+    <div class="stats-row" id="vpStats">
+      <div class="stat-chip"><strong id="vsTotal">—</strong><span>Total</span></div>
+      <div class="stat-chip"><strong id="vsBasic">—</strong><span>Basic</span></div>
+      <div class="stat-chip"><strong id="vsSilver">—</strong><span>Silver</span></div>
+      <div class="stat-chip"><strong id="vsGold">—</strong><span>Gold</span></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="vpSearch" placeholder="Search vendors/performers…" oninput="debounce(loadVPs, 350)()" />
+      </div>
+      <select class="filter-select" id="vpTierFilter" onchange="loadVPs()">
+        <option value="">All Tiers</option>
+        <option value="basic">Basic</option>
+        <option value="silver">Silver</option>
+        <option value="gold">Gold</option>
+      </select>
+      <select class="filter-select" id="vpTypeFilter" onchange="loadVPs()">
+        <option value="">All Types</option>
+        <option value="vendor">Vendor</option>
+        <option value="food_vendor">Food Vendor</option>
+        <option value="performer">Performer</option>
+      </select>
+      <button class="btn btn-dark" onclick="loadVPs()">🔄 Refresh</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Current Tier</th>
+            <th>Change Tier</th>
+          </tr>
+        </thead>
+        <tbody id="vpTableBody">
+          <tr><td colspan="5"><div class="spinner-wrap"><div class="spinner"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+  const sb = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
+
+  // ── Auth Gate ──
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = '/admin/alexander.html'; return; }
+    const { data: isAdmin } = await sb.rpc('is_admin_by_email', { p_email: session.user.email });
+    if (!isAdmin) { await sb.auth.signOut(); window.location.href = '/admin/alexander.html'; }
+  })();
+
+  document.getElementById('navLogout').addEventListener('click', async e => {
+    e.preventDefault();
+    await sb.auth.signOut();
+    window.location.href = '/admin/alexander.html';
+  });
+
+  // ── Toast ──
+  let toastTimer;
+  function showToast(msg, type = 'ok') {
+    const el = document.getElementById('toast');
+    el.textContent = (type === 'ok' ? '✅ ' : '❌ ') + msg;
+    el.style.borderColor = type === 'ok' ? '#bb9457' : '#c0392b';
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ── Debounce ──
+  function debounce(fn, delay) {
+    let t;
+    return function(...args) {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), delay);
+    };
+  }
+
+  // ── Tier Badge ──
+  function tierBadge(tier) {
+    const t = (tier || 'basic').toLowerCase();
+    const label = t.charAt(0).toUpperCase() + t.slice(1);
+    return `<span class="tier-badge tier-${t}">${label}</span>`;
+  }
+
+  // ── Type Chip ──
+  function typeChip(appType, isFoodVendor) {
+  if (appType === true)        return `<span class="type-chip type-performer">Performer</span>`;
+  if (isFoodVendor === true)   return `<span class="type-chip type-food_vendor">Food Vendor</span>`;
+  return `<span class="type-chip type-vendor">Vendor</span>`;
+}
+
+  // ── Tab Switch ──
+  let activeTab = 'fairs';
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('panelFairs').style.display = tab === 'fairs' ? '' : 'none';
+    document.getElementById('panelVPs').style.display   = tab === 'vps'   ? '' : 'none';
+    document.getElementById('tabFairs').classList.toggle('active', tab === 'fairs');
+    document.getElementById('tabVPs').classList.toggle('active', tab === 'vps');
+    if (tab === 'fairs') loadFairs();
+    else loadVPs();
+  }
+
+  // ══════════════ FAIRS ══════════════
+
+  async function loadFairs() {
+    const search = document.getElementById('fairSearch').value.trim();
+    const tier   = document.getElementById('fairTierFilter').value;
+    const tbody  = document.getElementById('fairTableBody');
+    tbody.innerHTML = `<tr><td colspan="5"><div class="spinner-wrap"><div class="spinner"></div></div></td></tr>`;
+
+    const { data, error } = await sb.rpc('admin_get_all_fairs_with_tier', {
+      p_search: search || null,
+      p_tier:   tier   || null
+    });
+
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-msg">❌ Error loading fairs: ${error.message}</td></tr>`;
+      return;
+    }
+
+    const rows = Array.isArray(data) ? data : [];
+
+    // Stats
+    document.getElementById('fsTotal').textContent  = rows.length;
+ document.getElementById('fsBasic').textContent  = rows.filter(r => !r.fair_tier).length;
+document.getElementById('fsSilver').textContent = rows.filter(r => r.fair_tier === 'silver').length;
+document.getElementById('fsGold').textContent   = rows.filter(r => r.fair_tier === 'gold').length;
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-msg">No fairs found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => `
+      <tr id="fair-row-${r.id}">
+        <td class="col-id">#${r.id}</td>
+        <td class="col-name">
+          ${r.name}
+          ${r.verified === false ? `<br><span class="col-sub">⚠ Unverified</span>` : ''}
+        </td>
+        <td><span class="col-sub">${r.state || '—'}</span></td>
+        <td>${tierBadge(r.fair_tier)}</td>
+        <td>
+          <select class="tier-select" id="fts-${r.id}">
+            <option value="basic"  ${!r.fair_tier ? 'selected':''}>Basic</option>
+            <option value="silver" ${r.fair_tier==='silver' ? 'selected':''}>Silver</option>
+            <option value="gold"   ${r.fair_tier==='gold'   ? 'selected':''}>Gold</option>
+          </select>
+          <button class="save-btn" onclick="saveFairTier(${r.id})">Save</button>
+          <span class="row-msg" id="fmsg-${r.id}"></span>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function saveFairTier(fairId) {
+    const sel  = document.getElementById(`fts-${fairId}`);
+    const msg  = document.getElementById(`fmsg-${fairId}`);
+    const btn  = sel.nextElementSibling;
+    const tier = sel.value;
+
+    btn.disabled = true; btn.textContent = '…';
+    msg.textContent = ''; msg.className = 'row-msg';
+
+    const { error } = await sb.rpc('admin_set_fair_tier', { p_fair_id: fairId, p_tier: tier });
+
+    btn.disabled = false; btn.textContent = 'Save';
+
+    if (error) {
+      msg.textContent = 'Error'; msg.className = 'row-msg err';
+      showToast('Failed to update fair tier: ' + error.message, 'err');
+      return;
+    }
+
+    msg.textContent = '✓'; msg.className = 'row-msg ok';
+    setTimeout(() => { msg.textContent = ''; }, 2000);
+
+    // Update badge in row
+    const row = document.getElementById(`fair-row-${fairId}`);
+    if (row) row.cells[3].innerHTML = tierBadge(tier === 'basic' ? null : tier);
+
+    showToast('Fair tier updated to ' + tier + '.', 'ok');
+  }
+
+  // ══════════════ VENDORS & PERFORMERS ══════════════
+
+  async function loadVPs() {
+    const search = document.getElementById('vpSearch').value.trim();
+    const tier   = document.getElementById('vpTierFilter').value;
+    const type   = document.getElementById('vpTypeFilter').value;
+    const tbody  = document.getElementById('vpTableBody');
+    tbody.innerHTML = `<tr><td colspan="5"><div class="spinner-wrap"><div class="spinner"></div></div></td></tr>`;
+
+    const { data, error } = await sb.rpc('admin_get_all_vps_with_tier', {
+      p_search: search || null,
+      p_tier:   tier   || null,
+      p_type:   type   || null
+    });
+
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-msg">❌ Error loading records: ${error.message}</td></tr>`;
+      return;
+    }
+
+    const rows = Array.isArray(data) ? data : [];
+
+    // Stats
+    document.getElementById('vsTotal').textContent  = rows.length;
+    document.getElementById('vsBasic').textContent  = rows.filter(r => !r.tier || r.tier === 'bronze').length;
+    document.getElementById('vsSilver').textContent = rows.filter(r => r.tier === 'silver').length;
+    document.getElementById('vsGold').textContent   = rows.filter(r => r.tier === 'gold').length;
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-msg">No records found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => `
+      <tr id="vp-row-${r.id}">
+        <td class="col-id">#${r.id}</td>
+        <td class="col-name">
+          ${r.name}
+          <br><span class="col-sub">${r.contact_email || ''}</span>
+        </td>
+        <td class="col-type">${typeChip(r.application_type, r.is_food_vendor)}</td>
+        <td>${tierBadge(r.tier)}</td>
+        <td>
+          <select class="tier-select" id="vts-${r.id}">
+        <option value="bronze" ${(!r.tier||r.tier==='bronze') ? 'selected':''}>Bronze</option>
+<option value="silver" ${r.tier==='silver' ? 'selected':''}>Silver</option>
+<option value="gold"   ${r.tier==='gold'   ? 'selected':''}>Gold</option>
+          </select>
+          <button class="save-btn" onclick="saveVPTier(${r.id})">Save</button>
+          <span class="row-msg" id="vmsg-${r.id}"></span>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function saveVPTier(vpId) {
+    const sel  = document.getElementById(`vts-${vpId}`);
+    const msg  = document.getElementById(`vmsg-${vpId}`);
+    const btn  = sel.nextElementSibling;
+    const tier = sel.value;
+
+    btn.disabled = true; btn.textContent = '…';
+    msg.textContent = ''; msg.className = 'row-msg';
+
+    const { error } = await sb.rpc('admin_set_vp_tier', { p_vp_id: vpId, p_tier: tier });
+
+    btn.disabled = false; btn.textContent = 'Save';
+
+    if (error) {
+      msg.textContent = 'Error'; msg.className = 'row-msg err';
+      showToast('Failed to update tier: ' + error.message, 'err');
+      return;
+    }
+
+    msg.textContent = '✓'; msg.className = 'row-msg ok';
+    setTimeout(() => { msg.textContent = ''; }, 2000);
+
+    const row = document.getElementById(`vp-row-${vpId}`);
+    if (row) row.cells[3].innerHTML = tierBadge(tier);
+
+    showToast('Tier updated to ' + tier + '.', 'ok');
+  }
+
+  // ── Init ──
+  loadFairs();
+</script>
+</body>
+</html>

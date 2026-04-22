@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Application Reports | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Domine', serif; background: #0a0a0a; color: #f0e6d2; margin: 0; padding: 0; }
+
+    .topnav {
+      background: #1a1208; border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a { color: #c8aa6e; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: background 0.15s; }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links .nav-logout { background: rgba(180,50,50,0.18); color: #f4a0a0; margin-left: 8px; border: 1px solid rgba(180,50,50,0.3); }
+
+    .page-body { padding: 16px 20px 60px; max-width: 1100px; margin: 0 auto; }
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+    h1 { font-family: 'Cinzel', serif; font-size: 24px; color: #f1df99; margin: 8px 0 20px; }
+
+    .report-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .report-btn {
+      background: rgba(241,223,153,0.12);
+      border: 2px solid rgba(241,223,153,0.2);
+      color: #f1df99;
+      padding: 16px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: 'Domine', serif;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .report-btn:hover { background: rgba(241,223,153,0.2); border-color: rgba(241,223,153,0.4); }
+    .report-btn.active {
+      background: rgba(187,154,87,0.35);
+      border-color: #bb9a57;
+      color: #f1df99;
+      font-weight: bold;
+    }
+    .report-btn .btn-icon { font-size: 24px; display: block; margin-bottom: 6px; }
+
+    .action-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+    .btn { padding: 10px 18px; border: none; border-radius: 8px; font-size: 14px; font-family: 'Domine', serif; cursor: pointer; transition: background 0.15s; }
+    .btn-gold  { background: #bb7a28; color: #fff; }
+    .btn-gold:hover  { background: #a06820; }
+    .btn-dark  { background: #2f2f2f; color: #f0e6d2; }
+    .btn-dark:hover  { background: #222; }
+    .btn-green { background: #2e7d32; color: #fff; }
+    .btn-green:hover { background: #1b5e20; }
+
+    .report-card {
+      background: rgba(241,223,153,0.88);
+      border-radius: 14px;
+      padding: 24px;
+      color: #3b1f1f;
+    }
+    .report-card h2 { font-family: 'Cinzel', serif; font-size: 18px; margin: 0 0 6px; color: #3b1f1f; }
+    .report-subtitle { font-size: 13px; color: #5c3a1e; margin-bottom: 16px; }
+
+    /* Application row */
+    .app-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 10px; margin-bottom: 8px; flex-wrap: wrap;
+      page-break-inside: avoid;
+    }
+    .app-name { font-weight: bold; font-size: 15px; color: #3b1f1f; flex: 1; min-width: 140px; }
+    .app-email { font-size: 12px; color: #5c3a1e; }
+    .app-date  { font-size: 12px; color: #5c3a1e; min-width: 120px; }
+    .app-type  { font-size: 12px; color: #3b1f1f; min-width: 110px; }
+
+    .status-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 999px;
+      font-size: 12px; font-weight: bold; text-align: center; white-space: nowrap;
+    }
+    .badge-approved { background: rgba(76,175,80,0.25);  color: #1a5c1e; border: 1px solid rgba(76,175,80,0.4); }
+    .badge-declined { background: rgba(200,50,50,0.2);   color: #8b1a1a; border: 1px solid rgba(200,50,50,0.3); }
+    .badge-review   { background: rgba(240,180,20,0.25); color: #7a5200; border: 1px solid rgba(240,180,20,0.4); }
+    .badge-pending  { background: rgba(0,0,0,0.08);      color: #3b1f1f; border: 1px solid rgba(0,0,0,0.15); }
+
+    /* Pipeline summary */
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .pipeline-box {
+      background: rgba(255,255,255,0.65);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .pipeline-box .p-icon  { font-size: 28px; margin-bottom: 8px; }
+    .pipeline-box .p-label { font-size: 13px; color: #5c3a1e; margin-bottom: 6px; }
+    .pipeline-box .p-value { font-family: 'Cinzel', serif; font-size: 32px; font-weight: bold; color: #3b1f1f; }
+    .pipeline-box .p-sub   { font-size: 12px; color: #5c3a1e; margin-top: 4px; }
+
+    /* Type section headers */
+    .type-section { margin-bottom: 20px; }
+    .type-header {
+      font-family: 'Cinzel', serif; font-size: 14px; font-weight: bold;
+      padding: 8px 14px; background: rgba(0,0,0,0.08); border-radius: 8px;
+      color: #3b1f1f; margin-bottom: 10px;
+    }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: #5c3a1e; font-size: 15px; }
+    .empty-state .e-icon { font-size: 36px; margin-bottom: 10px; }
+
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; flex-direction: column; gap: 16px;
+    }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner { border: 5px solid rgba(255,255,255,0.15); border-top: 5px solid #bb9457; border-radius: 50%; width: 52px; height: 52px; animation: spin 0.9s linear infinite; }
+
+    @media print {
+      .topnav, .report-selector, .action-bar, #loadingOverlay { display: none !important; }
+      body { background: #fff; color: #000; }
+      .report-card { background: #fff; box-shadow: none; }
+      .app-row { background: #f9f9f9; border: 1px solid #ccc; }
+      .pipeline-box { background: #f0f0f0; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="../fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" id="navPayReports">💳 Payment Reports</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading reports…</p>
+  </div>
+
+  <div class="page-body">
+    <div class="breadcrumb">
+      <a href="../fair_admin.html">Admin Home</a> ›
+      <a href="#" id="breadDashboard">Dashboard</a> ›
+      <span>Application Reports</span>
+    </div>
+
+    <h1 id="pageTitle">📋 Application Reports</h1>
+
+    <div class="report-selector">
+      <button class="report-btn active" onclick="showReport('all')" id="btn-all">
+        <span class="btn-icon">📋</span>All Applications
+      </button>
+      <button class="report-btn" onclick="showReport('approved')" id="btn-approved">
+        <span class="btn-icon">✅</span>Approved
+      </button>
+      <button class="report-btn" onclick="showReport('declined')" id="btn-declined">
+        <span class="btn-icon">❌</span>Declined
+      </button>
+      <button class="report-btn" onclick="showReport('review')" id="btn-review">
+        <span class="btn-icon">⏳</span>In Review
+      </button>
+      <button class="report-btn" onclick="showReport('pipeline')" id="btn-pipeline">
+        <span class="btn-icon">📊</span>Pipeline Summary
+      </button>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-gold" onclick="window.print()">🖨️ Print Report</button>
+      <button class="btn btn-green" id="btnCsv">⬇️ Download CSV</button>
+      <button class="btn btn-dark" id="btnBack">⬅ Back to Dashboard</button>
+    </div>
+
+    <div class="report-card" id="reportOutput">
+      <div class="empty-state"><div class="e-icon">📊</div>Loading data…</div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL  = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    let allSubmissions = [];
+    let currentReport = 'all';
+    let fairId = null;
+
+    function getFairId() {
+      const n = Number(new URLSearchParams(window.location.search).get('fair_id'));
+      return Number.isFinite(n) ? n : null;
+    }
+    function showLoader() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    function fmtDate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    function typeLabel(t) {
+      if (t === 'food_vendor') return '🍖 Food Vendor';
+      if (t === 'performer')   return '🎭 Performer';
+      return '🧺 Artisan Vendor';
+    }
+    function statusBadge(s) {
+      if (s === 'approved') return '<span class="status-badge badge-approved">✅ Approved</span>';
+      if (s === 'rejected') return '<span class="status-badge badge-declined">❌ Declined</span>';
+      if (s === 'in_review') return '<span class="status-badge badge-review">⏳ In Review</span>';
+      return '<span class="status-badge badge-pending">📝 Draft</span>';
+    }
+
+    function buildAppRow(sub) {
+      return `
+        <div class="app-row">
+          <div style="flex:1;min-width:140px;">
+            <div class="app-name">${sub.applicant_name || '—'}</div>
+            <div class="app-email">${sub.applicant_email || '—'}</div>
+          </div>
+          <div class="app-type">${typeLabel(sub.form_type)}</div>
+          <div class="app-date">Applied: ${fmtDate(sub.submitted_at)}</div>
+          ${statusBadge(sub.status)}
+        </div>`;
+    }
+
+    function buildByType(submissions) {
+      const types = ['vendor','food_vendor','performer'];
+      return types.map(t => {
+        const items = submissions.filter(s => s.form_type === t);
+        if (!items.length) return '';
+        return `
+          <div class="type-section">
+            <div class="type-header">${typeLabel(t)} — ${items.length} application${items.length !== 1 ? 's' : ''}</div>
+            ${items.map(buildAppRow).join('')}
+          </div>`;
+      }).join('');
+    }
+
+    function renderAll(subs) {
+      if (!subs.length) return '<div class="empty-state"><div class="e-icon">📋</div>No applications found.</div>';
+      const sorted = [...subs].sort((a,b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+      return `<p style="color:#5c3a1e;font-size:13px;margin-bottom:16px;">${subs.length} total application${subs.length !== 1 ? 's' : ''}</p>` +
+        buildByType(sorted);
+    }
+
+    function renderApproved(subs) {
+      const approved = subs.filter(s => s.status === 'approved');
+      if (!approved.length) return '<div class="empty-state"><div class="e-icon">✅</div>No approved applications yet.</div>';
+      return `<p style="color:#1a5c1e;font-weight:bold;margin-bottom:16px;">✅ ${approved.length} approved application${approved.length !== 1 ? 's' : ''}</p>` +
+        buildByType(approved);
+    }
+
+    function renderDeclined(subs) {
+      const declined = subs.filter(s => s.status === 'rejected');
+      if (!declined.length) return '<div class="empty-state"><div class="e-icon">❌</div>No declined applications.</div>';
+      return `<p style="color:#8b1a1a;font-weight:bold;margin-bottom:16px;">❌ ${declined.length} declined application${declined.length !== 1 ? 's' : ''}</p>` +
+        buildByType(declined);
+    }
+
+    function renderReview(subs) {
+      const review = subs.filter(s => s.status === 'in_review');
+      if (!review.length) return '<div class="empty-state"><div class="e-icon">⏳</div>No applications currently in review.</div>';
+      return `<p style="color:#7a5200;font-weight:bold;margin-bottom:16px;">⏳ ${review.length} application${review.length !== 1 ? 's' : ''} waiting for a decision</p>` +
+        buildByType(review);
+    }
+
+    function renderPipeline(subs) {
+      const total    = subs.length;
+      const approved = subs.filter(s => s.status === 'approved').length;
+      const declined = subs.filter(s => s.status === 'rejected').length;
+      const review   = subs.filter(s => s.status === 'in_review').length;
+      const draft    = subs.filter(s => s.status === 'pending').length;
+      const vendors  = subs.filter(s => s.form_type === 'vendor').length;
+      const food     = subs.filter(s => s.form_type === 'food_vendor').length;
+      const perf     = subs.filter(s => s.form_type === 'performer').length;
+      const rate     = total > 0 ? Math.round((approved / total) * 100) : 0;
+
+      return `
+        <div class="pipeline-grid">
+          <div class="pipeline-box">
+            <div class="p-icon">📋</div>
+            <div class="p-label">Total Applications</div>
+            <div class="p-value">${total}</div>
+          </div>
+          <div class="pipeline-box">
+            <div class="p-icon">✅</div>
+            <div class="p-label">Approved</div>
+            <div class="p-value" style="color:#1a5c1e;">${approved}</div>
+            <div class="p-sub">${rate}% approval rate</div>
+          </div>
+          <div class="pipeline-box">
+            <div class="p-icon">⏳</div>
+            <div class="p-label">In Review</div>
+            <div class="p-value" style="color:#7a5200;">${review}</div>
+            <div class="p-sub">awaiting decision</div>
+          </div>
+          <div class="pipeline-box">
+            <div class="p-icon">❌</div>
+            <div class="p-label">Declined</div>
+            <div class="p-value" style="color:#8b1a1a;">${declined}</div>
+          </div>
+          <div class="pipeline-box">
+            <div class="p-icon">🧺</div>
+            <div class="p-label">Artisan Vendors</div>
+            <div class="p-value">${vendors}</div>
+          </div>
+          <div class="pipeline-box">
+            <div class="p-icon">🍖</div>
+            <div class="p-label">Food Vendors</div>
+            <div class="p-value">${food}</div>
+          </div>
+          <div class="pipeline-box">
+            <div class="p-icon">🎭</div>
+            <div class="p-label">Performers</div>
+            <div class="p-value">${perf}</div>
+          </div>
+          <div class="pipeline-box">
+            <div class="p-icon">📝</div>
+            <div class="p-label">Draft / Not Submitted</div>
+            <div class="p-value">${draft}</div>
+          </div>
+        </div>`;
+    }
+
+    function showReport(type) {
+      currentReport = type;
+      document.querySelectorAll('.report-btn').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById(`btn-${type}`);
+      if (btn) btn.classList.add('active');
+
+      const out = document.getElementById('reportOutput');
+      const titles = {
+        all:      { title: '📋 All Applications',    sub: 'Every application submitted to this fair' },
+        approved: { title: '✅ Approved Applications', sub: 'Vendors and performers who have been approved' },
+        declined: { title: '❌ Declined Applications', sub: 'Applications that were not accepted' },
+        review:   { title: '⏳ In Review',             sub: 'Applications waiting for a decision' },
+        pipeline: { title: '📊 Application Pipeline',  sub: 'Overview of all application activity' },
+      };
+
+      const t = titles[type] || titles.all;
+      let content = '';
+      if (type === 'all')      content = renderAll(allSubmissions);
+      if (type === 'approved') content = renderApproved(allSubmissions);
+      if (type === 'declined') content = renderDeclined(allSubmissions);
+      if (type === 'review')   content = renderReview(allSubmissions);
+      if (type === 'pipeline') content = renderPipeline(allSubmissions);
+
+      out.innerHTML = `
+        <h2>${t.title}</h2>
+        <div class="report-subtitle">${t.sub}</div>
+        ${content}`;
+    }
+
+    function buildCsv(subs) {
+      const rows = [['Name','Email','Type','Status','Applied Date']];
+      for (const s of subs) {
+        rows.push([
+          s.applicant_name, s.applicant_email,
+          s.form_type, s.status,
+          s.submitted_at ? new Date(s.submitted_at).toLocaleDateString() : ''
+        ]);
+      }
+      return rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    }
+
+    async function init() {
+      fairId = getFairId();
+      if (!fairId) { hideLoader(); return; }
+
+      document.getElementById('navDashboard').href   = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('navPayReports').href  = `fair_reports_payments.html?fair_id=${fairId}`;
+      document.getElementById('breadDashboard').href = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('btnBack').onclick     = () => { window.location.href = `fair_dashboard.html?fair_id=${fairId}`; };
+
+      document.getElementById('navLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = '/index.html';
+      });
+
+      document.getElementById('btnCsv').onclick = () => {
+        const csv = buildCsv(allSubmissions);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `application_report_fair${fairId}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      try {
+        const { data: fairRows } = await supabaseClient.rpc('get_admin_dashboard_fair_by_id', { p_fair_id: fairId });
+        const fairName = fairRows?.[0]?.name || '';
+        document.getElementById('pageTitle').textContent = `📋 Application Reports — ${fairName}`;
+
+        const { data, error } = await supabaseClient.rpc('fair_man_app_list_submissions', { p_fair_id: fairId });
+        if (error) throw error;
+        allSubmissions = Array.isArray(data) ? data : [];
+        showReport('all');
+      } catch (e) {
+        console.error(e);
+        document.getElementById('reportOutput').innerHTML = '<div class="empty-state"><div class="e-icon">⚠️</div>Could not load application data. Please refresh.</div>';
+      }
+
+      hideLoader();
+    }
+
+    init();
+  </script>
+</body>
+</html>

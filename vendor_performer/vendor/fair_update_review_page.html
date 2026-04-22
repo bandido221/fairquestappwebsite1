@@ -606,47 +606,62 @@
       return m;
     }
 
-    async function loadFairWeekendOptions(fairId) {
-      const { data, error } = await supabaseClient
-        .from('renaissance_fairs')
-        .select(`
-          start_date, end_date,
-          week2_start_date, week2_end_date,
-          week3_start_date, week3_end_date,
-          week4_start_date, week4_end_date,
-          week5_start_date, week5_end_date,
-          week6_start_date, week6_end_date,
-          week7_start_date, week7_end_date,
-          week8_start_date, week8_end_date,
-          week9_start_date, week9_end_date,
-          week10_start_date, week10_end_date
-        `)
-        .eq('id', fairId)
-        .single();
+    async function loadFairWeekendOptions(fairId, formType) {
+  const { data, error } = await supabaseClient
+    .from('renaissance_fairs')
+    .select(`
+      start_date, end_date,
+      week2_start_date, week2_end_date,
+      week3_start_date, week3_end_date,
+      week4_start_date, week4_end_date,
+      week5_start_date, week5_end_date,
+      week6_start_date, week6_end_date,
+      week7_start_date, week7_end_date,
+      week8_start_date, week8_end_date,
+      week9_start_date, week9_end_date,
+      week10_start_date, week10_end_date
+    `)
+    .eq('id', fairId)
+    .single();
 
-      if (error) throw error;
+  if (error) throw error;
 
-      function fmtDate(d) {
-        if (!d) return '';
-        const dt = new Date(d + 'T00:00:00');
-        return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-      }
+  let pricingRows = [];
+  if (formType === 'vendor' || formType === 'food_vendor') {
+    const { data: pricing } = await supabaseClient
+      .rpc('get_fair_weekend_pricing_public', { p_fair_id: fairId });
+    pricingRows = Array.isArray(pricing) ? pricing : [];
+  }
 
-      const out = [];
-      if (data.start_date && data.end_date) {
-        out.push({ value: 'weekend_1', label: `Weekend 1: ${fmtDate(data.start_date)} — ${fmtDate(data.end_date)}` });
-      }
+  function fmtDate(d) {
+    if (!d) return '';
+    const dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
 
-      for (let i = 2; i <= 10; i++) {
-        const s = data[`week${i}_start_date`];
-        const e = data[`week${i}_end_date`];
-        if (s && e) {
-          out.push({ value: `weekend_${i}`, label: `Weekend ${i}: ${fmtDate(s)} — ${fmtDate(e)}` });
-        }
-      }
+  function priceLabel(weekNum) {
+    const row = pricingRows.find(r => r.week_number === weekNum);
+    if (!row) return '';
+    const price = formType === 'food_vendor' ? row.food_vendor_price : row.vendor_price;
+    if (price == null) return '';
+    return ` — $${Number(price).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  }
 
-      return out;
+  const out = [];
+  if (data.start_date && data.end_date) {
+    out.push({ value: 'weekend_1', label: `Weekend 1: ${fmtDate(data.start_date)} — ${fmtDate(data.end_date)}${priceLabel(1)}`, weekNum: 1, pricingRows, formType });
+  }
+
+  for (let i = 2; i <= 10; i++) {
+    const s = data[`week${i}_start_date`];
+    const e = data[`week${i}_end_date`];
+    if (s && e) {
+      out.push({ value: `weekend_${i}`, label: `Weekend ${i}: ${fmtDate(s)} — ${fmtDate(e)}${priceLabel(i)}`, weekNum: i, pricingRows, formType });
     }
+  }
+
+  return out;
+}
 
     function renderReadonlyState(canEdit) {
       const note = document.getElementById('readonlyNote');
@@ -789,12 +804,41 @@
                 if (cb.checked) selectedSet.add(String(opt.value));
                 else selectedSet.delete(String(opt.value));
                 setFieldValue(f.id, Array.from(selectedSet));
+                updateWeekendTotal();
               });
 
               row.appendChild(cb);
               row.appendChild(el('span', { text: opt.label }));
               box.appendChild(row);
             }
+
+            // Total row
+            const totalRow = el('div', {
+              id: `weekend_total_${f.id}`,
+              style: 'margin-top:12px; padding:12px 14px; border-radius:10px; background:rgba(0,0,0,0.08); border:1px solid rgba(0,0,0,0.15); font-weight:bold; font-size:18px; color:#3b1f1f;'
+            });
+            box.appendChild(totalRow);
+
+            function updateWeekendTotal() {
+              const showPrice = fairWeekendOptions.length > 0 && fairWeekendOptions[0].pricingRows && fairWeekendOptions[0].pricingRows.length > 0;
+              if (!showPrice) { totalRow.style.display = 'none'; return; }
+
+              let total = 0;
+              for (const opt of fairWeekendOptions) {
+                if (!selectedSet.has(String(opt.value))) continue;
+                const pr = opt.pricingRows.find(r => r.week_number === opt.weekNum);
+                if (!pr) continue;
+                const price = opt.formType === 'food_vendor' ? pr.food_vendor_price : pr.vendor_price;
+                if (price != null) total += Number(price);
+              }
+
+              const count = selectedSet.size;
+              totalRow.textContent = count === 0
+                ? 'No weekends selected'
+                : `Total for ${count} weekend${count !== 1 ? 's' : ''}: $${total.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+            }
+
+            updateWeekendTotal();
           }
 
           control = box;
@@ -1025,7 +1069,8 @@
         const formRow = await loadForm(submission.form_id);
         const fields = await loadFields(submission.form_id);
         const valuesMap = await loadSubmissionValuesMap(submissionId);
-        const fairWeekendOptions = await loadFairWeekendOptions(fairId);
+        const formType = vpaRow.application_type === true ? 'performer' : vpaRow.is_food_vendor === true ? 'food_vendor' : 'vendor';
+const fairWeekendOptions = await loadFairWeekendOptions(fairId, formType);
 
         pageState.submission = submission;
         pageState.fields = fields;

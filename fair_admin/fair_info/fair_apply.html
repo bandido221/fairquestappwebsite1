@@ -315,44 +315,65 @@ async function findExistingSubmission(fairId, vpaId) {
       return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
-    async function loadFair(fairId) {
-      const { data, error } = await supabaseClient
-        .from('renaissance_fairs')
-        .select(`
-          id, name, fair_tier,
-          start_date, end_date,
-          week2_start_date, week2_end_date,
-          week3_start_date, week3_end_date,
-          week4_start_date, week4_end_date,
-          week5_start_date, week5_end_date,
-          week6_start_date, week6_end_date,
-          week7_start_date, week7_end_date,
-          week8_start_date, week8_end_date,
-          week9_start_date, week9_end_date,
-          week10_start_date, week10_end_date
-        `)
-        .eq('id', fairId)
-        .single();
-      if (error) throw error;
-      return data;
-    }
+   async function loadFair(fairId) {
+  const { data, error } = await supabaseClient
+    .from('renaissance_fairs')
+    .select(`
+      id, name, fair_tier,
+      start_date, end_date,
+      week2_start_date, week2_end_date,
+      week3_start_date, week3_end_date,
+      week4_start_date, week4_end_date,
+      week5_start_date, week5_end_date,
+      week6_start_date, week6_end_date,
+      week7_start_date, week7_end_date,
+      week8_start_date, week8_end_date,
+      week9_start_date, week9_end_date,
+      week10_start_date, week10_end_date
+    `)
+    .eq('id', fairId)
+    .single();
+  if (error) throw error;
+  return data;
+}
 
-    function buildFairWeekendOptions(fairRow) {
-      const out = [];
-      const w1s = fairRow.start_date;
-      const w1e = fairRow.end_date;
-      if (w1s && w1e) {
-        out.push({ value: 'weekend_1', label: `Weekend 1: ${fmtDate(w1s)} — ${fmtDate(w1e)}` });
-      }
-      for (let i = 2; i <= 10; i++) {
-        const s = fairRow[`week${i}_start_date`];
-        const e = fairRow[`week${i}_end_date`];
-        if (s && e) {
-          out.push({ value: `weekend_${i}`, label: `Weekend ${i}: ${fmtDate(s)} — ${fmtDate(e)}` });
-        }
-      }
-      return out;
+async function loadWeekendPricing(fairId) {
+  const { data, error } = await supabaseClient
+    .rpc('get_fair_weekend_pricing_public', { p_fair_id: fairId });
+  if (error) {
+    console.error('Could not load weekend pricing', error);
+    return [];
+  }
+  return Array.isArray(data) ? data : [];
+}
+
+function buildFairWeekendOptions(fairRow, pricingRows, formType) {
+  const out = [];
+  const showPrice = (formType === 'vendor' || formType === 'food_vendor');
+
+  function priceLabel(weekNum) {
+    if (!showPrice || !pricingRows.length) return '';
+    const row = pricingRows.find(r => r.week_number === weekNum);
+    if (!row) return '';
+    const price = formType === 'food_vendor' ? row.food_vendor_price : row.vendor_price;
+    if (price == null) return '';
+    return ` — $${Number(price).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  }
+
+  const w1s = fairRow.start_date;
+  const w1e = fairRow.end_date;
+  if (w1s && w1e) {
+    out.push({ value: 'weekend_1', label: `Weekend 1: ${fmtDate(w1s)} — ${fmtDate(w1e)}${priceLabel(1)}` });
+  }
+  for (let i = 2; i <= 10; i++) {
+    const s = fairRow[`week${i}_start_date`];
+    const e = fairRow[`week${i}_end_date`];
+    if (s && e) {
+      out.push({ value: `weekend_${i}`, label: `Weekend ${i}: ${fmtDate(s)} — ${fmtDate(e)}${priceLabel(i)}` });
     }
+  }
+  return out;
+}
 
    async function loadApprovedVpa(userId) {
   const { data, error } = await supabaseClient
@@ -1208,7 +1229,8 @@ if (existingSub && String(existingSub.status || '').toLowerCase() !== 'pending')
           currentFields = fields;
 
           formHint.textContent = 'You must accept the contract before filling out this application.';
-          const fairWeekendOptions = buildFairWeekendOptions(fairRow);
+          const pricingRows = await loadWeekendPricing(fairId);
+const fairWeekendOptions = buildFairWeekendOptions(fairRow, pricingRows, formType);
           const fileKeyBase = currentDraftKey;
 
           await renderFieldsInto(fieldsWrap, fields, valuesMap, (field, value) => {

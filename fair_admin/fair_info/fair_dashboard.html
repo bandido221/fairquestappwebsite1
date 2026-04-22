@@ -202,6 +202,9 @@
       <button class="btn" id="btnApplications">Applications</button>
       <button class="btn" id="btnVendorDirectory">📒 Vendor & Performer Directory</button>
       <button class="btn" id="btnPayments">💳 Payment Tracking</button>
+      <button class="btn" id="btnWeekendPricing">🗓️ Weekend Pricing</button>
+      <button class="btn" id="btnPayReports">📊 Payment Reports</button>
+      <button class="btn" id="btnAppReports">📋 Application Reports</button>
       <button class="btn" onclick="window.location.href='vip_guide/guide_index.html'" style="background:#bb7a28;">📖 Guide</button>
     </div>
   </div>
@@ -388,7 +391,19 @@ document.getElementById('btnApplications').onclick = () => {
     if (!isGold) { showComingSoon(); return; }
     window.location.href = `fair_vendor_payments.html?fair_id=${fairId}`;
   };
-
+  document.getElementById('btnWeekendPricing').onclick = () => {
+    if (!isGold) { showComingSoon(); return; }
+    window.location.href = `fair_weekend_pricing.html?fair_id=${fairId}`;
+  };
+document.getElementById('btnPayReports').onclick = () => {
+    if (!isGold) { showComingSoon(); return; }
+    window.location.href = `fair_reports_payments.html?fair_id=${fairId}`;
+  };
+  document.getElementById('btnAppReports').onclick = () => {
+    if (!isGold) { showComingSoon(); return; }
+    window.location.href = `fair_reports_applications.html?fair_id=${fairId}`;
+  };
+  
   // Add unavailable overlay to appsCard if not gold
   if (!isGold) {
     const appsCard = document.getElementById('appsCard');

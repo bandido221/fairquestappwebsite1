@@ -194,8 +194,8 @@
       <div class="search-bar">
         <input type="text" id="searchInput" placeholder="🔍  Search by name or email…" />
         <select id="statusFilter">
-          <option value="">All Payment Statuses</option>
           <option value="unpaid">Unpaid</option>
+          <option value="">All Payment Statuses</option>
           <option value="pending">Pending</option>
           <option value="paid">Paid</option>
           <option value="waived">Waived</option>
@@ -342,6 +342,7 @@
             <input type="text" class="inp-reference"
               placeholder="PayPal ref / note"
               value="${p.payment_reference || ''}" />
+            <button class="btn-mark-paid" data-id="${p.id}" style="background:#2e7d32;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:13px;font-family:'Domine',serif;cursor:pointer;white-space:nowrap;">✅ Mark Paid</button>
             <button class="btn-save-payment" data-id="${p.id}">💾 Save</button>
             <span class="pay-status"></span>
           </div>`;
@@ -384,6 +385,46 @@
           }
           btn.disabled = false;
           btn.textContent = '💾 Save';
+        });
+
+        row.querySelector('.btn-mark-paid').addEventListener('click', async () => {
+          const btn = row.querySelector('.btn-mark-paid');
+          const statusEl = row.querySelector('.pay-status');
+          const amountInput = row.querySelector('.inp-amount-paid');
+          const reference = row.querySelector('.inp-reference').value.trim() || null;
+          const amountPaid = parseFloat(amountInput.value) || parseFloat(p.amount_due) || 0;
+
+          btn.disabled = true;
+          btn.textContent = 'Saving…';
+
+          const { error } = await supabaseClient.rpc('update_fair_vendor_payment', {
+            p_id:                p.id,
+            p_fair_id:           fairId,
+            p_payment_status:    'paid',
+            p_amount_paid:       amountPaid,
+            p_payment_reference: reference,
+            p_payment_method:    reference ? 'paypal' : null,
+            p_notes:             null
+          });
+
+          if (error) {
+            statusEl.textContent = '❌ Error';
+            statusEl.style.color = '#8b1a1a';
+            console.error(error);
+          } else {
+            p.payment_status = 'paid';
+            p.amount_paid = amountPaid;
+            row.querySelector('.sel-status').value = 'paid';
+            row.querySelector('.payment-status-badge').className = 'payment-status-badge status-paid';
+            row.querySelector('.payment-status-badge').textContent = '✅ Paid';
+            row.dataset.status = 'paid';
+            statusEl.textContent = '✅ Saved';
+            statusEl.style.color = '#1a5c1e';
+            setTimeout(() => { statusEl.textContent = ''; }, 2500);
+          }
+
+          btn.disabled = false;
+          btn.textContent = '✅ Mark Paid';
         });
 
         paymentsContainer.appendChild(row);

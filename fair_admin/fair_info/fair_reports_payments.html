@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Reports | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Domine', serif; background: #0a0a0a; color: #f0e6d2; margin: 0; padding: 0; }
+
+    .topnav {
+      background: #1a1208; border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a { color: #c8aa6e; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: background 0.15s; }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links .nav-logout { background: rgba(180,50,50,0.18); color: #f4a0a0; margin-left: 8px; border: 1px solid rgba(180,50,50,0.3); }
+
+    .page-body { padding: 16px 20px 60px; max-width: 1100px; margin: 0 auto; }
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+    h1 { font-family: 'Cinzel', serif; font-size: 24px; color: #f1df99; margin: 8px 0 20px; }
+
+    /* Report selector buttons */
+    .report-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .report-btn {
+      background: rgba(241,223,153,0.12);
+      border: 2px solid rgba(241,223,153,0.2);
+      color: #f1df99;
+      padding: 16px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: 'Domine', serif;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .report-btn:hover { background: rgba(241,223,153,0.2); border-color: rgba(241,223,153,0.4); }
+    .report-btn.active {
+      background: rgba(187,154,87,0.35);
+      border-color: #bb9a57;
+      color: #f1df99;
+      font-weight: bold;
+    }
+    .report-btn .btn-icon { font-size: 24px; display: block; margin-bottom: 6px; }
+
+    /* Action bar */
+    .action-bar {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center;
+    }
+    .btn {
+      padding: 10px 18px; border: none; border-radius: 8px;
+      font-size: 14px; font-family: 'Domine', serif; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-gold { background: #bb7a28; color: #fff; }
+    .btn-gold:hover { background: #a06820; }
+    .btn-dark { background: #2f2f2f; color: #f0e6d2; }
+    .btn-dark:hover { background: #222; }
+    .btn-green { background: #2e7d32; color: #fff; }
+    .btn-green:hover { background: #1b5e20; }
+
+    /* Report card */
+    .report-card {
+      background: rgba(241,223,153,0.88);
+      border-radius: 14px;
+      padding: 24px;
+      color: #3b1f1f;
+    }
+    .report-card h2 { font-family: 'Cinzel', serif; font-size: 18px; margin: 0 0 6px; color: #3b1f1f; }
+    .report-subtitle { font-size: 13px; color: #5c3a1e; margin-bottom: 16px; }
+
+    /* Vendor block */
+    .vendor-block {
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+      page-break-inside: avoid;
+    }
+    .vendor-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .vendor-name { font-family: 'Cinzel', serif; font-size: 16px; font-weight: bold; color: #3b1f1f; }
+    .vendor-email { font-size: 13px; color: #5c3a1e; }
+    .type-pill {
+      font-size: 11px; font-weight: bold; padding: 2px 9px; border-radius: 999px;
+      background: rgba(0,0,0,0.1); color: #3b1f1f; margin-left: auto;
+    }
+
+    /* Weekend rows */
+    .weekend-row {
+      display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+      border-radius: 8px; margin-bottom: 6px; flex-wrap: wrap;
+      background: rgba(255,255,255,0.5);
+    }
+    .weekend-label { font-weight: bold; font-size: 13px; color: #3b1f1f; min-width: 90px; }
+    .weekend-dates { font-size: 12px; color: #5c3a1e; flex: 1; }
+    .weekend-amount { font-size: 13px; font-weight: bold; min-width: 80px; text-align: right; }
+    .status-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 12px; font-weight: bold; min-width: 70px; text-align: center;
+    }
+    .badge-paid    { background: rgba(76,175,80,0.25); color: #1a5c1e; border: 1px solid rgba(76,175,80,0.4); }
+    .badge-unpaid  { background: rgba(200,50,50,0.2);  color: #8b1a1a; border: 1px solid rgba(200,50,50,0.3); }
+    .badge-pending { background: rgba(240,180,20,0.25);color: #7a5200; border: 1px solid rgba(240,180,20,0.4); }
+    .badge-waived  { background: rgba(0,0,0,0.08);     color: #3b1f1f; border: 1px solid rgba(0,0,0,0.15); }
+
+    /* Vendor totals */
+    .vendor-totals {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.12);
+      font-size: 13px; margin-top: 8px;
+    }
+    .total-item { font-weight: bold; }
+    .total-item span { font-weight: normal; }
+    .total-paid   { color: #1a5c1e; }
+    .total-unpaid { color: #8b1a1a; }
+
+    /* Summary totals card */
+    .summary-totals {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 2px solid rgba(0,0,0,0.15);
+    }
+    .summary-box {
+      background: rgba(255,255,255,0.6);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .summary-box .s-label { font-size: 13px; color: #5c3a1e; margin-bottom: 6px; }
+    .summary-box .s-value { font-family: 'Cinzel', serif; font-size: 28px; font-weight: bold; }
+    .s-green { color: #1a5c1e; }
+    .s-red   { color: #8b1a1a; }
+    .s-gold  { color: #7a5200; }
+
+    /* Money summary report */
+    .money-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .money-box {
+      background: rgba(255,255,255,0.65);
+      border-radius: 12px;
+      padding: 22px;
+      text-align: center;
+      border: 2px solid transparent;
+    }
+    .money-box.green-box { border-color: rgba(76,175,80,0.4); }
+    .money-box.red-box   { border-color: rgba(200,50,50,0.4); }
+    .money-box.gold-box  { border-color: rgba(187,154,87,0.4); }
+    .money-box .m-icon  { font-size: 32px; margin-bottom: 8px; }
+    .money-box .m-label { font-size: 14px; color: #5c3a1e; margin-bottom: 8px; }
+    .money-box .m-value { font-family: 'Cinzel', serif; font-size: 36px; font-weight: bold; }
+    .money-box .m-count { font-size: 13px; color: #5c3a1e; margin-top: 6px; }
+
+    /* New/returning report */
+    .nr-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .nr-section h3 { font-family: 'Cinzel', serif; font-size: 14px; margin: 0 0 10px; color: #3b1f1f; }
+    .nr-item {
+      background: rgba(255,255,255,0.55);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #3b1f1f;
+    }
+
+    /* Weekend breakdown */
+    .weekend-section { margin-bottom: 20px; }
+    .weekend-section h3 {
+      font-family: 'Cinzel', serif; font-size: 15px; margin: 0 0 10px;
+      padding: 10px 14px; background: rgba(0,0,0,0.08); border-radius: 8px; color: #3b1f1f;
+    }
+    .weekend-vendor-row {
+      display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+      background: rgba(255,255,255,0.55); border-radius: 8px; margin-bottom: 6px; flex-wrap: wrap;
+    }
+
+    .empty-state {
+      text-align: center; padding: 40px 20px; color: #5c3a1e; font-size: 15px;
+    }
+    .empty-state .e-icon { font-size: 36px; margin-bottom: 10px; }
+
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; flex-direction: column; gap: 16px;
+    }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner { border: 5px solid rgba(255,255,255,0.15); border-top: 5px solid #bb9457; border-radius: 50%; width: 52px; height: 52px; animation: spin 0.9s linear infinite; }
+
+    @media print {
+      .topnav, .report-selector, .action-bar, #loadingOverlay { display: none !important; }
+      body { background: #fff; color: #000; }
+      .report-card { background: #fff; box-shadow: none; }
+      .vendor-block { background: #f9f9f9; border: 1px solid #ccc; }
+      .weekend-row, .weekend-vendor-row, .nr-item { background: #f0f0f0; }
+      .summary-box, .money-box { background: #f0f0f0; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="../fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" id="navAppReports">📋 Application Reports</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading reports…</p>
+  </div>
+
+  <div class="page-body">
+    <div class="breadcrumb">
+      <a href="../fair_admin.html">Admin Home</a> ›
+      <a href="#" id="breadDashboard">Dashboard</a> ›
+      <span>Payment Reports</span>
+    </div>
+
+    <h1 id="pageTitle">💳 Payment Reports</h1>
+
+    <!-- REPORT SELECTOR -->
+    <div class="report-selector" id="reportSelector">
+      <button class="report-btn active" onclick="showReport('all')" id="btn-all">
+        <span class="btn-icon">📋</span>All Vendors & Payments
+      </button>
+      <button class="report-btn" onclick="showReport('paid')" id="btn-paid">
+        <span class="btn-icon">✅</span>Paid in Full
+      </button>
+      <button class="report-btn" onclick="showReport('unpaid')" id="btn-unpaid">
+        <span class="btn-icon">❌</span>Still Owe Money
+      </button>
+      <button class="report-btn" onclick="showReport('money')" id="btn-money">
+        <span class="btn-icon">💰</span>Money Summary
+      </button>
+      <button class="report-btn" onclick="showReport('weekend')" id="btn-weekend">
+        <span class="btn-icon">📅</span>By Weekend
+      </button>
+      <button class="report-btn" onclick="showReport('newret')" id="btn-newret">
+        <span class="btn-icon">🏷️</span>New vs Returning
+      </button>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+      <button class="btn btn-gold" onclick="window.print()">🖨️ Print Report</button>
+      <button class="btn btn-green" id="btnCsv">⬇️ Download CSV</button>
+      <button class="btn btn-dark" id="btnBack">⬅ Back to Dashboard</button>
+    </div>
+
+    <!-- REPORT OUTPUT -->
+    <div class="report-card" id="reportOutput">
+      <div class="empty-state">
+        <div class="e-icon">📊</div>
+        Loading data…
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL  = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    let allPayments = [];
+    let currentReport = 'all';
+    let fairId = null;
+
+    function getFairId() {
+      const n = Number(new URLSearchParams(window.location.search).get('fair_id'));
+      return Number.isFinite(n) ? n : null;
+    }
+    function showLoader() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    function fmtDate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    function fmtMoney(n) {
+      return '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function typeLabel(t) {
+      if (t === 'food_vendor') return '🍖 Food Vendor';
+      if (t === 'performer')   return '🎭 Performer';
+      return '🧺 Artisan Vendor';
+    }
+    function statusBadge(s) {
+      const cls = s === 'paid' ? 'badge-paid' : s === 'pending' ? 'badge-pending' : s === 'waived' ? 'badge-waived' : 'badge-unpaid';
+      const label = s === 'paid' ? '✅ Paid' : s === 'pending' ? '⏳ Pending' : s === 'waived' ? '— Waived' : '❌ Unpaid';
+      return `<span class="status-badge ${cls}">${label}</span>`;
+    }
+
+    function groupByVendor(payments) {
+      const map = new Map();
+      for (const p of payments) {
+        if (!map.has(p.directory_id)) {
+          map.set(p.directory_id, {
+            directory_id: p.directory_id,
+            name: p.applicant_name,
+            email: p.applicant_email,
+            type: p.type,
+            payments: []
+          });
+        }
+        map.get(p.directory_id).payments.push(p);
+      }
+      return Array.from(map.values()).sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    }
+
+    function buildVendorBlock(vendor) {
+      const totalDue  = vendor.payments.reduce((s,p) => s + Number(p.amount_due  || 0), 0);
+      const totalPaid = vendor.payments.reduce((s,p) => s + Number(p.amount_paid || 0), 0);
+      const balance   = totalDue - totalPaid;
+
+      let weekendsHtml = '';
+      for (const p of vendor.payments) {
+        const amountColor = p.payment_status === 'paid' ? 'color:#1a5c1e' : 'color:#8b1a1a';
+        weekendsHtml += `
+          <div class="weekend-row">
+            <div class="weekend-label">Weekend ${p.week_number}</div>
+            <div class="weekend-dates">${fmtDate(p.start_date)} — ${fmtDate(p.end_date)}</div>
+            <div class="weekend-amount" style="${amountColor}">${fmtMoney(p.amount_due)}</div>
+            ${statusBadge(p.payment_status)}
+          </div>`;
+      }
+
+      const balanceColor = balance > 0 ? 'color:#8b1a1a' : 'color:#1a5c1e';
+      const balanceLabel = balance > 0 ? `❌ Unpaid: ${fmtMoney(balance)}` : `✅ Fully Paid`;
+
+      return `
+        <div class="vendor-block">
+          <div class="vendor-header">
+            <div>
+              <div class="vendor-name">${vendor.name || '—'}</div>
+              <div class="vendor-email">${vendor.email || '—'}</div>
+            </div>
+            <span class="type-pill">${typeLabel(vendor.type)}</span>
+          </div>
+          ${weekendsHtml}
+          <div class="vendor-totals">
+            <div class="total-item total-paid">Total Paid: <span>${fmtMoney(totalPaid)}</span></div>
+            <div class="total-item total-unpaid">Total Due: <span>${fmtMoney(totalDue)}</span></div>
+            <div class="total-item" style="${balanceColor}">${balanceLabel}</div>
+          </div>
+        </div>`;
+    }
+
+    function buildSummaryTotals(vendors) {
+      const totalDue    = vendors.reduce((s,v) => s + v.payments.reduce((ss,p) => ss + Number(p.amount_due  || 0), 0), 0);
+      const totalPaid   = vendors.reduce((s,v) => s + v.payments.reduce((ss,p) => ss + Number(p.amount_paid || 0), 0), 0);
+      const totalUnpaid = totalDue - totalPaid;
+      const paidCount   = vendors.filter(v => v.payments.every(p => p.payment_status === 'paid' || p.payment_status === 'waived')).length;
+      const unpaidCount = vendors.filter(v => v.payments.some(p => p.payment_status === 'unpaid' || p.payment_status === 'pending')).length;
+
+      return `
+        <div class="summary-totals">
+          <div class="summary-box">
+            <div class="s-label">Total Collected</div>
+            <div class="s-value s-green">${fmtMoney(totalPaid)}</div>
+          </div>
+          <div class="summary-box">
+            <div class="s-label">Still Outstanding</div>
+            <div class="s-value s-red">${fmtMoney(totalUnpaid)}</div>
+          </div>
+          <div class="summary-box">
+            <div class="s-label">Total Billed</div>
+            <div class="s-value s-gold">${fmtMoney(totalDue)}</div>
+          </div>
+          <div class="summary-box">
+            <div class="s-label">Paid in Full</div>
+            <div class="s-value s-green">${paidCount} vendors</div>
+          </div>
+          <div class="summary-box">
+            <div class="s-label">Still Owe Money</div>
+            <div class="s-value s-red">${unpaidCount} vendors</div>
+          </div>
+        </div>`;
+    }
+
+    function renderAll(vendors) {
+      if (!vendors.length) return '<div class="empty-state"><div class="e-icon">💳</div>No payment records found.</div>';
+      return vendors.map(v => buildVendorBlock(v)).join('') + buildSummaryTotals(vendors);
+    }
+
+    function renderPaid(vendors) {
+      const paid = vendors.filter(v => v.payments.every(p => p.payment_status === 'paid' || p.payment_status === 'waived'));
+      if (!paid.length) return '<div class="empty-state"><div class="e-icon">✅</div>No vendors have paid in full yet.</div>';
+      return `<p style="color:#1a5c1e;font-weight:bold;margin-bottom:16px;">✅ ${paid.length} vendor${paid.length !== 1 ? 's' : ''} paid in full</p>` +
+        paid.map(v => buildVendorBlock(v)).join('');
+    }
+
+    function renderUnpaid(vendors) {
+      const unpaid = vendors.filter(v => v.payments.some(p => p.payment_status === 'unpaid' || p.payment_status === 'pending'));
+      if (!unpaid.length) return '<div class="empty-state"><div class="e-icon">🎉</div>All vendors have paid in full!</div>';
+      const totalOwed = unpaid.reduce((s,v) => s + v.payments.reduce((ss,p) => {
+        if (p.payment_status === 'unpaid' || p.payment_status === 'pending') return ss + Number(p.amount_due || 0) - Number(p.amount_paid || 0);
+        return ss;
+      }, 0), 0);
+      return `<p style="color:#8b1a1a;font-weight:bold;margin-bottom:16px;">❌ ${unpaid.length} vendor${unpaid.length !== 1 ? 's' : ''} still owe money — Total outstanding: ${fmtMoney(totalOwed)}</p>` +
+        unpaid.map(v => buildVendorBlock(v)).join('');
+    }
+
+    function renderMoney(vendors) {
+      const totalDue    = vendors.reduce((s,v) => s + v.payments.reduce((ss,p) => ss + Number(p.amount_due  || 0), 0), 0);
+      const totalPaid   = vendors.reduce((s,v) => s + v.payments.reduce((ss,p) => ss + Number(p.amount_paid || 0), 0), 0);
+      const totalUnpaid = totalDue - totalPaid;
+      const vendorDue   = vendors.filter(v=>v.type==='vendor').reduce((s,v) => s + v.payments.reduce((ss,p) => ss + Number(p.amount_due||0), 0), 0);
+      const foodDue     = vendors.filter(v=>v.type==='food_vendor').reduce((s,v) => s + v.payments.reduce((ss,p) => ss + Number(p.amount_due||0), 0), 0);
+      const vendorPaid  = vendors.filter(v=>v.type==='vendor').reduce((s,v) => s + v.payments.reduce((ss,p) => ss + Number(p.amount_paid||0), 0), 0);
+      const foodPaid    = vendors.filter(v=>v.type==='food_vendor').reduce((s,v) => s + v.payments.reduce((ss,p) => ss + Number(p.amount_paid||0), 0), 0);
+
+      return `
+        <div class="money-grid">
+          <div class="money-box green-box">
+            <div class="m-icon">💚</div>
+            <div class="m-label">Total Collected</div>
+            <div class="m-value s-green">${fmtMoney(totalPaid)}</div>
+            <div class="m-count">from ${vendors.length} vendors</div>
+          </div>
+          <div class="money-box red-box">
+            <div class="m-icon">❤️</div>
+            <div class="m-label">Still Outstanding</div>
+            <div class="m-value s-red">${fmtMoney(totalUnpaid)}</div>
+            <div class="m-count">not yet collected</div>
+          </div>
+          <div class="money-box gold-box">
+            <div class="m-icon">🏺</div>
+            <div class="m-label">Artisan Vendors</div>
+            <div class="m-value s-gold">${fmtMoney(vendorDue)}</div>
+            <div class="m-count">billed / ${fmtMoney(vendorPaid)} collected</div>
+          </div>
+          <div class="money-box gold-box">
+            <div class="m-icon">🍖</div>
+            <div class="m-label">Food Vendors</div>
+            <div class="m-value s-gold">${fmtMoney(foodDue)}</div>
+            <div class="m-count">billed / ${fmtMoney(foodPaid)} collected</div>
+          </div>
+          <div class="money-box green-box">
+            <div class="m-icon">📊</div>
+            <div class="m-label">Total Billed</div>
+            <div class="m-value s-gold">${fmtMoney(totalDue)}</div>
+            <div class="m-count">across all vendors</div>
+          </div>
+          <div class="money-box ${totalUnpaid > 0 ? 'red-box' : 'green-box'}">
+            <div class="m-icon">${totalUnpaid > 0 ? '⚠️' : '🎉'}</div>
+            <div class="m-label">Collection Rate</div>
+            <div class="m-value ${totalUnpaid > 0 ? 's-red' : 's-green'}">${totalDue > 0 ? Math.round((totalPaid/totalDue)*100) : 0}%</div>
+            <div class="m-count">of total billed collected</div>
+          </div>
+        </div>`;
+    }
+
+    function renderByWeekend(vendors) {
+      const weekMap = new Map();
+      for (const v of vendors) {
+        for (const p of v.payments) {
+          const key = p.week_number;
+          if (!weekMap.has(key)) weekMap.set(key, { week_number: p.week_number, start_date: p.start_date, end_date: p.end_date, vendors: [] });
+          weekMap.get(key).vendors.push({ name: v.name, email: v.email, type: v.type, status: p.payment_status, amount_due: p.amount_due });
+        }
+      }
+      if (!weekMap.size) return '<div class="empty-state"><div class="e-icon">📅</div>No weekend data found.</div>';
+
+      const weeks = Array.from(weekMap.values()).sort((a,b) => a.week_number - b.week_number);
+      return weeks.map(w => {
+        const rows = w.vendors.sort((a,b) => (a.name||'').localeCompare(b.name||'')).map(v => `
+          <div class="weekend-vendor-row">
+            <div style="flex:1;font-weight:bold;font-size:14px;color:#3b1f1f;">${v.name || '—'}</div>
+            <div style="font-size:12px;color:#5c3a1e;">${typeLabel(v.type)}</div>
+            <div style="font-size:13px;font-weight:bold;color:#3b1f1f;">${fmtMoney(v.amount_due)}</div>
+            ${statusBadge(v.status)}
+          </div>`).join('');
+        return `
+          <div class="weekend-section">
+            <h3>Weekend ${w.week_number} — ${fmtDate(w.start_date)} to ${fmtDate(w.end_date)} <span style="font-size:13px;font-weight:normal;">(${w.vendors.length} vendors)</span></h3>
+            ${rows}
+          </div>`;
+      }).join('');
+    }
+
+    function renderNewReturning(vendors) {
+      // Use fair_vendor_directory years_at_fair — for now split by type presence
+      const newV = vendors.filter(v => !v.payments.some(p => p.payment_status === 'paid'));
+      const retV = vendors.filter(v => v.payments.some(p => p.payment_status === 'paid'));
+
+      const makeList = (arr) => arr.length
+        ? arr.map(v => `<div class="nr-item"><strong>${v.name}</strong><br><span style="font-size:12px;color:#5c3a1e;">${v.email} — ${typeLabel(v.type)}</span></div>`).join('')
+        : '<div class="nr-item" style="color:#5c3a1e;">None found</div>';
+
+      return `
+        <p style="font-size:13px;color:#5c3a1e;margin-bottom:16px;">Based on payment history for this fair.</p>
+        <div class="nr-grid">
+          <div class="nr-section">
+            <h3>🆕 Not Yet Paid (${newV.length})</h3>
+            ${makeList(newV)}
+          </div>
+          <div class="nr-section">
+            <h3>✅ Have Made Payment (${retV.length})</h3>
+            ${makeList(retV)}
+          </div>
+        </div>`;
+    }
+
+    function showReport(type) {
+      currentReport = type;
+      document.querySelectorAll('.report-btn').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById(`btn-${type}`);
+      if (btn) btn.classList.add('active');
+
+      const out = document.getElementById('reportOutput');
+      const vendors = groupByVendor(allPayments);
+
+      const titles = {
+        all:     { title: '📋 All Vendors & Payments', sub: 'Complete payment status for all vendors' },
+        paid:    { title: '✅ Paid in Full', sub: 'Vendors who have completed all payments' },
+        unpaid:  { title: '❌ Still Owe Money', sub: 'Vendors with outstanding balances' },
+        money:   { title: '💰 Money Summary', sub: 'Financial overview for this fair' },
+        weekend: { title: '📅 Vendors by Weekend', sub: 'See which vendors are attending each weekend' },
+        newret:  { title: '🏷️ Payment Activity', sub: 'Vendors by payment activity' },
+      };
+
+      const t = titles[type] || titles.all;
+      let content = '';
+      if (type === 'all')     content = renderAll(vendors);
+      if (type === 'paid')    content = renderPaid(vendors);
+      if (type === 'unpaid')  content = renderUnpaid(vendors);
+      if (type === 'money')   content = renderMoney(vendors);
+      if (type === 'weekend') content = renderByWeekend(vendors);
+      if (type === 'newret')  content = renderNewReturning(vendors);
+
+      out.innerHTML = `
+        <h2>${t.title}</h2>
+        <div class="report-subtitle">${t.sub}</div>
+        ${content}`;
+    }
+
+    function buildCsv(vendors) {
+      const rows = [['Name','Email','Type','Weekend','Due','Paid','Status']];
+      for (const v of vendors) {
+        for (const p of v.payments) {
+          rows.push([
+            v.name, v.email, v.type,
+            `Weekend ${p.week_number}`,
+            Number(p.amount_due||0).toFixed(2),
+            Number(p.amount_paid||0).toFixed(2),
+            p.payment_status
+          ]);
+        }
+      }
+      return rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    }
+
+    async function init() {
+      fairId = getFairId();
+      if (!fairId) { hideLoader(); return; }
+
+      document.getElementById('navDashboard').href   = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('navAppReports').href  = `fair_reports_applications.html?fair_id=${fairId}`;
+      document.getElementById('breadDashboard').href = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('btnBack').onclick     = () => { window.location.href = `fair_dashboard.html?fair_id=${fairId}`; };
+
+      document.getElementById('navLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = '/index.html';
+      });
+
+      document.getElementById('btnCsv').onclick = () => {
+        const vendors = groupByVendor(allPayments);
+        const csv = buildCsv(vendors);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `payment_report_fair${fairId}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      try {
+        const { data: fairRows } = await supabaseClient.rpc('get_admin_dashboard_fair_by_id', { p_fair_id: fairId });
+        const fairName = fairRows?.[0]?.name || '';
+        document.getElementById('pageTitle').textContent = `💳 Payment Reports — ${fairName}`;
+
+        const { data, error } = await supabaseClient.rpc('get_fair_vendor_payments', { p_fair_id: fairId });
+        if (error) throw error;
+        allPayments = Array.isArray(data) ? data : [];
+        showReport('all');
+      } catch (e) {
+        console.error(e);
+        document.getElementById('reportOutput').innerHTML = '<div class="empty-state"><div class="e-icon">⚠️</div>Could not load payment data. Please refresh.</div>';
+      }
+
+      hideLoader();
+    }
+
+    init();
+  </script>
+</body>
+</html>

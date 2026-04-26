@@ -435,8 +435,8 @@ async function loadDashboard(userId){
       .eq('application_type','vendor');
 
       const isGoldApproved =
-      v.approval_status === 'approved' &&
-      (v.tier || '').toLowerCase() === 'gold';
+  v.approval_status === 'approved' &&
+  ['silver', 'gold'].includes((v.tier || '').toLowerCase());
 
     let fairHtml = '';
     if (fairs.length || manual.length) {

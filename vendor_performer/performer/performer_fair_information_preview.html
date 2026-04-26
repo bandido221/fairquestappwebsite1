@@ -399,7 +399,7 @@
       <button class="btn-dark" type="button" onclick="goBackToDashboard()">Back to Dashboard</button>
       <button class="btn-green" type="button" onclick="loadPage()">Refresh</button>
       <button id="archiveBtn" class="btn-dark" type="button" onclick="toggleArchive()">Archive This Fair</button>
-      <button class="btn-disabled" type="button">Documents Page Next</button>
+      
     </div>
 
     <div id="pageContent" class="loading">Loading fair information…</div>
@@ -412,9 +412,10 @@
     );
     const sb = window.supabaseClient;
 
-    let currentFairRows = [];
-    let currentFairName = '';
-    let currentSeasonYear = '';
+  let currentFairRows = [];
+let currentFairName = '';
+let currentSeasonYear = '';
+let fairControlsPricing = false;
 
     function getParams() {
       const params = new URLSearchParams(window.location.search);
@@ -471,52 +472,57 @@
   const yy = String(d.getFullYear()).slice(-2);
   return `${mm}-${dd}-${yy}`;
 }
-
 function renderWeekendRows(rows) {
   if (!rows.length) {
     return `<div class="empty-box">No weekends found for this fair.</div>`;
   }
 
-return rows.map(row => `
+  return rows.map((row, i) => {
+    const isPaid = !!row.is_paid;
+    const hasPrice = row.weekend_price !== null && row.weekend_price !== undefined;
+    return `
     <div class="weekend-row">
       <div class="weekend-left">
-        <div class="weekend-name">${formatDate(row.weekend_start_date)} to ${formatDate(row.weekend_end_date)}</div>
-        <div class="note-row" style="margin-top:10px;">
-          <div class="label">Notes</div>
-          <textarea
-            id="note-${row.id}"
-            class="note-input"
-            rows="2"
-            placeholder="Optional note"
-            style="font-size:13px;"
-          >${escapeHtml(row.notes || '')}</textarea>
-        </div>
+        <div class="weekend-name">${formatDate(row.weekend_start_date)} — ${formatDate(row.weekend_end_date)}</div>
+        <div style="font-size:11px; color:#8a6030; margin-top:3px; text-transform:uppercase; letter-spacing:0.05em;">Weekend ${i+1}</div>
       </div>
-
-      <div class="weekend-right">
-        <div class="price-row">
-          <div class="label">Weekend Price</div>
-          <input
-            id="price-${row.id}"
-            class="price-input"
-            type="number"
-            min="0"
-            step="0.01"
-            value="${row.weekend_price ?? ''}"
-            placeholder="Enter weekend price"
-          />
-        </div>
-
-        <div class="weekend-actions">
-          <button class="btn-gold" type="button" onclick="saveWeekend('${row.id}')">Save</button>
-          <button class="${row.is_paid ? 'btn-dark' : 'btn-green'}" type="button" onclick="togglePaid('${row.id}', ${row.is_paid ? 'true' : 'false'})">
-            ${row.is_paid ? 'Paid' : 'Not Paid'}
-          </button>
-        </div>
+      <div class="weekend-right" style="min-width:0; flex-direction:row; align-items:center; gap:14px; flex-wrap:wrap;">
+        ${fairControlsPricing ? `
+          <div>
+            <div class="label">Price</div>
+            <div style="font-family:'Cinzel',serif; font-size:18px; font-weight:700; color:#2f1a12;">
+              ${hasPrice ? formatMoney(row.weekend_price) : '<span style="font-size:13px;color:#aaa;font-family:Domine,serif;">Not set</span>'}
+            </div>
+          </div>
+          <span style="display:inline-flex; align-items:center; gap:5px; padding:6px 14px; border-radius:999px; font-size:12px; font-weight:700; font-family:Cinzel,serif; cursor:default; white-space:nowrap; ${isPaid ? 'background:#e8f8ef; color:#17643d; border:1.5px solid #8fd2ab;' : 'background:#fff0f0; color:#9b2020; border:1.5px solid #f0aaaa;'}">
+            <span style="width:7px;height:7px;border-radius:50%;background:${isPaid?'#27ae60':'#e74c3c'};flex-shrink:0;display:inline-block;"></span>
+            ${isPaid ? 'Paid' : 'Unpaid'}
+          </span>
+        ` : `
+          <div>
+            <div class="label">Price</div>
+            <input
+              id="price-${row.id}"
+              class="price-input"
+              type="number"
+              min="0"
+              step="0.01"
+              value="${hasPrice ? row.weekend_price : ''}"
+              placeholder="0.00"
+              style="width:100px;"
+            />
+          </div>
+          <div class="weekend-actions">
+            <button class="btn-gold" type="button" onclick="savePrice('${row.id}')">Save</button>
+            <button class="${isPaid ? 'btn-dark' : 'btn-green'}" type="button" onclick="togglePaid('${row.id}', ${isPaid})">
+              ${isPaid ? 'Paid' : 'Not Paid'}
+            </button>
+          </div>
+        `}
       </div>
-    </div>
-  `).join('');
-    }
+    </div>`;
+  }).join('');
+}
 
     function renderPage(rows) {
       const totalDue = getTotalDue(rows);
@@ -525,7 +531,7 @@ return rows.map(row => `
       const fairName = currentFairName || 'Fair';
 
       document.getElementById('pageTitle').textContent = `${fairName}${seasonYear ? ' — ' + seasonYear : ''}`;
-      document.getElementById('pageSubTitle').textContent = 'Weekend prices and paid status are now reading from vp_fair_info_weekend.';
+      document.getElementById('pageSubTitle').textContent = fairControlsPricing ? 'Prices and payment status are managed by the fair.' : 'Your fair information, documents and payment summary.';
       document.getElementById('archiveBtn').textContent = isArchivedFair(rows) ? 'Unarchive This Fair' : 'Archive This Fair';
 
       document.getElementById('pageContent').innerHTML = `
@@ -597,87 +603,65 @@ return rows.map(row => `
       window.location.href = url;
     }
 
-    async function loadPage() {
-      const { vpaId, fairName, seasonYear } = getParams();
+   async function loadPage() {
+  const { vpaId, fairName, seasonYear } = getParams();
 
-      if (!vpaId || !fairName) {
-        showError('Missing vpa_id or fair_name in the URL.');
-        return;
-      }
+  if (!vpaId || !fairName) {
+    showError('Missing vpa_id or fair_name in the URL.');
+    return;
+  }
 
-      document.getElementById('pageContent').innerHTML = `<div class="loading">Loading fair information…</div>`;
+  document.getElementById('pageContent').innerHTML = `<div class="loading">Loading fair information…</div>`;
 
-      const res = await sb
-        .from('vp_fair_info_weekend')
-        .select('id, vpa_id, fair_id, fair_name_snapshot, weekend_start_date, weekend_end_date, weekend_price, is_paid, paid_at, is_archived, archived_at, notes, created_at, updated_at')
-        .eq('vpa_id', vpaId)
-        .eq('fair_name_snapshot', fairName)
-        .order('weekend_start_date', { ascending: true });
+  const { data, error } = await sb.rpc('get_vp_fair_weekend_info', {
+    p_vpa_id: parseInt(vpaId, 10),
+    p_fair_name: fairName
+  });
 
-      if (res.error) {
-        showError(`Could not load weekend records: ${res.error.message}`);
-        return;
-      }
+  if (error) {
+    showError(`Could not load weekend records: ${error.message}`);
+    return;
+  }
 
-      const allRows = res.data || [];
-      if (!allRows.length) {
-        showError('No saved weekend rows were found for this fair.');
-        return;
-      }
+  const allRows = data || [];
+  if (!allRows.length) {
+    showError('No saved weekend rows were found for this fair.');
+    return;
+  }
 
-      let filteredRows = allRows;
-      if (seasonYear) {
-        filteredRows = allRows.filter(row => getSeasonYearFromDate(row.weekend_start_date) === String(seasonYear));
-      } else {
-        const years = [...new Set(allRows.map(row => getSeasonYearFromDate(row.weekend_start_date)).filter(Boolean))].sort();
-        const latestYear = years[years.length - 1];
-        if (latestYear) {
-          filteredRows = allRows.filter(row => getSeasonYearFromDate(row.weekend_start_date) === latestYear);
-        }
-      }
+  fairControlsPricing = allRows[0].fair_controls_pricing === true;
 
-      currentFairRows = filteredRows;
-      currentFairName = fairName;
-      currentSeasonYear = filteredRows.length ? getSeasonYearFromDate(filteredRows[0].weekend_start_date) : '';
-
-      renderPage(currentFairRows);
+  let filteredRows = allRows;
+  if (seasonYear) {
+    filteredRows = allRows.filter(row => getSeasonYearFromDate(row.weekend_start_date) === String(seasonYear));
+  } else {
+    const years = [...new Set(allRows.map(row => getSeasonYearFromDate(row.weekend_start_date)).filter(Boolean))].sort();
+    const latestYear = years[years.length - 1];
+    if (latestYear) {
+      filteredRows = allRows.filter(row => getSeasonYearFromDate(row.weekend_start_date) === latestYear);
     }
+  }
 
-    async function saveWeekend(rowId) {
-      const priceInput = document.getElementById(`price-${rowId}`);
-      const noteInput = document.getElementById(`note-${rowId}`);
+  currentFairRows = filteredRows;
+  currentFairName = fairName;
+  currentSeasonYear = filteredRows.length ? getSeasonYearFromDate(filteredRows[0].weekend_start_date) : '';
 
-      const rawPrice = priceInput ? priceInput.value.trim() : '';
-      const noteValue = noteInput ? noteInput.value.trim() : '';
-
-      let priceValue = null;
-      if (rawPrice !== '') {
-        const parsed = Number(rawPrice);
-        if (Number.isNaN(parsed) || parsed < 0) {
-          alert('Weekend price must be empty or a valid number 0 or higher.');
-          return;
-        }
-        priceValue = parsed;
-      }
-
-      const res = await sb
-        .from('vp_fair_info_weekend')
-        .update({
-          weekend_price: priceValue,
-          notes: noteValue === '' ? null : noteValue
-        })
-        .eq('id', rowId)
-        .select('id')
-        .single();
-
-      if (res.error) {
-        alert(`Could not save weekend: ${res.error.message}`);
-        return;
-      }
-
-      await loadPage();
-      showMessage('Weekend saved.');
-    }
+  renderPage(currentFairRows);
+}
+    async function savePrice(rowId) {
+  const input = document.getElementById('price-' + rowId);
+  if (!input) return;
+  const val = parseFloat(input.value);
+  if (isNaN(val) || val < 0) { showMessage('Please enter a valid price.'); return; }
+  const btn = input.closest('.weekend-actions')?.querySelector('.btn-gold');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  const { error } = await sb.from('vp_fair_info_weekend').update({ weekend_price: val }).eq('id', rowId);
+  if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+  if (error) { showMessage('Could not save price.'); return; }
+  const idx = currentFairRows.findIndex(r => r.id === rowId);
+  if (idx > -1) currentFairRows[idx].weekend_price = val;
+  showMessage('✓ Price saved.');
+}
 
     async function togglePaid(rowId, currentlyPaid) {
       const nextPaid = !currentlyPaid;
@@ -1122,11 +1106,17 @@ return rows.map(row => `
       if (p) { p.style.display = 'none'; document.getElementById('vProgressFill').style.width = '0%'; }
     }
 
-    window.addEventListener('DOMContentLoaded', async () => {
-      await loadPage();
-      const { vpaId, fairName, seasonYear } = getParams();
-      if (vpaId && fairName) await initVault(vpaId, fairName, seasonYear);
-    });
+   window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = '/vendor_performer/performer/performer_dashboard.html'; return; }
+  const { vpaId } = getParams();
+  if (!vpaId) { window.location.href = '/vendor_performer/performer/performer_dashboard.html'; return; }
+  const { data: vpaData } = await sb.from('vendor_performer_applications').select('tier').eq('id', vpaId).eq('user_id', session.user.id).single();
+  if (!vpaData || (vpaData.tier || 'basic').toLowerCase() === 'basic') { window.location.href = '/vendor_performer/performer/performer_dashboard.html'; return; }
+  await loadPage();
+  const { fairName, seasonYear } = getParams();
+  if (vpaId && fairName) await initVault(vpaId, fairName, seasonYear);
+});
   </script>
 
   <footer>

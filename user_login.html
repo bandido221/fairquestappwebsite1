@@ -108,11 +108,21 @@ async function signIn() {
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
   if (error) {
-    msg.textContent = error.message;
+    msg.style.color = '#b73239';
+
+    // Friendly message if account doesn't exist
+    if (error.message.toLowerCase().includes('invalid login credentials') ||
+        error.message.toLowerCase().includes('user not found') ||
+        error.message.toLowerCase().includes('no user found')) {
+      msg.innerHTML = `We couldn't find an account with that email.<br/>
+        Did you mean to <strong>Sign Up</strong> instead? 👆`;
+    } else {
+      msg.textContent = error.message;
+    }
     return;
   }
 
-  window.location.href = '/index.html';
+  window.location.href = '/profile/index.html';
 }
 
 async function signUp() {
@@ -123,11 +133,30 @@ async function signUp() {
   const { error } = await supabaseClient.auth.signUp({ email, password });
 
   if (error) {
+    msg.style.color = '#b73239';
     msg.textContent = error.message;
     return;
   }
 
-  msg.textContent = 'Check your email to confirm.';
+  // Hide the form so they don't get confused
+  document.querySelector('.container').innerHTML = `
+    <div style="padding: 20px;">
+      <div style="font-size: 60px; margin-bottom: 20px;">📬</div>
+      <h2 style="color: #3b1f1f; font-family: 'Cinzel', serif; margin-bottom: 16px;">Check Your Email!</h2>
+      <p style="color: #3b1f1f; font-size: 16px; line-height: 1.6; margin-bottom: 12px;">
+        We sent a confirmation link to:<br/>
+        <strong>${email}</strong>
+      </p>
+      <p style="color: #3b1f1f; font-size: 15px; line-height: 1.6;">
+        Click the link in that email to verify your account, then come back here to sign in.
+      </p>
+      <p style="color: #5b2a86; font-size: 13px; margin-top: 20px;">Sending you back to the home page in 5 seconds…</p>
+    </div>
+  `;
+
+  setTimeout(() => {
+    window.location.href = '/index.html';
+  }, 5000);
 }
 
 async function signInWithGoogle() {

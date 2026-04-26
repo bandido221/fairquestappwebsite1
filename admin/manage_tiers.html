@@ -615,7 +615,7 @@ document.getElementById('fsGold').textContent   = rows.filter(r => r.fair_tier =
 
     // Stats
     document.getElementById('vsTotal').textContent  = rows.length;
-    document.getElementById('vsBasic').textContent  = rows.filter(r => !r.tier || r.tier === 'bronze').length;
+    document.getElementById('vsBasic').textContent  = rows.filter(r => !r.tier || r.tier === 'basic').length;
     document.getElementById('vsSilver').textContent = rows.filter(r => r.tier === 'silver').length;
     document.getElementById('vsGold').textContent   = rows.filter(r => r.tier === 'gold').length;
 
@@ -635,7 +635,7 @@ document.getElementById('fsGold').textContent   = rows.filter(r => r.fair_tier =
         <td>${tierBadge(r.tier)}</td>
         <td>
           <select class="tier-select" id="vts-${r.id}">
-        <option value="bronze" ${(!r.tier||r.tier==='bronze') ? 'selected':''}>Bronze</option>
+        <option value="basic" ${(!r.tier||r.tier==='basic') ? 'selected':''}>Basic</option>
 <option value="silver" ${r.tier==='silver' ? 'selected':''}>Silver</option>
 <option value="gold"   ${r.tier==='gold'   ? 'selected':''}>Gold</option>
           </select>

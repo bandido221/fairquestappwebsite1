@@ -872,18 +872,18 @@ async function loadNearbyFairsCard(options = {}) {
       const endDate = formatNearbyFairDate(f.end_date);
       const dateLine = (startDate && endDate) ? `${startDate} – ${endDate}` : "";
  return `
-<div style="text-align:left; padding:14px 16px; background:rgba(30,18,8,0.75); border-radius:10px; margin:10px 0; color:#f1df99; border: 1px solid rgba(201,168,76,0.3);">
-  <a href="/fairs/fair_detail.html?id=${f.id}" style="color:#000; font-weight:bold; text-decoration:none;">
+<a href="/fairs/fair_detail.html?id=${f.id}" style="display:block; text-align:left; padding:14px 16px; background:rgba(30,18,8,0.75); border-radius:10px; margin:10px 0; color:#ffffff; border: 1px solid rgba(201,168,76,0.3); text-decoration:none;">
+  <div style="font-weight:bold;">
     ${f.name}
-  </a>
+  </div>
 
-  <div style="margin-top:6px; color:#000;">
+  <div style="margin-top:6px;">
     ${f.city}, ${f.state} · <strong>${miles} mi</strong>
   </div>
 
-  ${dateLine ? `<div style="margin-top:6px; color:#000;">${dateLine}</div>` : ``}
+  ${dateLine ? `<div style="margin-top:6px;">${dateLine}</div>` : ``}
 
-</div>
+</a>
 `;
     }).join("");
   };

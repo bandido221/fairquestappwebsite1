@@ -7,7 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css" />
-<link rel="stylesheet" href="/css/fq_theme.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
@@ -49,14 +49,13 @@
       gap: 8px 12px;
       margin-top: 10px;
     }
-    .label {
-      font-weight: bold;
-    }
+    .label { font-weight: bold; }
     .btn-row {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       margin-top: 18px;
+      align-items: flex-start;
     }
     .btn {
       background-color: #4CAF50;
@@ -76,7 +75,6 @@
       font-weight: bold;
       text-decoration: none;
     }
-
 
     /* ── TOP NAV ── */
     .topnav {
@@ -99,6 +97,7 @@
       background: rgba(180,50,50,0.18); color: #f4a0a0;
       margin-left: 8px; border: 1px solid rgba(180,50,50,0.3);
     }
+
     /* ── BREADCRUMB ── */
     .breadcrumb {
       font-size: 13px; color: #bb9457;
@@ -107,33 +106,67 @@
     .breadcrumb a { color: #bb9457; text-decoration: none; }
     .breadcrumb a:hover { text-decoration: underline; }
     .breadcrumb span { color: #f0e6d2; }
-    /* Loader */
+
+    /* ── LOADER ── */
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-        .apps-summary{
-      display:grid;
+
+    /* ── APPS SUMMARY ── */
+    .apps-summary {
+      display: grid;
       grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
       gap: 8px 12px;
       margin-top: 10px;
-      align-items:center;
+      align-items: center;
     }
-    .apps-h{
-      font-weight:bold;
-      text-align:center;
-    }
-    .apps-rh{
-      font-weight:bold;
-      text-align:left;
-    }
-    .apps-summary > div:not(.apps-h):not(.apps-rh){
-      text-align:center;
+    .apps-h { font-weight: bold; text-align: center; }
+    .apps-rh { font-weight: bold; text-align: left; }
+    .apps-summary > div:not(.apps-h):not(.apps-rh) {
+      text-align: center;
       background: rgba(225,209,145,0.75);
       padding: 6px 10px;
       border-radius: 8px;
     }
 
+    /* ── DROPDOWNS ── */
+    .dropdown-group {
+      position: relative;
+      display: inline-block;
+    }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: #1a1208;
+      border: 1px solid #3d2e0e;
+      border-radius: 8px;
+      min-width: 200px;
+      z-index: 999;
+      padding: 6px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .dropdown-menu button {
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .dropdown-menu button:hover {
+      background: rgba(241,223,153,0.12);
+      color: #f1df99;
+    }
+    .dropdown-group.open .dropdown-menu {
+      display: block;
+    }
   </style>
 </head>
 
@@ -144,7 +177,7 @@
       <img src="/images/logo.png" alt="FairQuest" />
       <span>FairQuest</span>
     </a>
-   <div class="topnav-links">
+    <div class="topnav-links">
       <a href="../fair_admin.html">🏰 My Fairs</a>
       <a href="vip_guide/guide_index.html" id="navGuide">📖 Guide</a>
       <a href="#" class="active">📊 Dashboard</a>
@@ -154,35 +187,31 @@
     </div>
   </nav>
 
-    <div style="max-width:800px; margin:0 auto; padding: 0 0 0 0;">
-      <div class="breadcrumb">
-        <a href="../fair_admin.html">Admin Home</a> › <span id="breadFairName">Dashboard</span>
-      </div>
+  <div style="max-width:800px; margin:0 auto; padding: 0 0 0 0;">
+    <div class="breadcrumb">
+      <a href="../fair_admin.html">Admin Home</a> › <span id="breadFairName">Dashboard</span>
     </div>
+  </div>
 
   <h1 id="pageTitle" style="text-align:center; font-family:'Cinzel', serif; padding: 8px 0 0; color:#f1df99;">Fair Dashboard</h1>
 
   <div id="loadingOverlay" style="
-    position: fixed;
-    top: 0; left: 0;
+    position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
     background: rgba(0,0,0,0.85);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: flex; justify-content: center; align-items: center;
     z-index: 9999;
   ">
     <div style="
       border: 6px solid #f3f3f3;
       border-top: 6px solid #bb9457;
       border-radius: 50%;
-      width: 60px;
-      height: 60px;
+      width: 60px; height: 60px;
       animation: spin 1s linear infinite;
     "></div>
   </div>
 
-  <!-- Fair Info -->
+  <!-- Fair Info Card -->
   <div class="card" id="fairCard">
     <a href="/index.html">
       <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
@@ -196,23 +225,48 @@
       <div class="label">Tier:</div><div id="fairTier">Loading...</div>
     </div>
 
-   <div class="btn-row">
+    <div class="btn-row">
       <button class="btn" id="btnBackToAdmin">⬅ Back to Admin Page</button>
-      <button class="btn" id="btnUpdateFair">Update Fair</button>
-      <button class="btn" id="btnApplications">Applications</button>
-      <button class="btn" id="btnVendorDirectory">📒 Vendor & Performer Directory</button>
-      <button class="btn" id="btnPayments">💳 Payment Tracking</button>
-      <button class="btn" id="btnWeekendPricing">🗓️ Weekend Pricing</button>
-      <button class="btn" id="btnPayReports">📊 Payment Reports</button>
-      <button class="btn" id="btnAppReports">📋 Application Reports</button>
+
+      <!-- ⚙️ Fair Settings dropdown -->
+      <div class="dropdown-group" id="dropSettings">
+        <button class="btn dropdown-toggle" onclick="toggleDropdown('dropSettings')">⚙️ Fair Settings ▾</button>
+        <div class="dropdown-menu">
+          <button onclick="goUpdateFair()">✏️ Update Fair</button>
+          <button onclick="goManageTeam()">👥 Manage Team</button>
+        </div>
+      </div>
+
+      <!-- 📋 Applications dropdown -->
+      <div class="dropdown-group" id="dropApplications">
+        <button class="btn dropdown-toggle" onclick="toggleDropdown('dropApplications')">📋 Applications ▾</button>
+        <div class="dropdown-menu">
+          <button onclick="goApplications()">📋 Applications</button>
+          <button onclick="goAppReports()">📊 Application Reports</button>
+        </div>
+      </div>
+
+      <!-- 💰 Financials dropdown -->
+      <div class="dropdown-group" id="dropFinancials">
+        <button class="btn dropdown-toggle" onclick="toggleDropdown('dropFinancials')">💰 Financials ▾</button>
+        <div class="dropdown-menu">
+          <button onclick="goPayments()">💳 Payment Tracking</button>
+          <button onclick="goWeekendPricing()">🗓️ Weekend Pricing</button>
+          <button onclick="goPayReports()">📊 Payment Reports</button>
+        </div>
+      </div>
+
+      <!-- 📒 Directory single button -->
+      <button class="btn" id="btnVendorDirectory">📒 Directory</button>
+
+      <!-- 📖 Guide single button -->
       <button class="btn" onclick="window.location.href='vip_guide/guide_index.html'" style="background:#bb7a28;">📖 Guide</button>
     </div>
   </div>
 
-  <!-- Applications Summary -->
+  <!-- Applications Summary Card -->
   <div class="card" id="appsCard">
     <h2>Applications Summary</h2>
-
     <div class="apps-summary">
       <div class="apps-h"></div>
       <div class="apps-h">Total</div>
@@ -239,7 +293,6 @@
       <div id="p_declined">Loading...</div>
     </div>
   </div>
-
 
   <a href="/index.html" class="back-link">🏡 Back to Home</a>
 
@@ -279,7 +332,30 @@
       hideLoader();
     }
 
-   async function requireFairAdmin(userId, fairId) {
+    function showTierMessage(required) {
+      const msg = required === 'silver'
+        ? 'You need to be Silver or Gold to use this feature.'
+        : 'You need to be Gold to use this feature.';
+      document.getElementById('tierModalMsg').textContent = msg;
+      document.getElementById('tierModal').style.display = 'flex';
+    }
+
+    function toggleDropdown(id) {
+      const el = document.getElementById(id);
+      document.querySelectorAll('.dropdown-group').forEach(d => {
+        if (d.id !== id) d.classList.remove('open');
+      });
+      el.classList.toggle('open');
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown-group')) {
+        document.querySelectorAll('.dropdown-group').forEach(d => d.classList.remove('open'));
+      }
+    });
+
+    async function requireFairAdmin(userId, fairId) {
       const { data, error } = await supabaseClient
         .rpc('check_fair_permission', { p_fair_id: fairId, p_permission: 'edit_fair_info' });
       if (error) return false;
@@ -296,13 +372,12 @@
     async function loadSubmissionStatusCounts(fairId) {
       const { data, error } = await supabaseClient
         .rpc('fair_man_app_list_submissions', { p_fair_id: fairId });
-
       if (error || !Array.isArray(data)) return null;
 
       const counts = {
-        vendors:   { total:0, review:0, approved:0, declined:0 },
-        food:      { total:0, review:0, approved:0, declined:0 },
-        performers:{ total:0, review:0, approved:0, declined:0 },
+        vendors:    { total:0, review:0, approved:0, declined:0 },
+        food:       { total:0, review:0, approved:0, declined:0 },
+        performers: { total:0, review:0, approved:0, declined:0 },
       };
 
       for (const row of data) {
@@ -314,184 +389,172 @@
         else if (row.status === 'approved') b.approved++;
         else if (row.status === 'rejected') b.declined++;
       }
-
       return counts;
     }
-async function load() {
 
-  const fairId = getFairIdFromUrl();
-  // Wire nav links
-  if (fairId) {
-    document.getElementById('navApplications').href = '#';
-    document.getElementById('navUpdateFair').href = `../fair_update.html?fair_id=${fairId}`;
-  }
+    async function load() {
+      const fairId = getFairIdFromUrl();
 
-  // Buttons (wire first so they always work)
-  document.getElementById('btnBackToAdmin').onclick = () => {
-    window.location.href = '../fair_admin.html';
-  };
+      // Wire nav links
+      if (fairId) {
+        document.getElementById('navApplications').href = '#';
+        document.getElementById('navUpdateFair').href = `../fair_update.html?fair_id=${fairId}`;
+      }
 
-  document.getElementById('btnUpdateFair').onclick = () => {
-    const fairId = getFairIdFromUrl();
-    if (!fairId) {
-      alert('Something went wrong — the fair ID is missing. Please go back and try again.');
-      return;
+      // Back button
+      document.getElementById('btnBackToAdmin').onclick = () => {
+        window.location.href = '../fair_admin.html';
+      };
+
+      if (!fairId) {
+        showError('⚠️ Missing fair_id in URL.');
+        return;
+      }
+
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) {
+        showError('⚠️ Please log in first.');
+        return;
+      }
+
+      const ok = await requireFairAdmin(user.id, fairId);
+      if (!ok) {
+        showError('⚠️ You are not authorized to view this fair.');
+        return;
+      }
+
+      const fair = await loadFairInfo(fairId);
+      if (!fair) {
+        showError('⚠️ Fair not found.');
+        return;
+      }
+
+      const isGold   = fair.fair_tier === 'gold';
+      const isSilver = fair.fair_tier === 'silver' || isGold;
+
+      // Lock Applications nav link if not gold
+      const navApps = document.getElementById('navApplications');
+      if (!isGold) {
+        navApps.onclick = (e) => { e.preventDefault(); showTierMessage('gold'); };
+      } else {
+        navApps.href = `fair_applications.html?fair_id=${fairId}`;
+      }
+
+      // Fair Settings dropdown actions
+      window.goUpdateFair = () => {
+        window.location.href = `../fair_update.html?fair_id=${fairId}`;
+      };
+      window.goManageTeam = () => {
+        if (!isSilver) { showTierMessage('silver'); return; }
+        window.location.href = `fair_team.html?fair_id=${fairId}`;
+      };
+
+      // Applications dropdown actions
+      window.goApplications = () => {
+        if (!isGold) { showTierMessage('gold'); return; }
+        window.location.href = `fair_applications.html?fair_id=${fairId}`;
+      };
+      window.goAppReports = () => {
+        if (!isGold) { showTierMessage('gold'); return; }
+        window.location.href = `fair_reports_applications.html?fair_id=${fairId}`;
+      };
+
+      // Financials dropdown actions
+      window.goPayments = () => {
+        if (!isGold) { showTierMessage('gold'); return; }
+        window.location.href = `fair_vendor_payments.html?fair_id=${fairId}`;
+      };
+      window.goWeekendPricing = () => {
+        if (!isGold) { showTierMessage('gold'); return; }
+        window.location.href = `fair_weekend_pricing.html?fair_id=${fairId}`;
+      };
+      window.goPayReports = () => {
+        if (!isGold) { showTierMessage('gold'); return; }
+        window.location.href = `fair_reports_payments.html?fair_id=${fairId}`;
+      };
+
+      // Directory single button
+      document.getElementById('btnVendorDirectory').onclick = () => {
+        if (!isGold) { showTierMessage('gold'); return; }
+        window.location.href = `fair_vendor_list.html?fair_id=${fairId}`;
+      };
+
+      // Add lock overlay to appsCard if not gold
+      if (!isGold) {
+        const appsCard = document.getElementById('appsCard');
+        appsCard.style.position = 'relative';
+        appsCard.style.overflow = 'hidden';
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+          position:absolute; inset:0; background:rgba(0,0,0,0.55);
+          display:flex; flex-direction:column; align-items:center;
+          justify-content:center; border-radius:12px; cursor:pointer; z-index:10;
+        `;
+        overlay.innerHTML = `
+          <div style="font-size:28px; margin-bottom:8px;">🔒</div>
+          <div style="font-family:'Cinzel',serif; font-size:16px; color:#f1df99; font-weight:bold;">Gold Tier Required</div>
+          <div style="font-size:13px; color:#f0e6d2; margin-top:6px; opacity:0.85;">Tap to learn more</div>
+        `;
+        overlay.onclick = () => showTierMessage('gold');
+        appsCard.appendChild(overlay);
+      }
+
+      // Populate fair info
+      document.getElementById('pageTitle').textContent = `Fair Dashboard — ${fair.name || ''}`.trim();
+      document.getElementById('fairName').textContent = fair.name || 'N/A';
+      document.getElementById('fairCityState').textContent = `${fair.city || 'N/A'}, ${fair.state || 'N/A'}`;
+      document.getElementById('fairAddress').textContent = fair.address || 'N/A';
+      document.getElementById('fairTier').textContent = fair.fair_tier
+        ? fair.fair_tier.charAt(0).toUpperCase() + fair.fair_tier.slice(1)
+        : 'Standard';
+
+      if (fair.website) {
+        document.getElementById('fairWebsite').innerHTML =
+          `<a href="${fair.website}" target="_blank" rel="noopener">${fair.website}</a>`;
+      } else {
+        document.getElementById('fairWebsite').textContent = 'N/A';
+      }
+
+      const counts = await loadSubmissionStatusCounts(fairId);
+      if (!counts) {
+        ['v_total','v_review','v_approved','v_declined',
+         'f_total','f_review','f_approved','f_declined',
+         'p_total','p_review','p_approved','p_declined']
+          .forEach(id => { document.getElementById(id).textContent = '—'; });
+        hideLoader();
+        return;
+      }
+
+      document.getElementById('v_total').textContent = counts.vendors.total;
+      document.getElementById('v_review').textContent = counts.vendors.review;
+      document.getElementById('v_approved').textContent = counts.vendors.approved;
+      document.getElementById('v_declined').textContent = counts.vendors.declined;
+
+      document.getElementById('f_total').textContent = counts.food.total;
+      document.getElementById('f_review').textContent = counts.food.review;
+      document.getElementById('f_approved').textContent = counts.food.approved;
+      document.getElementById('f_declined').textContent = counts.food.declined;
+
+      document.getElementById('p_total').textContent = counts.performers.total;
+      document.getElementById('p_review').textContent = counts.performers.review;
+      document.getElementById('p_approved').textContent = counts.performers.approved;
+      document.getElementById('p_declined').textContent = counts.performers.declined;
+
+      hideLoader();
     }
-    window.location.href = `../fair_update.html?fair_id=${fairId}`;
-  };
-
-
-
-  if (!fairId) {
-    showError('⚠️ Missing fair_id in URL.');
-    return;
-  }
-
-  const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-  if (userError || !user) {
-    showError('⚠️ Please log in first.');
-    return;
-  }
-
-  const ok = await requireFairAdmin(user.id, fairId);
-  if (!ok) {
-    showError('⚠️ You are not authorized to view this fair.');
-    return;
-  }
-
-  const fair = await loadFairInfo(fairId);
-  if (!fair) {
-    showError('⚠️ Fair not found.');
-    return;
-  }
-
-  const isGold = fair.fair_tier === 'gold';
-
-  function showComingSoon() {
-    document.getElementById('comingSoonModal').style.display = 'flex';
-  }
-
-  // Lock Applications nav link if not gold
-  const navApps = document.getElementById('navApplications');
-  if (!isGold) {
-    navApps.onclick = (e) => { e.preventDefault(); showComingSoon(); };
-  }
-
-
-  // Lock Applications button if not gold
-document.getElementById('btnApplications').onclick = () => {
-    if (!isGold) { showComingSoon(); return; }
-    window.location.href = `fair_applications.html?fair_id=${fairId}`;
-  };
-  document.getElementById('btnVendorDirectory').onclick = () => {
-    if (!isGold) { showComingSoon(); return; }
-    window.location.href = `fair_vendor_list.html?fair_id=${fairId}`;
-  };
-  document.getElementById('btnPayments').onclick = () => {
-    if (!isGold) { showComingSoon(); return; }
-    window.location.href = `fair_vendor_payments.html?fair_id=${fairId}`;
-  };
-  document.getElementById('btnWeekendPricing').onclick = () => {
-    if (!isGold) { showComingSoon(); return; }
-    window.location.href = `fair_weekend_pricing.html?fair_id=${fairId}`;
-  };
-document.getElementById('btnPayReports').onclick = () => {
-    if (!isGold) { showComingSoon(); return; }
-    window.location.href = `fair_reports_payments.html?fair_id=${fairId}`;
-  };
-  document.getElementById('btnAppReports').onclick = () => {
-    if (!isGold) { showComingSoon(); return; }
-    window.location.href = `fair_reports_applications.html?fair_id=${fairId}`;
-  };
-  
-  // Add unavailable overlay to appsCard if not gold
-  if (!isGold) {
-    const appsCard = document.getElementById('appsCard');
-    appsCard.style.position = 'relative';
-    appsCard.style.overflow = 'hidden';
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-      position:absolute; inset:0; background:rgba(0,0,0,0.55);
-      display:flex; flex-direction:column; align-items:center;
-      justify-content:center; border-radius:12px; cursor:pointer;
-      z-index:10;
-    `;
-    overlay.innerHTML = `
-      <div style="font-size:28px; margin-bottom:8px;">🔒</div>
-      <div style="font-family:'Cinzel',serif; font-size:16px; color:#f1df99; font-weight:bold;">Gold Tier Required</div>
-      <div style="font-size:13px; color:#f0e6d2; margin-top:6px; opacity:0.85;">Tap to learn more</div>
-    `;
-    overlay.onclick = showComingSoon;
-    appsCard.appendChild(overlay);
-  }
-
-  document.getElementById('pageTitle').textContent = `Fair Dashboard — ${fair.name || ''}`.trim();
-  document.getElementById('fairName').textContent = fair.name || 'N/A';
-  document.getElementById('fairCityState').textContent = `${fair.city || 'N/A'}, ${fair.state || 'N/A'}`;
-  document.getElementById('fairAddress').textContent = fair.address || 'N/A';
-  document.getElementById('fairTier').textContent = fair.fair_tier
-    ? fair.fair_tier.charAt(0).toUpperCase() + fair.fair_tier.slice(1)
-    : 'Standard';
-
-  if (fair.website) {
-    document.getElementById('fairWebsite').innerHTML =
-      `<a href="${fair.website}" target="_blank" rel="noopener">${fair.website}</a>`;
-  } else {
-    document.getElementById('fairWebsite').textContent = 'N/A';
-  }
-
-   const counts = await loadSubmissionStatusCounts(fairId);
-  if (!counts) {
-    document.getElementById('v_total').textContent = '—';
-    document.getElementById('v_review').textContent = '—';
-    document.getElementById('v_approved').textContent = '—';
-    document.getElementById('v_declined').textContent = '—';
-
-    document.getElementById('f_total').textContent = '—';
-    document.getElementById('f_review').textContent = '—';
-    document.getElementById('f_approved').textContent = '—';
-    document.getElementById('f_declined').textContent = '—';
-
-    document.getElementById('p_total').textContent = '—';
-    document.getElementById('p_review').textContent = '—';
-    document.getElementById('p_approved').textContent = '—';
-    document.getElementById('p_declined').textContent = '—';
-
-    hideLoader();
-    return;
-  }
-
-  document.getElementById('v_total').textContent = counts.vendors.total;
-  document.getElementById('v_review').textContent = counts.vendors.review;
-  document.getElementById('v_approved').textContent = counts.vendors.approved;
-  document.getElementById('v_declined').textContent = counts.vendors.declined;
-
-  document.getElementById('f_total').textContent = counts.food.total;
-  document.getElementById('f_review').textContent = counts.food.review;
-  document.getElementById('f_approved').textContent = counts.food.approved;
-  document.getElementById('f_declined').textContent = counts.food.declined;
-
-  document.getElementById('p_total').textContent = counts.performers.total;
-  document.getElementById('p_review').textContent = counts.performers.review;
-  document.getElementById('p_approved').textContent = counts.performers.approved;
-  document.getElementById('p_declined').textContent = counts.performers.declined;
-
-  hideLoader();
-
-}
-
 
     load();
   </script>
-<div id="comingSoonModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:10000; justify-content:center; align-items:center; padding:20px;">
-  <div style="background:rgba(241,223,153,0.97); border-radius:14px; max-width:460px; width:100%; padding:28px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.6); color:#000;">
-    <div style="font-size:42px; margin-bottom:12px;">🏰</div>
-    <h2 style="font-family:'Cinzel',serif; font-size:20px; margin:0 0 10px; color:#000;">Coming Soon</h2>
-    <p style="font-size:15px; color:#3b1f1f; line-height:1.6; margin-bottom:8px;">This feature requires a <strong>Gold tier</strong> fair listing.</p>
-    <p style="font-size:14px; color:#5c3a1e; line-height:1.6; margin-bottom:20px;">Application management — including reviewing vendor and performer applications, approving submissions, and managing contracts — is available to Gold tier fairs. More details and pricing will be available soon.</p>
-    <button onclick="document.getElementById('comingSoonModal').style.display='none';" style="background:#4CAF50; color:#fff; border:none; padding:11px 28px; border-radius:8px; font-size:15px; font-family:'Domine',serif; cursor:pointer;">Close</button>
+
+  <!-- Tier Modal -->
+  <div id="tierModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:10000; justify-content:center; align-items:center; padding:20px;">
+    <div style="background:rgba(241,223,153,0.97); border-radius:14px; max-width:460px; width:100%; padding:28px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.6); color:#000;">
+      <div style="font-size:42px; margin-bottom:12px;">🏰</div>
+      <h2 style="font-family:'Cinzel',serif; font-size:20px; margin:0 0 10px; color:#000;">Upgrade Required</h2>
+      <p id="tierModalMsg" style="font-size:15px; color:#3b1f1f; line-height:1.6; margin-bottom:20px;"></p>
+      <button onclick="document.getElementById('tierModal').style.display='none';" style="background:#4CAF50; color:#fff; border:none; padding:11px 28px; border-radius:8px; font-size:15px; font-family:'Domine',serif; cursor:pointer;">Close</button>
+    </div>
   </div>
-</div>
 
 </body>
 </html>

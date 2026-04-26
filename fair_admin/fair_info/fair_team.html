@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Management | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #000;
+      color: #f0e6d2;
+      padding: 0;
+      margin: 0;
+    }
+    h1 { font-family: 'Cinzel', serif; color: #f1df99; text-align: center; padding: 8px 0 0; }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      background: #1a1208; border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links a.active { background: rgba(241,223,153,0.18); color: #f1df99; font-weight: bold; }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18); color: #f4a0a0;
+      margin-left: 8px; border: 1px solid rgba(180,50,50,0.3);
+    }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb { font-size: 13px; color: #bb9457; padding: 10px 0 0; text-align: left; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+
+    /* ── CARDS ── */
+    .card {
+      position: relative;
+      background: rgba(241, 223, 153, 0.88);
+      padding: 26px; border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin: 18px auto; max-width: 800px;
+      color: #3b1f1f; text-align: left;
+    }
+    .card h2 { margin-top: 0; font-family: 'Cinzel', serif; }
+
+    /* ── MEMBER ROW ── */
+    .member-row {
+      background: rgba(255,255,255,0.35);
+      border-radius: 8px; padding: 12px 16px; margin-bottom: 10px;
+    }
+    .member-top {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .member-bottom {
+      margin-top: 10px; padding-top: 10px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .member-info { flex: 1; min-width: 180px; }
+    .member-email { font-weight: bold; font-size: 15px; }
+    .member-since { font-size: 12px; color: #5c3a1e; margin-top: 2px; }
+    .member-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block; padding: 4px 10px;
+      border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase;
+    }
+    .badge-owner   { background: #c79a3b; color: #000; }
+    .badge-manager { background: #2980b9; color: #fff; }
+    .badge-it      { background: #8e44ad; color: #fff; }
+    .badge-staff   { background: #7f8c8d; color: #fff; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      background-color: #4CAF50; color: white; padding: 10px 16px;
+      border: none; border-radius: 6px; font-size: 15px;
+      font-family: 'Domine', serif; cursor: pointer;
+    }
+    .btn:hover { background-color: #45a049; }
+    .btn-danger {
+      background: #c0392b; color: #fff; padding: 7px 14px;
+      border: none; border-radius: 6px; font-size: 13px;
+      font-family: 'Domine', serif; cursor: pointer;
+    }
+    .btn-danger:hover { background: #a93226; }
+    .btn-save {
+      background: #2980b9; color: #fff; padding: 7px 14px;
+      border: none; border-radius: 6px; font-size: 13px;
+      font-family: 'Domine', serif; cursor: pointer;
+    }
+    .btn-save:hover { background: #2471a3; }
+
+    /* ── TOGGLE ── */
+    .toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #3b1f1f; }
+    .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; background: #ccc;
+      border-radius: 22px; cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-slider:before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; left: 3px; top: 3px;
+      background: #fff; border-radius: 50%; transition: transform 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: #8e44ad; }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+    /* ── FORM ── */
+    .form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .form-row input, .form-row select {
+      padding: 10px; border-radius: 8px; border: none;
+      font-family: 'Domine', serif; font-size: 15px; flex: 1; min-width: 180px;
+    }
+    select.role-select {
+      padding: 6px 10px; border-radius: 6px; border: none;
+      font-family: 'Domine', serif; font-size: 13px; background: #fff; color: #3b1f1f;
+    }
+
+    /* ── BANNER ── */
+    .banner { padding: 10px 16px; border-radius: 8px; margin-bottom: 14px; font-size: 14px; display: none; }
+    .banner-success { background: #d4edda; color: #155724; display: block; }
+    .banner-error   { background: #f8d7da; color: #721c24; display: block; }
+
+    /* ── ACTIVITY LOG ── */
+    .log-row {
+      background: rgba(255,255,255,0.35);
+      border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px;
+    }
+    .log-action { font-weight: bold; margin-bottom: 4px; }
+    .log-action.added        { color: #27ae60; }
+    .log-action.removed      { color: #c0392b; }
+    .log-action.role_changed { color: #2980b9; }
+    .log-meta { font-size: 12px; color: #5c3a1e; }
+
+    /* ── LOADER ── */
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      display: flex; justify-content: center; align-items: center; z-index: 9999;
+    }
+    .spinner {
+      border: 6px solid #f3f3f3; border-top: 6px solid #bb9457;
+      border-radius: 50%; width: 60px; height: 60px;
+      animation: spin 1s linear infinite;
+    }
+    .profile-logo {
+      position: absolute; top: 10px; right: 10px;
+      width: 60px; height: auto; border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="../fair_admin.html">🏰 My Fairs</a>
+      <a href="vip_guide/guide_index.html">📖 Guide</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" class="active">👥 Team</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div style="max-width:800px; margin:0 auto; padding: 0 16px;">
+    <div class="breadcrumb">
+      <a href="../fair_admin.html">Admin Home</a> ›
+      <a href="#" id="breadDashboard">Dashboard</a> ›
+      <span>Team Management</span>
+    </div>
+  </div>
+
+  <h1 id="pageTitle">Team Management</h1>
+
+  <div id="loadingOverlay"><div class="spinner"></div></div>
+
+  <div style="max-width:800px; margin:0 auto; padding: 0 16px 40px;">
+
+    <!-- Current Team -->
+    <div class="card">
+      <a href="/index.html">
+        <img src="/images/logo.png" alt="FairQuest Logo" class="profile-logo" />
+      </a>
+      <h2>👥 Current Team</h2>
+      <div id="teamBanner" class="banner"></div>
+      <div id="teamList">Loading...</div>
+    </div>
+
+    <!-- Add New Member -->
+    <div class="card" id="addMemberCard">
+      <h2>➕ Add Team Member</h2>
+      <p style="font-size:14px; color:#5c3a1e;">Enter the email of someone who already has a FairQuest account.</p>
+      <div id="addBanner" class="banner"></div>
+      <div class="form-row">
+        <input type="email" id="newEmail" placeholder="Email address" />
+        <select id="newRole"></select>
+        <button class="btn" onclick="addMember()">Add to Team</button>
+      </div>
+    </div>
+
+    <!-- Activity Log (Gold + owner or granted access only) -->
+    <div class="card" id="logCard" style="display:none;">
+      <h2>📋 Team Activity Log</h2>
+      <div id="logBanner" class="banner"></div>
+      <div id="logList">Loading...</div>
+    </div>
+
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    let currentUserId    = null;
+    let currentUserRole  = null;
+    let currentCanViewLog = false;
+    let isGold           = false;
+    let fairId           = null;
+
+    function getFairIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const id = Number(params.get('fair_id'));
+      return Number.isFinite(id) ? id : null;
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('loadingOverlay');
+      if (el) el.style.display = 'none';
+    }
+
+    function showBanner(containerId, message, type) {
+      const el = document.getElementById(containerId);
+      el.textContent = message;
+      el.className = 'banner banner-' + type;
+      setTimeout(() => { el.className = 'banner'; el.textContent = ''; }, 4000);
+    }
+
+    function getBadge(role) {
+      const labels = { owner: 'Owner', manager: 'Manager', it: 'IT', staff: 'Staff' };
+      return `<span class="badge badge-${role}">${labels[role] || role}</span>`;
+    }
+
+    function getRoleOptions(viewerRole) {
+      if (viewerRole === 'owner') {
+        return `
+          <option value="manager">Manager</option>
+          <option value="it">IT</option>
+          <option value="staff">Staff</option>`;
+      } else if (viewerRole === 'manager') {
+        return `
+          <option value="it">IT</option>
+          <option value="staff">Staff</option>`;
+      }
+      return '';
+    }
+
+    function canModify(viewerRole, targetRole) {
+      if (viewerRole === 'owner' && targetRole !== 'owner') return true;
+      if (viewerRole === 'manager' && (targetRole === 'it' || targetRole === 'staff')) return true;
+      return false;
+    }
+
+    function getActionLabel(action, row) {
+      const performerName  = row.performed_by_username || 'Unknown';
+      const performerEmail = row.performed_by_email || '';
+      const targetName     = row.target_username || 'Unknown';
+      const targetEmail    = row.target_email || '';
+
+      const performer = `<strong>${performerName}</strong> <span style="font-weight:normal;color:#5c3a1e;">(${performerEmail})</span>`;
+      const target    = `<strong>${targetName}</strong> <span style="font-weight:normal;color:#5c3a1e;">(${targetEmail})</span>`;
+
+      if (action === 'added')
+        return `➕ ${performer} added ${target} as <strong>${row.target_role}</strong>`;
+      if (action === 'removed')
+        return `🗑️ ${performer} removed ${target} (was <strong>${row.previous_role}</strong>)`;
+      if (action === 'role_changed')
+        return `🔄 ${performer} changed ${target} from <strong>${row.previous_role}</strong> to <strong>${row.target_role}</strong>`;
+      return action;
+    }
+
+    function renderTeam(members) {
+      const list = document.getElementById('teamList');
+      if (!members.length) {
+        list.innerHTML = '<p style="color:#5c3a1e;">No team members found.</p>';
+        return;
+      }
+
+      list.innerHTML = '';
+      members.forEach(m => {
+        const div      = document.createElement('div');
+        div.className  = 'member-row';
+        div.id         = `member-${m.user_id}`;
+
+        const canEdit       = canModify(currentUserRole, m.admin_level);
+        const isMe          = m.user_id === currentUserId;
+        const showLogToggle = isGold && currentUserRole === 'owner' && !isMe
+          && (m.admin_level === 'manager' || m.admin_level === 'it');
+
+        // Role dropdown
+        let roleDropdown = '';
+        if (canEdit && !isMe) {
+          roleDropdown = `
+            <select class="role-select" id="role-${m.user_id}">
+              ${getRoleOptions(currentUserRole)}
+            </select>
+            <button class="btn-save" onclick="changeRole('${m.user_id}')">Save</button>`;
+        }
+
+        // Remove button — owners can only be removed by platform admin
+        let removeBtn = '';
+        if (canEdit && !isMe) {
+          removeBtn = `<button class="btn-danger" onclick="removeMember('${m.user_id}', '${m.email}')">Remove</button>`;
+        } else if (m.admin_level === 'owner' && !isMe) {
+          removeBtn = `<span style="font-size:12px;color:#5c3a1e;font-style:italic;">Contact support to remove</span>`;
+        }
+
+        // Log access toggle (owner only, gold only, manager/it only)
+        let logToggle = '';
+        if (showLogToggle) {
+          logToggle = `
+            <div class="member-bottom">
+              <div class="toggle-wrap">
+                <label class="toggle">
+                  <input type="checkbox" id="log-${m.user_id}"
+                    ${m.can_view_log ? 'checked' : ''}
+                    onchange="toggleLogAccess('${m.user_id}', this.checked)" />
+                  <span class="toggle-slider"></span>
+                </label>
+                📋 Can view activity log
+              </div>
+            </div>`;
+        }
+
+        div.innerHTML = `
+          <div class="member-top">
+            <div class="member-info">
+              <div class="member-email">
+                ${m.email}
+                ${isMe ? '<span style="font-size:11px;color:#5c3a1e;"> (you)</span>' : ''}
+              </div>
+              <div class="member-since">Added: ${new Date(m.created_at).toLocaleDateString()}</div>
+            </div>
+            <div class="member-actions">
+              ${getBadge(m.admin_level)}
+              ${roleDropdown}
+              ${removeBtn}
+            </div>
+          </div>
+          ${logToggle}
+        `;
+
+        list.appendChild(div);
+
+        // Set selected role in dropdown
+        if (canEdit && !isMe) {
+          const sel = document.getElementById(`role-${m.user_id}`);
+          if (sel) sel.value = m.admin_level;
+        }
+      });
+    }
+
+    function renderLog(entries) {
+      const list = document.getElementById('logList');
+      if (!entries || !entries.length) {
+        list.innerHTML = '<p style="color:#5c3a1e;font-size:14px;">No activity recorded yet.</p>';
+        return;
+      }
+      list.innerHTML = '';
+      entries.forEach(row => {
+        const div = document.createElement('div');
+        div.className = 'log-row';
+        div.innerHTML = `
+          <div class="log-action ${row.action}">${getActionLabel(row.action, row)}</div>
+          <div class="log-meta">${new Date(row.created_at).toLocaleString()}</div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    async function loadTeam() {
+      const { data, error } = await supabaseClient.rpc('get_fair_admins', { p_fair_id: fairId });
+      if (error) { document.getElementById('teamList').textContent = 'Error loading team.'; return; }
+      renderTeam(data || []);
+    }
+
+    async function loadLog() {
+      const { data, error } = await supabaseClient.rpc('get_fair_admin_team_log', { p_fair_id: fairId });
+      if (error) { document.getElementById('logList').textContent = 'Error loading activity log.'; return; }
+      renderLog(data || []);
+    }
+
+    async function addMember() {
+      const email = document.getElementById('newEmail').value.trim();
+      const role  = document.getElementById('newRole').value;
+      if (!email) { showBanner('addBanner', '⚠ Please enter an email address.', 'error'); return; }
+
+      const { data: users, error: lookupErr } = await supabaseClient.rpc('get_user_by_email', { p_email: email });
+      if (lookupErr || !users?.length) {
+        showBanner('addBanner', '❌ No FairQuest account found with that email.', 'error'); return;
+      }
+
+      const { error } = await supabaseClient.rpc('assign_fair_admin', {
+        p_user_id: users[0].user_id, p_fair_id: fairId, p_admin_level: role
+      });
+      if (error) { showBanner('addBanner', '❌ Error: ' + error.message, 'error'); return; }
+
+      showBanner('addBanner', '✅ Team member added successfully!', 'success');
+      document.getElementById('newEmail').value = '';
+      await loadTeam();
+      if (isGold && (currentUserRole === 'owner' || currentCanViewLog)) loadLog();
+    }
+
+    async function changeRole(targetUserId) {
+      const newRole = document.getElementById(`role-${targetUserId}`).value;
+      const { error } = await supabaseClient.rpc('update_fair_admin_level', {
+        p_user_id: targetUserId, p_fair_id: fairId, p_admin_level: newRole
+      });
+      if (error) { showBanner('teamBanner', '❌ Error: ' + error.message, 'error'); return; }
+      showBanner('teamBanner', '✅ Role updated successfully!', 'success');
+      await loadTeam();
+      if (isGold && (currentUserRole === 'owner' || currentCanViewLog)) loadLog();
+    }
+
+    async function removeMember(targetUserId, email) {
+      if (!confirm(`Remove ${email} from this fair's team?`)) return;
+      const { error } = await supabaseClient.rpc('remove_fair_admin', {
+        p_user_id: targetUserId, p_fair_id: fairId
+      });
+      if (error) { showBanner('teamBanner', '❌ Error: ' + error.message, 'error'); return; }
+      showBanner('teamBanner', '✅ Team member removed.', 'success');
+      await loadTeam();
+      if (isGold && (currentUserRole === 'owner' || currentCanViewLog)) loadLog();
+    }
+
+    async function toggleLogAccess(targetUserId, canViewLog) {
+      const { error } = await supabaseClient.rpc('toggle_fair_admin_log_access', {
+        p_user_id: targetUserId, p_fair_id: fairId, p_can_view_log: canViewLog
+      });
+      if (error) {
+        showBanner('teamBanner', '❌ Error updating log access: ' + error.message, 'error');
+        const cb = document.getElementById(`log-${targetUserId}`);
+        if (cb) cb.checked = !canViewLog;
+        return;
+      }
+      showBanner('teamBanner', `✅ Log access ${canViewLog ? 'granted' : 'removed'}.`, 'success');
+    }
+
+    async function load() {
+      fairId = getFairIdFromUrl();
+
+      document.getElementById('navDashboard').href   = `fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('breadDashboard').href = `fair_dashboard.html?fair_id=${fairId}`;
+
+      document.getElementById('navLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = '/index.html';
+      });
+
+      if (!fairId) {
+        document.getElementById('teamList').textContent = '⚠️ Missing fair_id in URL.';
+        hideLoader(); return;
+      }
+
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !user) { window.location.href = '../fair_admin.html'; return; }
+      currentUserId = user.id;
+
+      // Get fair tier
+      const { data: tierData } = await supabaseClient
+        .rpc('get_fair_tier', { p_fair_id: fairId });
+      console.log('tierData:', tierData, typeof tierData);
+      isGold = tierData === 'gold';
+
+      // Get current user's role and log access via RPC
+      const { data: adminRows } = await supabaseClient
+        .rpc('get_my_fair_admin_level', { p_fair_id: fairId });
+
+      if (!adminRows?.length) { window.location.href = `fair_dashboard.html?fair_id=${fairId}`; return; }
+
+      currentUserRole   = adminRows[0].admin_level;
+      currentCanViewLog = adminRows[0].can_view_log || false;
+
+      // Only owner and manager can access this page
+      if (currentUserRole !== 'owner' && currentUserRole !== 'manager') {
+        window.location.href = `fair_dashboard.html?fair_id=${fairId}`; return;
+      }
+
+      // Populate role dropdown
+      document.getElementById('newRole').innerHTML = getRoleOptions(currentUserRole);
+
+      // Show log card for gold tier owners or those granted access
+      if (isGold && (currentUserRole === 'owner' || currentCanViewLog)) {
+        document.getElementById('logCard').style.display = 'block';
+      }
+
+      await loadTeam();
+      if (isGold && (currentUserRole === 'owner' || currentCanViewLog)) await loadLog();
+
+      hideLoader();
+    }
+
+    load();
+  </script>
+
+</body>
+</html>

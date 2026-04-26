@@ -88,16 +88,23 @@ button.action {
   <h3>⚡ Quick Assign Fair Admin</h3>
   <p style="color:#aaa; font-size:14px;">Use this when someone emails you directly and you need to assign them manually.</p>
   <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
-    <input type="email" id="quickEmail" placeholder="User email (e.g. fairfieldirf@gmail.com)"
-      style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;" />
-    <input type="text" id="quickFairName" placeholder="Search fair name…"
-      style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;"
-      oninput="searchFairs()" />
-    <select id="quickFairSelect"
-      style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;">
-      <option value="">— Select fair after searching —</option>
-    </select>
-    <button class="action approve" onclick="quickAssign()">⚡ Assign as Fair Admin</button>
+   <input type="email" id="quickEmail" placeholder="User email (e.g. fairfieldirf@gmail.com)"
+  style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;" />
+<input type="text" id="quickFairName" placeholder="Search fair name…"
+  style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;"
+  oninput="searchFairs()" />
+<select id="quickFairSelect"
+  style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;">
+  <option value="">— Select fair after searching —</option>
+</select>
+<select id="quickRole"
+  style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;">
+  <option value="owner">Owner</option>
+  <option value="manager">Manager</option>
+  <option value="it">IT</option>
+  <option value="staff">Staff</option>
+</select>
+<button class="action approve" onclick="quickAssign()">⚡ Assign as Fair Admin</button>
     <div id="quickStatus" style="font-size:14px; margin-top:4px;"></div>
   </div>
 </div>
@@ -160,6 +167,7 @@ async function searchFairs() {
 async function quickAssign() {
   const email  = document.getElementById('quickEmail').value.trim();
   const fairId = document.getElementById('quickFairSelect').value;
+  const role   = document.getElementById('quickRole').value;
   const status = document.getElementById('quickStatus');
 
   if (!email || !fairId) { status.textContent = '⚠ Please enter an email and select a fair.'; return; }
@@ -179,7 +187,8 @@ async function quickAssign() {
 
   const { error } = await supabase.rpc('assign_fair_admin', {
     p_user_id: userId,
-    p_fair_id: parseInt(fairId)
+    p_fair_id: parseInt(fairId),
+    p_admin_level: role
   });
 
   if (error) {
@@ -369,7 +378,8 @@ async function approve(verificationId, userId, fairId, fairName){
   'assign_fair_admin',
   {
     p_user_id: userId,
-    p_fair_id: finalFairId
+    p_fair_id: finalFairId,
+    p_admin_level: 'owner'
   }
 );
 

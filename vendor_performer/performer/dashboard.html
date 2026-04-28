@@ -472,7 +472,13 @@ function handleAddNewPerformerAccount() {
         if (fairs.length || manual.length) {
           fairHtml += `<div class="fair-cards-wrap">`;
           fairHtml += `<div class="fair-cards-title">Your Fairs</div>`;
-          fairHtml += `<div class="fair-cards-list">`;
+fairHtml += `<div style="text-align:center; margin-bottom:12px;">
+  <button class="start-app" style="min-width:0; padding:9px 18px; font-size:14px;"
+    onclick="window.location.href='/vendor_performer/manage_fairs.html?vpa_id=${v.id}&type=vendor'">
+    ✏️ Add / Edit Fairs
+  </button>
+</div>`;
+fairHtml += `<div class="fair-cards-list">`;
 
           const shownFairs = new Set();
           const fairInfoButtonLabel = isGoldApproved
@@ -535,16 +541,22 @@ function handleAddNewPerformerAccount() {
 
           fairHtml += `</div></div>`;
         } else {
-          fairHtml = `
-            <div class="fair-cards-wrap">
-              <div class="fair-cards-title">Your Fairs</div>
-              <div class="fair-cards-list">
-                <div class="fair-card">
-                  <div class="fair-card-name">No fairs listed yet</div>
-                </div>
-              </div>
-            </div>
-          `;
+         fairHtml = `
+  <div class="fair-cards-wrap">
+    <div class="fair-cards-title">Your Fairs</div>
+    <div style="text-align:center; margin-bottom:12px;">
+      <button class="start-app" style="min-width:0; padding:9px 18px; font-size:14px;"
+        onclick="window.location.href='/vendor_performer/manage_fairs.html?vpa_id=${v.id}&type=vendor'">
+        ✏️ Add / Edit Fairs
+      </button>
+    </div>
+    <div class="fair-cards-list">
+      <div class="fair-card">
+        <div class="fair-card-name">No fairs listed yet</div>
+      </div>
+    </div>
+  </div>
+`;
         }
 
         const box = document.createElement('div');

@@ -483,8 +483,7 @@ document.getElementById('termsBox').innerHTML = `
 
 const supa = window.supabase.createClient(
   'https://awtbjuiqgtdydsqzimul.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ',
-  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "fq_fair_admin_access_auth" } }
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
 );
 
 // ── HELPERS ──
@@ -540,6 +539,12 @@ function friendlyAuthError(error) {
 function friendlyDbError(error) {
   if (!error) return "Something went wrong. Please try again.";
   const msg = (error.message || "").toLowerCase();
+  if (msg.includes("daily_limit_reached"))
+    return "You've reached the maximum of 5 fair submissions per day. Please try again tomorrow.";
+  if (msg.includes("pending_limit_reached"))
+    return "You have 7 or more pending requests. Please wait for some to be approved before submitting more.";
+  if (msg.includes("cooldown_active"))
+    return "You're submitting too quickly. Please wait a few minutes before submitting another request.";
   if (msg.includes("permission denied") || msg.includes("not authorized") || msg.includes("rls"))
     return "We couldn't submit your request due to a permission issue. Please contact FairQuest support.";
   if (msg.includes("duplicate") || msg.includes("unique constraint"))
@@ -751,7 +756,8 @@ async function submitFairInfo() {
     p_contact_phone:           document.getElementById("contactPhone").value.trim(),
     p_extra_email:             document.getElementById("useAltEmail").checked ? document.getElementById("altEmail").value.trim() : null,
     p_fair_id:                 document.getElementById("fairId").value ? parseInt(document.getElementById("fairId").value, 10) : null,
-    p_authorization_confirmed: true,
+    p_authorization_confirmed: document.getElementById("authConfirm").checked,
+    p_terms_confirmed:         document.getElementById("termsConfirm").checked,
     p_terms_version:           TERMS_VERSION,
     p_terms_agreed_at:         new Date().toISOString()
   });

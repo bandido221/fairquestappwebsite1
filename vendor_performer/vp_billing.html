@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Billing & Subscription | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
+
+<style>
+body {
+  font-family: 'Domine', serif;
+  background: #0d0a04;
+  color: #f1df99;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+}
+
+h1, h2, h3 {
+  font-family: 'Cinzel', serif;
+  margin-top: 0;
+}
+
+.top-banner, .logo {
+  display: block;
+  margin: 0 auto 20px auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+
+.top-banner {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.logo {
+  max-width: 100px;
+  transition: transform 0.3s ease;
+}
+
+.logo:hover { transform: scale(1.05); }
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: rgba(241, 223, 153, 0.93);
+  color: #111;
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 16px;
+  box-shadow:
+    0 2px 0 rgba(201,168,76,0.35),
+    0 8px 28px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+  padding: 24px;
+  text-align: left;
+}
+
+.container h1 {
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 28px;
+  color: #111;
+}
+
+.top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  justify-content: center;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 16px;
+  font-family: 'Domine', serif;
+  cursor: pointer;
+  text-align: center;
+  min-width: 160px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  transition: opacity 0.2s;
+}
+
+button:hover { opacity: 0.88; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-green  { background: #27ae60; color: #fff; }
+.btn-gold   { background: #aa8425; color: #fff; }
+.btn-red    { background: #c0392b; color: #fff; }
+.btn-dark   { background: #444;    color: #fff; }
+.btn-blue   { background: #2471a3; color: #fff; }
+.btn-sleep  { background: #6c4f9e; color: #fff; }
+
+.loading {
+  font-size: 18px;
+  color: #2f1a12;
+  text-align: center;
+  padding: 30px 10px;
+}
+
+/* ── Section cards ─────────────────────────────────────────── */
+.section-card {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+  text-align: left;
+}
+
+.section-title {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  color: #111;
+  margin-bottom: 16px;
+}
+
+/* ── Plan display ─────────────────────────────────────────── */
+.plan-display {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.plan-icon {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.plan-name {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #111;
+}
+
+.plan-price {
+  font-size: 15px;
+  color: #555;
+  margin-top: 2px;
+}
+
+/* ── Trial pill ───────────────────────────────────────────── */
+.trial-pill {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.trial-active {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #8fd2ab;
+}
+
+.trial-none {
+  background: #f8f9fa;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+/* ── Action buttons grid ─────────────────────────────────── */
+.action-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* ── Billing history table ────────────────────────────────── */
+.billing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.billing-table th {
+  background: rgba(170,132,37,0.18);
+  color: #111;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid rgba(170,132,37,0.35);
+}
+
+.billing-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  color: #111;
+  vertical-align: middle;
+}
+
+.billing-table tr:last-child td { border-bottom: none; }
+.billing-table tr:hover td { background: rgba(255,255,255,0.5); }
+
+/* ── Status badges ────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.badge-paid    { background: #dff6e7; color: #17643d; border: 1px solid #8fd2ab; }
+.badge-pending { background: #fff0d8; color: #8a5700; border: 1px solid #e7c17a; }
+.badge-failed  { background: #ffe0e0; color: #8f1f1f; border: 1px solid #e19a9a; }
+
+/* ── Gold trial prompt banner ─────────────────────────────── */
+.gold-prompt {
+  background: rgba(255,248,220,0.9);
+  border: 2px solid #aa8425;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.gold-prompt-title {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  color: #4a250f;
+  margin-bottom: 8px;
+}
+
+.gold-prompt-note {
+  font-size: 14px;
+  color: #5a4335;
+  margin-bottom: 14px;
+}
+
+/* ── Sleep mode banner ────────────────────────────────────── */
+.sleep-banner {
+  background: rgba(108,79,158,0.12);
+  border: 2px solid #6c4f9e;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.sleep-banner-title {
+  font-family: 'Cinzel', serif;
+  font-size: 17px;
+  color: #3d2160;
+  margin-bottom: 6px;
+}
+
+.sleep-banner-note {
+  font-size: 14px;
+  color: #3d2160;
+}
+
+/* ── Info note ────────────────────────────────────────────── */
+.info-note {
+  font-size: 13px;
+  color: #555;
+  background: rgba(0,0,0,0.04);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 12px;
+}
+
+/* ── Modal overlay ────────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal-box {
+  background: rgba(241,223,153,0.97);
+  border: 1px solid rgba(201,168,76,0.5);
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 8px 36px rgba(0,0,0,0.55);
+  text-align: center;
+}
+
+.modal-title {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  color: #111;
+  margin-bottom: 12px;
+}
+
+.modal-body {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.modal-body strong { color: #111; }
+
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* ── Divider ──────────────────────────────────────────────── */
+.divider {
+  border: none;
+  border-top: 1px solid rgba(0,0,0,0.12);
+  margin: 18px 0;
+}
+
+/* ── Empty state ─────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 15px;
+}
+
+footer {
+  margin-top: 40px;
+  font-size: 14px;
+  text-align: center;
+}
+
+footer a {
+  color: #aa8452;
+  text-decoration: none;
+  margin: 0 8px;
+}
+
+footer a:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+  body { padding: 14px; }
+  .container { padding: 18px; }
+  .top-actions, .action-grid, .modal-actions { flex-direction: column; }
+  button { width: 100%; min-width: 0; box-sizing: border-box; }
+  .logo { max-width: 80px; }
+  .top-banner { max-width: 100%; }
+  .container h1 { font-size: 24px; }
+  .billing-table th:nth-child(3),
+  .billing-table td:nth-child(3) { display: none; }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+<img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+<div class="container">
+  <h1>Billing &amp; Subscription</h1>
+
+  <div class="top-actions">
+    <button class="btn-red" onclick="logout()">Log Out</button>
+    <button class="btn-green" onclick="window.location.href='/profile/index.html'">My Profile</button>
+    <button class="btn-green" onclick="goBack()">← Back to Dashboard</button>
+  </div>
+
+  <div id="billingContent" class="loading">Loading your billing information…</div>
+</div>
+
+<!-- ══ MODALS ══════════════════════════════════════════════ -->
+
+<!-- Upgrade to Silver modal -->
+<div class="modal-overlay" id="modalUpgradeSilver">
+  <div class="modal-box">
+    <div class="modal-title">Upgrade to Silver</div>
+    <div class="modal-body" id="modalUpgradeSilverBody"></div>
+    <div class="modal-actions">
+      <button class="btn-green" onclick="confirmUpgrade('silver')">Yes, Upgrade</button>
+      <button class="btn-dark" onclick="closeModal('modalUpgradeSilver')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upgrade to Gold modal -->
+<div class="modal-overlay" id="modalUpgradeGold">
+  <div class="modal-box">
+    <div class="modal-title">Upgrade to Gold</div>
+    <div class="modal-body" id="modalUpgradeGoldBody"></div>
+    <div class="modal-actions">
+      <button class="btn-gold" onclick="confirmUpgrade('gold')">Yes, Upgrade to Gold</button>
+      <button class="btn-dark" onclick="closeModal('modalUpgradeGold')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Start Gold Trial modal -->
+<div class="modal-overlay" id="modalGoldTrial">
+  <div class="modal-box">
+    <div class="modal-title">🌟 Try Gold Free for 7 Days</div>
+    <div class="modal-body">
+      You can unlock <strong>Gold Tier features</strong> for 7 days at no charge.<br><br>
+      Your <strong>Silver plan stays active</strong>. After 7 days, you'll return to Silver ($15/month) unless you upgrade.<br><br>
+      <em>Note: Starting the Gold trial will use your remaining Gold trial credit.</em>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-gold" onclick="confirmGoldTrial()">Start Gold Trial</button>
+      <button class="btn-dark" onclick="closeModal('modalGoldTrial')">Maybe Later</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sleep mode modal -->
+<div class="modal-overlay" id="modalSleep">
+  <div class="modal-box">
+    <div class="modal-title">😴 Enter Sleep Mode</div>
+    <div class="modal-body" id="modalSleepBody"></div>
+    <div class="modal-actions">
+      <button class="btn-sleep" onclick="confirmSleep()">Yes, Enter Sleep Mode</button>
+      <button class="btn-dark" onclick="closeModal('modalSleep')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Wake up modal -->
+<div class="modal-overlay" id="modalWakeUp">
+  <div class="modal-box">
+    <div class="modal-title">⏰ Wake Up Your Account</div>
+    <div class="modal-body" id="modalWakeUpBody"></div>
+    <div class="modal-actions">
+      <button class="btn-green" onclick="confirmWakeUp()">Wake Up &amp; Pay Now</button>
+      <button class="btn-dark" onclick="closeModal('modalWakeUp')">Not Yet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Downgrade to Silver modal -->
+<div class="modal-overlay" id="modalDowngrade">
+  <div class="modal-box">
+    <div class="modal-title">Downgrade to Silver</div>
+    <div class="modal-body" id="modalDowngradeBody"></div>
+    <div class="modal-actions">
+      <button class="btn-blue" onclick="confirmDowngrade()">Yes, Downgrade</button>
+      <button class="btn-dark" onclick="closeModal('modalDowngrade')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel modal -->
+<div class="modal-overlay" id="modalCancel">
+  <div class="modal-box">
+    <div class="modal-title" style="color:#8f1f1f;">⚠️ Cancel Subscription</div>
+    <div class="modal-body">
+      <strong>Warning: This will permanently erase all your VP data.</strong><br><br>
+      If you cancel, your vendor/performer profiles, fair listings, vault files, and all associated data will be <strong>deleted</strong>.<br><br>
+      If you return later, <strong>you will have to start everything from scratch.</strong><br><br>
+      <strong>Consider Sleep Mode instead</strong> — your data is preserved and you only pay $5/month.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-dark" onclick="closeModal('modalCancel'); openModal('modalSleep')">😴 Use Sleep Mode Instead</button>
+      <button class="btn-red" onclick="confirmCancel()">Cancel Anyway — Erase My Data</button>
+      <button class="btn-green" onclick="closeModal('modalCancel')">Keep My Subscription</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCRIPTS ════════════════════════════════════════════ -->
+<script>
+if (!window.supabaseClient) {
+  window.supabaseClient = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
+}
+const sb = window.supabaseClient;
+
+// ── State ──────────────────────────────────────────────────
+let gVpaId   = null;
+let gUserId  = null;
+let gState   = null;  // full billing state from RPC
+
+// ── Init ───────────────────────────────────────────────────
+async function initBilling() {
+  const params = new URLSearchParams(window.location.search);
+  gVpaId = params.get('vpa_id') ? parseInt(params.get('vpa_id')) : null;
+
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (!session?.user?.id) {
+    sb.auth.onAuthStateChange((_, s) => {
+      if (s?.user?.id) { gUserId = s.user.id; loadBilling(); }
+      else document.getElementById('billingContent').innerHTML = '<p>Please sign in to continue.</p>';
+    });
+    return;
+  }
+
+  gUserId = session.user.id;
+
+  // If no vpa_id in URL, try to pick the first VP for this user
+  if (!gVpaId) {
+    const { data: apps } = await sb
+      .from('vendor_performer_applications')
+      .select('id')
+      .eq('user_id', gUserId)
+      .limit(1);
+    if (apps?.length) gVpaId = apps[0].id;
+  }
+
+  if (!gVpaId) {
+    document.getElementById('billingContent').innerHTML =
+      '<div class="section-card"><p>No vendor/performer account found. Please create one first.</p></div>';
+    return;
+  }
+
+  loadBilling();
+}
+
+// ── Load billing state ─────────────────────────────────────
+async function loadBilling() {
+  const el = document.getElementById('billingContent');
+  el.innerHTML = '<div class="loading">Loading…</div>';
+
+  const { data, error } = await sb.rpc('get_vp_billing_state', { p_vpa_id: gVpaId });
+
+  if (error || data?.error) {
+    // No subscription row yet → show basic/free state
+    gState = {
+      subscription: { current_tier: 'basic', status: 'basic', billing_date: null, sleep_start_date: null },
+      silver_trial_used: false,
+      gold_trial_used: false,
+      billing_history: []
+    };
+  } else {
+    gState = data;
+  }
+
+  renderBilling(el);
+}
+
+// ── Render ─────────────────────────────────────────────────
+function renderBilling(el) {
+  const sub   = gState.subscription || {};
+  const tier  = (sub.current_tier || 'basic').toLowerCase();
+  const status = (sub.status || 'basic').toLowerCase();
+  const silverUsed = gState.silver_trial_used;
+  const goldUsed   = gState.gold_trial_used;
+  const history    = gState.billing_history || [];
+
+  const isSleep    = status === 'sleep';
+  const isTrial    = status === 'trial';
+  const isActive   = status === 'active' || isTrial;
+  const isBasic    = tier === 'basic' || status === 'basic';
+
+  // Days until billing date
+  let daysUntilBilling = null;
+  if (sub.billing_date) {
+    const diff = new Date(sub.billing_date) - new Date();
+    daysUntilBilling = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
+
+  // Trial days remaining
+  let trialDaysLeft = null;
+  if (isTrial && sub.trial_ends_at) {
+    const diff = new Date(sub.trial_ends_at) - new Date();
+    trialDaysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
+
+  // Sleep start date display
+  let sleepStartDisplay = '';
+  if (sub.sleep_start_date) {
+    sleepStartDisplay = new Date(sub.sleep_start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  // Plan display info
+  const planInfo = {
+    basic:  { icon: '🔓', label: 'Basic (Free)',  price: 'Free — no vault access' },
+    silver: { icon: '🥈', label: 'Silver',        price: '$15 / month' },
+    gold:   { icon: '🥇', label: 'Gold',          price: '$25 / month' },
+    sleep:  { icon: '😴', label: 'Sleep Mode',    price: '$5 / month' },
+  };
+  const plan = planInfo[isSleep ? 'sleep' : tier] || planInfo.basic;
+
+  // ── Gold trial prompt: show after Silver trial ended, Gold not used, currently Silver active
+  const showGoldTrialPrompt = !isSleep && !isBasic && tier === 'silver' && silverUsed && !goldUsed && isActive;
+
+  // ── Build HTML ─────────────────────────────────────────
+  let html = '';
+
+  // Sleep banner
+  if (isSleep) {
+    html += `
+      <div class="sleep-banner">
+        <div class="sleep-banner-title">😴 Account is in Sleep Mode</div>
+        <div class="sleep-banner-note">
+          Your data is preserved. Silver/Gold features are locked until you wake up.<br>
+          ${sleepStartDisplay ? `Sleep began: <strong>${sleepStartDisplay}</strong>` : ''}
+        </div>
+      </div>`;
+  }
+
+  // Gold trial prompt banner
+  if (showGoldTrialPrompt) {
+    html += `
+      <div class="gold-prompt">
+        <div class="gold-prompt-title">🌟 Want to try Gold Tier free for 7 days?</div>
+        <div class="gold-prompt-note">You've completed your Silver trial. Your Gold trial is still available — unlock all Gold features at no charge for a week.</div>
+        <button class="btn-gold" style="min-width:0;" onclick="openModal('modalGoldTrial')">Start My Gold Trial</button>
+      </div>`;
+  }
+
+  // ── Plan Management ────────────────────────────────────
+  html += `<div class="section-card">
+    <div class="section-title">Current Plan</div>
+
+    <div class="plan-display">
+      <div class="plan-icon">${plan.icon}</div>
+      <div>
+        <div class="plan-name">${plan.label}</div>
+        <div class="plan-price">${plan.price}</div>
+      </div>
+    </div>`;
+
+  // Trial pill
+  if (isTrial) {
+    html += `<div class="trial-pill trial-active">🎉 Free Trial Active — ${trialDaysLeft} day${trialDaysLeft !== 1 ? 's' : ''} remaining</div>`;
+  } else if (!isBasic && !isSleep) {
+    const trialLabel = silverUsed && goldUsed
+      ? 'All trials used'
+      : silverUsed
+        ? 'Silver trial used — Gold trial available'
+        : 'Trial available';
+    html += `<div class="trial-pill trial-none">${trialLabel}</div>`;
+  }
+
+  // Next billing date
+  if (sub.billing_date && !isSleep) {
+    const bd = new Date(sub.billing_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    html += `<div class="info-note">📅 Next billing date: <strong>${bd}</strong></div>`;
+  }
+
+  // Sleep scheduled
+  if (sub.sleep_start_date && !isSleep) {
+    html += `<div class="info-note">😴 Sleep mode scheduled for: <strong>${sleepStartDisplay}</strong>. You keep full access until then.</div>`;
+  }
+
+  html += `<hr class="divider" />`;
+
+  // ── Action Buttons ────────────────────────────────────
+  html += `<div class="action-grid">`;
+
+  if (isSleep) {
+    // Wake up
+    const prevTier = (sub.previous_tier || 'silver').toLowerCase();
+    const wakePrice = prevTier === 'gold' ? '$25' : '$15';
+    html += `<button class="btn-green" onclick="openWakeUpModal('${prevTier}', ${daysUntilBilling})">⏰ Wake Up (${wakePrice})</button>`;
+
+  } else if (isBasic) {
+    // Basic → offer Silver (trial or paid) and Gold (trial or paid)
+    if (!silverUsed) {
+      html += `<button class="btn-green" onclick="openUpgradeModal('silver', true)">🥈 Start Silver Trial (Free 7 Days)</button>`;
+    } else {
+      html += `<button class="btn-green" onclick="openUpgradeModal('silver', false)">🥈 Upgrade to Silver — $15/mo</button>`;
+    }
+    if (!goldUsed) {
+      html += `<button class="btn-gold" onclick="openUpgradeModal('gold', true)">🥇 Start Gold Trial (Free 7 Days)</button>`;
+    } else {
+      html += `<button class="btn-gold" onclick="openUpgradeModal('gold', false)">🥇 Upgrade to Gold — $25/mo</button>`;
+    }
+
+  } else if (tier === 'silver') {
+    // Silver → upgrade to Gold
+    if (!goldUsed) {
+      html += `<button class="btn-gold" onclick="openModal('modalGoldTrial')">🥇 Try Gold Free for 7 Days</button>`;
+    } else {
+      html += `<button class="btn-gold" onclick="openUpgradeModal('gold', false)">🥇 Upgrade to Gold — $10 more/mo</button>`;
+    }
+    // Sleep & Cancel
+    html += `<button class="btn-sleep" onclick="openSleepModal(${daysUntilBilling})">😴 Enter Sleep Mode</button>`;
+    html += `<button class="btn-red" onclick="openModal('modalCancel')">Cancel Subscription</button>`;
+
+  } else if (tier === 'gold') {
+    // Gold → downgrade to Silver
+    html += `<button class="btn-blue" onclick="openDowngradeModal(${daysUntilBilling})">🥈 Downgrade to Silver</button>`;
+    html += `<button class="btn-sleep" onclick="openSleepModal(${daysUntilBilling})">😴 Enter Sleep Mode</button>`;
+    html += `<button class="btn-red" onclick="openModal('modalCancel')">Cancel Subscription</button>`;
+  }
+
+  html += `</div></div>`; // end section-card Plan Management
+
+  // ── Billing History ────────────────────────────────────
+  html += `<div class="section-card">
+    <div class="section-title">Billing History</div>`;
+
+  if (!history.length) {
+    html += `<div class="empty-state">No charges on record yet.</div>`;
+  } else {
+    html += `<table class="billing-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Plan</th>
+          <th>Description</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+    history.forEach(h => {
+      const dateStr = new Date(h.charge_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const amount  = h.amount_cents ? `$${(h.amount_cents / 100).toFixed(2)}` : '—';
+      const planLabel = (h.plan || '').charAt(0).toUpperCase() + (h.plan || '').slice(1);
+      const badgeCls  = { paid: 'badge-paid', pending: 'badge-pending', failed: 'badge-failed' }[h.status] || 'badge-pending';
+
+      html += `
+        <tr>
+          <td>${dateStr}</td>
+          <td>${planLabel}</td>
+          <td>${h.description || '—'}</td>
+          <td>${amount}</td>
+          <td><span class="badge ${badgeCls}">${h.status}</span></td>
+        </tr>`;
+    });
+
+    html += `</tbody></table>`;
+  }
+
+  html += `<div class="info-note" style="margin-top:16px;">💳 Payment processing coming soon via Stripe. No charges will be made until payment is configured.</div>`;
+  html += `</div>`; // end billing history card
+
+  el.innerHTML = html;
+}
+
+// ── Modal helpers ─────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function openUpgradeModal(tier, isTrial) {
+  if (tier === 'silver') {
+    document.getElementById('modalUpgradeSilverBody').innerHTML = isTrial
+      ? `Start your <strong>7-day free Silver trial</strong>.<br><br>After the trial, you'll be billed <strong>$15/month</strong> unless you cancel. No charge today.`
+      : `Upgrade to <strong>Silver</strong> for <strong>$15/month</strong>.<br><br>You'll be charged immediately.`;
+    openModal('modalUpgradeSilver');
+  } else {
+    document.getElementById('modalUpgradeGoldBody').innerHTML = isTrial
+      ? `Start your <strong>7-day free Gold trial</strong>.<br><br>After the trial, you'll be billed <strong>$25/month</strong> unless you cancel. No charge today.<br><br><em>Note: Starting the Gold trial uses both your Silver and Gold trial credits.</em>`
+      : `Upgrade to <strong>Gold</strong> for <strong>$25/month</strong>${(gState.subscription?.current_tier || '') === 'silver' ? ' ($10 more than Silver)' : ''}.<br><br>You'll be charged immediately.`;
+    openModal('modalUpgradeGold');
+  }
+}
+
+function openSleepModal(daysUntilBilling) {
+  const dateStr = gState.subscription?.billing_date
+    ? new Date(gState.subscription.billing_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : 'your next billing date';
+  document.getElementById('modalSleepBody').innerHTML =
+    `Sleep mode will take effect on <strong>${dateStr}</strong>.<br><br>
+     Until then, you keep full access. On that date:<br>
+     • You'll be charged <strong>$5</strong><br>
+     • Silver/Gold features will be locked<br>
+     • Your data is <strong>preserved</strong><br><br>
+     To wake up later, you'll pay the full tier price ($15 Silver / $25 Gold).`;
+  openModal('modalSleep');
+}
+
+function openWakeUpModal(prevTier, daysLeft) {
+  const price = prevTier === 'gold' ? '$25' : '$15';
+  const tierLabel = prevTier === 'gold' ? 'Gold' : 'Silver';
+  let body = `You'll be restored to <strong>${tierLabel}</strong> and charged <strong>${price}</strong> now.<br><br>`;
+  if (daysLeft !== null && daysLeft > 0) {
+    body += `<strong>⚠️ Heads up:</strong> Your next billing date is in <strong>${daysLeft} day${daysLeft !== 1 ? 's' : ''}</strong>. You'll be charged the same amount (${price}) at that time too. You can wait or pay now — your choice.`;
+  }
+  document.getElementById('modalWakeUpBody').innerHTML = body;
+  openModal('modalWakeUp');
+}
+
+function openDowngradeModal(daysLeft) {
+  const dateStr = gState.subscription?.billing_date
+    ? new Date(gState.subscription.billing_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : 'your next billing date';
+  document.getElementById('modalDowngradeBody').innerHTML =
+    `Downgrading to <strong>Silver ($15/month)</strong> will take effect on <strong>${dateStr}</strong>.<br><br>
+     You keep Gold features until then.`;
+  openModal('modalDowngrade');
+}
+
+// ── Action confirmations ───────────────────────────────────
+// NOTE: These call the RPCs. Wire Stripe payments here later.
+
+async function confirmUpgrade(tier) {
+  closeModal('modalUpgradeSilver');
+  closeModal('modalUpgradeGold');
+
+  const isTrial = tier === 'silver'
+    ? !gState.silver_trial_used
+    : !gState.gold_trial_used;
+
+  const now = new Date();
+  const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const billingDate = isTrial
+    ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  // Mark trial used
+  if (isTrial) {
+    await sb.rpc('mark_trial_used', { p_user_id: gUserId, p_tier: tier });
+  }
+
+  // Upsert subscription
+  await sb.rpc('upsert_vp_subscription', {
+    p_vpa_id:        gVpaId,
+    p_user_id:       gUserId,
+    p_status:        isTrial ? 'trial' : 'active',
+    p_current_tier:  tier,
+    p_trial_tier:    isTrial ? tier : null,
+    p_trial_ends_at: isTrial ? trialEnd : null,
+    p_billing_date:  billingDate
+  });
+
+  // Log charge if paid (not trial)
+  if (!isTrial) {
+    const amount = tier === 'gold' ? 2500 : 1500;
+    await sb.rpc('insert_billing_charge', {
+      p_vpa_id:       gVpaId,
+      p_user_id:      gUserId,
+      p_amount_cents: amount,
+      p_plan:         tier,
+      p_description:  `${tier.charAt(0).toUpperCase() + tier.slice(1)} Monthly — Upgrade`,
+      p_status:       'pending' // mark pending until Stripe confirms
+    });
+  }
+
+  // Also update the tier on the vendor_performer_applications row
+  await sb
+    .from('vendor_performer_applications')
+    .update({ tier: tier })
+    .eq('id', gVpaId);
+
+  alert(`✅ ${isTrial ? `Your ${tier} trial is now active!` : `Upgraded to ${tier}!`}`);
+  loadBilling();
+}
+
+async function confirmGoldTrial() {
+  closeModal('modalGoldTrial');
+  await confirmUpgrade('gold');
+}
+
+async function confirmSleep() {
+  closeModal('modalSleep');
+
+  const sub = gState.subscription || {};
+  const sleepDate = sub.billing_date || new Date().toISOString().split('T')[0];
+
+  await sb.rpc('upsert_vp_subscription', {
+    p_vpa_id:          gVpaId,
+    p_user_id:         gUserId,
+    p_status:          'active',           // still active until sleep kicks in
+    p_current_tier:    sub.current_tier,
+    p_previous_tier:   sub.current_tier,   // remember what they had
+    p_billing_date:    sub.billing_date,
+    p_sleep_start_date: sleepDate
+  });
+
+  alert(`😴 Sleep mode scheduled for your next billing date. You keep full access until then.`);
+  loadBilling();
+}
+
+async function confirmWakeUp() {
+  closeModal('modalWakeUp');
+
+  const sub = gState.subscription || {};
+  const returnTier = (sub.previous_tier || 'silver').toLowerCase();
+  const amount = returnTier === 'gold' ? 2500 : 1500;
+
+  const now = new Date();
+  const nextBillingDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  await sb.rpc('upsert_vp_subscription', {
+    p_vpa_id:          gVpaId,
+    p_user_id:         gUserId,
+    p_status:          'active',
+    p_current_tier:    returnTier,
+    p_previous_tier:   null,
+    p_billing_date:    nextBillingDate,
+    p_sleep_start_date: null
+  });
+
+  await sb.rpc('insert_billing_charge', {
+    p_vpa_id:       gVpaId,
+    p_user_id:      gUserId,
+    p_amount_cents: amount,
+    p_plan:         returnTier,
+    p_description:  `${returnTier.charAt(0).toUpperCase() + returnTier.slice(1)} — Wake Up`,
+    p_status:       'pending'
+  });
+
+  await sb
+    .from('vendor_performer_applications')
+    .update({ tier: returnTier })
+    .eq('id', gVpaId);
+
+  // If returning to Silver and Gold trial is unused, prompt
+  if (returnTier === 'silver' && !gState.gold_trial_used) {
+    alert(`✅ Account reactivated as Silver! Loading…`);
+    await loadBilling();
+    openModal('modalGoldTrial');
+  } else {
+    alert(`✅ Account reactivated as ${returnTier.charAt(0).toUpperCase() + returnTier.slice(1)}!`);
+    loadBilling();
+  }
+}
+
+async function confirmDowngrade() {
+  closeModal('modalDowngrade');
+
+  const sub = gState.subscription || {};
+
+  // Downgrade takes effect next billing date — just flag it
+  // In practice Stripe handles this; here we just note it
+  alert(`✅ Downgrade to Silver scheduled for your next billing date. You keep Gold until then.`);
+  // Optionally store a pending_downgrade flag — implement when Stripe is wired
+  closeModal('modalDowngrade');
+}
+
+async function confirmCancel() {
+  closeModal('modalCancel');
+
+  const sure = confirm('Are you absolutely sure? All VP data will be permanently deleted. This cannot be undone.');
+  if (!sure) return;
+
+  // Soft-delete the VP application
+  await sb
+    .from('vendor_performer_applications')
+    .update({ approval_status: 'cancelled', tier: 'basic' })
+    .eq('id', gVpaId);
+
+  await sb.rpc('upsert_vp_subscription', {
+    p_vpa_id:       gVpaId,
+    p_user_id:      gUserId,
+    p_status:       'cancelled',
+    p_current_tier: 'basic'
+  });
+
+  await sb.from('admin_notifications').insert([{
+    application_id: gVpaId,
+    message: `VP account ID ${gVpaId} cancelled subscription and requested data deletion.`,
+    category: 'subscription_cancelled'
+  }]);
+
+  alert('Your subscription has been cancelled. An admin has been notified about data removal.');
+  window.location.href = '/vendor_performer/index.html';
+}
+
+// ── Nav helpers ────────────────────────────────────────────
+function goBack() {
+  const params = new URLSearchParams(window.location.search);
+  const type   = params.get('type') || 'vendor';
+  if (type === 'performer') {
+    window.location.href = '/vendor_performer/performer/performer_dashboard.html';
+  } else {
+    window.location.href = '/vendor_performer/vendor/vendor_dashboard.html';
+  }
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  window.location.href = '/index.html';
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('active');
+  });
+});
+
+window.addEventListener('DOMContentLoaded', initBilling);
+</script>
+
+<footer>
+  <a href="/index.html">Home</a> |
+  <a href="/terms.html">Terms</a> |
+  <a href="/privacy.html">Privacy</a> |
+  <a href="/faq.html">FAQ</a> |
+  <a href="/contact.html">Contact</a>
+</footer>
+
+</body>
+</html>

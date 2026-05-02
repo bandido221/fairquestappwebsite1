@@ -319,6 +319,123 @@
     .type-vendor       { background: rgba(76,175,80,0.15);  color: #5ab55e; border: 1px solid rgba(76,175,80,0.3); }
     .type-food_vendor  { background: rgba(255,160,0,0.15);  color: #d48c10; border: 1px solid rgba(255,160,0,0.3); }
     .type-performer    { background: rgba(156,39,176,0.15); color: #c07cd8; border: 1px solid rgba(156,39,176,0.3); }
+
+    /* ── Clickable name ── */
+    .detail-link {
+      cursor: pointer;
+      color: #f1df99;
+      text-decoration: underline dotted rgba(241,223,153,0.4);
+      transition: color 0.15s;
+    }
+    .detail-link:hover { color: #bb9457; }
+
+    /* ── Detail drawer ── */
+    .detail-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 200;
+    }
+    .detail-overlay.open { display: block; }
+
+    .detail-drawer {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 420px;
+      max-width: 95vw;
+      background: #0d0a04;
+      border-left: 1px solid #3d2e0e;
+      z-index: 201;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s ease;
+      overflow: hidden;
+    }
+    .detail-drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid #3d2e0e;
+      background: #0d0a04;
+      flex-shrink: 0;
+    }
+    .drawer-header h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: #f1df99;
+      margin: 0;
+    }
+    .drawer-close {
+      background: none;
+      border: none;
+      color: #bb9457;
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .drawer-close:hover { color: #f1df99; }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .drawer-loading {
+      text-align: center;
+      padding: 40px 0;
+      color: #7a6040;
+    }
+
+    .detail-section {
+      margin-bottom: 20px;
+    }
+    .detail-section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      color: #bb9457;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #3d2e0e;
+    }
+    .detail-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .detail-label {
+      color: #7a6040;
+      min-width: 110px;
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+    .detail-value {
+      color: #f0e6d2;
+      word-break: break-word;
+    }
+    .detail-photo {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      border: 1px solid #3d2e0e;
+    }
+    .detail-link-ext {
+      color: #bb9457;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .detail-link-ext:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -544,7 +661,7 @@ document.getElementById('fsGold').textContent   = rows.filter(r => r.fair_tier =
       <tr id="fair-row-${r.id}">
         <td class="col-id">#${r.id}</td>
         <td class="col-name">
-          ${r.name}
+          <span class="detail-link" onclick="window.location.href='/admin/fair_admin_detail.html?fair_id=${r.id}'">${r.name}</span>
           ${r.verified === false ? `<br><span class="col-sub">⚠ Unverified</span>` : ''}
         </td>
         <td><span class="col-sub">${r.state || '—'}</span></td>
@@ -624,26 +741,32 @@ document.getElementById('fsGold').textContent   = rows.filter(r => r.fair_tier =
       return;
     }
 
-    tbody.innerHTML = rows.map(r => `
+    tbody.innerHTML = rows.map(r => {
+      const isSilverOrGold = r.tier === 'silver' || r.tier === 'gold';
+      return `
       <tr id="vp-row-${r.id}">
         <td class="col-id">#${r.id}</td>
         <td class="col-name">
-          ${r.name}
+          <span class="detail-link" onclick="openVPDetail(${r.id})">${r.name}</span>
           <br><span class="col-sub">${r.contact_email || ''}</span>
+          ${isSilverOrGold ? `<div class="usage-inline" id="usage-${r.id}"><span style="color:#7a6040;font-size:11px;">Loading usage…</span></div>` : ''}
         </td>
         <td class="col-type">${typeChip(r.application_type, r.is_food_vendor)}</td>
         <td>${tierBadge(r.tier)}</td>
         <td>
           <select class="tier-select" id="vts-${r.id}">
-        <option value="basic" ${(!r.tier||r.tier==='basic') ? 'selected':''}>Basic</option>
-<option value="silver" ${r.tier==='silver' ? 'selected':''}>Silver</option>
-<option value="gold"   ${r.tier==='gold'   ? 'selected':''}>Gold</option>
+            <option value="basic" ${(!r.tier||r.tier==='basic') ? 'selected':''}>Basic</option>
+            <option value="silver" ${r.tier==='silver' ? 'selected':''}>Silver</option>
+            <option value="gold"   ${r.tier==='gold'   ? 'selected':''}>Gold</option>
           </select>
           <button class="save-btn" onclick="saveVPTier(${r.id})">Save</button>
           <span class="row-msg" id="vmsg-${r.id}"></span>
         </td>
       </tr>
-    `).join('');
+    `}).join('');
+
+    // load usage summary for silver/gold only
+    rows.filter(r => r.tier === 'silver' || r.tier === 'gold').forEach(r => loadVPUsageSummary(r.id));
   }
 
   async function saveVPTier(vpId) {
@@ -672,6 +795,278 @@ document.getElementById('fsGold').textContent   = rows.filter(r => r.fair_tier =
     if (row) row.cells[3].innerHTML = tierBadge(tier);
 
     showToast('Tier updated to ' + tier + '.', 'ok');
+  }
+
+  // ── Detail Drawer ──
+  document.body.insertAdjacentHTML('beforeend', `
+    <div class="detail-overlay" id="detailOverlay" onclick="closeDrawer()"></div>
+    <div class="detail-drawer" id="detailDrawer">
+      <div class="drawer-header">
+        <h2 id="drawerTitle">Details</h2>
+        <button class="drawer-close" onclick="closeDrawer()">✕</button>
+      </div>
+      <div class="drawer-body" id="drawerBody">
+        <div class="drawer-loading">Loading…</div>
+      </div>
+    </div>
+  `);
+
+  function openDrawer(title) {
+    document.getElementById('drawerTitle').textContent = title;
+    document.getElementById('drawerBody').innerHTML = '<div class="drawer-loading"><div class="spinner" style="margin:0 auto;"></div></div>';
+    document.getElementById('detailOverlay').classList.add('open');
+    document.getElementById('detailDrawer').classList.add('open');
+  }
+
+  function closeDrawer() {
+    document.getElementById('detailOverlay').classList.remove('open');
+    document.getElementById('detailDrawer').classList.remove('open');
+  }
+
+  function row(label, value) {
+    if (!value && value !== 0) return '';
+    return `<div class="detail-row"><span class="detail-label">${label}</span><span class="detail-value">${value}</span></div>`;
+  }
+
+  async function openFairDetail(fairId) {
+    openDrawer('Fair Details');
+    const { data, error } = await sb.from('renaissance_fairs').select('*').eq('id', fairId).single();
+    const el = document.getElementById('drawerBody');
+    if (error || !data) { el.innerHTML = '<div class="drawer-loading">❌ Could not load fair.</div>'; return; }
+    const f = data;
+
+    const weekends = [];
+    const pairs = [
+      ['start_date','end_date'],
+      ...Array.from({length:9},(_,i)=>[`week${i+2}_start_date`,`week${i+2}_end_date`])
+    ];
+    pairs.forEach(([s,e]) => { if (f[s] && f[e]) weekends.push(`${f[s]} → ${f[e]}`); });
+
+    el.innerHTML = `
+      ${f.image_url ? `<img class="detail-photo" src="${f.image_url}" alt="${f.name}" />` : ''}
+      <div class="detail-section">
+        <div class="detail-section-title">Fair Info</div>
+        ${row('ID', '#' + f.id)}
+        ${row('Name', f.name)}
+        ${row('Tier', f.fair_tier || 'Basic')}
+        ${row('State', f.state)}
+        ${row('City', f.city)}
+        ${row('Address', f.address)}
+        ${row('ZIP', f.zip)}
+        ${row('Verified', f.verified ? '✅ Yes' : '⚠ No')}
+        ${f.website ? `<div class="detail-row"><span class="detail-label">Website</span><span class="detail-value"><a class="detail-link-ext" href="${f.website}" target="_blank">${f.website}</a></span></div>` : ''}
+      </div>
+      ${weekends.length ? `
+      <div class="detail-section">
+        <div class="detail-section-title">📅 Weekends</div>
+        ${weekends.map(w => `<div class="detail-row"><span class="detail-value">${w}</span></div>`).join('')}
+      </div>` : ''}
+      <div class="detail-section">
+        <div class="detail-section-title">Meta</div>
+        ${row('Created', f.created_at ? new Date(f.created_at).toLocaleDateString() : '—')}
+      </div>
+    `;
+  }
+
+  async function openVPDetail(vpId) {
+    openDrawer('VP Details');
+    const { data, error } = await sb.from('vendor_performer_applications').select('*').eq('id', vpId).single();
+    const el = document.getElementById('drawerBody');
+    if (error || !data) { el.innerHTML = '<div class="drawer-loading">❌ Could not load record.</div>'; return; }
+    const v = data;
+    const vpType = v.application_type ? 'Performer' : (v.is_food_vendor ? 'Food Vendor' : 'Vendor');
+
+    el.innerHTML = `
+      ${v.photo_url ? `<img class="detail-photo" src="${v.photo_url}" alt="${v.name}" />` : ''}
+      <div class="detail-section">
+        <div class="detail-section-title">Profile</div>
+        ${row('ID', '#' + v.id)}
+        ${row('Name', v.name)}
+        ${row('Type', vpType)}
+        ${row('Tier', v.tier || 'Basic')}
+        ${row('Status', v.approval_status)}
+        ${row('Category', v.vendor_type)}
+        ${row('Description', v.description)}
+        ${v.website ? `<div class="detail-row"><span class="detail-label">Website</span><span class="detail-value"><a class="detail-link-ext" href="${v.website}" target="_blank">${v.website}</a></span></div>` : ''}
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">Contact</div>
+        ${row('Contact Name', v.contact_name)}
+        ${row('Email', v.contact_email)}
+        ${row('Phone', v.phone_number)}
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">Location</div>
+        ${row('Address', v.street_address)}
+        ${row('City', v.city)}
+        ${row('State', v.state)}
+        ${row('ZIP', v.zip_code)}
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">Meta</div>
+        ${row('User ID', v.user_id)}
+        ${row('Food Vendor', v.is_food_vendor ? 'Yes' : 'No')}
+        ${row('Update Pending', v.update_pending ? '⚠ Yes' : 'No')}
+      </div>
+    `;
+  }
+
+  // ── VP Usage Summary (inline in table row) ──
+  async function loadVPUsageSummary(vpId) {
+    const el = document.getElementById(`usage-${vpId}`);
+    if (!el) return;
+
+    const { data, error } = await sb.rpc('get_vp_usage_summary', { p_vpa_id: vpId });
+    if (error || !data) { el.innerHTML = ''; return; }
+
+    const lastLogin = data.last_login
+      ? new Date(data.last_login).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+      : 'Never';
+
+    const fileColor    = data.file_count > 0  ? '#4caf50' : '#7a6040';
+    const pageColor    = data.has_page        ? '#4caf50' : '#7a6040';
+    const loginColor   = data.last_login      ? '#4caf50' : '#e74c3c';
+    const weekendColor = data.weekend_count > 0 ? '#4caf50' : '#7a6040';
+    const storageMb    = data.total_kb ? (data.total_kb / 1024).toFixed(1) : '0';
+
+    el.innerHTML = `
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px;">
+        <span style="font-size:11px;color:${fileColor};">📁 ${data.file_count} file${data.file_count !== 1 ? 's' : ''} (${storageMb}MB)</span>
+        <span style="font-size:11px;color:#3d2e0e;">·</span>
+        <span style="font-size:11px;color:${pageColor};">🌐 ${data.has_page ? (data.page_published ? 'Page live' : 'Page draft') : 'No page'}</span>
+        <span style="font-size:11px;color:#3d2e0e;">·</span>
+        <span style="font-size:11px;color:${weekendColor};">🎪 ${data.weekend_count} weekend${data.weekend_count !== 1 ? 's' : ''}</span>
+        <span style="font-size:11px;color:#3d2e0e;">·</span>
+        <span style="font-size:11px;color:${loginColor};">🕐 ${lastLogin}</span>
+      </div>
+    `;
+  }
+
+  // ── VP Detail Drawer — now includes usage ──
+  async function openVPDetail(vpId) {
+    openDrawer('VP Details');
+    const el = document.getElementById('drawerBody');
+
+    const [{ data: v, error }, { data: usage }] = await Promise.all([
+      sb.from('vendor_performer_applications').select('*').eq('id', vpId).single(),
+      sb.rpc('get_vp_usage_detail', { p_vpa_id: vpId })
+    ]);
+
+    if (error || !v) { el.innerHTML = '<div class="drawer-loading">❌ Could not load record.</div>'; return; }
+
+    const vpType   = v.application_type ? 'Performer' : (v.is_food_vendor ? 'Food Vendor' : 'Vendor');
+    const u        = usage || {};
+    const files    = u.files    || [];
+    const weekends = u.weekends || [];
+    const storage  = u.storage  || {};
+    const page     = u.page     || null;
+
+    const lastLogin = u.last_login
+      ? new Date(u.last_login).toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' })
+      : '⚠️ Never logged in';
+
+    const isSilverGold = v.tier === 'silver' || v.tier === 'gold';
+
+    // storage bar
+    const usedMb  = storage.total_kb ? (storage.total_kb / 1024).toFixed(1) : '0';
+    const maxMb   = storage.max_kb   ? (storage.max_kb   / 1024).toFixed(0) : '0';
+    const pct     = storage.max_kb   ? Math.min(100, Math.round((storage.total_kb / storage.max_kb) * 100)) : 0;
+    const barColor = pct >= 95 ? '#c0392b' : pct >= 75 ? '#b85c00' : '#4caf50';
+
+    // files html
+    const filesHtml = files.length === 0
+      ? `<div class="detail-row"><span class="detail-value" style="color:#7a6040;">No files uploaded.</span></div>`
+      : files.map(f => {
+          const icon = f.file_type === 'image' ? '🖼️' : '📄';
+          const size = f.file_size_kb ? `${(f.file_size_kb/1024).toFixed(1)}MB` : '';
+          const date = f.uploaded_at ? new Date(f.uploaded_at).toLocaleDateString() : '';
+          return `<div class="detail-row">
+            <span class="detail-label" style="color:#bb9457;">${icon} ${f.nickname || f.file_name}</span>
+            <span class="detail-value" style="font-size:12px;color:#7a6040;">${size}${size && date ? ' · ' : ''}${date}</span>
+          </div>`;
+        }).join('');
+
+    // weekends html
+    const weekendsHtml = weekends.length === 0
+      ? `<div class="detail-row"><span class="detail-value" style="color:#7a6040;">No weekend info filled out.</span></div>`
+      : weekends.map(w => `
+          <div class="detail-row">
+            <span class="detail-label" style="color:#f0e6d2;">${w.fair_name || 'Fair'}</span>
+            <span class="detail-value" style="font-size:12px;color:#7a6040;">
+              ${w.weekend_price ? `$${w.weekend_price}` : 'No price'}
+              ${w.is_paid ? ' · ✅ Paid' : ''}
+              ${w.is_archived ? ' · 📦 Archived' : ''}
+            </span>
+          </div>`).join('');
+
+    // page html
+    const pageHtml = !page
+      ? `<div class="detail-row"><span class="detail-value" style="color:#7a6040;">No online page created.</span></div>`
+      : `<div class="detail-row">
+           <span class="detail-label">${page.is_published ? '✅ Published' : '📝 Draft'}</span>
+           <span class="detail-value" style="font-size:12px;color:#7a6040;">
+             Last updated: ${page.updated_at ? new Date(page.updated_at).toLocaleDateString() : '—'}
+           </span>
+         </div>`;
+
+    el.innerHTML = `
+      ${v.photo_url ? `<img class="detail-photo" src="${v.photo_url}" alt="${v.name}" />` : ''}
+
+      <div class="detail-section">
+        <div class="detail-section-title">Profile</div>
+        ${row('ID', '#' + v.id)}
+        ${row('Name', v.name)}
+        ${row('Type', vpType)}
+        ${row('Tier', v.tier || 'Basic')}
+        ${row('Status', v.approval_status)}
+        ${row('Category', v.vendor_type)}
+        ${row('Last Login', lastLogin)}
+        ${v.website ? `<div class="detail-row"><span class="detail-label">Website</span><span class="detail-value"><a class="detail-link-ext" href="${v.website}" target="_blank">${v.website}</a></span></div>` : ''}
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">Contact</div>
+        ${row('Name', v.contact_name)}
+        ${row('Email', v.contact_email)}
+        ${row('Phone', v.phone_number)}
+      </div>
+
+      ${isSilverGold ? `
+      <div class="detail-section">
+        <div class="detail-section-title">💾 Storage Usage</div>
+        <div class="detail-row">
+          <span class="detail-label">Used</span>
+          <span class="detail-value">${usedMb} MB / ${maxMb} MB</span>
+        </div>
+        <div style="height:8px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden;margin:4px 0 8px;">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:99px;transition:width 0.4s;"></div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">📁 Vault Files (${files.length})</div>
+        ${filesHtml}
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">🌐 Online Page</div>
+        ${pageHtml}
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">🎪 Fair Weekend Info (${weekends.length})</div>
+        ${weekendsHtml}
+      </div>
+      ` : ''}
+
+      <div class="detail-section">
+        <div class="detail-section-title">Location</div>
+        ${row('Address', v.street_address)}
+        ${row('City', v.city)}
+        ${row('State', v.state)}
+        ${row('ZIP', v.zip_code)}
+      </div>
+    `;
   }
 
   // ── Init ──

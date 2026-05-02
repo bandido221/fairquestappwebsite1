@@ -735,23 +735,18 @@ function handleSubmitFair() {
       });
     }
   
-    // Add tracking to dropdowns
-    stateDropdown.addEventListener('change', () => {
-      const value = stateDropdown.value;
-      if (value) {
-        gtagTrack('fair_filter_state', value);
-        window.location.href = `fairs_by_state.html?state=${value}`;
-      }
-    });
-  
-    monthDropdown.addEventListener('change', () => {
-      const value = monthDropdown.value;
-      if (value) {
-        const monthName = new Date(0, value - 1).toLocaleString('default', { month: 'long' });
-        gtagTrack('fair_filter_month', monthName);
-        window.location.href = `fairs_by_month.html?month=${value}`;
-      }
-    });
+  stateDropdown.addEventListener('change', () => {
+  const value = stateDropdown.value;
+  if (value) gtagTrack('fair_filter_state', value);
+});
+
+monthDropdown.addEventListener('change', () => {
+  const value = monthDropdown.value;
+  if (value) {
+    const monthName = new Date(0, value - 1).toLocaleString('default', { month: 'long' });
+    gtagTrack('fair_filter_month', monthName);
+  }
+});
   
      
     // Track clicks on each fair card link

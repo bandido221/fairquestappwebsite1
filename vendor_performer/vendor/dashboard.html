@@ -353,6 +353,10 @@
         font-size: 28px;
       }
     }
+    .btn-billing {
+  background: #2471a3;
+  color: #fff;
+}
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -601,6 +605,10 @@ fairHtml += `<div class="fair-cards-list">`;
         <button class="start-app"
           onclick="window.location.href='fair_applications.html?vpa_id=${v.id}'">
           Fair Applications
+        </button>
+        <button class="btn-billing"
+          onclick="window.location.href='/vendor_performer/vp_billing.html?vpa_id=${v.id}&type=vendor'">
+          💳 Billing
         </button>
       </div>
 

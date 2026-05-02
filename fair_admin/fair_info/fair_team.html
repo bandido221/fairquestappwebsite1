@@ -432,6 +432,30 @@
 
       showBanner('addBanner', '✅ Team member added successfully!', 'success');
       document.getElementById('newEmail').value = '';
+
+      // Send invite email
+      try {
+        const { data: addedUser } = await supabaseClient
+          .rpc('get_user_by_email', { p_email: email });
+        const { data: meData } = await supabaseClient
+          .rpc('get_my_fair_admin_level', { p_fair_id: fairId });
+
+        await fetch('https://awtbjuiqgtdydsqzimul.supabase.co/functions/v1/send-team-invite-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target_email:       email,
+            target_username:    addedUser?.[0]?.email || email,
+            fair_name:          fairName,
+            role:               role,
+            added_by_username:  meData?.[0]?.admin_level || '',
+            added_by_email:     user.email || ''
+          })
+        });
+      } catch (emailErr) {
+        console.warn('Email notification failed:', emailErr);
+      }
+
       await loadTeam();
       if (isGold && (currentUserRole === 'owner' || currentCanViewLog)) loadLog();
     }
@@ -492,11 +516,12 @@
       if (userError || !user) { window.location.href = '../fair_admin.html'; return; }
       currentUserId = user.id;
 
-      // Get fair tier
-      const { data: tierData } = await supabaseClient
+      // Get fair tier and name
+      const { data: fairInfo } = await supabaseClient
         .rpc('get_fair_tier', { p_fair_id: fairId });
-      console.log('tierData:', tierData, typeof tierData);
-      isGold = tierData === 'gold';
+      const fairTier = fairInfo?.[0]?.fair_tier || null;
+      const fairName = fairInfo?.[0]?.fair_name || 'Your Fair';
+      isGold = fairTier === 'gold';
 
       // Get current user's role and log access via RPC
       const { data: adminRows } = await supabaseClient

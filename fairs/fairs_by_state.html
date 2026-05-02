@@ -205,11 +205,9 @@ for (let i = 2; i <= 10; i++) {
   if (start && end) {
     weekends.push(`${formatDateMMDDYY(start)} to ${formatDateMMDDYY(end)}`);
   }
+}
 
-
-        }
-
- const imgUrl = (fair.image_url || '').trim();
+const imgUrl = (fair.image_url || '').trim();
 
 container.innerHTML += `
   <div class="card">

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fair Detail | FairQuest Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      background: #000;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      margin: 0; padding: 0;
+      min-height: 100vh;
+    }
+
+    .topnav {
+      background: #0d0a04;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-brand {
+      font-family: 'Cinzel', serif; font-size: 17px;
+      color: #f1df99; text-decoration: none;
+    }
+    .topnav-links { display: flex; gap: 6px; align-items: center; }
+    .topnav-links a {
+      color: #c8aa6e; text-decoration: none; font-size: 13px;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+    }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .nav-logout {
+      background: rgba(180,50,50,0.18) !important;
+      color: #f4a0a0 !important;
+      border: 1px solid rgba(180,50,50,0.3);
+    }
+    .nav-logout:hover { background: rgba(180,50,50,0.32) !important; }
+
+    .page-body {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 80px;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .page-header-left h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      color: #f1df99;
+      margin: 0 0 4px;
+    }
+
+    .page-header-left .subtitle {
+      color: #bb9457;
+      font-size: 13px;
+    }
+
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ── Tier badge ── */
+    .tier-badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-left: 10px;
+    }
+    .tier-basic  { background: rgba(150,150,150,0.2); color: #aaa; border: 1px solid rgba(150,150,150,0.3); }
+    .tier-silver { background: rgba(180,200,220,0.2); color: #8ab0d0; border: 1px solid rgba(180,200,220,0.35); }
+    .tier-gold   { background: rgba(240,180,20,0.2);  color: #d4a830; border: 1px solid rgba(240,180,20,0.4); }
+
+    /* ── Grid layout ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: rgba(241,223,153,0.07);
+      border: 1px solid #3d2e0e;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      color: #bb9457;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #3d2e0e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ── Stat chips ── */
+    .stat-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .stat-chip {
+      background: rgba(0,0,0,0.25);
+      border: 1px solid #3d2e0e;
+      border-radius: 8px;
+      padding: 10px 16px;
+      text-align: center;
+      flex: 1;
+      min-width: 80px;
+    }
+
+    .stat-chip .num {
+      font-family: 'Cinzel', serif;
+      font-size: 22px;
+      color: #f1df99;
+      display: block;
+    }
+
+    .stat-chip .lbl {
+      font-size: 11px;
+      color: #bb9457;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Data rows ── */
+    .data-row {
+      display: flex;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(61,46,14,0.4);
+      font-size: 13px;
+      align-items: flex-start;
+    }
+
+    .data-row:last-child { border-bottom: none; }
+
+    .data-label {
+      color: #7a6040;
+      min-width: 130px;
+      flex-shrink: 0;
+      font-size: 12px;
+    }
+
+    .data-value {
+      color: #f0e6d2;
+      word-break: break-word;
+      flex: 1;
+    }
+
+    /* ── Status badges ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .badge-green   { background: rgba(76,175,80,0.15);  color: #4caf50; border: 1px solid rgba(76,175,80,0.3); }
+    .badge-yellow  { background: rgba(255,193,7,0.15);  color: #ffc107; border: 1px solid rgba(255,193,7,0.3); }
+    .badge-red     { background: rgba(244,67,54,0.15);  color: #f44336; border: 1px solid rgba(244,67,54,0.3); }
+    .badge-grey    { background: rgba(150,150,150,0.15);color: #aaa;    border: 1px solid rgba(150,150,150,0.3); }
+    .badge-blue    { background: rgba(33,150,243,0.15); color: #64b5f6; border: 1px solid rgba(33,150,243,0.3); }
+
+    /* ── Table ── */
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .mini-table th {
+      color: #7a6040;
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 6px 8px;
+      border-bottom: 1px solid #3d2e0e;
+      text-align: left;
+    }
+
+    .mini-table td {
+      padding: 8px;
+      border-bottom: 1px solid rgba(61,46,14,0.3);
+      color: #f0e6d2;
+      vertical-align: middle;
+    }
+
+    .mini-table tr:last-child td { border-bottom: none; }
+    .mini-table tr:hover td { background: rgba(241,223,153,0.04); }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-gold   { background: #bb9457; color: #000; }
+    .btn-gold:hover { background: #d4a85f; }
+    .btn-dark   { background: #2a2218; color: #f0e6d2; border: 1px solid #3d2e0e; }
+    .btn-dark:hover { background: #3a2f1e; }
+    .btn-red    { background: rgba(192,57,43,0.8); color: #fff; }
+    .btn-red:hover { background: rgba(192,57,43,1); }
+    .btn-sm     { padding: 5px 10px; font-size: 12px; }
+
+    /* ── Tier change row ── */
+    .tier-change-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #3d2e0e;
+      flex-wrap: wrap;
+    }
+
+    .tier-select {
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid #3d2e0e;
+      background: #0d0a04;
+      color: #f0e6d2;
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* ── Storage bar ── */
+    .storage-bar-bg {
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 6px 0;
+    }
+
+    .storage-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.4s;
+    }
+
+    /* ── Loading ── */
+    .loading-wrap {
+      text-align: center;
+      padding: 60px 20px;
+      color: #7a6040;
+    }
+
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.1);
+      border-top: 4px solid #bb9457;
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      animation: spin 0.85s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      background: #2a1e0a;
+      border: 1px solid #bb9457;
+      border-radius: 10px;
+      padding: 14px 22px;
+      font-size: 14px;
+      color: #f1df99;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      z-index: 9999;
+    }
+
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Fair photo ── */
+    .fair-photo {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      border: 1px solid #3d2e0e;
+    }
+
+    /* ── Empty state ── */
+    .empty { color: #7a6040; font-size: 13px; padding: 10px 0; }
+
+    /* ── Usage indicator ── */
+    .usage-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+
+    .dot-green  { background: #4caf50; }
+    .dot-yellow { background: #ffc107; }
+    .dot-red    { background: #f44336; }
+    .dot-grey   { background: #555; }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="topnav-brand" href="/admin/admin_dashboard.html">🛡️ FairQuest Admin</a>
+  <div class="topnav-links">
+    <a href="/admin/admin_dashboard.html">🏠 Dashboard</a>
+    <a href="/admin/manage_tiers.html">⚙️ Manage Tiers</a>
+    <a href="/admin/app_users.html">👤 Users</a>
+    <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+  </div>
+</nav>
+
+<div class="page-body">
+  <div id="pageContent">
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <p>Loading fair details…</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const sb = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+const fairId = parseInt(new URLSearchParams(location.search).get('fair_id'));
+
+// ── Auth gate ──
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { location.href = '/admin/alexander.html'; return; }
+  const { data: isAdmin } = await sb.rpc('is_admin_by_email', { p_email: session.user.email });
+  if (!isAdmin) { await sb.auth.signOut(); location.href = '/admin/alexander.html'; return; }
+  if (!fairId) { document.getElementById('pageContent').innerHTML = '<p style="color:#e74c3c;padding:40px;">No fair ID provided.</p>'; return; }
+  loadPage();
+})();
+
+document.getElementById('navLogout').addEventListener('click', async e => {
+  e.preventDefault();
+  await sb.auth.signOut();
+  location.href = '/admin/alexander.html';
+});
+
+// ── Toast ──
+let toastTimer;
+function showToast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = (type === 'ok' ? '✅ ' : '❌ ') + msg;
+  el.style.borderColor = type === 'ok' ? '#bb9457' : '#c0392b';
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ── Helpers ──
+function fmt(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function fmtMoney(n) {
+  if (n == null) return '—';
+  return '$' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function fmtBytes(b) {
+  if (!b) return '0 KB';
+  if (b < 1024) return b + ' B';
+  if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+  return (b / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function tierBadge(tier) {
+  const t = (tier || 'basic').toLowerCase();
+  return `<span class="tier-badge tier-${t}">${t.charAt(0).toUpperCase() + t.slice(1)}</span>`;
+}
+
+function statusBadge(status) {
+  const map = {
+    approved:  ['badge-green',  'Approved'],
+    active:    ['badge-green',  'Active'],
+    paid:      ['badge-green',  'Paid'],
+    confirmed: ['badge-green',  'Confirmed'],
+    in_review: ['badge-yellow', 'In Review'],
+    pending:   ['badge-yellow', 'Pending'],
+    invited:   ['badge-blue',   'Invited'],
+    declined:  ['badge-red',    'Declined'],
+    rejected:  ['badge-red',    'Rejected'],
+    unpaid:    ['badge-red',    'Unpaid'],
+    inactive:  ['badge-grey',   'Inactive'],
+  };
+  const [cls, label] = map[(status||'').toLowerCase()] || ['badge-grey', status || '—'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function dot(active) {
+  return `<span class="usage-dot ${active ? 'dot-green' : 'dot-grey'}"></span>`;
+}
+
+function dataRow(label, value) {
+  if (value == null || value === '') return '';
+  return `<div class="data-row">
+    <span class="data-label">${label}</span>
+    <span class="data-value">${value}</span>
+  </div>`;
+}
+
+// ── Load ──
+async function loadPage() {
+  const { data, error } = await sb.rpc('admin_get_fair_full_detail', { p_fair_id: fairId });
+
+  if (error || !data) {
+    document.getElementById('pageContent').innerHTML =
+      `<p style="color:#e74c3c;padding:40px;">❌ Could not load fair: ${error?.message || 'Unknown error'}</p>`;
+    return;
+  }
+
+  render(data);
+}
+
+function render(d) {
+  const f           = d.fair || {};
+  const admins      = d.admins || [];
+  const forms       = d.forms || [];
+  const subSummary  = d.submissions_summary || {};
+  const recentSubs  = d.recent_submissions || [];
+  const files       = d.files || {};
+  const weekends    = d.weekend_pricing || [];
+  const payments    = d.payments_summary || {};
+  const directory   = d.directory || {};
+  const contacts    = d.contacts || [];
+  const lastLogin   = d.owner_last_login;
+
+  const tier = (f.fair_tier || 'basic').toLowerCase();
+
+  // ── Usage summary for header ──
+  const usingForms     = forms.length > 0;
+  const usingApps      = (subSummary.total || 0) > 0;
+  const usingPayments  = (payments.total_records || 0) > 0;
+  const usingDirectory = (directory.total || 0) > 0;
+  const usingWeekends  = weekends.length > 0;
+  const usingFiles     = (files.total_files || 0) > 0;
+
+  document.title = `${f.name || 'Fair'} | FairQuest Admin`;
+
+  document.getElementById('pageContent').innerHTML = `
+
+    <!-- HEADER -->
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>${f.name || 'Fair Details'} ${tierBadge(tier)}</h1>
+        <div class="subtitle">
+          ${f.city || ''}${f.city && f.state ? ', ' : ''}${f.state || ''} &nbsp;·&nbsp;
+          Fair ID: #${f.id} &nbsp;·&nbsp;
+          Owner last login: <strong style="color:${lastLogin ? '#4caf50' : '#f44336'};">${lastLogin ? fmt(lastLogin) : 'Never'}</strong>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="/admin/manage_tiers.html" class="btn btn-dark">← Back to Tiers</a>
+        <a href="/fair_admin/fair_dashboard.html?fair_id=${f.id}" target="_blank" class="btn btn-gold">Open Fair Dashboard ↗</a>
+      </div>
+    </div>
+
+    <!-- USAGE OVERVIEW -->
+    <div class="card">
+      <div class="card-title">📊 Usage Overview — Is This Fair Active?</div>
+      <div class="stat-row">
+        <div class="stat-chip">
+          <span class="num">${subSummary.total || 0}</span>
+          <span class="lbl">Applications</span>
+        </div>
+        <div class="stat-chip">
+          <span class="num">${forms.length}</span>
+          <span class="lbl">Forms Created</span>
+        </div>
+        <div class="stat-chip">
+          <span class="num">${directory.total || 0}</span>
+          <span class="lbl">Directory Entries</span>
+        </div>
+        <div class="stat-chip">
+          <span class="num">${payments.total_records || 0}</span>
+          <span class="lbl">Payment Records</span>
+        </div>
+        <div class="stat-chip">
+          <span class="num">${weekends.length}</span>
+          <span class="lbl">Weekends Set</span>
+        </div>
+        <div class="stat-chip">
+          <span class="num">${files.total_files || 0}</span>
+          <span class="lbl">Files Uploaded</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;font-size:13px;margin-top:4px;">
+        <span>${dot(usingForms)}Application Forms</span>
+        <span>${dot(usingApps)}Applications Received</span>
+        <span>${dot(usingPayments)}Payment Tracking</span>
+        <span>${dot(usingDirectory)}Vendor Directory</span>
+        <span>${dot(usingWeekends)}Weekend Pricing</span>
+        <span>${dot(usingFiles)}Files/Uploads</span>
+      </div>
+    </div>
+
+    <!-- FAIR INFO + TIER CHANGE -->
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="card-title">🏰 Fair Info</div>
+        ${(f.image_url || f.photo_url || f.image) ? `<img class="fair-photo" src="${f.image_url || f.photo_url || f.image}" alt="${f.name}" />` : '<div style="width:100%;height:120px;background:rgba(255,255,255,0.04);border:1px dashed #3d2e0e;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#7a6040;font-size:13px;margin-bottom:14px;">No image uploaded</div>'}
+        ${dataRow('Name', f.name)}
+        ${dataRow('City', f.city)}
+        ${dataRow('State', f.state)}
+        ${dataRow('Address', f.address)}
+        ${dataRow('ZIP', f.zip)}
+        ${dataRow('Website', f.website ? `<a href="${f.website}" target="_blank" style="color:#bb9457;">${f.website}</a>` : null)}
+        ${dataRow('Verified', f.verified ? '✅ Yes' : '⚠️ No')}
+        ${dataRow('Created', fmt(f.created_at))}
+
+        <div class="tier-change-row">
+          <span style="color:#7a6040;font-size:13px;">Change Tier:</span>
+          <select class="tier-select" id="fairTierSelect">
+            <option value="basic"  ${tier==='basic'  ? 'selected':''}>Basic</option>
+            <option value="silver" ${tier==='silver' ? 'selected':''}>Silver</option>
+            <option value="gold"   ${tier==='gold'   ? 'selected':''}>Gold</option>
+          </select>
+          <button class="btn btn-gold btn-sm" onclick="saveTier()">Save</button>
+          <span id="tierMsg" style="font-size:12px;"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">👥 Team Members (${admins.length})</div>
+        ${admins.length === 0 ? '<div class="empty">No team members.</div>' :
+          `<table class="mini-table">
+            <thead><tr><th>Email</th><th>Level</th><th>Last Login</th></tr></thead>
+            <tbody>
+              ${admins.map(a => `
+                <tr>
+                  <td>${a.email || '—'}</td>
+                  <td><span class="badge badge-blue">${a.admin_level || '—'}</span></td>
+                  <td style="color:${a.last_login ? '#4caf50' : '#f44336'};">${fmt(a.last_login)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`
+        }
+      </div>
+    </div>
+
+    <!-- APPLICATIONS -->
+    <div class="card">
+      <div class="card-title">
+        📋 Applications
+        <span style="font-size:12px;color:#7a6040;">Last received: ${fmt(subSummary.latest)}</span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-chip"><span class="num">${subSummary.total || 0}</span><span class="lbl">Total</span></div>
+        <div class="stat-chip"><span class="num" style="color:#ffc107;">${subSummary.in_review || 0}</span><span class="lbl">In Review</span></div>
+        <div class="stat-chip"><span class="num" style="color:#4caf50;">${subSummary.approved || 0}</span><span class="lbl">Approved</span></div>
+        <div class="stat-chip"><span class="num" style="color:#f44336;">${subSummary.declined || 0}</span><span class="lbl">Declined</span></div>
+        <div class="stat-chip"><span class="num" style="color:#7a6040;">${subSummary.pending || 0}</span><span class="lbl">Pending</span></div>
+      </div>
+      ${recentSubs.length === 0 ? '<div class="empty">No applications submitted yet.</div>' : `
+        <div style="font-size:12px;color:#7a6040;margin-bottom:8px;">Most recent 10:</div>
+        <table class="mini-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Submitted</th><th>Contract</th></tr></thead>
+          <tbody>
+            ${recentSubs.map(s => `
+              <tr>
+                <td>${s.applicant_name || '—'}</td>
+                <td style="font-size:12px;color:#bb9457;">${s.applicant_email || '—'}</td>
+                <td>${statusBadge(s.status)}</td>
+                <td style="font-size:12px;">${fmt(s.submitted_at)}</td>
+                <td>${s.contract_accepted ? '✅' : '⬜'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `}
+    </div>
+
+    <!-- FORMS -->
+    <div class="card">
+      <div class="card-title">📝 Application Forms (${forms.length})</div>
+      ${forms.length === 0 ? '<div class="empty">No forms created yet.</div>' : `
+        <table class="mini-table">
+          <thead><tr><th>Title</th><th>Type</th><th>Questions</th><th>Submissions</th><th>Contract</th><th>Active</th><th>Updated</th></tr></thead>
+          <tbody>
+            ${forms.map(fm => `
+              <tr>
+                <td>${fm.title || '—'}</td>
+                <td style="font-size:12px;color:#bb9457;">${fm.form_type || '—'}</td>
+                <td style="text-align:center;">${fm.field_count || 0}</td>
+                <td style="text-align:center;">${fm.submission_count || 0}</td>
+                <td style="text-align:center;">${fm.has_contract ? '✅' : '⬜'}</td>
+                <td>${fm.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-grey">Off</span>'}</td>
+                <td style="font-size:12px;">${fmt(fm.updated_at)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `}
+    </div>
+
+    <!-- PAYMENTS + WEEKENDS -->
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="card-title">💰 Payment Tracking</div>
+        ${payments.total_records === 0 ? '<div class="empty">No payment records yet.</div>' : `
+          <div class="stat-row">
+            <div class="stat-chip">
+              <span class="num" style="color:#4caf50;">${fmtMoney(payments.total_paid)}</span>
+              <span class="lbl">Collected</span>
+            </div>
+            <div class="stat-chip">
+              <span class="num" style="color:#f44336;">${fmtMoney(payments.total_due - payments.total_paid)}</span>
+              <span class="lbl">Outstanding</span>
+            </div>
+            <div class="stat-chip">
+              <span class="num">${payments.total_records || 0}</span>
+              <span class="lbl">Records</span>
+            </div>
+          </div>
+          ${dataRow('Paid Records', payments.paid_count)}
+          ${dataRow('Unpaid Records', payments.unpaid_count)}
+          ${dataRow('Last Payment', fmt(payments.latest_payment))}
+        `}
+      </div>
+
+      <div class="card">
+        <div class="card-title">📅 Weekend Pricing (${weekends.length} weekends)</div>
+        ${weekends.length === 0 ? '<div class="empty">No weekend pricing set up yet.</div>' : `
+          <table class="mini-table">
+            <thead><tr><th>Week</th><th>Dates</th><th>Vendor</th><th>Food</th><th>Performer</th></tr></thead>
+            <tbody>
+              ${weekends.map(w => `
+                <tr>
+                  <td>${w.week_number}</td>
+                  <td style="font-size:12px;">${fmt(w.start_date)} – ${fmt(w.end_date)}</td>
+                  <td>${w.vendor_price ? fmtMoney(w.vendor_price) : '—'}</td>
+                  <td>${w.food_vendor_price ? fmtMoney(w.food_vendor_price) : '—'}</td>
+                  <td>${w.performer_fee ? fmtMoney(w.performer_fee) : '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `}
+      </div>
+    </div>
+
+    <!-- VENDOR DIRECTORY + FILES -->
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="card-title">📒 Vendor & Performer Directory</div>
+        ${directory.total === 0 ? '<div class="empty">No directory entries yet.</div>' : `
+          <div class="stat-row">
+            <div class="stat-chip"><span class="num">${directory.total || 0}</span><span class="lbl">Total</span></div>
+            <div class="stat-chip"><span class="num">${directory.vendors || 0}</span><span class="lbl">Vendors</span></div>
+            <div class="stat-chip"><span class="num">${directory.food_vendors || 0}</span><span class="lbl">Food</span></div>
+            <div class="stat-chip"><span class="num">${directory.performers || 0}</span><span class="lbl">Performers</span></div>
+          </div>
+          ${dataRow('Invited', directory.invited || 0)}
+          ${dataRow('Confirmed', directory.confirmed || 0)}
+          ${dataRow('Returning', directory.returning || 0)}
+          ${dataRow('New', directory.new || 0)}
+        `}
+      </div>
+
+      <div class="card">
+        <div class="card-title">📎 Uploaded Files</div>
+        ${!files.total_files ? '<div class="empty">No files uploaded via applications yet.</div>' : `
+          ${dataRow('Total Files', files.total_files)}
+          ${dataRow('Total Size', fmtBytes(files.total_size_bytes))}
+        `}
+      </div>
+    </div>
+
+    <!-- CONTACTS -->
+    <div class="card">
+      <div class="card-title">📞 Contacts (${contacts.length})</div>
+      ${contacts.length === 0 ? '<div class="empty">No contacts added yet.</div>' : `
+        <table class="mini-table">
+          <thead><tr><th>Label</th><th>Name</th><th>Email</th><th>Phone</th><th>Public</th></tr></thead>
+          <tbody>
+            ${contacts.map(c => `
+              <tr>
+                <td>${c.label || c.contact_type || '—'}</td>
+                <td>${c.name || '—'}</td>
+                <td style="font-size:12px;color:#bb9457;">${c.email || '—'}</td>
+                <td style="font-size:12px;">${c.phone || '—'}</td>
+                <td>${c.is_public ? '✅' : '⬜'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `}
+    </div>
+
+  `;
+}
+
+// ── Save tier ──
+async function saveTier() {
+  const tier = document.getElementById('fairTierSelect').value;
+  const msg  = document.getElementById('tierMsg');
+  msg.textContent = 'Saving…';
+
+  const { error } = await sb.rpc('admin_set_fair_tier', { p_fair_id: fairId, p_tier: tier });
+
+  if (error) {
+    msg.textContent = '❌ Error';
+    msg.style.color = '#f44336';
+    showToast('Failed: ' + error.message, 'err');
+    return;
+  }
+
+  msg.textContent = '✓ Saved';
+  msg.style.color = '#4caf50';
+  showToast('Fair tier updated to ' + tier);
+  setTimeout(() => { msg.textContent = ''; }, 3000);
+}
+</script>
+
+</body>
+</html>

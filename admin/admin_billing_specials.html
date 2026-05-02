@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Billing Specials | FairQuest Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background-color: #000;
+      font-family: 'Domine', serif;
+      color: #ceb581;
+      padding: 30px 20px 60px;
+      text-align: center;
+    }
+
+    h1, h2, h3 { font-family: 'Cinzel', serif; }
+
+    h1 { margin-bottom: 10px; }
+
+    .nav-bar {
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .action-button {
+      display: inline-block;
+      background-color: #bb9457;
+      color: #000;
+      padding: 9px 16px;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .action-button:hover { background-color: #e6c78c; }
+    .action-button.red   { background-color: #c0392b; color: #fff; }
+    .action-button.red:hover { background-color: #a93226; }
+    .action-button.green { background-color: #27ae60; color: #fff; }
+    .action-button.green:hover { background-color: #1e8449; }
+    .action-button.purple { background-color: #5b2a86; color: #fff; }
+    .action-button.purple:hover { background-color: #472066; }
+    .action-button.sm { padding: 6px 12px; font-size: 13px; }
+
+    /* ── Section boxes ─────────────────────────────────────── */
+    .box {
+      background: #c5b16a;
+      color: #3b1f1f;
+      padding: 22px 24px;
+      margin: 20px auto;
+      border-radius: 12px;
+      max-width: 860px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      text-align: left;
+    }
+
+    .box h2 { margin-top: 0; font-size: 20px; }
+
+    /* ── Form ──────────────────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #2f1a0f;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="datetime-local"],
+    input[type="color"],
+    select,
+    textarea {
+      padding: 9px 11px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2);
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      background: rgba(255,255,255,0.9);
+      color: #111;
+    }
+
+    textarea { resize: vertical; min-height: 70px; }
+
+    .type-section {
+      background: rgba(255,255,255,0.35);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .type-section h3 { margin: 0 0 10px; font-size: 16px; }
+
+    /* ── Toggle switch ─────────────────────────────────────── */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 46px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #ccc;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .slider:before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    input:checked + .slider { background: #27ae60; }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* ── Specials list ─────────────────────────────────────── */
+    .special-card {
+      background: rgba(255,255,255,0.82);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      border-left: 5px solid #aa8425;
+    }
+
+    .special-card.inactive { border-left-color: #aaa; opacity: 0.75; }
+
+    .special-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .special-title { font-family: 'Cinzel', serif; font-size: 17px; color: #111; }
+    .special-meta  { font-size: 13px; color: #444; margin-top: 4px; }
+    .special-desc  { font-size: 14px; color: #222; margin-top: 8px; }
+
+    .special-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+    /* ── Status badge ──────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .badge-on  { background: #d4edda; color: #155724; border: 1px solid #8fd2ab; }
+    .badge-off { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .badge-exp { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+
+    /* ── Claims table ──────────────────────────────────────── */
+    .claims-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .claims-table th {
+      background: rgba(170,132,37,0.25);
+      color: #2f1a0f;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      padding: 9px 10px;
+      text-align: left;
+      border-bottom: 2px solid rgba(170,132,37,0.4);
+    }
+
+    .claims-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      color: #111;
+      vertical-align: middle;
+    }
+
+    .claims-table tr:hover td { background: rgba(255,255,255,0.4); }
+
+    /* ── Tabs ──────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 9px 20px;
+      border-radius: 8px;
+      border: 2px solid #bb9457;
+      background: transparent;
+      color: #bb9457;
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active { background: #bb9457; color: #000; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Search ────────────────────────────────────────────── */
+    .search-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .search-row input {
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: #5c3a1e;
+      font-size: 14px;
+    }
+
+    .logout {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: #bb9457;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      padding: 9px 14px;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: 'Domine', serif;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .special-card-top { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="logout" onclick="logout()">Logout</button>
+
+  <h1>🎟️ Billing Specials & Offers</h1>
+
+  <div class="nav-bar">
+    <a href="/admin/admin_dashboard.html" class="action-button">🏠 Admin Home</a>
+    <a href="/admin/vp_billing_admin.html" class="action-button purple">💳 Billing Overview</a>
+    <a href="/admin/app_users.html" class="action-button">👤 Users</a>
+    <a href="/admin/manage_tiers.html" class="action-button">⚙️ Manage Tiers</a>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('specials')">🎟️ Manage Specials</button>
+    <button class="tab" onclick="switchTab('create')">➕ Create / Edit Special</button>
+    <button class="tab" onclick="switchTab('claims')">📋 Who Claimed</button>
+  </div>
+
+  <!-- ── TAB: Manage Specials ─────────────────────────────── -->
+  <div class="tab-content active" id="tab-specials">
+    <div class="box">
+      <h2>All Specials</h2>
+      <div class="search-row">
+        <input type="text" id="specialSearch" placeholder="Search by title…" oninput="filterSpecials()" />
+      </div>
+      <div id="specialsList"><div class="empty-state">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ── TAB: Create / Edit ───────────────────────────────── -->
+  <div class="tab-content" id="tab-create">
+    <div class="box">
+      <h2 id="formTitle">➕ Create New Special</h2>
+      <input type="hidden" id="editId" value="" />
+
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Title (shown in banner)</label>
+          <input type="text" id="fTitle" placeholder="e.g. Launch Special" />
+        </div>
+
+        <div class="form-group full">
+          <label>Description (shown to user)</label>
+          <textarea id="fDescription" placeholder="e.g. Get your first month free, then 50% off for 3 months!"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Special Type</label>
+          <select id="fType" onchange="onTypeChange()">
+            <option value="sequence">Sequence (free months → discount)</option>
+            <option value="percent_discount">Percent Discount</option>
+            <option value="free_months">Free Months</option>
+            <option value="flat_discount">Flat Dollar Discount</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Applies To</label>
+          <select id="fAppliesTo">
+            <option value="both">Both Silver & Gold</option>
+            <option value="silver">Silver Only</option>
+            <option value="gold">Gold Only</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Sequence fields -->
+      <div class="type-section" id="sectionSequence">
+        <h3>📋 Sequence: Phase 1 → Phase 2</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Phase 1 — Free Months</label>
+            <input type="number" id="fPhase1" min="0" value="1" placeholder="e.g. 1" />
+          </div>
+          <div class="form-group">
+            <label>Phase 2 — Discount %</label>
+            <input type="number" id="fPhase2Pct" min="0" max="100" value="50" placeholder="e.g. 50" />
+          </div>
+          <div class="form-group">
+            <label>Phase 2 — Months</label>
+            <input type="number" id="fPhase2Months" min="0" value="3" placeholder="e.g. 3" />
+          </div>
+        </div>
+        <div class="special-meta" style="margin-top:8px;">
+          Example: 1 free month → 50% off for 3 months → full price
+        </div>
+      </div>
+
+      <!-- Simple fields -->
+      <div class="type-section" id="sectionSimple" style="display:none;">
+        <h3>📋 Simple Special</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label id="simpleValueLabel">Value (% or $)</label>
+            <input type="number" id="fValue" min="0" value="0" />
+          </div>
+          <div class="form-group">
+            <label>Duration (months)</label>
+            <input type="number" id="fDuration" min="1" value="1" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Common fields -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Offer Expires At (leave blank = no expiry)</label>
+          <input type="datetime-local" id="fExpiresAt" />
+        </div>
+
+        <div class="form-group">
+          <label>Banner Color</label>
+          <input type="color" id="fBannerColor" value="#aa8425" />
+        </div>
+
+        <div class="form-group full">
+          <label>Button Label</label>
+          <input type="text" id="fCtaLabel" value="Claim This Offer" />
+        </div>
+
+        <div class="form-group">
+          <label>Active</label>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="fIsActive" checked />
+              <span class="slider"></span>
+            </label>
+            <span id="activeLabel">ON</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+        <button class="action-button green" onclick="saveSpecial()">💾 Save Special</button>
+        <button class="action-button" onclick="clearForm()">✖ Clear</button>
+      </div>
+      <div id="formStatus" style="margin-top:12px; font-weight:bold; font-size:14px;"></div>
+    </div>
+  </div>
+
+  <!-- ── TAB: Who Claimed ─────────────────────────────────── -->
+  <div class="tab-content" id="tab-claims">
+    <div class="box">
+      <h2>📋 All Claims</h2>
+      <div class="search-row">
+        <input type="text" id="claimSearch" placeholder="Search by user, VP name, or special…" oninput="filterClaims()" />
+        <select id="claimSpecialFilter" onchange="filterClaims()">
+          <option value="">All Specials</option>
+        </select>
+      </div>
+      <div id="claimsContainer">
+        <div class="empty-state">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const sb = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+let allSpecials = [];
+let allClaims   = [];
+
+// ── Auth gate ─────────────────────────────────────────────
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = '/admin/alexander.html'; return; }
+  const { data: isAdmin } = await sb.rpc('is_admin_by_email', { p_email: session.user.email });
+  if (!isAdmin) { await sb.auth.signOut(); window.location.href = '/admin/alexander.html'; return; }
+  init();
+})();
+
+async function init() {
+  await loadSpecials();
+  await loadClaims();
+
+  document.getElementById('fIsActive').addEventListener('change', function() {
+    document.getElementById('activeLabel').textContent = this.checked ? 'ON' : 'OFF';
+  });
+}
+
+// ── Tabs ──────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`#tab-${tab}`).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── Type change ───────────────────────────────────────────
+function onTypeChange() {
+  const type = document.getElementById('fType').value;
+  const isSeq = type === 'sequence';
+  document.getElementById('sectionSequence').style.display = isSeq ? 'block' : 'none';
+  document.getElementById('sectionSimple').style.display   = isSeq ? 'none'  : 'block';
+
+  const labels = {
+    percent_discount: 'Discount %',
+    free_months:      'Number of Free Months',
+    flat_discount:    'Flat Discount ($)',
+  };
+  document.getElementById('simpleValueLabel').textContent = labels[type] || 'Value';
+}
+
+// ── Load specials ─────────────────────────────────────────
+async function loadSpecials() {
+  const { data, error } = await sb.rpc('admin_get_all_specials');
+  allSpecials = Array.isArray(data) ? data : [];
+  if (error) { console.error(error); }
+  renderSpecials(allSpecials);
+  populateSpecialFilter();
+}
+
+function renderSpecials(list) {
+  const el = document.getElementById('specialsList');
+  if (!list.length) { el.innerHTML = '<div class="empty-state">No specials created yet.</div>'; return; }
+
+  el.innerHTML = list.map(s => {
+    const isExpired = s.expires_at && new Date(s.expires_at) < new Date();
+    const badgeCls  = isExpired ? 'badge-exp' : (s.is_active ? 'badge-on' : 'badge-off');
+    const badgeTxt  = isExpired ? 'Expired' : (s.is_active ? 'Active' : 'Off');
+    const expiryStr = s.expires_at
+      ? new Date(s.expires_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+      : 'No expiry';
+
+    let detail = '';
+    if (s.special_type === 'sequence') {
+      detail = `${s.phase1_free_months} free month(s) → ${s.phase2_discount_pct}% off for ${s.phase2_months} month(s)`;
+    } else if (s.special_type === 'percent_discount') {
+      detail = `${s.value}% off for ${s.duration_months} month(s)`;
+    } else if (s.special_type === 'free_months') {
+      detail = `${s.value} free month(s)`;
+    } else if (s.special_type === 'flat_discount') {
+      detail = `$${s.value} off for ${s.duration_months} month(s)`;
+    }
+
+    return `
+      <div class="special-card ${s.is_active ? '' : 'inactive'}">
+        <div class="special-card-top">
+          <div>
+            <div class="special-title">${s.title}</div>
+            <div class="special-meta">
+              <span class="badge ${badgeCls}">${badgeTxt}</span>
+              &nbsp;${detail} &nbsp;|&nbsp; Applies to: ${s.applies_to} &nbsp;|&nbsp; Expires: ${expiryStr}
+            </div>
+            <div class="special-desc">${s.description}</div>
+          </div>
+        </div>
+        <div class="special-actions">
+          <button class="action-button sm" onclick="editSpecial('${s.id}')">✏️ Edit</button>
+          <button class="action-button sm ${s.is_active ? 'red' : 'green'}" onclick="toggleSpecial('${s.id}', ${!s.is_active})">
+            ${s.is_active ? '⏸ Turn Off' : '▶ Turn On'}
+          </button>
+          <button class="action-button sm red" onclick="deleteSpecial('${s.id}', '${s.title.replace(/'/g,"\\'")}')">🗑️ Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterSpecials() {
+  const q = document.getElementById('specialSearch').value.toLowerCase();
+  renderSpecials(allSpecials.filter(s => s.title.toLowerCase().includes(q)));
+}
+
+// ── Toggle ────────────────────────────────────────────────
+async function toggleSpecial(id, active) {
+  const { error } = await sb.rpc('admin_toggle_special', { p_id: id, p_active: active });
+  if (error) { alert('❌ ' + error.message); return; }
+  await loadSpecials();
+}
+
+// ── Delete ────────────────────────────────────────────────
+async function deleteSpecial(id, title) {
+  if (!confirm(`Delete special "${title}"? This will also remove all claim records.`)) return;
+  const { error } = await sb.rpc('admin_delete_special', { p_id: id });
+  if (error) { alert('❌ ' + error.message); return; }
+  await loadSpecials();
+  await loadClaims();
+}
+
+// ── Edit ──────────────────────────────────────────────────
+function editSpecial(id) {
+  const s = allSpecials.find(x => x.id === id);
+  if (!s) return;
+
+  document.getElementById('editId').value          = s.id;
+  document.getElementById('fTitle').value          = s.title;
+  document.getElementById('fDescription').value    = s.description;
+  document.getElementById('fType').value           = s.special_type;
+  document.getElementById('fAppliesTo').value      = s.applies_to;
+  document.getElementById('fPhase1').value         = s.phase1_free_months;
+  document.getElementById('fPhase2Pct').value      = s.phase2_discount_pct;
+  document.getElementById('fPhase2Months').value   = s.phase2_months;
+  document.getElementById('fValue').value          = s.value;
+  document.getElementById('fDuration').value       = s.duration_months;
+  document.getElementById('fBannerColor').value    = s.banner_color || '#aa8425';
+  document.getElementById('fCtaLabel').value       = s.cta_label;
+  document.getElementById('fIsActive').checked     = s.is_active;
+  document.getElementById('activeLabel').textContent = s.is_active ? 'ON' : 'OFF';
+
+  if (s.expires_at) {
+    const d = new Date(s.expires_at);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    document.getElementById('fExpiresAt').value = d.toISOString().slice(0,16);
+  } else {
+    document.getElementById('fExpiresAt').value = '';
+  }
+
+  onTypeChange();
+  document.getElementById('formTitle').textContent = '✏️ Edit Special';
+
+  // Switch to create tab
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  document.getElementById('tab-create').classList.add('active');
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Save ──────────────────────────────────────────────────
+async function saveSpecial() {
+  const id          = document.getElementById('editId').value || null;
+  const title       = document.getElementById('fTitle').value.trim();
+  const description = document.getElementById('fDescription').value.trim();
+  const type        = document.getElementById('fType').value;
+  const appliesTo   = document.getElementById('fAppliesTo').value;
+  const isActive    = document.getElementById('fIsActive').checked;
+  const expiresAt   = document.getElementById('fExpiresAt').value || null;
+  const bannerColor = document.getElementById('fBannerColor').value;
+  const ctaLabel    = document.getElementById('fCtaLabel').value.trim();
+
+  if (!title || !description) {
+    document.getElementById('formStatus').innerHTML = '⚠️ Title and description are required.';
+    document.getElementById('formStatus').style.color = '#c0392b';
+    return;
+  }
+
+  const params = {
+    p_id:                  id,
+    p_title:               title,
+    p_description:         description,
+    p_special_type:        type,
+    p_phase1_free_months:  parseInt(document.getElementById('fPhase1').value) || 0,
+    p_phase2_discount_pct: parseInt(document.getElementById('fPhase2Pct').value) || 0,
+    p_phase2_months:       parseInt(document.getElementById('fPhase2Months').value) || 0,
+    p_value:               parseFloat(document.getElementById('fValue').value) || 0,
+    p_duration_months:     parseInt(document.getElementById('fDuration').value) || 1,
+    p_applies_to:          appliesTo,
+    p_is_active:           isActive,
+    p_expires_at:          expiresAt ? new Date(expiresAt).toISOString() : null,
+    p_banner_color:        bannerColor,
+    p_cta_label:           ctaLabel
+  };
+
+  const { error } = await sb.rpc('admin_upsert_special', params);
+
+  const statusEl = document.getElementById('formStatus');
+  if (error) {
+    statusEl.innerHTML = '❌ Error: ' + error.message;
+    statusEl.style.color = '#c0392b';
+    return;
+  }
+
+  statusEl.innerHTML = '✅ Special saved!';
+  statusEl.style.color = '#155724';
+  clearForm();
+  await loadSpecials();
+
+  setTimeout(() => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('tab-specials').classList.add('active');
+  }, 800);
+}
+
+function clearForm() {
+  document.getElementById('editId').value        = '';
+  document.getElementById('fTitle').value        = '';
+  document.getElementById('fDescription').value  = '';
+  document.getElementById('fType').value         = 'sequence';
+  document.getElementById('fAppliesTo').value    = 'both';
+  document.getElementById('fPhase1').value       = '1';
+  document.getElementById('fPhase2Pct').value    = '50';
+  document.getElementById('fPhase2Months').value = '3';
+  document.getElementById('fValue').value        = '0';
+  document.getElementById('fDuration').value     = '1';
+  document.getElementById('fExpiresAt').value    = '';
+  document.getElementById('fBannerColor').value  = '#aa8425';
+  document.getElementById('fCtaLabel').value     = 'Claim This Offer';
+  document.getElementById('fIsActive').checked   = true;
+  document.getElementById('activeLabel').textContent = 'ON';
+  document.getElementById('formTitle').textContent   = '➕ Create New Special';
+  document.getElementById('formStatus').textContent  = '';
+  onTypeChange();
+}
+
+// ── Claims ────────────────────────────────────────────────
+async function loadClaims() {
+  const { data, error } = await sb.rpc('admin_get_special_claims');
+  allClaims = Array.isArray(data) ? data : [];
+  if (error) { console.error(error); }
+  renderClaims(allClaims);
+}
+
+function renderClaims(list) {
+  const el = document.getElementById('claimsContainer');
+  if (!list.length) { el.innerHTML = '<div class="empty-state">No claims yet.</div>'; return; }
+
+  const rows = list.map(c => {
+    const vpType    = c.application_type ? 'Performer' : 'Vendor';
+    const userName  = c.first_name ? `${c.first_name} ${c.last_name || ''}`.trim() : (c.username || c.email || '—');
+    const dateStr   = new Date(c.claimed_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const statusBadge = c.status === 'active'
+      ? `<span class="badge badge-on">Active</span>`
+      : `<span class="badge badge-off">${c.status}</span>`;
+
+    return `
+      <tr>
+        <td>${c.special_title}</td>
+        <td>${userName}<br><span style="font-size:11px;color:#666;">${c.email||''}</span></td>
+        <td>${c.vp_name || '—'}<br><span style="font-size:11px;color:#666;">ID: ${c.vpa_id} · ${vpType}</span></td>
+        <td>${dateStr}</td>
+        <td>${statusBadge}</td>
+        <td>Phase ${c.phase} · ${c.phase_months_used} mo used</td>
+      </tr>
+    `;
+  }).join('');
+
+  el.innerHTML = `
+    <table class="claims-table">
+      <thead>
+        <tr>
+          <th>Special</th>
+          <th>User</th>
+          <th>VP Account</th>
+          <th>Claimed</th>
+          <th>Status</th>
+          <th>Progress</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function filterClaims() {
+  const q  = document.getElementById('claimSearch').value.toLowerCase();
+  const sf = document.getElementById('claimSpecialFilter').value;
+  renderClaims(allClaims.filter(c => {
+    const matchQ  = !q || [c.special_title, c.username, c.email, c.vp_name, c.vpa_id?.toString()].some(v => (v||'').toLowerCase().includes(q));
+    const matchSF = !sf || c.special_title === sf;
+    return matchQ && matchSF;
+  }));
+}
+
+function populateSpecialFilter() {
+  const sel    = document.getElementById('claimSpecialFilter');
+  const titles = [...new Set(allSpecials.map(s => s.title))];
+  titles.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    sel.appendChild(o);
+  });
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  window.location.href = '/admin/alexander.html';
+}
+</script>
+
+</body>
+</html>

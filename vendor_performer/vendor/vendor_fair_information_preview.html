@@ -827,15 +827,27 @@ async function toggleArchive() {
     let vaultVpaId = null;
     let vaultFairName = null;
     let vaultSeasonYear = null;
+    let vaultFairId = null;
 
     async function initVault(vpaId, fairName, seasonYear) {
       vaultVpaId = parseInt(vpaId, 10);
       vaultFairName = fairName;
       vaultSeasonYear = seasonYear || '';
+      vaultFairId = null;
 
       const { data: { session } } = await VAULT_SB.auth.getSession();
       if (!session) return;
       vaultUserId = session.user.id;
+
+      // Look up the real fair_id from renaissance_fairs by name
+      if (fairName) {
+        const { data: fairRow } = await VAULT_SB
+          .from('renaissance_fairs')
+          .select('id')
+          .ilike('name', fairName.trim())
+          .maybeSingle();
+        if (fairRow) vaultFairId = fairRow.id;
+      }
 
       await vaultLoadStorage();
       await vaultLoadFiles();
@@ -1159,7 +1171,7 @@ async function toggleArchive() {
 
         vaultShowProgress('Saving…', 85);
         const { error: dbErr } = await VAULT_SB.from('vp_fair_documents').insert({
-          user_id: vaultUserId, vpa_id: vaultVpaId, fair_id: null,
+          user_id: vaultUserId, vpa_id: vaultVpaId, fair_id: vaultFairId,
           file_name: file.name, file_path: filePath,
           file_type: isImage?'image':'document',
           file_size_kb: finalKb, mime_type: mime,

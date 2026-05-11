@@ -365,6 +365,21 @@
   background: #2471a3;
   color: #fff;
 }
+    .btn-teams {
+  background: #6b3fa0;
+  color: #fff;
+  position: relative;
+  display: none;
+}
+    .btn-teams .red-dot {
+  position: absolute;
+  top: -4px; right: -4px;
+  width: 12px; height: 12px;
+  background: #e74c3c;
+  border-radius: 50%;
+  border: 2px solid #0d0a04;
+  display: none;
+}
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -380,7 +395,9 @@
     <div class="top-actions">
       <button class="logout" onclick="logout()">Log Out</button>
       <button class="start-app" onclick="window.location.href='/profile/index.html'">My Profile</button>
-      <button id="applyButton" class="start-app" onclick="handleAddNewPerformerAccount()">Add New Performer Account</button>
+      <button id="teamsBtn" class="btn-teams" onclick="window.location.href='/vendor_performer/vp_my_teams.html'">
+        👥 My Teams <span class="red-dot" id="teamsDot"></span>
+      </button>
     </div>
 
     <div id="dashboardContent" class="loading">Loading your information...</div>
@@ -415,6 +432,7 @@ function handleAddNewPerformerAccount() {
       const { data: { session } } = await window.supabaseClient.auth.getSession();
 
       if (session?.user?.id) {
+        checkTeamMemberships(session.user.id);
         loadDashboard(session.user.id);
       } else {
         window.supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -478,7 +496,7 @@ function handleAddNewPerformerAccount() {
           fairHtml += `<div class="fair-cards-title">Your Fairs</div>`;
 fairHtml += `<div style="text-align:center; margin-bottom:12px;">
   <button class="start-app" style="min-width:0; padding:9px 18px; font-size:14px;"
-    onclick="window.location.href='/vendor_performer/manage_fairs.html?vpa_id=${v.id}&type=vendor'">
+    onclick="window.location.href='/vendor_performer/manage_fairs.html?vpa_id=${perf.id}&type=performer'">
     ✏️ Add / Edit Fairs
   </button>
 </div>`;
@@ -646,10 +664,15 @@ fairHtml += `<div class="fair-cards-list">`;
     onclick="window.location.href='fair_applications.html?vpa_id=${perf.id}'">
     Fair Applications
   </button>
-  <button class="btn-billing"
-    onclick="alert('Billing is coming soon! This feature is currently under development.')">
-    💳 Billing
-  </button>
+ <button class="btn-billing"
+  onclick="alert('Billing is coming soon! This feature is currently under development.')">
+  💳 Billing
+</button>
+<button class="start-app"
+  onclick="window.location.href='/vendor_performer/vp_team_manage.html?vpa_id=${perf.id}&type=performer'"
+  style="background:#2471a3;">
+  👥 Team
+</button>
 </div>
 
           ${fairAppsHtml}
@@ -831,6 +854,21 @@ fairHtml += `<div class="fair-cards-list">`;
 }
 
 window.addEventListener('DOMContentLoaded', initDashboard);
+async function checkTeamMemberships(uid) {
+  const { data } = await window.supabaseClient
+    .from('vp_team_members')
+    .select('id, invite_status')
+    .eq('member_user_id', uid);
+
+  if (!data || !data.length) return;
+
+  const btn = document.getElementById('teamsBtn');
+  const dot = document.getElementById('teamsDot');
+  if (btn) btn.style.display = 'inline-block';
+
+  const hasPending = data.some(m => m.invite_status === 'pending');
+  if (dot && hasPending) dot.style.display = 'block';
+}
   </script>
 
   <footer style="margin-top: 40px; font-size: 14px;">

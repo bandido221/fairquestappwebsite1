@@ -12,12 +12,81 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    body {
-      background-color: #000;
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: #f1df99;
+      letter-spacing: 0.05em;
+    }
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
       font-family: 'Domine', serif;
-      color: #f0e6d2;
-      padding: 40px;
+      font-size: 13px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: #c9a84c;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: #f1df99;
+    }
+    body {
+      font-family: 'Domine', serif;
+      background: #0d0a04;
+      color: #f1df99;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
       text-align: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
     }
     h1 {
       font-family: 'Cinzel', serif;
@@ -80,16 +149,28 @@
 .website-btn{
   display:inline-block;
   background:#2e7d32;
-  color:#fff;
-  padding:8px 14px;
+  color:#fff !important;
+  padding:6px 14px;
   border-radius:6px;
   text-decoration:none;
   font-weight:bold;
+  font-size:12px;
+  margin-top:4px;
 }
+.website-btn:hover{ background:#1b5e20; }
 
-.website-btn:hover{
-  background:#1b5e20;
+.directions-btn {
+  display: inline-block;
+  background: #1a56a0;
+  color: #fff !important;
+  padding: 6px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 12px;
+  margin-top: 4px;
 }
+.directions-btn:hover { background: #133e7a; }
 .nav-btn{
   background:#bb9457;
   color:#000;
@@ -137,39 +218,37 @@
 </head>
 <body>
 
-   <!-- Banner Image -->
-   <img src="/images/banner.png" alt="FairQuest Banner" class="top-banner" />
+   
 
-   <header>
-     <img src="/images/logo.png" alt="FairQuest Logo" class="logo" />
-     <h1>Welcome to FairQuest</h1>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right" id="menuRight">
+      <a href="/fairs/explore.html" class="nav-btn">🎪 Fairs</a>
+      <a href="/profile/index.html" class="nav-btn">👤 Profile</a>
+    </div>
+  </nav>
 
   <h1>🎭 Fairs in <span id="monthName"></span></h1>
 
-  <!-- Content section for AdSense "publisher-content" signal -->
   <section style="max-width:760px;margin:18px auto 12px;padding:0 18px;text-align:left;">
     <p>
       This page shows all Renaissance fairs taking place in the selected month. 
-      Use the dropdown to filter by state or scroll through to explore what’s available. 
+      Use the dropdown to filter by state or scroll through to explore what's available. 
       Each fair listing includes dates, locations, and official links when possible. 
       The information is kept current as new events are added or updated by us.
     </p>
   </section>
 
-  <div style="margin-bottom: 20px; display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center;">
+  <div style="margin-bottom: 20px; margin-top: 16px; display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center;">
+    <label for="stateFilter" style="font-weight:bold; color:#f1df99;">Filter by State:</label>
+    <select id="stateFilter" onchange="applyStateFilter()" style="padding: 8px; border-radius: 6px;">
+      <option value="">All States</option>
+    </select>
+  </div>
 
-  <label for="stateFilter" style="font-weight:bold;">Filter by State:</label>
-
-  <select id="stateFilter" onchange="applyStateFilter()" style="padding: 8px; border-radius: 6px;">
-    <option value="">All States</option>
-  </select>
-
-  <a href="/fairs/explore.html" class="nav-btn">Explore</a>
-  <a href="/index.html" class="nav-btn">Home</a>
-
-</div>
-
-  
   <div id="fairResults">Loading...</div>
 
   <script>
@@ -210,7 +289,7 @@ let currentStateFilter = "";
 
 function buildStateDropdown() {
   const dropdown = document.getElementById('stateFilter');
-  const uniqueStates = [...new Set(allFairsThisMonth.map(fair => fair.state))].sort();
+  const uniqueStates = [...new Set(allFairsThisMonth.map(fair => (fair.state || '').toUpperCase()))].sort();
 
   uniqueStates.forEach(state => {
     const option = document.createElement('option');
@@ -235,7 +314,7 @@ function displayFairs(fairs) {
 
   const filtered = fairs.filter(fair => {
     if (!currentStateFilter) return true;
-    return fair.state === currentStateFilter;
+    return (fair.state || '').toUpperCase() === currentStateFilter;
   });
 
   if (!filtered.length) {
@@ -278,6 +357,7 @@ container.innerHTML += `
       <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
       <p><span class="badge">${fair.state}</span></p>
       <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
+      <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${fair.address}, ${fair.city}, ${fair.state} ${fair.zip || ''}`)}" target="_blank" class="directions-btn">📍 Get Directions</a></p>
       ${fair.website ? `
   <p>
     <a href="${fair.website}" target="_blank" class="website-btn">Visit Website</a>

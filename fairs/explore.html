@@ -193,7 +193,7 @@
 
   /* ── CARDS ── */
   .card {
-    background: var(--parchment);
+    background: rgba(241, 223, 153, 0.93) !important;
     border-radius: var(--card-radius);
     padding: 0;
     margin-bottom: 16px;
@@ -288,6 +288,19 @@
     margin-top: 4px;
   }
   .website-btn:hover { background: #1b5e20; }
+
+  .directions-btn {
+    display: inline-block;
+    background: #1a56a0;
+    color: #fff !important;
+    padding: 6px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .directions-btn:hover { background: #133e7a; }
 .unverified-notice {
   background: #7a3b00;
   color: #ffe0b2 !important;
@@ -479,13 +492,13 @@
       <span>FairQuest</span>
     </a>
     <div class="topnav-right" id="menuRight">
-      <a href="/index.html" class="nav-btn">🏠 Home</a>
+      <a href="/fairs/explore.html" class="nav-btn">🎪 Fairs</a>
       <a href="/profile/index.html" class="nav-btn">👤 Profile</a>
     </div>
   </nav>
 
   <div class="page-wrap">
-    <img src="/images/banner.png" alt="FairQuest Banner" class="top-banner" />
+    
 
     <div class="page-header">
       <h1>🎪 Explore Renaissance Fairs</h1>
@@ -628,6 +641,7 @@ div.innerHTML = `
       <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
       <p><span class="badge">${fair.state}</span></p>
       <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
+      <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${fair.address}, ${fair.city}, ${fair.state} ${fair.zip || ''}`)}" target="_blank" class="directions-btn">📍 Get Directions</a></p>
       ${fair.website ? `
   <p>
     <a href="${fair.website}" target="_blank" class="website-btn">Visit Website</a>

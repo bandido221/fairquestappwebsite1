@@ -12,130 +12,233 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
     body {
-      background-color: #000;
       font-family: 'Domine', serif;
-      color: #000; /* pure black */
-      padding: 40px;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
       text-align: center;
     }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
+    }
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
+    }
+
     h1 {
       font-family: 'Cinzel', serif;
-      font-size: 2.5rem;
-      margin-bottom: 20px;
+      font-size: clamp(22px, 6vw, 34px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+      margin: 24px 0 16px;
     }
 
-    .top-banner {
-      width: 100%;
-      max-width: 600px;
-      display: block;
-      margin: 0 auto 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    .card {
+      background: rgba(241, 223, 153, 0.93) !important;
+      border-radius: var(--card-radius);
+      padding: 0;
+      max-width: 700px;
+      margin: 16px auto;
+      text-align: left;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
+      overflow: hidden;
     }
+    .card, .card * { color: #111 !important; }
+
+    .card-image {
+      width: 100%;
+      height: 180px;
+      background: rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-content { padding: 18px 20px; }
 
     .fair-link {
-  display: inline-block;
-  background-color: #bb9457;
-  color: black;
-  font-weight: bold;
-  padding: 8px 14px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-size: 1.2rem;
-  transition: background-color 0.2s ease;
-  margin-bottom: 10px;
-}
-.fair-link:hover {
-  background-color: #f2e1c1;
-  color: #000;
-}
-.website-btn {
-  display: inline-block;
-  margin-top: 8px;
-  padding: 8px 14px;
-  background: #2e7d32;
-  color: #fff;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.website-btn:hover {
-  background: #1b5e20;
-}
-
-/* NEW: centered message when there is no image */
-.no-image-msg {
-  font-weight: 600;
-  font-size: 1rem;
-  text-align: center;
-  padding: 0 8px;
-}
-
-    .logo {
-      width: 120px;
-      display: block;
-      margin: 0 auto 20px;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gold-light) !important;
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 12px;
+      background: #3b2a0e;
+      border: 1.5px solid #1e1208;
+      border-radius: 10px;
+      padding: 10px 16px;
+      box-shadow: 0 4px 0 #1e1208, 0 6px 10px rgba(0,0,0,0.35);
+      transition: transform 0.1s, box-shadow 0.1s;
     }
-    .card-image {
-  width: 100%;
-  height: 180px; /* fixed image container height */
-  background-color: rgb(255, 232, 232);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.card-image img {
-  height: 100%;
-  width: auto;
-  object-fit: contain;
-  object-position: center;
-}
-.card {
-  background: #89805a;
-  color: #222;
-  border-radius: 12px;
-  padding: 20px;
-  max-width: 700px;
-  margin: 20px auto;
-  text-align: left;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-
-.card * {
-  color: #222 !important;
-}
-
-
-
-    .card-content {
-      padding: 16px;
+    .fair-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #1e1208, 0 8px 14px rgba(0,0,0,0.4);
     }
+
     .badge {
       display: inline-block;
-      background-color: #bb9457;
-      color: black;
-      font-weight: bold;
+      background: rgba(201,168,76,0.3);
+      border: 1px solid rgba(201,168,76,0.5);
+      color: #111 !important;
+      font-size: 11px;
+      font-weight: 700;
       border-radius: 6px;
-      padding: 4px 10px;
-      margin: 2px 4px;
+      padding: 3px 9px;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .card-content p {
+      font-size: 13px;
+      color: #333 !important;
+      margin-bottom: 5px;
+      line-height: 1.5;
+    }
+
+    .website-btn {
+      display: inline-block;
+      background: #2e7d32;
+      color: #fff !important;
+      padding: 6px 14px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .website-btn:hover { background: #1b5e20; }
+
+    .directions-btn {
+      display: inline-block;
+      background: #1a56a0;
+      color: #fff !important;
+      padding: 6px 14px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .directions-btn:hover { background: #133e7a; }
+
+    .unverified-notice {
+      background: #7a3b00;
+      color: #ffe0b2 !important;
+      border: 1px solid #ff8f00;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .no-image-msg {
+      font-size: 13px;
+      color: #888 !important;
+      font-style: italic;
     }
   </style>
 </head>
 <body>
-   <!-- Banner Image -->
-   <img src="/images/banner.png" alt="FairQuest Banner" class="top-banner" />
-
-   <header>
-     <img src="/images/logo.png" alt="FairQuest Logo" class="logo" />
-     <h1>Welcome to FairQuest</h1>
+   <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/fairs/explore.html" class="nav-btn">🎪 Fairs</a>
+      <a href="/profile/index.html" class="nav-btn">👤 Profile</a>
+    </div>
+  </nav>
 
   <h1>🎪 Fairs in <span id="stateName"></span></h1>
 
@@ -225,6 +328,7 @@ container.innerHTML += `
       <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
       <p><span class="badge">${fair.state}</span></p>
       <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
+      <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${fair.address}, ${fair.city}, ${fair.state} ${fair.zip || ''}`)}" target="_blank" class="directions-btn">📍 Get Directions</a></p>
       ${fair.website ? `
   <div class="fair-actions">
     <a href="${fair.website}" target="_blank" class="website-btn">Visit Website</a>

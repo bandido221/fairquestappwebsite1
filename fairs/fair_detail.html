@@ -51,7 +51,7 @@
     }
 
     /* ── TOP NAV ── */
-    .top-nav {
+    .topnav {
       position: sticky;
       top: 0;
       z-index: 200;
@@ -60,14 +60,34 @@
       backdrop-filter: blur(12px);
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
+      justify-content: space-between;
       padding: 0 20px;
       height: 56px;
-      flex-wrap: wrap;
     }
-    .top-nav a,
-    .top-nav button {
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
+    }
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
       font-family: 'Domine', serif;
       font-size: 13px;
       padding: 7px 14px;
@@ -82,8 +102,7 @@
       align-items: center;
       gap: 5px;
     }
-    .top-nav a:hover,
-    .top-nav button:hover {
+    .nav-btn:hover {
       background: rgba(201,168,76,0.12);
       border-color: rgba(201,168,76,0.55);
       color: var(--gold-light);
@@ -119,7 +138,7 @@
 
     /* ── CARDS ── */
     .card {
-      background: var(--parchment);
+      background: rgba(241, 223, 153, 0.93) !important;
       border-radius: var(--card-radius);
       padding: 22px 20px;
       margin-bottom: 18px;
@@ -194,6 +213,19 @@
     }
     .website-btn:hover { background: #1b5e20; }
 
+    .directions-btn {
+      display: inline-block;
+      background: #1a56a0;
+      color: #fff !important;
+      padding: 6px 14px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .directions-btn:hover { background: #133e7a; }
+
     /* vendor/performer links */
     .link {
       color: #1a3a6b !important;
@@ -247,31 +279,23 @@
       font-style: italic;
     }
 
-    /* ── BANNER & LOGO (keep for now) ── */
-    .top-banner, .logo {
-      display: block;
-      margin: 0 auto 20px;
-    }
-    .top-banner {
-      max-width: 600px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    .logo {
-      max-width: 100px;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-    }
+    
 </style>
 </head>
 <body>
-  <img src="/images/banner.png" alt="FairQuest Banner" class="top-banner" />
-  <img src="/images/logo.png" alt="FairQuest Logo" class="logo" />
+  
 
-  <div class="top-nav">
-    <button type="button" onclick="history.back()">⬅ Back</button>
-    <a href="/fairs/explore.html">🧭 Explore</a>
-    <a href="/index.html">🏠 Home</a>
-  </div>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right" id="menuRight">
+      <button type="button" onclick="history.back()" class="nav-btn">⬅ Back</button>
+      <a href="/fairs/explore.html" class="nav-btn">🎪 Fairs</a>
+      <a href="/profile/index.html" class="nav-btn">👤 Profile</a>
+    </div>
+  </nav>
 
   <h1>Fair Details</h1>
 
@@ -297,6 +321,7 @@
     <p><strong>🏙️ City:</strong> <span id="fairCity"></span></p>
     <p><strong>🗺️ State:</strong> <span id="fairState"></span></p>
 <p><strong>🌐 Website:</strong> <span id="fairWebsite"></span></p>
+<p><strong>🗺️ Directions:</strong> <a id="fairDirections" class="directions-btn" target="_blank">📍 Get Directions</a></p>
 <p><strong>🕒 Hours:</strong> <span id="fairHours"></span></p>
 <p><strong>📅 Weekends:</strong></p>
 <ul id="weekendsList"></ul>
@@ -537,6 +562,9 @@ loadFair = async function() {
   document.getElementById('fairAddress').textContent = data.address;
   document.getElementById('fairCity').textContent = data.city;
   document.getElementById('fairState').textContent = data.state;
+
+  const mapsQuery = encodeURIComponent(`${data.address}, ${data.city}, ${data.state} ${data.zip || ''}`);
+  document.getElementById('fairDirections').href = `https://www.google.com/maps/dir/?api=1&destination=${mapsQuery}`;
 document.getElementById('fairWebsite').innerHTML = data.website
   ? `<a href="${data.website}" target="_blank" class="website-btn">Visit Website</a>`
   : 'N/A';
@@ -603,9 +631,16 @@ setupFavoriteButton();
 async function setupFavoriteButton() {
   const btn = document.getElementById('favoriteBtn');
   const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return; // not logged in — keep button hidden
 
   btn.style.display = 'inline-block';
+
+  if (!user) {
+    btn.textContent = '❤️ Save to Favorites';
+    btn.addEventListener('click', () => {
+      window.location.href = '/profile/index.html';
+    });
+    return;
+  }
 
   // Check current favorite status
   const { data: isFav, error } = await supabaseClient.rpc('app_is_favorite', {

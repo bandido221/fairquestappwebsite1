@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Teams | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Domine:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Domine', serif;
+      background: #0d0a04;
+      color: #f1df99;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1, h2, h3 { font-family: 'Cinzel', serif; margin-top: 0; }
+
+    .top-banner, .logo {
+      display: block;
+      margin: 0 auto 20px auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .top-banner { width: 100%; max-width: 600px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .logo { max-width: 100px; transition: transform 0.3s ease; }
+    .logo:hover { transform: scale(1.05); }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: rgba(241,223,153,0.93);
+      color: #111;
+      border: 1px solid rgba(201,168,76,0.4);
+      border-radius: 16px;
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+      padding: 24px;
+      text-align: left;
+    }
+
+    .container h1 { text-align: center; margin-bottom: 6px; font-size: 26px; color: #111; }
+    .page-subtitle { text-align: center; font-size: 14px; color: #5a3e1b; margin-bottom: 24px; }
+
+    .top-actions {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      margin-bottom: 24px; justify-content: center;
+    }
+
+    button {
+      border: none; border-radius: 10px; padding: 12px 18px;
+      font-size: 15px; font-family: 'Domine', serif;
+      cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .btn-green  { background: #27ae60; color: #fff; }
+    .btn-red    { background: #c0392b; color: #fff; }
+    .btn-dark   { background: #444; color: #fff; }
+    .btn-sm { padding: 7px 14px; font-size: 13px; min-width: 0; box-shadow: none; }
+
+    /* ── Invite cards ── */
+    .invites-section { margin-bottom: 24px; }
+    .invites-title {
+      font-family: 'Cinzel', serif;
+      font-size: 15px; color: #2f1a06;
+      margin: 0 0 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .invite-card {
+      background: #fff8e7;
+      border: 2px solid #e6a817;
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .invite-card.responded {
+      border-color: rgba(0,0,0,0.1);
+      background: rgba(255,255,255,0.4);
+      opacity: 0.7;
+    }
+    .invite-info { flex: 1; min-width: 0; }
+    .invite-app-name { font-weight: 700; font-size: 15px; color: #111; margin-bottom: 3px; }
+    .invite-role { font-size: 13px; color: #5a3e1b; margin-bottom: 6px; }
+    .invite-date { font-size: 12px; color: #888; }
+    .invite-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    /* ── Team cards ── */
+    .teams-section { }
+    .teams-title {
+      font-family: 'Cinzel', serif;
+      font-size: 15px; color: #2f1a06;
+      margin: 0 0 12px;
+    }
+
+    .team-card {
+      background: rgba(255,255,255,0.75);
+      border: 1px solid rgba(139,90,18,0.15);
+      border-radius: 14px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .team-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      cursor: pointer;
+      gap: 12px;
+      flex-wrap: wrap;
+      transition: background 0.15s;
+    }
+    .team-card-header:hover { background: rgba(201,168,76,0.1); }
+
+    .team-card-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+    .team-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px; flex-shrink: 0;
+    }
+    .avatar-manager { background: #d4af37; color: #3b1f00; }
+    .avatar-staff   { background: #2980b9; color: #fff; }
+    .avatar-pending { background: #ccc; color: #555; }
+
+    .team-name { font-weight: 700; font-size: 15px; color: #111; }
+    .team-role-line { font-size: 12px; color: #666; margin-top: 2px; }
+
+    .team-card-right { display: flex; align-items: center; gap: 10px; }
+    .chevron { font-size: 14px; color: #888; transition: transform 0.2s; }
+    .team-card.open .chevron { transform: rotate(180deg); }
+
+    /* badges */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; font-family: 'Cinzel', serif;
+    }
+    .badge-active   { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .badge-pending  { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+    .badge-declined { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .badge-manager  { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+    .badge-staff    { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+
+    /* team detail panel */
+    .team-detail {
+      display: none;
+      padding: 0 18px 16px;
+      border-top: 1px solid rgba(0,0,0,0.07);
+    }
+    .team-card.open .team-detail { display: block; }
+
+    .detail-section { margin-top: 14px; }
+    .detail-label {
+      font-size: 12px; font-weight: 700; color: #5a3e1b;
+      text-transform: uppercase; letter-spacing: .04em;
+      margin-bottom: 8px;
+    }
+
+    .fair-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(201,168,76,0.15);
+      border: 1px solid rgba(139,90,18,0.2);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px; color: #111;
+      margin: 0 6px 6px 0;
+    }
+    .fair-chip-date { font-size: 11px; color: #666; }
+
+    .no-fairs { font-size: 13px; color: #888; font-style: italic; }
+
+    .empty-state {
+      text-align: center; padding: 32px 20px;
+      color: #8a6030; font-size: 14px;
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+    .loading-msg { text-align: center; padding: 20px; color: #5a3e1b; font-size: 14px; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #2f1a06; color: #f1df99;
+      padding: 12px 24px; border-radius: 10px;
+      font-size: 14px; z-index: 999;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    .section-card {
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .container { padding: 16px; }
+      .invite-card { flex-direction: column; align-items: flex-start; }
+      .invite-actions { width: 100%; }
+      .invite-actions button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+<img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+<div class="container">
+  <h1>👥 My Teams</h1>
+  <div class="page-subtitle">Teams you belong to as a manager or staff member.</div>
+
+  <div class="top-actions">
+    <button class="btn-red" onclick="logout()">Log Out</button>
+    <button class="btn-dark" onclick="history.back()">← Back</button>
+  </div>
+
+  <div id="pageContent"><div class="loading-msg">Loading your teams…</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+const sb = window.supabaseClient;
+
+let userId = null;
+
+// ── Init ──────────────────────────────────────────────────
+async function init() {
+  let { data: { session } } = await sb.auth.getSession();
+
+  if (!session) {
+    await new Promise(resolve => {
+      sb.auth.onAuthStateChange((event, s) => { session = s; resolve(); });
+    });
+  }
+
+  if (!session) {
+    location.href = '/user_login.html?redirect=' + encodeURIComponent(location.pathname);
+    return;
+  }
+
+  userId = session.user.id;
+  await loadPage();
+}
+
+// ── Load all memberships ───────────────────────────────────
+async function loadPage() {
+  const { data, error } = await sb
+    .from('vp_team_members')
+    .select(`
+      id, vpa_id, role, invite_status, can_view_billing,
+      invited_at, responded_at,
+      vendor_performer_applications(id, name, application_type)
+    `)
+    .eq('member_user_id', userId)
+    .order('invited_at', { ascending: false });
+
+  if (error) {
+    document.getElementById('pageContent').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">⚠️</div><div>Could not load teams. Please try again.</div></div>`;
+    return;
+  }
+
+  const memberships = data || [];
+
+  // Get fair assignments for all memberships
+  const memberIds = memberships.map(m => m.id);
+  let assignments = [];
+  if (memberIds.length) {
+    const { data: aData } = await sb
+      .from('vp_team_fair_assignments')
+      .select('vp_team_member_id, fair_id, renaissance_fairs(id, name)')
+      .in('vp_team_member_id', memberIds);
+    assignments = aData || [];
+  }
+
+  // Attach assignments to memberships
+  memberships.forEach(m => {
+    m._assignments = assignments.filter(a => a.vp_team_member_id === m.id);
+  });
+
+  const pending  = memberships.filter(m => m.invite_status === 'pending');
+  const accepted = memberships.filter(m => m.invite_status === 'accepted');
+  const declined = memberships.filter(m => m.invite_status === 'declined');
+  const nonPending = [...accepted, ...declined];
+
+  let html = '';
+
+  // ── Pending invites section ──
+  if (pending.length) {
+    html += `<div class="section-card invites-section">
+      <div class="invites-title">📨 Pending Invitations</div>`;
+    pending.forEach(m => {
+      const appName = m.vendor_performer_applications?.name || 'Unknown';
+      const roleLabel = m.role === 'manager' ? '⚙️ Manager' : '🪧 Staff';
+      const date = m.invited_at ? new Date(m.invited_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+      html += `
+        <div class="invite-card" id="invite-${m.id}">
+          <div class="invite-info">
+            <div class="invite-app-name">${escHtml(appName)}</div>
+            <div class="invite-role">Role: ${roleLabel}</div>
+            <div class="invite-date">Invited ${date}</div>
+          </div>
+          <div class="invite-actions">
+            <button class="btn-green btn-sm" onclick="respond('${m.id}', 'accepted')">✓ Accept</button>
+            <button class="btn-red btn-sm" onclick="respond('${m.id}', 'declined')">✕ Decline</button>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ── All teams section ──
+  if (nonPending.length) {
+    html += `<div class="section-card teams-section">
+      <div class="teams-title">Your Teams</div>`;
+
+    nonPending.forEach(m => {
+      const appName = m.vendor_performer_applications?.name || 'Unknown';
+      const appId   = m.vendor_performer_applications?.id;
+      const appType = m.vendor_performer_applications?.application_type ? 'performer' : 'vendor';
+      const roleLabel = m.role === 'manager' ? '⚙️ Manager' : '🪧 Staff';
+      const avatarClass = m.invite_status === 'accepted'
+        ? (m.role === 'manager' ? 'avatar-manager' : 'avatar-staff')
+        : 'avatar-pending';
+      const initials = appName.slice(0, 2).toUpperCase();
+
+      const statusBadge = m.invite_status === 'accepted'
+        ? `<span class="badge badge-active">✅ Active</span>`
+        : `<span class="badge badge-declined">❌ Declined</span>`;
+
+      const roleBadge = m.role === 'manager'
+        ? `<span class="badge badge-manager">⚙️ Manager</span>`
+        : `<span class="badge badge-staff">🪧 Staff</span>`;
+
+      // Fair chips
+      let fairsHtml = '';
+      if (m._assignments.length) {
+        fairsHtml = m._assignments.map(a => {
+          const fname = a.renaissance_fairs?.name || 'Fair';
+          return `<div class="fair-chip">🏰 ${escHtml(fname)}</div>`;
+        }).join('');
+      } else if (m.role === 'manager') {
+        fairsHtml = `<div class="fair-chip">All fairs (manager access)</div>`;
+      } else {
+        fairsHtml = `<div class="no-fairs">No fairs assigned yet.</div>`;
+      }
+
+      // Show "Go to Team" button only for active managers (they can manage)
+      const manageBtn = (m.invite_status === 'accepted' && m.role === 'manager' && appId)
+        ? `<a href="/vendor_performer/vp_team_manage.html?vpa_id=${appId}&type=${appType}"
+             style="display:inline-block;margin-top:12px;padding:8px 16px;background:#2471a3;color:#fff;border-radius:8px;font-size:13px;text-decoration:none;">
+             ⚙️ Manage Team
+           </a>` : '';
+
+      html += `
+        <div class="team-card" id="tcard-${m.id}">
+          <div class="team-card-header" onclick="toggleTeam('${m.id}')">
+            <div class="team-card-left">
+              <div class="team-avatar ${avatarClass}">${initials}</div>
+              <div>
+                <div class="team-name">${escHtml(appName)}</div>
+                <div class="team-role-line">${roleLabel}</div>
+              </div>
+            </div>
+            <div class="team-card-right">
+              ${statusBadge}
+              ${roleBadge}
+              <span class="chevron">▼</span>
+            </div>
+          </div>
+          <div class="team-detail">
+            <div class="detail-section">
+              <div class="detail-label">Assigned Fairs</div>
+              ${fairsHtml}
+            </div>
+            ${manageBtn}
+          </div>
+        </div>`;
+    });
+
+    html += `</div>`;
+  }
+
+  // ── Empty state ──
+  if (!memberships.length) {
+    html = `<div class="empty-state">
+      <div class="empty-icon">👥</div>
+      <div>You are not part of any team yet.<br/>When someone adds you as a manager or staff, it will appear here.</div>
+    </div>`;
+  }
+
+  document.getElementById('pageContent').innerHTML = html;
+}
+
+// ── Accept / Decline invite ────────────────────────────────
+async function respond(memberId, status) {
+  const { error } = await sb
+    .from('vp_team_members')
+    .update({ invite_status: status, responded_at: new Date().toISOString() })
+    .eq('id', memberId)
+    .eq('member_user_id', userId);
+
+  if (error) { showToast('Could not update invite.', true); return; }
+
+  showToast(status === 'accepted' ? '✅ Invitation accepted!' : 'Invitation declined.');
+  await loadPage();
+}
+
+// ── Toggle team detail panel ───────────────────────────────
+function toggleTeam(id) {
+  const card = document.getElementById('tcard-' + id);
+  if (card) card.classList.toggle('open');
+}
+
+// ── Navigation ─────────────────────────────────────────────
+async function logout() {
+  await sb.auth.signOut();
+  location.href = '/index.html';
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer;
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isError ? '#7f1d1d' : '#2f1a06';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+
+<footer style="margin-top:40px; font-size:14px;">
+  <a href="/index.html" style="color:#aa8452;">Home</a> |
+  <a href="/terms.html" style="color:#aa8452;">Terms</a> |
+  <a href="/privacy.html" style="color:#aa8452;">Privacy</a> |
+  <a href="/contact.html" style="color:#aa8452;">Contact</a>
+</footer>
+
+</body>
+</html>

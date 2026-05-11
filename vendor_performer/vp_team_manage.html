@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Management | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Domine:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Domine', serif;
+      background: #0d0a04;
+      color: #f1df99;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1, h2, h3 { font-family: 'Cinzel', serif; margin-top: 0; }
+
+    .top-banner, .logo {
+      display: block;
+      margin: 0 auto 20px auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .top-banner { width: 100%; max-width: 600px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .logo { max-width: 100px; transition: transform 0.3s ease; }
+    .logo:hover { transform: scale(1.05); }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: rgba(241,223,153,0.93);
+      color: #111;
+      border: 1px solid rgba(201,168,76,0.4);
+      border-radius: 16px;
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+      padding: 24px;
+      text-align: left;
+    }
+
+    .container h1 { text-align: center; margin-bottom: 6px; font-size: 26px; color: #111; }
+    .page-subtitle { text-align: center; font-size: 14px; color: #5a3e1b; margin-bottom: 24px; }
+
+    .top-actions {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      margin-bottom: 24px; justify-content: center;
+    }
+
+    button {
+      border: none; border-radius: 10px; padding: 12px 18px;
+      font-size: 15px; font-family: 'Domine', serif;
+      cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .btn-green  { background: #27ae60; color: #fff; }
+    .btn-green:hover { background: #219a52; }
+    .btn-red    { background: #c0392b; color: #fff; }
+    .btn-red:hover { background: #a93226; }
+    .btn-dark   { background: #444; color: #fff; }
+    .btn-dark:hover { background: #333; }
+    .btn-gold   { background: #c9a84c; color: #111; }
+    .btn-gold:hover { background: #e6c85c; }
+    .btn-sm {
+      padding: 7px 14px; font-size: 13px;
+      min-width: 0; box-shadow: none;
+    }
+
+    /* ── Section card ── */
+    .section-card {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      color: #2f1a06;
+      margin: 0 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Search box ── */
+    .search-wrap { position: relative; margin-bottom: 8px; }
+    .search-wrap input {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(139,90,18,0.3);
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      background: #fff;
+      color: #111;
+      box-sizing: border-box;
+    }
+    .search-wrap input:focus { outline: none; border-color: #8a6a1a; }
+    .search-results {
+      background: #fff;
+      border: 1.5px solid rgba(139,90,18,0.25);
+      border-radius: 10px;
+      margin-top: 4px;
+      overflow: hidden;
+      display: none;
+    }
+    .search-result-item {
+      padding: 11px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      font-size: 14px;
+      color: #111;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.15s;
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: rgba(201,168,76,0.12); }
+    .search-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: #c9a84c; color: #3b1f00;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+    .search-result-name { font-weight: 700; }
+    .search-result-email { font-size: 12px; color: #666; }
+
+    /* ── Add member form ── */
+    .add-form {
+      display: none;
+      background: rgba(255,255,255,0.85);
+      border: 1.5px solid rgba(139,90,18,0.2);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+    .add-form.open { display: block; }
+    .selected-user {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: rgba(201,168,76,0.15);
+      border-radius: 8px;
+      margin-bottom: 14px;
+    }
+    .selected-user-info { flex: 1; }
+    .selected-user-name { font-weight: 700; font-size: 14px; color: #111; }
+    .selected-user-email { font-size: 12px; color: #666; }
+
+    .form-row { margin-bottom: 14px; }
+    .form-label { font-size: 13px; font-weight: 700; color: #2f1a06; margin-bottom: 6px; display: block; }
+    .role-options { display: flex; gap: 10px; }
+    .role-option {
+      flex: 1; padding: 10px;
+      border: 2px solid rgba(139,90,18,0.25);
+      border-radius: 10px; text-align: center;
+      cursor: pointer; transition: all 0.15s;
+      background: rgba(255,255,255,0.7);
+    }
+    .role-option:hover { border-color: #8a6a1a; }
+    .role-option.selected { border-color: #27ae60; background: rgba(39,174,96,0.1); }
+    .role-option-title { font-weight: 700; font-size: 14px; color: #111; margin-bottom: 3px; }
+    .role-option-desc { font-size: 11px; color: #666; line-height: 1.4; }
+
+    .billing-toggle-row {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.6);
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.08);
+      margin-bottom: 14px;
+    }
+    .billing-toggle-row.show { display: flex; }
+    .billing-toggle-label { font-size: 14px; color: #111; }
+    .billing-toggle-note { font-size: 11px; color: #666; margin-top: 2px; }
+
+    /* toggle switch */
+    .toggle-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: #ccc; border-radius: 24px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #fff; top: 3px; left: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: #27ae60; }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    .form-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── Team member cards ── */
+    .member-card {
+      background: rgba(255,255,255,0.75);
+      border: 1px solid rgba(139,90,18,0.15);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .member-card:last-child { margin-bottom: 0; }
+    .member-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px; flex-shrink: 0;
+    }
+    .avatar-manager { background: #d4af37; color: #3b1f00; }
+    .avatar-staff   { background: #2980b9; color: #fff; }
+
+    .member-info { flex: 1; min-width: 0; }
+    .member-name { font-weight: 700; font-size: 14px; color: #111; }
+    .member-email { font-size: 12px; color: #666; margin-top: 1px; }
+    .member-meta  { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; font-family: 'Cinzel', serif;
+    }
+    .badge-manager  { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+    .badge-staff    { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+    .badge-pending  { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+    .badge-accepted { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .badge-declined { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .badge-billing  { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+
+    .member-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+    /* ── Fair assignment panel ── */
+    .assign-panel {
+      display: none;
+      background: rgba(255,255,255,0.5);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 10px;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    .assign-panel.open { display: block; }
+    .assign-panel-title { font-size: 13px; font-weight: 700; color: #2f1a06; margin-bottom: 10px; }
+    .fair-checkbox-list { display: flex; flex-direction: column; gap: 8px; }
+    .fair-checkbox-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.06);
+      font-size: 13px; color: #111; cursor: pointer;
+    }
+    .fair-checkbox-row input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; }
+    .fair-checkbox-name { flex: 1; font-weight: 700; }
+    .fair-checkbox-dates { font-size: 11px; color: #666; }
+
+    .empty-state {
+      text-align: center; padding: 28px 20px;
+      color: #8a6030; font-size: 14px;
+    }
+    .empty-icon { font-size: 36px; margin-bottom: 10px; }
+
+    .loading-msg { text-align: center; padding: 20px; color: #5a3e1b; font-size: 14px; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #2f1a06; color: #f1df99;
+      padding: 12px 24px; border-radius: 10px;
+      font-size: 14px; z-index: 999;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .container { padding: 16px; }
+      .role-options { flex-direction: column; }
+      .member-card { flex-wrap: wrap; }
+      .member-actions { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+<img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+<div class="container">
+  <h1>👥 Team Management</h1>
+  <div class="page-subtitle" id="pageSubtitle">Loading…</div>
+
+  <div class="top-actions">
+    <button class="btn-red" onclick="logout()">Log Out</button>
+    <button class="btn-dark" onclick="goBack()">← Back to Dashboard</button>
+  </div>
+
+  <!-- ADD MEMBER SECTION -->
+  <div class="section-card">
+    <div class="section-title">➕ Add a Team Member</div>
+
+    <div class="search-wrap">
+      <input type="text" id="searchInput"
+        placeholder="Search by name or email…"
+        autocomplete="off"
+        oninput="onSearchInput()" />
+    </div>
+    <div class="search-results" id="searchResults"></div>
+
+    <!-- Form shown after selecting a user -->
+    <div class="add-form" id="addForm">
+      <div class="selected-user" id="selectedUserDisplay"></div>
+
+      <div class="form-row">
+        <div class="form-label">Role</div>
+        <div class="role-options">
+          <div class="role-option" id="roleManager" onclick="selectRole('manager')">
+            <div class="role-option-title">⚙️ Manager</div>
+            <div class="role-option-desc">Can do everything except delete the application. Billing access is optional.</div>
+          </div>
+          <div class="role-option" id="roleStaff" onclick="selectRole('staff')">
+            <div class="role-option-title">🪧 Staff</div>
+            <div class="role-option-desc">Can only see fairs they are assigned to work and those fair's files.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="billing-toggle-row" id="billingToggleRow">
+        <div>
+          <div class="billing-toggle-label">Allow billing access</div>
+          <div class="billing-toggle-note">Manager can view subscription tier and payment history</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="billingToggle" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-dark btn-sm" onclick="cancelAdd()">Cancel</button>
+        <button class="btn-green btn-sm" onclick="sendInvite()">Send Invite</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANAGERS -->
+  <div class="section-card">
+    <div class="section-title">⚙️ Managers</div>
+    <div id="managersList"><div class="loading-msg">Loading…</div></div>
+  </div>
+
+  <!-- STAFF -->
+  <div class="section-card">
+    <div class="section-title">🪧 Staff</div>
+    <div id="staffList"><div class="loading-msg">Loading…</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+const sb = window.supabaseClient;
+
+const params  = new URLSearchParams(location.search);
+const VPA_ID  = parseInt(params.get('vpa_id'), 10);
+const VP_TYPE = params.get('type') || 'vendor';
+
+let userId       = null;
+let appName      = '';
+let selectedUser = null;
+let selectedRole = null;
+let allFairs     = [];   // fairs this vpa is attending
+let searchTimer  = null;
+
+// ── Init ──────────────────────────────────────────────────
+async function init() {
+  if (!VPA_ID) { showToast('Missing vpa_id.', true); return; }
+
+  let { data: { session } } = await sb.auth.getSession();
+
+  if (!session) {
+    await new Promise(resolve => {
+      sb.auth.onAuthStateChange((event, s) => {
+        session = s;
+        resolve();
+      });
+    });
+  }
+
+  if (!session) { 
+    location.href = '/user_login.html?redirect=' + encodeURIComponent(location.pathname + location.search); 
+    return; 
+  }
+  userId = session.user.id;
+
+  // Load app name and verify ownership
+  const { data: app, error: appErr } = await sb
+    .from('vendor_performer_applications')
+    .select('name, user_id, application_type')
+    .eq('id', VPA_ID)
+    .single();
+
+  if (appErr || !app) { showToast('Application not found.', true); return; }
+  if (app.user_id !== userId) { showToast('Access denied.', true); return; }
+
+  appName = app.name;
+  document.getElementById('pageSubtitle').textContent = `Managing team for: ${appName}`;
+
+  await loadFairs();
+  await loadTeam();
+}
+
+// ── Load fairs this vpa attends ────────────────────────────
+async function loadFairs() {
+  const { data } = await sb
+    .from('vendor_application_fairs')
+    .select('fair_id, start_date, end_date, renaissance_fairs(id, name)')
+    .eq('application_id', VPA_ID);
+
+  // Deduplicate by fair_id
+  const seen = new Set();
+  allFairs = [];
+  (data || []).forEach(row => {
+    const fid = row.fair_id;
+    if (!seen.has(fid)) {
+      seen.add(fid);
+      allFairs.push({
+        fair_id: fid,
+        name: row.renaissance_fairs?.name || 'Unknown Fair',
+        start_date: row.start_date
+      });
+    }
+  });
+}
+
+// ── Load team members ──────────────────────────────────────
+async function loadTeam() {
+  const { data, error } = await sb
+    .from('vp_team_members')
+    .select('*')
+    .eq('vpa_id', VPA_ID)
+    .order('created_at', { ascending: true });
+
+  // Fetch assignments separately to avoid RLS join issue
+  const memberIds = (data || []).map(m => m.id);
+  let assignments = [];
+  if (memberIds.length) {
+    const { data: aData } = await sb
+      .from('vp_team_fair_assignments')
+      .select('vp_team_member_id, fair_id, id')
+      .in('vp_team_member_id', memberIds);
+    assignments = aData || [];
+  }
+
+  // Attach assignments to each member
+  const members = (data || []).map(m => ({
+    ...m,
+    vp_team_fair_assignments: assignments.filter(a => a.vp_team_member_id === m.id)
+  }));
+
+  if (error) { showToast('Could not load team.', true); return; }
+
+  const managers = members.filter(m => m.role === 'manager');
+  const staff    = members.filter(m => m.role === 'staff');
+
+  renderList('managersList', managers, 'manager');
+  renderList('staffList', staff, 'staff');
+}
+
+// ── Render a list of members ───────────────────────────────
+function renderList(containerId, members, role) {
+  const el = document.getElementById(containerId);
+  if (!members.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">${role === 'manager' ? '⚙️' : '🪧'}</div><div>No ${role}s added yet.</div></div>`;
+    return;
+  }
+
+  el.innerHTML = members.map(m => {
+    const initials = (m.member_full_name || m.member_email || '?').slice(0, 2).toUpperCase();
+    const assignedFairIds = (m.vp_team_fair_assignments || []).map(a => a.fair_id);
+
+    const statusBadge = {
+      pending:  `<span class="badge badge-pending">⏳ Pending</span>`,
+      accepted: `<span class="badge badge-accepted">✅ Accepted</span>`,
+      declined: `<span class="badge badge-declined">❌ Declined</span>`
+    }[m.invite_status] || '';
+
+    const billingBadge = (role === 'manager' && m.can_view_billing)
+      ? `<span class="badge badge-billing">💳 Billing</span>` : '';
+
+    const fairChips = assignedFairIds.map(fid => {
+      const f = allFairs.find(x => x.fair_id === fid);
+      return f ? `<span class="badge badge-staff">${f.name}</span>` : '';
+    }).join('');
+
+    const assignBtn = role === 'staff'
+      ? `<button class="btn-dark btn-sm" onclick="toggleAssignPanel('${m.id}')">🗓 Fairs</button>` : '';
+
+    const fairPanel = role === 'staff' ? buildAssignPanel(m.id, assignedFairIds) : '';
+
+    return `
+      <div class="member-card" id="mcard-${m.id}">
+        <div class="member-avatar avatar-${role}">${initials}</div>
+        <div class="member-info">
+          <div class="member-name">${escHtml(m.member_full_name || m.member_email)}</div>
+          <div class="member-email">${escHtml(m.member_email)}</div>
+          <div class="member-meta">
+            <span class="badge badge-${role}">${role === 'manager' ? '⚙️ Manager' : '🪧 Staff'}</span>
+            ${statusBadge}
+            ${billingBadge}
+            ${fairChips}
+          </div>
+          ${fairPanel}
+        </div>
+        <div class="member-actions">
+          ${assignBtn}
+          <button class="btn-red btn-sm" onclick="removeMember('${m.id}', '${escHtml(m.member_full_name || m.member_email)}')">Remove</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Build the fair assignment panel for a staff member ─────
+function buildAssignPanel(memberId, assignedFairIds) {
+  if (!allFairs.length) {
+    return `<div class="assign-panel" id="assign-${memberId}">
+      <div class="assign-panel-title">Assign to Fairs</div>
+      <div style="font-size:13px;color:#666;">No fairs found on this profile. Add fairs first from the dashboard.</div>
+    </div>`;
+  }
+
+  const rows = allFairs.map(f => {
+    const checked = assignedFairIds.includes(f.fair_id) ? 'checked' : '';
+    return `<label class="fair-checkbox-row">
+      <input type="checkbox" ${checked}
+        onchange="toggleFairAssignment('${memberId}', ${f.fair_id}, this.checked)" />
+      <span class="fair-checkbox-name">${escHtml(f.name)}</span>
+      <span class="fair-checkbox-dates">${formatDate(f.start_date)}</span>
+    </label>`;
+  }).join('');
+
+  return `<div class="assign-panel" id="assign-${memberId}">
+    <div class="assign-panel-title">Assign to Fairs</div>
+    <div class="fair-checkbox-list">${rows}</div>
+  </div>`;
+}
+
+function toggleAssignPanel(memberId) {
+  const panel = document.getElementById('assign-' + memberId);
+  if (!panel) return;
+  panel.classList.toggle('open');
+}
+
+// ── Fair assignment toggle ─────────────────────────────────
+async function toggleFairAssignment(memberId, fairId, isChecked) {
+  if (isChecked) {
+    const { error } = await sb.from('vp_team_fair_assignments').insert({
+      vp_team_member_id:   parseInt(memberId),
+      vpa_id:              VPA_ID,
+      fair_id:             fairId,
+      assigned_by_user_id: userId
+    });
+    if (error) { showToast('Could not assign fair.', true); return; }
+    showToast('Fair assigned.');
+  } else {
+    const { error } = await sb.from('vp_team_fair_assignments')
+      .delete()
+      .eq('vp_team_member_id', memberId)
+      .eq('fair_id', fairId);
+    if (error) { showToast('Could not remove fair.', true); return; }
+    showToast('Fair removed.');
+  }
+}
+
+// ── User search ────────────────────────────────────────────
+function onSearchInput() {
+  clearTimeout(searchTimer);
+  const q = document.getElementById('searchInput').value.trim();
+  if (q.length < 2) { document.getElementById('searchResults').style.display = 'none'; return; }
+  searchTimer = setTimeout(() => searchUsers(q), 300);
+}
+
+async function searchUsers(q) {
+  const { data, error } = await sb.rpc('search_vp_team_users', { p_query: q });
+
+  const resultsEl = document.getElementById('searchResults');
+  if (error || !data || !data.length) {
+    resultsEl.innerHTML = `<div class="search-result-item" style="color:#666;cursor:default;">No users found</div>`;
+    resultsEl.style.display = 'block';
+    return;
+  }
+
+  resultsEl.innerHTML = data.map(u => {
+    const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || u.email;
+    const initials = name.slice(0, 2).toUpperCase();
+    return `<div class="search-result-item" onclick="selectUser(${JSON.stringify(u).replace(/"/g, '&quot;')})">
+      <div class="search-avatar">${initials}</div>
+      <div>
+        <div class="search-result-name">${escHtml(name)}</div>
+        <div class="search-result-email">${escHtml(u.email)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  resultsEl.style.display = 'block';
+}
+
+function selectUser(user) {
+  selectedUser = user;
+  selectedRole = null;
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').style.display = 'none';
+  document.getElementById('roleManager').classList.remove('selected');
+  document.getElementById('roleStaff').classList.remove('selected');
+  document.getElementById('billingToggle').checked = false;
+  document.getElementById('billingToggleRow').classList.remove('show');
+
+  const initials = (user.full_name || user.email || '?').slice(0, 2).toUpperCase();
+  document.getElementById('selectedUserDisplay').innerHTML = `
+    <div class="search-avatar">${initials}</div>
+    <div class="selected-user-info">
+      <div class="selected-user-name">${escHtml(user.email)}</div>
+    </div>`;
+  document.getElementById('addForm').classList.add('open');
+}
+
+function selectRole(role) {
+  selectedRole = role;
+  document.getElementById('roleManager').classList.toggle('selected', role === 'manager');
+  document.getElementById('roleStaff').classList.toggle('selected',   role === 'staff');
+  document.getElementById('billingToggleRow').classList.toggle('show', role === 'manager');
+}
+
+function cancelAdd() {
+  selectedUser = null; selectedRole = null;
+  document.getElementById('addForm').classList.remove('open');
+  document.getElementById('searchInput').value = '';
+}
+
+// ── Send invite ────────────────────────────────────────────
+async function sendInvite() {
+  if (!selectedUser) { showToast('Please select a user.', true); return; }
+  if (!selectedRole) { showToast('Please select a role.', true); return; }
+
+  const canBilling = selectedRole === 'manager'
+    ? document.getElementById('billingToggle').checked
+    : false;
+
+const { data: existing } = await sb
+    .from('vp_team_members')
+    .select('id')
+    .eq('vpa_id', VPA_ID)
+    .eq('member_user_id', selectedUser.user_id)
+    .maybeSingle();
+
+  if (existing) { showToast('This user is already on your team.', true); return; }
+
+  const { error } = await sb.from('vp_team_members').insert({
+    vpa_id:           VPA_ID,
+    owner_user_id:    userId,
+    member_user_id:   selectedUser.user_id,
+    member_email:     selectedUser.email,
+    member_full_name: [selectedUser.first_name, selectedUser.last_name].filter(Boolean).join(' ') || selectedUser.username || null,
+    role:             selectedRole,
+    can_view_billing: canBilling,
+    invite_status:    'pending'
+  });
+
+  if (error) { showToast('Could not send invite: ' + error.message, true); return; }
+
+  
+
+  showToast(`✅ Invite sent to ${selectedUser.email}`);
+  cancelAdd();
+  await loadTeam();
+}
+
+// ── Remove member ──────────────────────────────────────────
+async function removeMember(memberId, name) {
+  if (!confirm(`Remove ${name} from your team?`)) return;
+
+  // Assignments cascade delete via FK so just delete the member row
+  const { error } = await sb
+    .from('vp_team_members')
+    .delete()
+    .eq('id', memberId)
+    .eq('owner_user_id', userId);
+
+  if (error) { showToast('Could not remove member.', true); return; }
+  showToast(`${name} removed from team.`);
+  await loadTeam();
+}
+
+// ── Navigation ─────────────────────────────────────────────
+function goBack() {
+  const base = VP_TYPE === 'performer'
+    ? '/vendor_performer/performer/dashboard.html'
+    : '/vendor_performer/vendor/dashboard.html';
+  location.href = base;
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  location.href = '/index.html';
+}
+
+// ── Helpers ────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+let toastTimer;
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isError ? '#7f1d1d' : '#2f1a06';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Close search on outside click ─────────────────────────
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap') && !e.target.closest('.search-results')) {
+    document.getElementById('searchResults').style.display = 'none';
+  }
+});
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+
+<footer style="margin-top:40px; font-size:14px;">
+  <a href="/index.html" style="color:#aa8452;">Home</a> |
+  <a href="/terms.html" style="color:#aa8452;">Terms</a> |
+  <a href="/privacy.html" style="color:#aa8452;">Privacy</a> |
+  <a href="/contact.html" style="color:#aa8452;">Contact</a>
+</footer>
+
+</body>
+</html>

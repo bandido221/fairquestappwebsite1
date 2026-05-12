@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Messages | FairQuest Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
+    body {
+      font-family: 'Domine', serif;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
+    }
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
+    }
+
+    /* ── PAGE ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 32px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+    }
+    .page-header p {
+      font-size: 13px;
+      color: var(--gold);
+      margin-top: 6px;
+      opacity: 0.85;
+    }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    .filter-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: rgba(201,168,76,0.15);
+      border-color: rgba(201,168,76,0.6);
+      color: var(--gold-light);
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--parchment) !important;
+      border-radius: var(--card-radius);
+      padding: 20px;
+      margin-bottom: 14px;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
+    }
+    .card, .card * { color: #111 !important; }
+
+    .card.unread {
+      border-left: 4px solid #c0392b;
+    }
+
+    .msg-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .msg-name {
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #111 !important;
+    }
+    .msg-date {
+      font-size: 11px;
+      color: #666 !important;
+    }
+    .msg-email {
+      font-size: 13px;
+      color: #444 !important;
+      margin-bottom: 6px;
+    }
+    .msg-topic {
+      display: inline-block;
+      background: rgba(201,168,76,0.3);
+      border: 1px solid rgba(201,168,76,0.5);
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #111 !important;
+    }
+    .msg-body {
+      font-size: 14px;
+      color: #222 !important;
+      line-height: 1.6;
+      background: rgba(255,255,255,0.6);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .msg-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn:hover { background: #fff; transform: translateY(-1px); }
+    .btn-green { background: rgba(46,125,50,0.15); border-color: rgba(46,125,50,0.4); color: #1b5e20 !important; }
+    .btn-green:hover { background: rgba(46,125,50,0.25); }
+
+    .unread-badge {
+      display: inline-block;
+      background: #c0392b;
+      color: #fff !important;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    #emptyMsg {
+      text-align: center;
+      color: var(--gold);
+      padding: 40px 0;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/admin/admin_dashboard.html" class="nav-btn">⬅ Dashboard</a>
+      <a href="/index.html" class="nav-btn">🏠 Home</a>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <div class="page-header">
+      <h1>✉️ Contact Messages</h1>
+      <p>Messages submitted through the FairQuest contact form</p>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="setFilter('unread', this)">📬 Unread</button>
+      <button class="filter-btn" onclick="setFilter('all', this)">📋 All Messages</button>
+      <button class="filter-btn" onclick="setFilter('read', this)">✅ Read</button>
+    </div>
+
+    <div id="messageList"></div>
+    <div id="emptyMsg" style="display:none;">No messages found.</div>
+
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    let allMessages = [];
+    let currentFilter = 'unread';
+
+    async function loadMessages() {
+      const { data, error } = await supabaseClient.rpc('get_contact_messages');
+      if (error) {
+        document.getElementById('messageList').innerHTML = `<p style="color:var(--gold)">Error loading messages: ${error.message}</p>`;
+        return;
+      }
+      allMessages = data || [];
+      renderMessages();
+    }
+
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderMessages();
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('messageList');
+      const emptyMsg = document.getElementById('emptyMsg');
+      container.innerHTML = '';
+
+      const filtered = allMessages.filter(m => {
+        if (currentFilter === 'unread') return !m.read;
+        if (currentFilter === 'read') return m.read;
+        return true;
+      });
+
+      if (!filtered.length) {
+        emptyMsg.style.display = 'block';
+        return;
+      }
+      emptyMsg.style.display = 'none';
+
+      filtered.forEach(msg => {
+        const date = new Date(msg.created_at).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+
+        const div = document.createElement('div');
+        div.className = `card ${!msg.read ? 'unread' : ''}`;
+        div.innerHTML = `
+          <div class="msg-header">
+            <div>
+              <span class="msg-name">${msg.name}</span>
+              ${!msg.read ? '<span class="unread-badge">NEW</span>' : ''}
+            </div>
+            <span class="msg-date">${date}</span>
+          </div>
+          <div class="msg-email">📧 ${msg.email}</div>
+          <div class="msg-topic">${msg.topic}</div>
+          <div class="msg-body">${msg.message}</div>
+          <div class="msg-actions">
+            <a href="mailto:${msg.email}?subject=Re: Your FairQuest Message&body=Hi ${encodeURIComponent(msg.name)},%0D%0A%0D%0A" class="btn">📩 Reply via Email</a>
+            ${!msg.read ? `<button class="btn btn-green" onclick="markRead(${msg.id}, this)">✅ Mark as Read</button>` : ''}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function markRead(id, btn) {
+      const { error } = await supabaseClient.rpc('mark_contact_message_read', { p_id: id });
+      if (error) { alert('Error: ' + error.message); return; }
+      const msg = allMessages.find(m => m.id === id);
+      if (msg) msg.read = true;
+      renderMessages();
+    }
+
+    loadMessages();
+  </script>
+
+</body>
+</html>

@@ -4,220 +4,516 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User List | FairQuest Admin</title>
-  <link rel="stylesheet" href="/css/style.css" />
-<link rel="stylesheet" href="/css/fq_theme.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
     body {
-      background-color: #000;
-      color: #f0e6d2;
       font-family: 'Domine', serif;
-      padding: 20px;
-      text-align: center;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
     }
 
-    h1 {
-      font-family: 'Cinzel', serif;
-      margin-bottom: 20px;
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
     }
 
-    .filters {
-      margin-bottom: 20px;
+    /* ── TOP NAV ── */
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
     }
-
-    .filters button, .filters input {
-      padding: 8px;
-      margin: 5px;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .user-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .user-card {
-      background: #c7b574;
-      color: #3b1f1f;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      text-align: left;
-    }
-
-    .green-dot {
-      height: 12px;
-      width: 12px;
-      background-color: green;
-      border-radius: 50%;
-      display: inline-block;
-      margin-right: 6px;
-    }
-
-    a.back-button {
-      display: inline-block;
-      margin-top: 30px;
-      padding: 10px 16px;
-      background: #bb9457;
-      color: black;
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       text-decoration: none;
-      border-radius: 6px;
-      font-weight: bold;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
+    }
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
     }
 
-    .section-title {
-      font-family: 'Cinzel', serif;
-      margin: 30px 0 10px;
-      font-size: 22px;
-      color: #bb9457;
+    /* ── PAGE ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
     }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 32px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── STATS ROW ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: rgba(241,223,153,0.93) !important;
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+      border: 1px solid rgba(201,168,76,0.4);
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .stat-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+    .stat-val {
+      font-family: 'Cinzel', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #111 !important;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: #555 !important;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 3px;
+    }
+
+    /* ── SEARCH & FILTER ── */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .search-input {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.4);
+      background: rgba(201,168,76,0.1);
+      color: var(--gold-light);
+      outline: none;
+      flex: 1;
+      min-width: 200px;
+    }
+    .search-input::placeholder { color: rgba(241,223,153,0.4); }
+    .search-input:focus {
+      border-color: rgba(201,168,76,0.7);
+      background: rgba(201,168,76,0.15);
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .filter-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: rgba(201,168,76,0.15);
+      border-color: rgba(201,168,76,0.6);
+      color: var(--gold-light);
+    }
+
+    /* ── USER CARD ── */
+    .user-card {
+      background: var(--parchment) !important;
+      border-radius: var(--card-radius);
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
+    }
+    .user-card, .user-card * { color: #111 !important; }
+
+    .user-card.no-profile { border-left: 4px solid #e67e22; }
+    .user-card.banned     { border-left: 4px solid #c0392b; }
+    .user-card.deleted    { border-left: 4px solid #888; opacity: 0.7; }
+    .user-card.unconfirmed { border-left: 4px solid #b8860b; }
+
+    .user-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .user-email {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #111 !important;
+      word-break: break-all;
+    }
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-profile    { background: rgba(46,125,50,0.2);  color: #1b5e20 !important; border: 1px solid rgba(46,125,50,0.4); }
+    .badge-noprofile  { background: rgba(230,126,34,0.2); color: #7a3300 !important; border: 1px solid rgba(230,126,34,0.4); }
+    .badge-banned     { background: rgba(180,30,30,0.2);  color: #7a0000 !important; border: 1px solid rgba(180,30,30,0.4); }
+    .badge-deleted    { background: rgba(100,100,100,0.2);color: #333 !important;    border: 1px solid rgba(100,100,100,0.4); }
+    .badge-unconfirmed{ background: rgba(184,134,11,0.2); color: #5c4000 !important; border: 1px solid rgba(184,134,11,0.4); }
+    .badge-anon       { background: rgba(100,100,180,0.2);color: #1a1a6b !important; border: 1px solid rgba(100,100,180,0.4); }
+    .badge-type       { background: rgba(201,168,76,0.25);color: #5c3a00 !important; border: 1px solid rgba(201,168,76,0.4); }
+
+    .user-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 6px;
+      font-size: 12px;
+      color: #444 !important;
+    }
+    .user-detail { color: #444 !important; }
+    .user-detail strong { color: #111 !important; }
+
+    #emptyMsg {
+      text-align: center;
+      color: var(--gold);
+      padding: 40px 0;
+      font-size: 15px;
+    }
+
+    .loading {
+      text-align: center;
+      color: var(--gold);
+      padding: 40px 0;
+      font-size: 15px;
+    }
+
+    .vp-section {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+    }
+    .vp-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #444 !important;
+      margin-bottom: 6px;
+    }
+    .vp-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+      margin: 2px 3px 2px 0;
+    }
+    .vp-vendor   { background: rgba(26,86,160,0.15); color: #0a3a7a !important; border: 1px solid rgba(26,86,160,0.3); }
+    .vp-performer{ background: rgba(91,42,134,0.15); color: #3a0a7a !important; border: 1px solid rgba(91,42,134,0.3); }
+    .vp-approved { background: rgba(46,125,50,0.15); color: #1b5e20 !important; border: 1px solid rgba(46,125,50,0.3); }
+    .vp-pending  { background: rgba(230,180,0,0.15); color: #7a5c00 !important; border: 1px solid rgba(230,180,0,0.3); }
+    .vp-declined { background: rgba(180,30,30,0.15); color: #7a0000 !important; border: 1px solid rgba(180,30,30,0.3); }
   </style>
 </head>
-
 <body>
-  <h1>👤 User List</h1>
 
-  <div class="filters">
-    <button onclick="groupByDate()">📅 Group by Date</button>
-    <button onclick="groupByType()">👥 Group by User Type</button>
-    <input type="text" id="searchInput" placeholder="🔎 Search by Email" />
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/admin/admin_dashboard.html" class="nav-btn">⬅ Dashboard</a>
+      <a href="/index.html" class="nav-btn">🏠 Home</a>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <div class="page-header">
+      <h1>👤 User List</h1>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-box">
+        <span class="stat-icon">👥</span>
+        <div class="stat-val" id="statTotal">…</div>
+        <div class="stat-label">Total Auth Users</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-icon">✅</span>
+        <div class="stat-val" id="statProfiles">…</div>
+        <div class="stat-label">Has Profile</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-icon">⚠️</span>
+        <div class="stat-val" id="statNoProfile">…</div>
+        <div class="stat-label">No Profile</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-icon">🚫</span>
+        <div class="stat-val" id="statBanned">…</div>
+        <div class="stat-label">Banned</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-icon">❓</span>
+        <div class="stat-val" id="statUnconfirmed">…</div>
+        <div class="stat-label">Unconfirmed</div>
+      </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="toolbar">
+      <input class="search-input" type="text" id="searchInput" placeholder="🔍 Search by email or username..." oninput="renderUsers()" />
+    </div>
+
+    <!-- FILTER TABS -->
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="setFilter('all', this)">👥 All</button>
+      <button class="filter-btn" onclick="setFilter('profile', this)">✅ Has Profile</button>
+      <button class="filter-btn" onclick="setFilter('noprofile', this)">⚠️ No Profile</button>
+      <button class="filter-btn" onclick="setFilter('unconfirmed', this)">📧 Unconfirmed</button>
+      <button class="filter-btn" onclick="setFilter('banned', this)">🚫 Banned</button>
+      <button class="filter-btn" onclick="setFilter('deleted', this)">🗑️ Deleted</button>
+    </div>
+
+    <div id="userList"><div class="loading">Loading users…</div></div>
+    <div id="emptyMsg" style="display:none;">No users found.</div>
+
   </div>
 
-  <div class="user-grid" id="userGrid"></div>
-
-  <a href="/admin/admin_dashboard.html" class="back-button">🔙 Back to Admin</a>
-
   <script>
-  const supabaseClient = window.supabase.createClient(
-    'https://awtbjuiqgtdydsqzimul.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
-  );
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
 
-  let users = [];
-  let seenUsers = JSON.parse(localStorage.getItem('seenUsers')) || [];
+    let allUsers = [];
+    let currentFilter = 'all';
 
-  async function loadUsers() {
-const { data, error } = await supabaseClient
-  .rpc('get_admin_user_list');
+    function fmtDate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric'
+      });
+    }
 
-
-      if (error || !data) {
-        document.getElementById('userGrid').innerHTML = '<p>⚠️ Failed to load users.</p>';
+    async function loadUsers() {
+      const { data, error } = await supabaseClient.rpc('get_admin_full_user_list');
+      if (error) {
+        document.getElementById('userList').innerHTML = `<p style="color:var(--gold)">Error: ${error.message}</p>`;
         return;
       }
+      allUsers = data || [];
 
-      users = data;
-      renderNewUsersOnly();
+      // Stats
+      document.getElementById('statTotal').innerText = allUsers.length;
+      document.getElementById('statProfiles').innerText = allUsers.filter(u => u.has_profile).length;
+      document.getElementById('statNoProfile').innerText = allUsers.filter(u => !u.has_profile && !u.deleted_at).length;
+      document.getElementById('statBanned').innerText = allUsers.filter(u => u.banned_until).length;
+      document.getElementById('statUnconfirmed').innerText = allUsers.filter(u => !u.email_confirmed_at && !u.deleted_at).length;
+
+      renderUsers();
     }
 
-    function formatDate(dateString) {
-      if (!dateString) return 'N/A';
-      const d = new Date(dateString);
-      if (isNaN(d)) return 'N/A';
-      return d.toLocaleDateString();
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderUsers();
     }
 
-    function renderNewUsersOnly() {
-      const container = document.getElementById('userGrid');
+    function renderUsers() {
+      const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const container = document.getElementById('userList');
+      const emptyMsg = document.getElementById('emptyMsg');
       container.innerHTML = '';
 
-      users.forEach(user => {
-        if (!seenUsers.includes(user.id)) {
-          container.innerHTML += renderUserCard(user, true);
-          seenUsers.push(user.id);
+      let filtered = allUsers.filter(u => {
+        if (currentFilter === 'profile')     return u.has_profile && !u.deleted_at;
+        if (currentFilter === 'noprofile')   return !u.has_profile && !u.deleted_at;
+        if (currentFilter === 'unconfirmed') return !u.email_confirmed_at && !u.deleted_at;
+        if (currentFilter === 'banned')      return !!u.banned_until;
+        if (currentFilter === 'deleted')     return !!u.deleted_at;
+        return true;
+      });
+
+      if (query) {
+        filtered = filtered.filter(u =>
+          (u.email || '').toLowerCase().includes(query) ||
+          (u.username || '').toLowerCase().includes(query) ||
+          (u.first_name || '').toLowerCase().includes(query) ||
+          (u.last_name || '').toLowerCase().includes(query)
+        );
+      }
+
+      if (!filtered.length) {
+        emptyMsg.style.display = 'block';
+        return;
+      }
+      emptyMsg.style.display = 'none';
+
+      filtered.forEach(u => {
+        const div = document.createElement('div');
+        let cardClass = 'user-card';
+        if (u.deleted_at)          cardClass += ' deleted';
+        else if (u.banned_until)   cardClass += ' banned';
+        else if (!u.has_profile)   cardClass += ' no-profile';
+        else if (!u.email_confirmed_at) cardClass += ' unconfirmed';
+        div.className = cardClass;
+
+        const badges = [];
+        if (u.has_profile)          badges.push(`<span class="badge badge-profile">Profile ✓</span>`);
+        else                         badges.push(`<span class="badge badge-noprofile">No Profile</span>`);
+        if (!u.email_confirmed_at)  badges.push(`<span class="badge badge-unconfirmed">Unconfirmed</span>`);
+        if (u.banned_until)         badges.push(`<span class="badge badge-banned">Banned</span>`);
+        if (u.deleted_at)           badges.push(`<span class="badge badge-deleted">Deleted</span>`);
+        if (u.is_anonymous)         badges.push(`<span class="badge badge-anon">Anonymous</span>`);
+        if (u.account_type)         badges.push(`<span class="badge badge-type">${u.account_type}</span>`);
+
+        const displayName = u.username
+          ? `${u.username}${u.first_name ? ` (${u.first_name} ${u.last_name || ''})` : ''}`
+          : u.first_name ? `${u.first_name} ${u.last_name || ''}` : '—';
+
+        // Build VP applications section
+        let vpHTML = '';
+        if (u.vp_applications && u.vp_applications.length > 0) {
+          const tags = u.vp_applications.map(vp => {
+            const typeClass = vp.type === 'Vendor' ? 'vp-vendor' : 'vp-performer';
+            const statusClass = 
+              vp.status === 'approved' ? 'vp-approved' :
+              vp.status === 'declined' ? 'vp-declined' : 'vp-pending';
+            const icon = vp.type === 'Vendor' ? '📦' : '🎭';
+            const label = vp.vendor_type ? `${vp.vendor_type}` : vp.type;
+            return `
+              <span class="vp-tag ${typeClass}">${icon} ${label}</span>
+              <span class="vp-tag ${statusClass}">${vp.status} — ${vp.tier || 'basic'}</span>
+            `;
+          }).join('');
+          vpHTML = `
+            <div class="vp-section">
+              <div class="vp-title">🎪 VP Applications</div>
+              ${tags}
+            </div>
+          `;
         }
+
+        div.innerHTML = `
+          <div class="user-header">
+            <div>
+              <div class="user-email">${u.email || '(no email)'}</div>
+              <div style="font-size:12px; color:#555 !important; margin-top:2px;">${displayName}</div>
+            </div>
+            <div class="badge-row">${badges.join('')}</div>
+          </div>
+          <div class="user-details">
+            <div class="user-detail"><strong>Level:</strong> ${u.level ?? '—'}</div>
+            <div class="user-detail"><strong>Tier:</strong> ${u.subscription_tier || '—'}</div>
+            <div class="user-detail"><strong>Location:</strong> ${u.city || '—'}${u.state ? ', ' + u.state : ''}</div>
+            <div class="user-detail"><strong>Joined:</strong> ${fmtDate(u.created_at)}</div>
+            <div class="user-detail"><strong>Last Login:</strong> ${fmtDate(u.last_login || u.last_sign_in_at)}</div>
+            <div class="user-detail"><strong>Email Confirmed:</strong> ${fmtDate(u.email_confirmed_at)}</div>
+            ${u.banned_until ? `<div class="user-detail"><strong>Banned Until:</strong> ${fmtDate(u.banned_until)}</div>` : ''}
+            ${u.deleted_at ? `<div class="user-detail"><strong>Deleted:</strong> ${fmtDate(u.deleted_at)}</div>` : ''}
+          </div>
+          ${vpHTML}
+        `;
+        container.appendChild(div);
       });
-
-      if (container.innerHTML.trim() === '') {
-        container.innerHTML = '<p>✅ No new users.</p>';
-      }
-
-      localStorage.setItem('seenUsers', JSON.stringify(seenUsers));
     }
-
-    function renderUserCard(user, isNew = false) {
-      return `
-        <div class="user-card">
-          <h2>${isNew ? '<span class="green-dot"></span>' : ''}${user.email}</h2>
-          <p><strong>Username:</strong> ${user.username || 'N/A'}</p>
-          <p><strong>Level:</strong> ${user.level ?? 1}</p>
-          <p><strong>Account Type:</strong> ${user.account_type || 'user'}</p>
-          <p><strong>Created At:</strong> ${formatDate(user.created_at)}</p>
-          <p><strong>Last Login:</strong> ${formatDate(user.last_login)}</p>
-        </div>
-      `;
-    }
-
-    function groupByDate() {
-      const container = document.getElementById('userGrid');
-      container.innerHTML = '';
-
-      const today = new Date();
-      const yesterday = new Date();
-      yesterday.setDate(today.getDate() - 1);
-
-      const todayGroup = users.filter(u => isSameDay(u.created_at, today));
-      const yesterdayGroup = users.filter(u => isSameDay(u.created_at, yesterday));
-      const others = users.filter(u => !isSameDay(u.created_at, today) && !isSameDay(u.created_at, yesterday));
-
-      if (todayGroup.length) container.innerHTML += `<h2 class="section-title">Today</h2>`;
-      todayGroup.forEach(user => container.innerHTML += renderUserCard(user));
-
-      if (yesterdayGroup.length) container.innerHTML += `<h2 class="section-title">Yesterday</h2>`;
-      yesterdayGroup.forEach(user => container.innerHTML += renderUserCard(user));
-
-      const groupedByDate = {};
-      others.forEach(user => {
-        const dateStr = formatDate(user.created_at);
-        if (!groupedByDate[dateStr]) groupedByDate[dateStr] = [];
-        groupedByDate[dateStr].push(user);
-      });
-
-      for (const date in groupedByDate) {
-        container.innerHTML += `<h2 class="section-title">${date}</h2>`;
-        groupedByDate[date].forEach(user => container.innerHTML += renderUserCard(user));
-      }
-    }
-
-    function groupByType() {
-      const container = document.getElementById('userGrid');
-      container.innerHTML = '';
-
-      const usersOnly = users.filter(u => u.account_type === 'user' || !u.account_type);
-      const vendors = users.filter(u => u.account_type === 'vendor');
-      const performers = users.filter(u => u.account_type === 'performer');
-
-      if (usersOnly.length) container.innerHTML += `<h2 class="section-title">Normal Users</h2>`;
-      usersOnly.forEach(user => container.innerHTML += renderUserCard(user));
-
-      if (vendors.length) container.innerHTML += `<h2 class="section-title">Vendors</h2>`;
-      vendors.forEach(user => container.innerHTML += renderUserCard(user));
-
-      if (performers.length) container.innerHTML += `<h2 class="section-title">Performers</h2>`;
-      performers.forEach(user => container.innerHTML += renderUserCard(user));
-    }
-
-    function isSameDay(dateStr, compareDate) {
-      const d = new Date(dateStr);
-      return d.getFullYear() === compareDate.getFullYear() &&
-             d.getMonth() === compareDate.getMonth() &&
-             d.getDate() === compareDate.getDate();
-    }
-
-    document.getElementById('searchInput').addEventListener('input', () => {
-      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-      const container = document.getElementById('userGrid');
-      container.innerHTML = '';
-
-      users.filter(user => user.email.toLowerCase().includes(searchQuery))
-        .forEach(user => container.innerHTML += renderUserCard(user));
-    });
 
     loadUsers();
   </script>

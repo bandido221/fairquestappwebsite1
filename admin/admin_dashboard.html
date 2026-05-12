@@ -10,130 +10,448 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+      --ink:         #1e1208;
+    }
+
     body {
-      background-color: #000;
       font-family: 'Domine', serif;
-      color: #ceb581;
-      padding: 40px;
-      text-align: center;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
     }
-    h1 {
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
       font-family: 'Cinzel', serif;
-      margin-bottom: 20px;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
     }
-    .app-box {
-      background: #c5b16a;
-      color: #333;
-      padding: 20px;
-      margin: 20px auto;
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
+    }
+    .nav-btn-danger {
+      border-color: rgba(180,30,30,0.4);
+      color: #e07070;
+    }
+    .nav-btn-danger:hover {
+      background: rgba(180,30,30,0.15);
+      border-color: rgba(180,30,30,0.7);
+      color: #f09090;
+    }
+
+    /* ── PAGE WRAP ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 32px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+    }
+    .page-header p {
+      font-size: 13px;
+      color: var(--gold);
+      margin-top: 6px;
+      opacity: 0.85;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--parchment) !important;
+      border-radius: var(--card-radius);
+      padding: 22px 20px;
+      margin-bottom: 18px;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
+    }
+    .card, .card * { color: #111 !important; }
+
+    .card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #111 !important;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(0,0,0,0.12);
+    }
+
+    /* ── PENDING STATS GRID ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(0,0,0,0.15);
       border-radius: 12px;
-      max-width: 700px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      text-decoration: none;
+      display: block;
+    }
+    .stat-box:hover {
+      background: rgba(255,255,255,1);
+      transform: translateY(-2px);
+    }
+    .stat-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+    .stat-val {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: #111 !important;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #444 !important;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .stat-box.has-pending .stat-val { color: #c0392b !important; }
+
+    /* ── NAV GRID (quick links) ── */
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .nav-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 14px;
+      background: rgba(255,255,255,0.85);
+      border: 1.5px solid rgba(0,0,0,0.18);
+      border-radius: 12px;
+      cursor: pointer;
       text-align: left;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.1s;
+      font-family: 'Domine', serif;
     }
-    button, .action-button {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      margin: 5px;
+    .nav-card:hover {
+      background: rgba(255,255,255,1);
+      transform: translateY(-1px);
+    }
+    .nav-card-icon { font-size: 22px; flex-shrink: 0; }
+    .nav-card-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111 !important;
+      line-height: 1.2;
+    }
+
+    /* ── INLINE FORMS ── */
+    .form-group { margin-bottom: 12px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #444 !important;
+      margin-bottom: 4px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.9);
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      color: #111;
+    }
+
+    /* ── ACTION BUTTONS ── */
+    .btn {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
       cursor: pointer;
-      font-weight: bold;
+      transition: background 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       text-decoration: none;
+      margin: 4px 4px 4px 0;
     }
-    .action-button {
-      display: inline-block;
-      background-color: #bb9457;
-      color: black;
-      padding: 8px 14px;
-      margin-left: 10px;
-      border: none;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
-      transition: background-color 0.2s ease;
-    }
-    .action-button:hover {
-      background-color: #e6c78c;
-      color: #000;
-    }
-    .logout {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background-color: #bb9457;
-      color: black;
-    }
-    .nav-bar, .page-nav {
-      margin-bottom: 20px;
-    }
-    .nav-bar button, .page-nav a {
-      background-color: #bb9457;
-      color: black;
-      padding: 10px 16px;
-      margin: 0 10px;
-      border: none;
-      border-radius: 6px;
+    .btn:hover { background: #fff; transform: translateY(-1px); }
+    .btn-primary { background: var(--gold); border-color: var(--gold-dark); color: #111 !important; }
+    .btn-primary:hover { background: var(--gold-light); }
+    .btn-danger { background: rgba(180,30,30,0.12); border-color: rgba(180,30,30,0.3); color: #c0392b !important; }
+    .btn-danger:hover { background: rgba(180,30,30,0.22); }
+    .btn-purple { background: #5b2a86; border-color: #3d1a5c; color: #fff !important; }
+    .btn-purple:hover { background: #6d35a0; }
+
+    /* ── DROP ZONE ── */
+    .drop-zone {
+      border: 2px dashed rgba(201,168,76,0.5);
+      padding: 28px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.5);
       cursor: pointer;
-      font-weight: bold;
-      text-decoration: none;
+      text-align: center;
+      font-size: 14px;
+      color: #555 !important;
+      margin-bottom: 10px;
+      transition: background 0.2s;
     }
-    .error-msg {
-      color: red;
-      font-weight: bold;
-      margin-top: 20px;
-    }
+    .drop-zone:hover { background: rgba(255,255,255,0.8); }
+
+    .error-msg { color: #c0392b !important; font-weight: bold; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h1>🛡️ Gatekeeper's Dashboard</h1>
 
-  <div class="nav-bar">
-<a href="/vendor_performer/vendor_list.html" class="action-button">📦 Vendors</a>
-    <a href="/vendor_performer/performer_list.html" class="action-button">🎭 Performers</a>
-<a href="email_outreach/outreach.html" class="action-button">📣 Fair Outreach</a>
-<a href="email_outreach/outreach_vendors.html" class="action-button">🧺 Vendor Outreach</a>    <a href="/admin/app_users.html" class="action-button">👤 Users</a> <!-- 🆕 NEW BUTTON -->
-    <a href="/admin/assign_fair_admin.html" class="action-button">🏰 Assign Fair Admins</a>
-<a href="/admin/manage_tiers.html" class="action-button">⚙️ Manage Tiers</a>
-<a href="/admin/admin_billing_specials.html" class="action-button">🎟️ Billing Specials</a>
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/admin/app_users.html" class="nav-btn">👤 Users</a>
+      <a href="/admin/assign_fair_admin.html" class="nav-btn">🏰 Assign Admins</a>
+      <a href="/admin/manage_tiers.html" class="nav-btn">⚙️ Tiers</a>
+      <a href="/admin/admin_billing_specials.html" class="nav-btn">🎟️ Billing</a>
+      <a href="/index.html" class="nav-btn">🏠 Home</a>
+      <button class="nav-btn nav-btn-danger" onclick="logout()">🚪 Logout</button>
+    </div>
+  </nav>
 
-    <a href="/index.html" class="action-button">🏰 Home</a>
-  </div>
-  
-  
+  <div class="page">
 
-  <div class="page-nav">
-    <a href="all_fairs.html">Fairs</a>
-    <a href="reports.html">Reports</a>
-    <a href="settings.html">Settings</a>
-    <div id="pendingCounts" style="margin-top: 30px; font-size: 18px;">
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <h1>🛡️ Gatekeeper's Dashboard</h1>
+      <p>FairQuest Admin Control Panel</p>
+    </div>
 
-  </div>
-  <!-- Admin Upload Vendor/Performer Photo -->
-   <!-- Add Search and Select Section -->
-<div style="margin: 40px auto; max-width: 600px; background: #fdf7e1; padding: 20px; border-radius: 12px; color: #000;">
-  <h2>Select Vendor or Performer</h2>
-  <input type="text" id="searchQuery" placeholder="Search by name..." style="width:100%; margin-bottom: 10px; padding: 8px; border-radius:6px;" oninput="searchApplications()">
-  <select id="applicationDropdown" style="width:100%; padding: 8px; border-radius:6px;">
-    <option value="">-- Select an application --</option>
-  </select>
-  
-</div>
-<div id="selectedApplicationCard" style="display:none; background: #fdf7e1; color:#000; margin: 20px auto; padding: 20px; border-radius: 12px; max-width: 600px;">
-  <h3>📝 Edit Application</h3>
-  <label>Name:</label>
-  <input type="text" id="editName" style="width:100%; margin-bottom:10px; padding:8px; border-radius:6px;" />
-  
-  <label>Tier:</label>
-  <input type="text" id="editTier" style="width:100%; margin-bottom:10px; padding:8px; border-radius:6px;" />
+    <!-- PENDING COUNTS CARD -->
+    <div class="card">
+      <div class="card-title">⚠️ Pending Review</div>
+      <div class="stats-grid">
+        <a class="stat-box" href="approve_vendors.html" id="statVendor">
+          <span class="stat-icon">📦</span>
+          <div class="stat-val" id="vendorCount">…</div>
+          <div class="stat-label">Vendors</div>
+        </a>
+        <a class="stat-box" href="approve_performers.html" id="statPerformer">
+          <span class="stat-icon">🎭</span>
+          <div class="stat-val" id="performerCount">…</div>
+          <div class="stat-label">Performers</div>
+        </a>
+        <a class="stat-box" href="approve_updates.html" id="statUpdates">
+          <span class="stat-icon">🛠️</span>
+          <div class="stat-val" id="updateApplicationCount">…</div>
+          <div class="stat-label">VP Updates</div>
+        </a>
+        <a class="stat-box" href="fair_approval.html" id="statFairs">
+          <span class="stat-icon">🏰</span>
+          <div class="stat-val" id="fairCount">…</div>
+          <div class="stat-label">New Fairs</div>
+        </a>
+        <a class="stat-box" href="fair_update_review.html" id="statFairUpdates">
+          <span class="stat-icon">✏️</span>
+          <div class="stat-val" id="updateCount">…</div>
+          <div class="stat-label">Fair Updates</div>
+        </a>
+        <a class="stat-box" href="app_users.html" id="statUsers">
+          <span class="stat-icon">👤</span>
+          <div class="stat-val" id="userCount">…</div>
+          <div class="stat-label">New Users</div>
+        </a>
+        <a class="stat-box" href="/admin/assign_fair_admin.html" id="statVerifications">
+          <span class="stat-icon">🏰</span>
+          <div class="stat-val" id="verificationCount">…</div>
+          <div class="stat-label">Fair Verifications</div>
+        </a>
+        <a class="stat-box" href="/admin/contact_messages.html" id="statMessages">
+          <span class="stat-icon">✉️</span>
+          <div class="stat-val" id="messageCount">…</div>
+          <div class="stat-label">Messages</div>
+        </a>
+      </div>
+    </div>
 
-  <label>Type:</label>
-  <select id="editType" style="width:100%; margin-bottom:10px; padding:8px; border-radius:6px;">
-    <option value="vendor">Vendor</option>
-    <option value="performer">Performer</option>
-  </select>
+    <!-- QUICK LINKS CARD -->
+    <div class="card">
+      <div class="card-title">🗺️ Quick Links</div>
+      <div class="nav-grid">
+        <a href="/vendor_performer/vendor_list.html" class="nav-card">
+          <span class="nav-card-icon">📦</span>
+          <span class="nav-card-label">Vendor List</span>
+        </a>
+        <a href="/vendor_performer/performer_list.html" class="nav-card">
+          <span class="nav-card-icon">🎭</span>
+          <span class="nav-card-label">Performer List</span>
+        </a>
+        <a href="email_outreach/outreach.html" class="nav-card">
+          <span class="nav-card-icon">📣</span>
+          <span class="nav-card-label">Fair Outreach</span>
+        </a>
+        <a href="email_outreach/outreach_vendors.html" class="nav-card">
+          <span class="nav-card-icon">🧺</span>
+          <span class="nav-card-label">Vendor Outreach</span>
+        </a>
+        <a href="admin_update_message.html" class="nav-card">
+          <span class="nav-card-icon">📢</span>
+          <span class="nav-card-label">Post Update</span>
+        </a>
+        <a href="all_fairs.html" class="nav-card">
+          <span class="nav-card-icon">🎪</span>
+          <span class="nav-card-label">All Fairs</span>
+        </a>
+        <a href="/admin/fair_amenities.html" class="nav-card">
+          <span class="nav-card-icon">🏕️</span>
+          <span class="nav-card-label">Fair Amenities</span>
+        </a>
+      </div>
+    </div>
 
-  <button onclick="saveApplicationEdits()" class="action-button">💾 Save Changes</button>
-</div>
+    <!-- SEARCH & EDIT APPLICATION CARD -->
+    <div class="card">
+      <div class="card-title">🔍 Search & Edit Vendor / Performer</div>
+      <div class="form-group">
+        <label>Search by Name</label>
+        <input type="text" id="searchQuery" placeholder="Type a name..." oninput="searchApplications()">
+      </div>
+      <div class="form-group">
+        <label>Select Application</label>
+        <select id="applicationDropdown">
+          <option value="">-- Select an application --</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card" id="selectedApplicationCard" style="display:none;">
+      <div class="card-title">📝 Edit Application</div>
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="editName" />
+      </div>
+      <div class="form-group">
+        <label>Tier</label>
+        <input type="text" id="editTier" />
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="editType">
+          <option value="vendor">Vendor</option>
+          <option value="performer">Performer</option>
+        </select>
+      </div>
+      <button onclick="saveApplicationEdits()" class="btn btn-primary">💾 Save Changes</button>
+    </div>
 
 <script>
 async function searchApplications() {
@@ -211,59 +529,28 @@ dropdown.addEventListener('change', async () => {
 
 </script>
 
-<div style="margin: 40px auto; max-width: 600px; background: #fdf7e1; padding: 20px; border-radius: 12px; color: #000;">
-  <h2>Upload Vendor/Performer Image</h2>
-  <input type="text" id="applicationIdInput" placeholder="Enter Application ID" style="width:100%; margin-bottom: 10px; padding: 8px; border-radius:6px;">
-  <div id="dropArea" style="border:2px dashed #bb9457; padding:30px; margin-bottom:10px; border-radius:8px; background:#fff0; cursor:pointer;">
-    <p>Drag & Drop Image Here or Click to Upload</p>
-    <input type="file" id="adminPhotoUpload" accept="image/*" style="display:none;">
-  </div>
-    <br/>
-    <img id="adminImagePreview" style="display:none; max-height:150px; border-radius:8px; margin-top:10px; box-shadow:0 2px 8px rgba(0,0,0,0.3);" />
-    <p id="existingImageLabel" style="margin-top:10px;"></p>
-      <br/>
-  <button onclick="adminUploadPhoto()" class="action-button">Upload Image</button>
-  <button onclick="savePhotoToApplication()" class="action-button" style="background:#5b2a86; color:white;">Save to Vendor/Performer</button>
-  <p id="uploadStatus" style="margin-top:10px;"></p>
-</div>
+<!-- UPLOAD IMAGE CARD -->
+    <div class="card">
+      <div class="card-title">🖼️ Upload Vendor / Performer Image</div>
+      <div class="form-group">
+        <label>Application ID</label>
+        <input type="text" id="applicationIdInput" placeholder="Enter Application ID">
+      </div>
+      <div class="drop-zone" id="dropArea">
+        <p>Drag & Drop Image Here or Click to Upload</p>
+        <input type="file" id="adminPhotoUpload" accept="image/*" style="display:none;">
+      </div>
+      <img id="adminImagePreview" style="display:none; max-height:150px; border-radius:8px; margin:10px 0; box-shadow:0 2px 8px rgba(0,0,0,0.3);" />
+      <p id="existingImageLabel" style="margin-bottom:8px; font-size:13px;"></p>
+      <button onclick="adminUploadPhoto()" class="btn">📤 Upload Image</button>
+      <button onclick="savePhotoToApplication()" class="btn btn-purple">💾 Save to Vendor/Performer</button>
+      <p id="uploadStatus" style="margin-top:10px; font-size:13px;"></p>
+    </div>
 
-  <!-- Restored Pending Summary Section -->
-  <div id="pendingCounts" style="margin-top: 30px; font-size: 18px;">
-    <p>
-      🔸 Pending Vendor Applications: <strong id="vendorCount">...</strong>
-      <a class="action-button" href="approve_vendors.html">Review Vendors</a>
-    </p>
+    <div id="applicationList"></div>
+    <p id="errorMessage" class="error-msg"></p>
 
-    <p>
-      🔹 Pending Performer Applications: <strong id="performerCount">...</strong>
-      <a class="action-button" href="approve_performers.html">Review Performers</a>
-    </p>
-    <p>
-      🛠️ Vendor/Performer Updates: <strong id="updateApplicationCount">...</strong> |
-      <strong id="logUpdateCount">...</strong> new fields
-      <a class="action-button" href="approve_updates.html">Review Updates</a>
-    </p>
-    
-    
-    <p>
-      🏰 New Fair Submissions: <strong id="fairCount">...</strong>
-      <a class="action-button" href="fair_approval.html">Review Fairs</a>
-    </p>
-    <p>
-      ✏️ Fair Update Suggestions: <strong id="updateCount">...</strong>
-      <a class="action-button" href="fair_update_review.html">Review Updates</a>
-    </p>
-    <p>
-      👤 New App Users: <strong id="userCount">...</strong>
-      <a class="action-button" href="app_users.html">View Users</a>
-    </p>
-  
-  </div>
-
-  <div id="applicationList"></div>
-
-  <p id="errorMessage" class="error-msg"></p>
-  <button class="logout" onclick="logout()">Logout</button>
+  </div><!-- /page -->
 
   <script>
 const supabaseClient = window.supabase.createClient(
@@ -417,8 +704,26 @@ fileInput.addEventListener('change', () => {
   document.getElementById('updateCount').innerText = data.update_count ?? 0;
   document.getElementById('userCount').innerText = data.user_count ?? 0;
   document.getElementById('updateApplicationCount').innerText = data.update_application_count ?? 0;
-  document.getElementById('logUpdateCount').innerText = data.log_update_count ?? 0;
+  
+
+  // Fair verifications — separate RPC call
+  const { data: verData } = await supabaseClient.rpc('get_pending_fair_verifications');
+  const verCount = (verData || []).length;
+  document.getElementById('verificationCount').innerText = verCount;
+  if (verCount > 0) document.getElementById('statVerifications').classList.add('has-pending');
+
+  // Contact messages
+  const { data: msgCount } = await supabaseClient.rpc('get_unread_contact_message_count');
+  document.getElementById('messageCount').innerText = msgCount ?? 0;
+  if ((msgCount ?? 0) > 0) document.getElementById('statMessages').classList.add('has-pending');
+if ((data.vendor_count ?? 0) > 0) document.getElementById('statVendor').classList.add('has-pending');
+  if ((data.performer_count ?? 0) > 0) document.getElementById('statPerformer').classList.add('has-pending');
+  if ((data.update_application_count ?? 0) > 0) document.getElementById('statUpdates').classList.add('has-pending');
+  if ((data.fair_count ?? 0) > 0) document.getElementById('statFairs').classList.add('has-pending');
+  if ((data.update_count ?? 0) > 0) document.getElementById('statFairUpdates').classList.add('has-pending');
+  if ((data.user_count ?? 0) > 0) document.getElementById('statUsers').classList.add('has-pending');
 }
+
 
    
     async function logout() {

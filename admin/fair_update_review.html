@@ -17,85 +17,203 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
     body {
-      background: #000;
-      color: #f0e6d2;
       font-family: 'Domine', serif;
-      padding: 30px;
-      text-align: center;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
     }
-    h1 {
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
       font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
     }
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 32px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+    }
+
     .card {
-      background: #b7af95;
-      color: #3b1f1f;
-      border-radius: 12px;
-      margin: 20px auto;
-      padding: 20px;
-      max-width: 900px;
+      background: var(--parchment) !important;
+      border-radius: var(--card-radius);
+      padding: 22px 20px;
+      margin-bottom: 16px;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
       text-align: left;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
+    .card, .card * { color: #111 !important; }
+
+    .card p { font-size: 13px; color: #333 !important; margin-bottom: 6px; }
+
     .field {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+      padding: 12px;
+      background: rgba(255,255,0,0.12);
+      border: 1px solid rgba(200,180,0,0.3);
+      border-radius: 8px;
     }
     .field label {
-      width: 150px;
-      font-weight: bold;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #444 !important;
     }
     .field span {
       flex: 1;
-      padding: 4px 8px;
-      background: #fff9de;
+      padding: 6px 10px;
+      background: rgba(255,255,255,0.7);
       border-radius: 6px;
+      font-size: 13px;
+      color: #111 !important;
     }
-    .field {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  gap: 10px;
-}
-.field label {
-  width: 150px;
-  font-weight: bold;
-}
-.field span {
-  flex: 1;
-  padding: 4px 8px;
-  background: #fff9de;
-  border-radius: 6px;
-}
-button.reject {
-  background-color: #e74c3c;
-}
-button.reject:hover {
-  background-color: #c0392b;
-}
 
-    button {
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       margin-top: 10px;
-      padding: 8px 16px;
-      font-weight: bold;
-      background-color: #2ecc71;
-      border: none;
-      color: white;
-      border-radius: 6px;
+    }
+    .btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
       cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
-    button.approved {
-      background-color: #888;
-      cursor: default;
-    }
+    .btn:hover { background: #fff; transform: translateY(-1px); }
+    .btn-approve { background: rgba(46,125,50,0.15); border-color: rgba(46,125,50,0.4); color: #1b5e20 !important; }
+    .btn-approve:hover { background: rgba(46,125,50,0.25); }
+    .btn-reject { background: rgba(180,30,30,0.12); border-color: rgba(180,30,30,0.3); color: #7a0000 !important; }
+    .btn-reject:hover { background: rgba(180,30,30,0.22); }
   </style>
 </head>
 <body>
-  <h1>🛡️ Review Fair Updates</h1>
-  <div id="reviewContainer">Loading suggestions...</div>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/admin/admin_dashboard.html" class="nav-btn">⬅ Dashboard</a>
+      <a href="/index.html" class="nav-btn">🏠 Home</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-header">
+      <h1>🛡️ Review Fair Updates</h1>
+    </div>
+    <div id="reviewContainer">Loading suggestions...</div>
+  </div>
 
  <!-- Replace this section inside your <script> tag -->
 <script>
@@ -169,9 +287,9 @@ const fairData = fairResult?.[0];
   <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
     <span><strong>Live:</strong> ${liveVal || '(blank)'}</span>
     <span><strong>Suggested:</strong> ${suggestedVal}</span>
-    <div style="display: flex; gap: 10px; margin-top: 8px;">
-      <button onclick="approveField(${latest.id}, '${field}', \`${suggestedVal.replace(/`/g, "\\`")}\`)">✅ Approve</button>
-      <button class="reject" onclick="rejectField(${latest.id})">❌ Reject</button>
+    <div class="btn-row">
+      <button class="btn btn-approve" onclick="approveField(${latest.id}, '${field}', \`${suggestedVal.replace(/`/g, "\\`")}\`)">✅ Approve</button>
+      <button class="btn btn-reject" onclick="rejectField(${latest.id})">❌ Reject</button>
     </div>
   </div>
 `;

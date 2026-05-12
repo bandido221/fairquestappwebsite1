@@ -8,82 +8,193 @@
   <title>Billing Specials | FairQuest Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <style>
+ <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
     body {
-      background-color: #000;
       font-family: 'Domine', serif;
-      color: #ceb581;
-      padding: 30px 20px 60px;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
       text-align: center;
     }
 
-    h1, h2, h3 { font-family: 'Cinzel', serif; }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-    h1 { margin-bottom: 10px; }
-
-    .nav-bar {
-      margin-bottom: 24px;
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
+    }
+    .topnav-right {
+      display: flex;
+      align-items: center;
       gap: 8px;
     }
-
-    .action-button {
-      display: inline-block;
-      background-color: #bb9457;
-      color: #000;
-      padding: 9px 16px;
-      border: none;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
-      cursor: pointer;
+    .nav-btn {
       font-family: 'Domine', serif;
-      font-size: 14px;
-      transition: background 0.2s;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
+    }
+    .nav-btn-danger {
+      border-color: rgba(180,30,30,0.4);
+      color: #e07070;
+    }
+    .nav-btn-danger:hover {
+      background: rgba(180,30,30,0.15);
+      color: #f09090;
     }
 
-    .action-button:hover { background-color: #e6c78c; }
-    .action-button.red   { background-color: #c0392b; color: #fff; }
-    .action-button.red:hover { background-color: #a93226; }
-    .action-button.green { background-color: #27ae60; color: #fff; }
-    .action-button.green:hover { background-color: #1e8449; }
-    .action-button.purple { background-color: #5b2a86; color: #fff; }
-    .action-button.purple:hover { background-color: #472066; }
-    .action-button.sm { padding: 6px 12px; font-size: 13px; }
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
 
-    /* ── Section boxes ─────────────────────────────────────── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 32px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .tab {
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: rgba(201,168,76,0.2);
+      border-color: rgba(201,168,76,0.6);
+      color: var(--gold-light);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── BOX / CARD ── */
     .box {
-      background: #c5b16a;
-      color: #3b1f1f;
-      padding: 22px 24px;
-      margin: 20px auto;
-      border-radius: 12px;
-      max-width: 860px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      background: var(--parchment) !important;
+      border-radius: var(--card-radius);
+      padding: 22px 20px;
+      margin-bottom: 18px;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
       text-align: left;
     }
+    .box, .box * { color: #111 !important; }
 
-    .box h2 { margin-top: 0; font-size: 20px; }
+    .box h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #111 !important;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
 
-    /* ── Form ──────────────────────────────────────────────── */
+    /* ── FORM ── */
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin-bottom: 14px;
     }
-
     .form-group { display: flex; flex-direction: column; gap: 4px; }
     .form-group.full { grid-column: 1 / -1; }
 
     label {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.4px;
-      color: #2f1a0f;
+      letter-spacing: 0.06em;
+      color: #444 !important;
     }
 
     input[type="text"],
@@ -100,35 +211,35 @@
       background: rgba(255,255,255,0.9);
       color: #111;
     }
-
     textarea { resize: vertical; min-height: 70px; }
 
     .type-section {
-      background: rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.4);
       border-radius: 10px;
       padding: 14px;
       margin-bottom: 14px;
     }
+    .type-section h3 {
+      font-family: 'Cinzel', serif;
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: #111 !important;
+    }
 
-    .type-section h3 { margin: 0 0 10px; font-size: 16px; }
-
-    /* ── Toggle switch ─────────────────────────────────────── */
+    /* ── TOGGLE ── */
     .toggle-wrap {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-top: 4px;
     }
-
     .toggle {
       position: relative;
       width: 46px;
       height: 24px;
       flex-shrink: 0;
     }
-
     .toggle input { opacity: 0; width: 0; height: 0; }
-
     .slider {
       position: absolute;
       inset: 0;
@@ -137,7 +248,6 @@
       cursor: pointer;
       transition: 0.3s;
     }
-
     .slider:before {
       content: '';
       position: absolute;
@@ -147,21 +257,18 @@
       border-radius: 50%;
       transition: 0.3s;
     }
-
     input:checked + .slider { background: #27ae60; }
     input:checked + .slider:before { transform: translateX(22px); }
 
-    /* ── Specials list ─────────────────────────────────────── */
+    /* ── SPECIAL CARDS ── */
     .special-card {
-      background: rgba(255,255,255,0.82);
+      background: rgba(255,255,255,0.75);
       border-radius: 10px;
       padding: 14px 16px;
       margin-bottom: 12px;
-      border-left: 5px solid #aa8425;
+      border-left: 4px solid var(--gold);
     }
-
     .special-card.inactive { border-left-color: #aaa; opacity: 0.75; }
-
     .special-card-top {
       display: flex;
       justify-content: space-between;
@@ -169,112 +276,89 @@
       gap: 10px;
       flex-wrap: wrap;
     }
-
-    .special-title { font-family: 'Cinzel', serif; font-size: 17px; color: #111; }
-    .special-meta  { font-size: 13px; color: #444; margin-top: 4px; }
-    .special-desc  { font-size: 14px; color: #222; margin-top: 8px; }
-
+    .special-title { font-family: 'Cinzel', serif; font-size: 16px; color: #111 !important; }
+    .special-meta  { font-size: 13px; color: #555 !important; margin-top: 4px; }
+    .special-desc  { font-size: 14px; color: #333 !important; margin-top: 8px; }
     .special-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 
-    /* ── Status badge ──────────────────────────────────────── */
+    /* ── BADGES ── */
     .badge {
       display: inline-block;
-      padding: 3px 10px;
+      padding: 3px 9px;
       border-radius: 999px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
     }
+    .badge-on  { background: rgba(46,125,50,0.15);  color: #1b5e20 !important; border: 1px solid rgba(46,125,50,0.4); }
+    .badge-off { background: rgba(180,30,30,0.12);  color: #7a0000 !important; border: 1px solid rgba(180,30,30,0.3); }
+    .badge-exp { background: rgba(230,180,0,0.15);  color: #7a5c00 !important; border: 1px solid rgba(230,180,0,0.4); }
 
-    .badge-on  { background: #d4edda; color: #155724; border: 1px solid #8fd2ab; }
-    .badge-off { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    .badge-exp { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+    /* ── BUTTONS ── */
+    .btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 13px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
+    }
+    .btn:hover { background: #fff; transform: translateY(-1px); }
+    .btn.green  { background: rgba(46,125,50,0.15);  border-color: rgba(46,125,50,0.4);  color: #1b5e20 !important; }
+    .btn.green:hover  { background: rgba(46,125,50,0.25); }
+    .btn.red    { background: rgba(180,30,30,0.12);  border-color: rgba(180,30,30,0.3);  color: #7a0000 !important; }
+    .btn.red:hover    { background: rgba(180,30,30,0.22); }
+    .btn.purple { background: rgba(91,42,134,0.15);  border-color: rgba(91,42,134,0.3);  color: #3a0a7a !important; }
+    .btn.purple:hover { background: rgba(91,42,134,0.25); }
+    .btn.sm { padding: 5px 10px; font-size: 11px; }
 
-    /* ── Claims table ──────────────────────────────────────── */
+    /* ── CLAIMS TABLE ── */
     .claims-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
     }
-
     .claims-table th {
-      background: rgba(170,132,37,0.25);
-      color: #2f1a0f;
+      background: rgba(201,168,76,0.2);
+      color: #111 !important;
       font-family: 'Cinzel', serif;
-      font-size: 12px;
+      font-size: 11px;
       padding: 9px 10px;
       text-align: left;
-      border-bottom: 2px solid rgba(170,132,37,0.4);
+      border-bottom: 2px solid rgba(201,168,76,0.3);
     }
-
     .claims-table td {
       padding: 9px 10px;
       border-bottom: 1px solid rgba(0,0,0,0.08);
-      color: #111;
+      color: #111 !important;
       vertical-align: middle;
     }
+    .claims-table tr:hover td { background: rgba(255,255,255,0.5); }
 
-    .claims-table tr:hover td { background: rgba(255,255,255,0.4); }
-
-    /* ── Tabs ──────────────────────────────────────────────── */
-    .tabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 20px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .tab {
-      padding: 9px 20px;
-      border-radius: 8px;
-      border: 2px solid #bb9457;
-      background: transparent;
-      color: #bb9457;
-      font-family: 'Domine', serif;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .tab.active { background: #bb9457; color: #000; }
-
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    /* ── Search ────────────────────────────────────────────── */
+    /* ── SEARCH ── */
     .search-row {
       display: flex;
       gap: 10px;
       margin-bottom: 14px;
       flex-wrap: wrap;
     }
-
-    .search-row input {
-      flex: 1;
-      min-width: 160px;
-    }
+    .search-row input { flex: 1; min-width: 160px; }
 
     .empty-state {
       text-align: center;
       padding: 20px;
-      color: #5c3a1e;
       font-size: 14px;
+      color: #555 !important;
     }
 
-    .logout {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background-color: #bb9457;
-      color: #000;
-      border: none;
-      border-radius: 6px;
-      padding: 9px 14px;
-      font-weight: bold;
-      cursor: pointer;
-      font-family: 'Domine', serif;
-    }
+    #formStatus { margin-top: 12px; font-weight: bold; font-size: 14px; }
 
     @media (max-width: 600px) {
       .form-grid { grid-template-columns: 1fr; }
@@ -284,16 +368,23 @@
 </head>
 <body>
 
-  <button class="logout" onclick="logout()">Logout</button>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/admin/admin_dashboard.html" class="nav-btn">⬅ Dashboard</a>
+      <a href="/admin/vp_billing_admin.html" class="nav-btn">💳 Billing Overview</a>
+      <a href="/admin/manage_tiers.html" class="nav-btn">⚙️ Tiers</a>
+      <button class="nav-btn nav-btn-danger" onclick="logout()">🚪 Logout</button>
+    </div>
+  </nav>
 
-  <h1>🎟️ Billing Specials & Offers</h1>
-
-  <div class="nav-bar">
-    <a href="/admin/admin_dashboard.html" class="action-button">🏠 Admin Home</a>
-    <a href="/admin/vp_billing_admin.html" class="action-button purple">💳 Billing Overview</a>
-    <a href="/admin/app_users.html" class="action-button">👤 Users</a>
-    <a href="/admin/manage_tiers.html" class="action-button">⚙️ Manage Tiers</a>
-  </div>
+  <div class="page">
+    <div class="page-header">
+      <h1>🎟️ Billing Specials & Offers</h1>
+    </div>
 
   <div class="tabs">
     <button class="tab active" onclick="switchTab('specials')">🎟️ Manage Specials</button>
@@ -416,8 +507,8 @@
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
-        <button class="action-button green" onclick="saveSpecial()">💾 Save Special</button>
-        <button class="action-button" onclick="clearForm()">✖ Clear</button>
+        <button class="btn green" onclick="saveSpecial()">💾 Save Special</button>
+        <button class="btn" onclick="clearForm()">✖ Clear</button>
       </div>
       <div id="formStatus" style="margin-top:12px; font-weight:bold; font-size:14px;"></div>
     </div>
@@ -533,12 +624,12 @@ function renderSpecials(list) {
             <div class="special-desc">${s.description}</div>
           </div>
         </div>
-        <div class="special-actions">
-          <button class="action-button sm" onclick="editSpecial('${s.id}')">✏️ Edit</button>
-          <button class="action-button sm ${s.is_active ? 'red' : 'green'}" onclick="toggleSpecial('${s.id}', ${!s.is_active})">
+  <div class="special-actions">
+          <button class="btn sm" onclick="editSpecial('${s.id}')">✏️ Edit</button>
+          <button class="btn sm ${s.is_active ? 'red' : 'green'}" onclick="toggleSpecial('${s.id}', ${!s.is_active})">
             ${s.is_active ? '⏸ Turn Off' : '▶ Turn On'}
           </button>
-          <button class="action-button sm red" onclick="deleteSpecial('${s.id}', '${s.title.replace(/'/g,"\\'")}')">🗑️ Delete</button>
+          <button class="btn sm red" onclick="deleteSpecial('${s.id}', '${s.title.replace(/'/g,"\\'")}')">🗑️ Delete</button>
         </div>
       </div>
     `;
@@ -759,5 +850,6 @@ async function logout() {
 }
 </script>
 
+</div><!-- /page -->
 </body>
 </html>

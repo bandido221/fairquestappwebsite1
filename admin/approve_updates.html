@@ -9,59 +9,225 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
     body {
-      background-color: #000;
       font-family: 'Domine', serif;
-      color: #f0e6d2;
-      padding: 40px;
-      text-align: center;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
     }
-    h1 {
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
       font-family: 'Cinzel', serif;
-      margin-bottom: 30px;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
     }
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 32px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+    }
+
+    .search-input {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.4);
+      background: rgba(201,168,76,0.1);
+      color: var(--gold-light);
+      outline: none;
+      width: 100%;
+      margin-bottom: 16px;
+    }
+    .search-input::placeholder { color: rgba(241,223,153,0.4); }
+    .search-input:focus {
+      border-color: rgba(201,168,76,0.7);
+      background: rgba(201,168,76,0.15);
+    }
+
     .log-entry {
-      background: rgba(172, 148, 49, 0.88);
-      color: #3b1f1f;
+      background: var(--parchment) !important;
+      border-radius: var(--card-radius);
       padding: 20px;
-      margin: 20px auto;
-      border-radius: 12px;
-      max-width: 700px;
-      border: 2px solid #aa8452;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      margin-bottom: 14px;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
       text-align: left;
     }
-    .log-entry strong { display: block; margin-top: 10px; }
-    .log-entry button {
-      margin-top: 12px;
-      background: #5b2a86;
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
+    .log-entry, .log-entry * { color: #111 !important; }
+
+    .log-name {
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #111 !important;
     }
-    .log-entry button:hover {
-      background: #472066;
+    .log-field {
+      font-size: 13px;
+      color: #333 !important;
+      margin-bottom: 4px;
     }
-    #searchBox {
-      width: 100%;
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 12px;
+    .log-values {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .val-box {
+      background: rgba(255,255,255,0.6);
       border-radius: 8px;
-      font-size: 16px;
-      border: 1px solid #aa8452;
-      display: block;
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #333 !important;
     }
+    .val-box strong {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #666 !important;
+      margin-bottom: 3px;
+    }
+    .val-box.new-val {
+      background: rgba(46,125,50,0.12);
+      border: 1px solid rgba(46,125,50,0.3);
+    }
+
+    .btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .btn:hover { background: #fff; transform: translateY(-1px); }
+    .btn-purple { background: rgba(91,42,134,0.15); border-color: rgba(91,42,134,0.3); color: #3a0a7a !important; }
+    .btn-purple:hover { background: rgba(91,42,134,0.25); }
   </style>
 </head>
 <body>
-  <h1>📜 Vendor/Performer Update Logs</h1>
 
-  <input type="text" id="searchBox" placeholder="Search by vendor or performer name..." oninput="loadLogs()">
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/admin/admin_dashboard.html" class="nav-btn">⬅ Dashboard</a>
+      <a href="/index.html" class="nav-btn">🏠 Home</a>
+    </div>
+  </nav>
 
-  <div id="logContainer"></div>
+  <div class="page">
+    <div class="page-header">
+      <h1>📜 VP Update Logs</h1>
+    </div>
+    <input class="search-input" type="text" id="searchBox" placeholder="🔍 Search by vendor or performer name..." oninput="loadLogs()">
+    <div id="logContainer"></div>
+  </div>
 
   <script>
   const supabaseClient = window.supabase.createClient(
@@ -104,25 +270,38 @@ const { data: apps, error: appError } = await supabaseClient.rpc(
         const div = document.createElement('div');
         div.className = 'log-entry';
 
-        div.innerHTML = `
-          <strong>${name} (${log.application_type})</strong>
-          <div><strong>Field:</strong> ${log.field_name}</div>
-        ${log.field_name === 'photo_url'
-  ? `<div><strong>Old:</strong><br><img src="${log.old_value}" width="100"/></div>
-     <div><strong>New:</strong><br><img src="${log.new_value}" width="100"/></div>`
-  : `<div><strong>Old:</strong> ${log.old_value}</div>
-     <div><strong>New:</strong> ${log.new_value}</div>`}
+        const isPhoto = log.field_name === 'photo_url';
+        const valuesHTML = isPhoto ? `
+          <div class="log-values">
+            <div class="val-box">
+              <strong>Old</strong>
+              <img src="${log.old_value}" style="width:80px; border-radius:6px; margin-top:4px;" />
+            </div>
+            <div class="val-box new-val">
+              <strong>New</strong>
+              <img src="${log.new_value}" style="width:80px; border-radius:6px; margin-top:4px;" />
+            </div>
+          </div>
+        ` : `
+          <div class="log-values">
+            <div class="val-box"><strong>Old</strong>${log.old_value || '(blank)'}</div>
+            <div class="val-box new-val"><strong>New</strong>${log.new_value || '(blank)'}</div>
+          </div>
+        `;
 
-          <div><strong>Time:</strong> ${new Date(log.updated_at).toLocaleString()}</div>
+        div.innerHTML = `
+          <div class="log-name">${name}</div>
+          <div class="log-field"><strong>Type:</strong> ${log.application_type}</div>
+          <div class="log-field"><strong>Field Changed:</strong> ${log.field_name}</div>
+          ${valuesHTML}
+          <div class="log-field"><strong>Updated:</strong> ${new Date(log.updated_at).toLocaleString()}</div>
         `;
 
         const seenBtn = document.createElement('button');
-        seenBtn.textContent = 'Mark as Seen';
+        seenBtn.className = 'btn btn-purple';
+        seenBtn.textContent = '✅ Mark as Seen';
         seenBtn.onclick = async () => {
-   await supabaseClient.rpc(
-  'mark_application_update_log_seen',
-  { p_id: log.id }
-);
+          await supabaseClient.rpc('mark_application_update_log_seen', { p_id: log.id });
           loadLogs();
         };
         div.appendChild(seenBtn);

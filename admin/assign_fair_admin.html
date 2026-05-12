@@ -10,106 +10,311 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
-body {
-  background:#000;
-  color:#f0e6d2;
-  font-family:'Domine', serif;
-  padding:30px;
-}
-h1 {
-  font-family:'Cinzel', serif;
-  text-align:center;
-}
-.controls {
-  text-align:center;
-  margin-bottom:20px;
-}
-.controls button {
-  margin:5px;
-  padding:10px 16px;
-  border-radius:8px;
-  border:none;
-  font-weight:bold;
-  cursor:pointer;
-}
-.primary { background:#c79a3b; color:#000; }
-.secondary { background:#444; color:#fff; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-.card {
-  background:#111;
-  border-radius:12px;
-  padding:20px;
-  margin:20px auto;
-  max-width:800px;
-}
-.card h3 {
-  margin-top:0;
-}
-.badge {
-  display:inline-block;
-  padding:5px 10px;
-  border-radius:6px;
-  font-size:12px;
-  font-weight:bold;
-}
-.pending { background:#b58900; color:#000; }
-.approved { background:#2ecc71; color:#000; }
-.newfair { background:#e67e22; color:#000; margin-left:8px; }
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
 
-button.action {
-  margin-top:10px;
-  margin-right:10px;
-  padding:8px 14px;
-  border-radius:6px;
-  border:none;
-  cursor:pointer;
-  font-weight:bold;
-}
-.approve { background:#27ae60; color:#fff; }
-.reject { background:#c0392b; color:#fff; }
+    body {
+      font-family: 'Domine', serif;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
+    }
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 32px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .filter-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: rgba(201,168,76,0.15);
+      border-color: rgba(201,168,76,0.6);
+      color: var(--gold-light);
+    }
+
+    .card {
+      background: var(--parchment) !important;
+      border-radius: var(--card-radius);
+      padding: 22px 20px;
+      margin-bottom: 16px;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
+      text-align: left;
+    }
+    .card, .card * { color: #111 !important; }
+
+    .card h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #111 !important;
+    }
+
+    .card p { font-size: 13px; color: #333 !important; margin-bottom: 5px; }
+
+    .card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #111 !important;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(0,0,0,0.12);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    .pending  { background: rgba(230,180,0,0.25); color: #7a5c00 !important; border: 1px solid rgba(230,180,0,0.4); }
+    .approved { background: rgba(46,125,50,0.2);  color: #1b5e20 !important; border: 1px solid rgba(46,125,50,0.4); }
+    .newfair  { background: rgba(230,100,0,0.15); color: #7a3300 !important; border: 1px solid rgba(230,100,0,0.3); margin-left: 6px; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #444 !important;
+      margin-bottom: 4px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.9);
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      color: #111;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn:hover { background: #fff; transform: translateY(-1px); }
+    .btn-approve { background: rgba(46,125,50,0.15); border-color: rgba(46,125,50,0.4); color: #1b5e20 !important; }
+    .btn-approve:hover { background: rgba(46,125,50,0.25); }
+    .btn-reject { background: rgba(180,30,30,0.12); border-color: rgba(180,30,30,0.3); color: #7a0000 !important; }
+    .btn-reject:hover { background: rgba(180,30,30,0.22); }
+    .btn-blue { background: rgba(26,86,160,0.15); border-color: rgba(26,86,160,0.3); color: #0a3a7a !important; }
+    .btn-blue:hover { background: rgba(26,86,160,0.25); }
+
+    #quickStatus { font-size: 13px; margin-top: 8px; color: #111 !important; }
 </style>
 </head>
 
 <body>
 
-<h1>🏰 Fair Admin Approval</h1>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/admin/admin_dashboard.html" class="nav-btn">⬅ Dashboard</a>
+      <a href="/index.html" class="nav-btn">🏠 Home</a>
+      <button class="nav-btn" onclick="logout()" style="border-color:rgba(180,30,30,0.4);color:#e07070;">🚪 Logout</button>
+    </div>
+  </nav>
 
-<div class="controls">
-  <button class="secondary" onclick="goHome()">← Go to FairQuest Main Page</button>
-  <button class="secondary" onclick="goBackToDashboard()">← Back to Admin Dashboard</button>
-  <br><br>
-  <button class="primary" onclick="showPending()">Pending Applications</button>
-  <button class="secondary" onclick="showApproved()">Approved / Admins</button>
-  <br><br>
-  <button class="secondary" onclick="logout()">Logout</button>
-</div>
+  <div class="page">
 
-<div class="card" style="max-width:800px; margin:0 auto 20px;">
-  <h3>⚡ Quick Assign Fair Admin</h3>
-  <p style="color:#aaa; font-size:14px;">Use this when someone emails you directly and you need to assign them manually.</p>
-  <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
-   <input type="email" id="quickEmail" placeholder="User email (e.g. fairfieldirf@gmail.com)"
-  style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;" />
-<input type="text" id="quickFairName" placeholder="Search fair name…"
-  style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;"
-  oninput="searchFairs()" />
-<select id="quickFairSelect"
-  style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;">
-  <option value="">— Select fair after searching —</option>
-</select>
-<select id="quickRole"
-  style="padding:10px; border-radius:8px; border:none; font-family:'Domine',serif; font-size:15px;">
-  <option value="owner">Owner</option>
-  <option value="manager">Manager</option>
-  <option value="it">IT</option>
-  <option value="staff">Staff</option>
-</select>
-<button class="action approve" onclick="quickAssign()">⚡ Assign as Fair Admin</button>
-    <div id="quickStatus" style="font-size:14px; margin-top:4px;"></div>
+    <div class="page-header">
+      <h1>🏰 Fair Admin Approval</h1>
+    </div>
+
+    <!-- QUICK ASSIGN CARD -->
+    <div class="card">
+      <div class="card-title">⚡ Quick Assign Fair Admin</div>
+      <p style="font-size:13px; color:#555 !important; margin-bottom:14px;">Use this when someone emails you directly and you need to assign them manually.</p>
+      <div class="form-group">
+        <label>User Email</label>
+        <input type="email" id="quickEmail" placeholder="e.g. fairfieldirf@gmail.com" />
+      </div>
+      <div class="form-group">
+        <label>Search Fair Name</label>
+        <input type="text" id="quickFairName" placeholder="Type to search…" oninput="searchFairs()" />
+      </div>
+      <div class="form-group">
+        <label>Select Fair</label>
+        <select id="quickFairSelect">
+          <option value="">— Select fair after searching —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="quickRole">
+          <option value="owner">Owner</option>
+          <option value="manager">Manager</option>
+          <option value="it">IT</option>
+          <option value="staff">Staff</option>
+        </select>
+      </div>
+      <button class="btn btn-approve" onclick="quickAssign()">⚡ Assign as Fair Admin</button>
+      <div id="quickStatus"></div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="showPending(this)">📋 Pending Applications</button>
+      <button class="filter-btn" onclick="showApproved(this)">✅ Approved Admins</button>
+    </div>
+
+    <div id="list">Loading…</div>
+
   </div>
-</div>
-
-<div id="list">Loading…</div>
 
 <script>
   // IMPORTANT: use "var" so it never crashes if another script also used "const supabase"
@@ -120,17 +325,20 @@ button.action {
 
   var mode = 'pending';
 
-  function goHome(){
-    window.location.href = "https://www.fairquestapp.com";
-  }
+  
 
-  function goBackToDashboard(){
-    // adjust if your dashboard file path is different
-    window.location.href = "/admin/admin_dashboard.html";
+  function showPending(btn){ 
+    mode='pending'; 
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    load(); 
   }
-
-  function showPending(){ mode='pending'; load(); }
-  function showApproved(){ mode='approved'; load(); }
+  function showApproved(btn){ 
+    mode='approved'; 
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    load(); 
+  }
 
  async function requireAdminLogin(){
   const { data, error } = await supabase.auth.getSession();
@@ -277,17 +485,17 @@ ${!r.fair_id ? `
 
 <p><b>Submitted:</b> ${new Date(r.submitted_at).toLocaleString()}</p>
 
-<div id="actionBtns_${r.id}">
+<div class="btn-row" id="actionBtns_${r.id}">
   ${r.fair_id ? `
-  <button class="action approve" onclick="approve('${r.id}','${r.user_id}','${r.fair_id}','${escapeQuotes(r.fair_name)}')">
-    Approve & Assign Admin
+  <button class="btn btn-approve" onclick="approve('${r.id}','${r.user_id}','${r.fair_id}','${escapeQuotes(r.fair_name)}')">
+    ✅ Approve & Assign Admin
   </button>
   ` : `
-  <button class="action approve" onclick="createFair('${r.id}','${escapeQuotes(r.fair_name)}','${escapeQuotes(r.fair_city)}','${escapeQuotes(r.fair_state)}')">
-    Create Fair
+  <button class="btn btn-blue" onclick="createFair('${r.id}','${escapeQuotes(r.fair_name)}','${escapeQuotes(r.fair_city)}','${escapeQuotes(r.fair_state)}')">
+    🏰 Create Fair
   </button>
   `}
-  <button class="action reject" onclick="rejectReq('${r.id}')">Reject</button>
+  <button class="btn btn-reject" onclick="rejectReq('${r.id}')">❌ Reject</button>
 </div>
       `;
       list.appendChild(div);

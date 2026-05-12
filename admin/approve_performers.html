@@ -11,50 +11,196 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
     body {
-      background-color: #000;
       font-family: 'Domine', serif;
-      color: #f0e6d2;
-      padding: 40px;
-      text-align: center;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
     }
-    h1 { font-family: 'Cinzel', serif; }
-    .nav-bar {
-      margin-bottom: 30px;
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
     }
-    .nav-bar a {
-      background-color: #bb9457;
-      color: black;
-      padding: 10px 16px;
-      border-radius: 6px;
-      font-weight: bold;
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       text-decoration: none;
     }
-    .app-box {
-      background: #fdf7e1;
-      color: #333;
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
+    }
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 32px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+    }
+
+    .card {
+      background: var(--parchment) !important;
+      border-radius: var(--card-radius);
       padding: 20px;
-      margin: 20px auto;
-      border-radius: 12px;
-      max-width: 700px;
+      margin-bottom: 16px;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
       text-align: left;
     }
-    .buttons { margin-top: 10px; }
-    button {
-      padding: 10px 16px;
-      margin-right: 10px;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
+    .card, .card * { color: #111 !important; }
+
+    .app-name {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #111 !important;
     }
-    .approve { background-color: #2ecc71; color: white; }
-    .decline { background-color: #e74c3c; color: white; }
-    .delete  { background-color: #c0392b; color: white; }
+
+    .app-field {
+      font-size: 13px;
+      color: #333 !important;
+      margin-bottom: 5px;
+      line-height: 1.5;
+    }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+    .status-pending  { background: rgba(230,180,0,0.25); color: #7a5c00 !important; border: 1px solid rgba(230,180,0,0.4); }
+    .status-approved { background: rgba(46,125,50,0.2);  color: #1b5e20 !important; border: 1px solid rgba(46,125,50,0.4); }
+    .status-declined { background: rgba(180,30,30,0.15); color: #7a0000 !important; border: 1px solid rgba(180,30,30,0.3); }
+
+    .card ul {
+      padding-left: 18px;
+      margin-top: 6px;
+    }
+    .card ul li {
+      font-size: 13px;
+      color: #333 !important;
+      margin-bottom: 3px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn:hover { background: #fff; transform: translateY(-1px); }
+    .btn-approve { background: rgba(46,125,50,0.15); border-color: rgba(46,125,50,0.4); color: #1b5e20 !important; }
+    .btn-approve:hover { background: rgba(46,125,50,0.25); }
+    .btn-decline { background: rgba(230,100,0,0.12); border-color: rgba(230,100,0,0.3); color: #7a3300 !important; }
+    .btn-decline:hover { background: rgba(230,100,0,0.22); }
+    .btn-delete  { background: rgba(180,30,30,0.12); border-color: rgba(180,30,30,0.3); color: #7a0000 !important; }
+    .btn-delete:hover  { background: rgba(180,30,30,0.22); }
   </style>
   <script>
     window.addEventListener('load', () => {
@@ -122,23 +268,24 @@ const { data: manual = [] } = await supabaseClient.rpc(
           fairHTML += '<p>None listed</p>';
         }
 
+        const statusClass =
+          app.approval_status === 'approved' ? 'status-approved' :
+          app.approval_status === 'declined' ? 'status-declined' : 'status-pending';
+
         container.innerHTML += `
-          <div class="app-box">
-            <p><strong>Name:</strong> ${app.name}</p>
-            <p><strong>Status:</strong>
-              <span style="font-weight:bold;color:${app.approval_status === 'approved' ? 'green' : app.approval_status === 'declined' ? 'red' : 'orange'}">
-                ${app.approval_status.toUpperCase()}</span>
-            </p>
-            <p><strong>Description:</strong> ${app.description}</p>
-            <p><strong>Contact:</strong> ${app.contact_name} (${app.contact_email})</p>
-            ${app.website ? `<p><strong>Website:</strong> <a href="${app.website}" target="_blank">${app.website}</a></p>` : ''}
-            ${app.photo_url ? `<p><strong>Photo:</strong><br><img src="${app.photo_url}" width="100"/></p>` : ''}
+          <div class="card">
+            <div class="app-name">${app.name}</div>
+            <span class="status-badge ${statusClass}">${app.approval_status}</span>
+            <div class="app-field"><strong>Description:</strong> ${app.description}</div>
+            <div class="app-field"><strong>Contact:</strong> ${app.contact_name} — <a href="mailto:${app.contact_email}" style="color:#1a3a6b !important;">${app.contact_email}</a></div>
+            ${app.website ? `<div class="app-field"><strong>Website:</strong> <a href="${app.website}" target="_blank" style="color:#1a3a6b !important;">${app.website}</a></div>` : ''}
+            ${app.photo_url ? `<div class="app-field"><strong>Photo:</strong><br><img src="${app.photo_url}" style="width:100px; border-radius:6px; margin-top:6px;"/></div>` : ''}
             ${fairHTML}
-            <div class="buttons">
-              <button class="approve" onclick="approvePerformer(${app.id})">✅ Approve</button>
-              <button class="decline" onclick="declinePerformer(${app.id})">❌ Decline</button>
-              <button class="delete" onclick="deleteApplication(${app.id})">🗑️ Delete</button>
-              <button onclick="askQuestion('${app.contact_email}', '${app.name}')">✉️ Ask a Question</button>
+            <div class="btn-row">
+              <button class="btn btn-approve" onclick="approvePerformer(${app.id})">✅ Approve</button>
+              <button class="btn btn-decline" onclick="declinePerformer(${app.id})">❌ Decline</button>
+              <button class="btn btn-delete" onclick="deleteApplication(${app.id})">🗑️ Delete</button>
+              <button class="btn" onclick="askQuestion('${app.contact_email}', '${app.name}')">✉️ Ask a Question</button>
             </div>
           </div>
         `;
@@ -199,18 +346,24 @@ const { data: manual = [] } = await supabaseClient.rpc(
   </script>
 </head>
 <body>
-  <h1>🎤 Approve Performer Applications</h1>
-  <div class="nav-bar">
-    <a href="admin_dashboard.html">🏠 Home</a>
-    <a href="approve_vendors.html">📦 Approve Vendors</a>
-    <a href="approve_performers.html">🎤 Approve Performers</a>
-    <a href="vendor_list.html">📋 Vendor List</a>
-    <a href="performer_list.html">💂 Performer List</a>
-    <a href="all_fairs.html">🎪 All Fairs</a>
-    <a href="reports.html">📊 Reports</a>
-    <a href="settings.html">⚙️ Settings</a>
-  </div>
 
-  <div id="applicationList">Loading performer applications...</div>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/admin/admin_dashboard.html" class="nav-btn">⬅ Dashboard</a>
+      <a href="approve_vendors.html" class="nav-btn">📦 Vendors</a>
+      <a href="/index.html" class="nav-btn">🏠 Home</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-header">
+      <h1>🎤 Approve Performer Applications</h1>
+    </div>
+    <div id="applicationList">Loading performer applications...</div>
+  </div>
 </body>
 </html>

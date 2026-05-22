@@ -276,35 +276,52 @@
     </div>
 
     <!-- QUICK ASSIGN CARD -->
-    <div class="card">
-      <div class="card-title">⚡ Quick Assign Fair Admin</div>
-      <p style="font-size:13px; color:#555 !important; margin-bottom:14px;">Use this when someone emails you directly and you need to assign them manually.</p>
-      <div class="form-group">
-        <label>User Email</label>
-        <input type="email" id="quickEmail" placeholder="e.g. fairfieldirf@gmail.com" />
-      </div>
-      <div class="form-group">
-        <label>Search Fair Name</label>
-        <input type="text" id="quickFairName" placeholder="Type to search…" oninput="searchFairs()" />
-      </div>
-      <div class="form-group">
-        <label>Select Fair</label>
-        <select id="quickFairSelect">
-          <option value="">— Select fair after searching —</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Role</label>
-        <select id="quickRole">
-          <option value="owner">Owner</option>
-          <option value="manager">Manager</option>
-          <option value="it">IT</option>
-          <option value="staff">Staff</option>
-        </select>
-      </div>
-      <button class="btn btn-approve" onclick="quickAssign()">⚡ Assign as Fair Admin</button>
-      <div id="quickStatus"></div>
+<div class="card">
+  <div class="card-title">⚡ Assign / Remove Fair Admin</div>
+  <p style="font-size:13px; color:#555 !important; margin-bottom:14px;">Search for a fair to view and manage its admins, or assign a new one.</p>
+
+  <!-- FAIR SEARCH -->
+  <div class="form-group">
+    <label>Search Fair</label>
+    <input type="text" id="quickFairName" placeholder="Type fair name…" oninput="searchFairs()" autocomplete="off" />
+    <div id="fairResults" style="margin-top:6px;"></div>
+    <div id="selectedFairDisplay" style="display:none; margin-top:8px; padding:8px 12px; background:rgba(46,125,50,0.1); border:1px solid rgba(46,125,50,0.3); border-radius:8px; font-size:13px; color:#1b5e20 !important; display:flex; align-items:center; justify-content:space-between;">
+      <span id="selectedFairName"></span>
+      <button onclick="clearFair()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#7a0000;">✕</button>
     </div>
+  </div>
+
+  <!-- CURRENT ADMINS FOR SELECTED FAIR -->
+  <div id="fairAdminsCard" style="display:none; margin-bottom:16px;">
+    <div class="card-title" style="margin-top:8px;">👥 Current Admins</div>
+    <div id="fairAdminsList"></div>
+  </div>
+
+  <!-- ASSIGN NEW ADMIN -->
+  <div id="assignSection" style="display:none;">
+    <div class="card-title">➕ Assign New Admin</div>
+    <div class="form-group">
+      <label>Search User</label>
+      <input type="text" id="quickUserSearch" placeholder="Type name or email…" oninput="filterUsers()" autocomplete="off" />
+      <div id="userResults" style="margin-top:6px;"></div>
+      <div id="selectedUserDisplay" style="display:none; margin-top:8px; padding:8px 12px; background:rgba(26,86,160,0.1); border:1px solid rgba(26,86,160,0.3); border-radius:8px; font-size:13px; color:#0a3a7a !important; display:flex; align-items:center; justify-content:space-between;">
+        <span id="selectedUserName"></span>
+        <button onclick="clearUser()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#7a0000;">✕</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Role</label>
+      <select id="quickRole">
+        <option value="owner">Owner</option>
+        <option value="manager">Manager</option>
+        <option value="it">IT</option>
+        <option value="staff">Staff</option>
+      </select>
+    </div>
+    <button class="btn btn-approve" onclick="quickAssign()">⚡ Assign as Fair Admin</button>
+    <div id="quickStatus" style="margin-top:8px; font-size:13px;"></div>
+  </div>
+</div>
 
     <!-- FILTER BAR -->
     <div class="filter-bar">
@@ -351,10 +368,22 @@
   return true;
 }
 
+// --- State ---
+var selectedFairId = null;
+var selectedUserId = null;
+var allUsers = [];
+
+// --- Load all users once ---
+async function loadAllUsers() {
+  const { data, error } = await supabase.rpc('get_admin_user_list');
+  if (!error) allUsers = data || [];
+}
+
+// --- Fair search ---
 async function searchFairs() {
   const query = document.getElementById('quickFairName').value.trim();
-  const sel   = document.getElementById('quickFairSelect');
-  sel.innerHTML = '<option value="">— Select fair —</option>';
+  const resultsDiv = document.getElementById('fairResults');
+  resultsDiv.innerHTML = '';
   if (query.length < 2) return;
 
   const { data, error } = await supabase
@@ -364,51 +393,142 @@ async function searchFairs() {
     .limit(10);
 
   if (error) { console.error(error); return; }
-  (data||[]).forEach(f => {
-    const o = document.createElement('option');
-    o.value = f.id;
-    o.textContent = `${f.name} — ${f.city}, ${f.state}`;
-    sel.appendChild(o);
+  if (!data.length) { resultsDiv.innerHTML = '<p style="font-size:12px;color:#555;">No fairs found.</p>'; return; }
+
+  data.forEach(f => {
+    const item = document.createElement('div');
+    item.style.cssText = 'padding:8px 12px; background:rgba(255,255,255,0.85); border:1px solid rgba(0,0,0,0.15); border-radius:6px; margin-bottom:4px; cursor:pointer; font-size:13px; color:#111;';
+    item.textContent = `${f.name} — ${f.city}, ${f.state}`;
+    item.onmouseover = () => item.style.background = '#fff';
+    item.onmouseout = () => item.style.background = 'rgba(255,255,255,0.85)';
+    item.onclick = () => selectFair(f.id, `${f.name} — ${f.city}, ${f.state}`);
+    resultsDiv.appendChild(item);
   });
 }
 
+async function selectFair(id, label) {
+  selectedFairId = id;
+  document.getElementById('fairResults').innerHTML = '';
+  document.getElementById('quickFairName').value = '';
+  document.getElementById('quickFairName').style.display = 'none';
+
+  const display = document.getElementById('selectedFairDisplay');
+  display.style.display = 'flex';
+  document.getElementById('selectedFairName').textContent = '🏰 ' + label;
+
+  document.getElementById('assignSection').style.display = 'block';
+  await loadFairAdmins(id);
+}
+
+function clearFair() {
+  selectedFairId = null;
+  document.getElementById('quickFairName').style.display = 'block';
+  document.getElementById('quickFairName').value = '';
+  document.getElementById('selectedFairDisplay').style.display = 'none';
+  document.getElementById('fairResults').innerHTML = '';
+  document.getElementById('fairAdminsCard').style.display = 'none';
+  document.getElementById('assignSection').style.display = 'none';
+  clearUser();
+}
+
+// --- Load current admins for fair ---
+async function loadFairAdmins(fairId) {
+  const card = document.getElementById('fairAdminsCard');
+  const list = document.getElementById('fairAdminsList');
+  list.innerHTML = 'Loading…';
+  card.style.display = 'block';
+
+  const { data, error } = await supabase.rpc('get_fair_admins', { p_fair_id: parseInt(fairId) });
+
+  if (error) { list.innerHTML = '❌ Error loading admins.'; return; }
+  if (!data.length) { list.innerHTML = '<p style="font-size:13px;color:#555;">No admins assigned yet.</p>'; return; }
+
+  list.innerHTML = '';
+  data.forEach(a => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:rgba(255,255,255,0.7); border-radius:6px; margin-bottom:6px; font-size:13px; color:#111;';
+    row.innerHTML = `
+      <span><b>${a.email}</b> <span style="color:#555; font-size:11px; text-transform:uppercase; margin-left:6px;">${a.admin_level}</span></span>
+      <button class="btn btn-reject" style="padding:5px 10px; font-size:11px;" onclick="removeAdmin('${a.user_id}', '${a.email}')">🗑 Remove</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+async function removeAdmin(userId, email) {
+  if (!confirm(`Remove ${email} as admin for this fair?`)) return;
+  const { error } = await supabase.rpc('remove_fair_admin', {
+    p_user_id: userId,
+    p_fair_id: parseInt(selectedFairId)
+  });
+  if (error) { alert('❌ Error removing admin: ' + error.message); return; }
+  await loadFairAdmins(selectedFairId);
+}
+
+// --- User search ---
+function filterUsers() {
+  const query = document.getElementById('quickUserSearch').value.trim().toLowerCase();
+  const resultsDiv = document.getElementById('userResults');
+  resultsDiv.innerHTML = '';
+  if (query.length < 2) return;
+
+  const matches = allUsers.filter(u =>
+    (u.email && u.email.toLowerCase().includes(query)) ||
+    (u.username && u.username.toLowerCase().includes(query))
+  ).slice(0, 8);
+
+  if (!matches.length) { resultsDiv.innerHTML = '<p style="font-size:12px;color:#555;">No users found.</p>'; return; }
+
+  matches.forEach(u => {
+    const item = document.createElement('div');
+    item.style.cssText = 'padding:8px 12px; background:rgba(255,255,255,0.85); border:1px solid rgba(0,0,0,0.15); border-radius:6px; margin-bottom:4px; cursor:pointer; font-size:13px; color:#111;';
+    item.textContent = `${u.email}${u.username ? ' (' + u.username + ')' : ''}`;
+    item.onmouseover = () => item.style.background = '#fff';
+    item.onmouseout = () => item.style.background = 'rgba(255,255,255,0.85)';
+    item.onclick = () => selectUser(u.id, u.email, u.username);
+    resultsDiv.appendChild(item);
+  });
+}
+
+function selectUser(id, email, username) {
+  selectedUserId = id;
+  document.getElementById('userResults').innerHTML = '';
+  document.getElementById('quickUserSearch').value = '';
+  document.getElementById('quickUserSearch').style.display = 'none';
+
+  const display = document.getElementById('selectedUserDisplay');
+  display.style.display = 'flex';
+  document.getElementById('selectedUserName').textContent = `👤 ${email}${username ? ' (' + username + ')' : ''}`;
+}
+
+function clearUser() {
+  selectedUserId = null;
+  document.getElementById('quickUserSearch').style.display = 'block';
+  document.getElementById('quickUserSearch').value = '';
+  document.getElementById('selectedUserDisplay').style.display = 'none';
+  document.getElementById('userResults').innerHTML = '';
+  document.getElementById('quickStatus').textContent = '';
+}
+
+// --- Assign ---
 async function quickAssign() {
-  const email  = document.getElementById('quickEmail').value.trim();
-  const fairId = document.getElementById('quickFairSelect').value;
-  const role   = document.getElementById('quickRole').value;
   const status = document.getElementById('quickStatus');
+  const role = document.getElementById('quickRole').value;
 
-  if (!email || !fairId) { status.textContent = '⚠ Please enter an email and select a fair.'; return; }
-
-  const { data: users, error: userErr } = await supabase
-    .from('app_users')
-    .select('id')
-    .eq('email', email)
-    .limit(1);
-
-  if (userErr || !users?.length) {
-    status.textContent = '❌ User not found. Make sure they have a FairQuest account.';
-    return;
-  }
-
-  const userId = users[0].id;
+  if (!selectedFairId) { status.textContent = '⚠ Please select a fair.'; return; }
+  if (!selectedUserId) { status.textContent = '⚠ Please select a user.'; return; }
 
   const { error } = await supabase.rpc('assign_fair_admin', {
-    p_user_id: userId,
-    p_fair_id: parseInt(fairId),
+    p_user_id: selectedUserId,
+    p_fair_id: parseInt(selectedFairId),
     p_admin_level: role
   });
 
-  if (error) {
-    console.error(error);
-    status.textContent = '❌ Error assigning admin: ' + error.message;
-    return;
-  }
+  if (error) { status.textContent = '❌ Error: ' + error.message; return; }
 
   status.textContent = '✅ Admin assigned successfully!';
-  document.getElementById('quickEmail').value = '';
-  document.getElementById('quickFairName').value = '';
-  document.getElementById('quickFairSelect').innerHTML = '<option value="">— Select fair after searching —</option>';
+  clearUser();
+  await loadFairAdmins(selectedFairId);
 }
   async function load(){
     var ok = await requireAdminLogin();
@@ -648,6 +768,7 @@ var r = await supabase.rpc(
 
   // start
   load();
+  loadAllUsers();
 
   async function searchLinkFairs(verificationId) {
   const query = document.getElementById('linkSearch_' + verificationId).value.trim();

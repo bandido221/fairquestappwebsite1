@@ -274,9 +274,7 @@ async function safeOp(actionLabel, fn) {
 }
     async function loadPendingFairs() {
       const { data, error } = await supabaseClient
-        .from('new_fair_addition')
-        .select('*, user_id')
-        .eq('pending', true);
+        .rpc('get_pending_fair_submissions');
      
       const list = document.getElementById('fairList');
       if (error || !data) return list.innerHTML = '<p>Error loading fairs.</p>';
@@ -286,7 +284,15 @@ async function safeOp(actionLabel, fn) {
         const card = document.createElement('div');
         card.className = 'fair-card';
         card.id = `fair-${fair.id}`;
+        const submittedAt = fair.submitted_at
+          ? new Date(fair.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+          : '—';
+
         card.innerHTML = `
+          <div style="background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.3); border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:13px;">
+            <strong>📤 Submitted by:</strong> ${fair.submitted_by_email || 'Unknown'} ${fair.submitted_by_username ? `(${fair.submitted_by_username})` : ''}<br>
+            <strong>🕒 Submitted at:</strong> ${submittedAt}
+          </div>
           <label>Fair Name</label>
           <input value="${fair.name}" id="name-${fair.id}" />
           <label>Address</label>

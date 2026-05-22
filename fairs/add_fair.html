@@ -1,144 +1,345 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-    <!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Add a Fair | FairQuest</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
   <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-HP222J86X0');</script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit a Fair | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
     body {
-      background-color: #000;
       font-family: 'Domine', serif;
-      color: #f0e6d2;
-      padding: 40px;
-      text-align: center;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
     }
-    h1 {
-      font-family: 'Cinzel', serif;
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
     }
-    form {
-      max-width: 700px;
-      margin: auto;
-      background: rgba(251,241,200,0.9);
-      padding: 30px;
-      border-radius: 12px;
-      color: #3b1f1f;
+
+    .topnav {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; height: 56px;
     }
-    label {
-      display: block;
-      text-align: left;
-      font-weight: bold;
-      margin-top: 16px;
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 17px; color: var(--gold-light); letter-spacing: 0.05em; }
+    .topnav-right { display: flex; align-items: center; gap: 8px; }
+    .nav-btn {
+      font-family: 'Domine', serif; font-size: 13px; padding: 7px 14px;
+      border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+      background: transparent; color: var(--gold); cursor: pointer;
+      text-decoration: none; transition: background 0.2s, border-color 0.2s;
+      display: inline-flex; align-items: center; gap: 5px;
     }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 4px;
-      border: 1px solid #aa8452;
-      border-radius: 6px;
-      background-color: #fdf7e1;
-      color: #3b1f1f;
+    .nav-btn:hover { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.55); color: var(--gold-light); }
+
+    .page { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; padding: 28px 16px 60px; }
+
+    .page-header { text-align: center; margin-bottom: 24px; }
+    .page-header h1 { font-family: 'Cinzel', serif; font-size: clamp(22px, 6vw, 32px); font-weight: 700; color: var(--gold-light); letter-spacing: 0.04em; margin-bottom: 8px; }
+    .page-header p { font-size: 14px; color: var(--gold); opacity: 0.85; line-height: 1.6; }
+
+    .notice {
+      background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 12px; padding: 14px 18px; font-size: 13px;
+      color: var(--gold); line-height: 1.6; margin-bottom: 20px;
     }
-    .side-by-side {
-      display: flex;
-      gap: 300px;
+
+    .login-wall { text-align: center; padding: 60px 20px; }
+    .login-wall h2 { font-family: 'Cinzel', serif; font-size: 22px; color: var(--gold-light); margin-bottom: 12px; }
+    .login-wall p { font-size: 14px; color: var(--gold); margin-bottom: 24px; line-height: 1.6; }
+    .login-wall a {
+      display: inline-block; background: var(--gold); color: #111 !important;
+      padding: 12px 28px; border-radius: 10px; font-family: 'Cinzel', serif;
+      font-size: 14px; font-weight: 700; text-decoration: none; transition: background 0.2s;
     }
-    .side-by-side > div {
-      flex: 1;
+    .login-wall a:hover { background: var(--gold-light); }
+
+    .card {
+      background: var(--parchment) !important; border-radius: var(--card-radius);
+      padding: 24px 22px; margin-bottom: 18px;
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
     }
+    .card, .card * { color: #111 !important; }
+
+    .card-title {
+      font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; color: #111 !important;
+      margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+    .card-title::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.12); }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #444 !important; }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.9); font-family: 'Domine', serif;
+      font-size: 14px; color: #111; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--gold-dark);
+    }
+
     .weekend-pair {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 12px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      margin-bottom: 10px; padding: 12px;
+      background: rgba(255,255,255,0.5); border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.08);
     }
-    .weekend-pair input {
-      width: 100%;
+    .weekend-pair label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #444 !important; margin-bottom: 4px; display: block; }
+
+    .add-weekend-btn {
+      font-family: 'Domine', serif; font-size: 13px; font-weight: 700;
+      padding: 8px 16px; border-radius: 8px; border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85); color: #111 !important; cursor: pointer;
+      transition: background 0.15s; display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
     }
-    #addWeekendBtn {
-      margin-top: 20px;
-      background-color: #bb9457;
-      border: none;
-      padding: 10px 16px;
-      font-weight: bold;
-      border-radius: 8px;
-      color: #000;
-      cursor: pointer;
+    .add-weekend-btn:hover { background: #fff; }
+
+    .organizer-toggle {
+      display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+      background: rgba(255,255,255,0.6); border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.1); margin-bottom: 14px; cursor: pointer;
     }
-    #addWeekendBtn:hover {
-      background-color: #f2e1c1;
+    .organizer-toggle input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; cursor: pointer; accent-color: #2e7d32; flex-shrink: 0; }
+    .organizer-toggle-text { flex: 1; }
+    .organizer-toggle-label { font-size: 14px; font-weight: 700; color: #111 !important; }
+    .organizer-toggle-sub { font-size: 12px; color: #555 !important; margin-top: 3px; line-height: 1.4; }
+
+    .organizer-section {
+      display: none; background: rgba(46,125,50,0.08);
+      border: 1px solid rgba(46,125,50,0.25); border-radius: 10px;
+      padding: 16px; margin-bottom: 14px;
     }
-    button[type="button"].submit {
-      margin-top: 30px;
-      padding: 12px 20px;
-      font-size: 16px;
-      font-weight: bold;
-      background-color: #5b2a86;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
+    .organizer-section.show { display: block; }
+    .organizer-section .section-note { font-size: 13px; color: #1b5e20 !important; margin-bottom: 14px; line-height: 1.5; }
+
+    .terms-box {
+      display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+      background: rgba(255,255,255,0.6); border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.1); margin-top: 16px;
+    }
+    .terms-box input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; cursor: pointer; accent-color: #1a56a0; flex-shrink: 0; }
+    .terms-box label { font-size: 13px; color: #333 !important; line-height: 1.5; cursor: pointer; }
+
+    .submit-btn {
+      width: 100%; margin-top: 20px; padding: 13px; background: var(--gold);
+      color: #111 !important; border: none; border-radius: 10px;
+      font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: background 0.2s, transform 0.1s; letter-spacing: 0.05em;
+    }
+    .submit-btn:hover { background: var(--gold-light); transform: translateY(-1px); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .form-error {
+      font-size: 13px; color: #c0392b !important; font-weight: 700;
+      margin-top: 12px; padding: 10px 14px;
+      background: rgba(180,30,30,0.08); border-radius: 8px;
+      border: 1px solid rgba(180,30,30,0.2); display: none;
+    }
+    .form-error.show { display: block; }
+
+    .success-box { display: none; text-align: center; padding: 50px 20px; }
+    .success-box.show { display: block; }
+    .success-icon { font-size: 56px; margin-bottom: 16px; }
+    .success-title { font-family: 'Cinzel', serif; font-size: 24px; color: var(--gold-light); margin-bottom: 12px; }
+    .success-msg { font-size: 14px; color: var(--gold); line-height: 1.7; max-width: 480px; margin: 0 auto 24px; }
+    .success-btn {
+      display: inline-block; background: var(--gold); color: #111 !important;
+      padding: 11px 24px; border-radius: 10px; font-family: 'Cinzel', serif;
+      font-size: 13px; font-weight: 700; text-decoration: none; transition: background 0.2s;
+    }
+    .success-btn:hover { background: var(--gold-light); }
+
+    @media (max-width: 520px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .weekend-pair { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <!-- Login gate -->
-  <div id="loginGate" style="display:none; max-width:500px; margin:60px auto; background:rgba(251,241,200,0.9); padding:30px; border-radius:12px; color:#3b1f1f; text-align:center;">
-    <h2 style="font-family:'Cinzel',serif; margin-bottom:16px;">🔒 Login Required</h2>
-    <p style="margin-bottom:20px;">You must be logged in to submit a fair.</p>
-    <a href="/profile/index.html" style="background:#5b2a86; color:#fff; padding:12px 20px; border-radius:8px; font-weight:bold; text-decoration:none;">Go to Login</a>
-  </div>
 
-  <div id="fairFormWrap" style="display:none;">
-  <h1>🎪 Add a New Renaissance Fair</h1>
-  <p style="color:#bb9457; margin-bottom:20px;">Your submission will appear publicly while we review it. We may contact you if we have questions.</p>
-  <form id="addFairForm">
-    <label for="name">Fair Name *</label>
-    <input type="text" id="name" required />
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/fairs/explore.html" class="nav-btn">🎪 Explore Fairs</a>
+      <a href="/profile/index.html" class="nav-btn">👤 Profile</a>
+    </div>
+  </nav>
 
-    <label for="address">Address *</label>
-    <input type="text" id="address" required />
+  <div class="page">
 
-    <label for="city">City *</label>
-    <input type="text" id="city" required />
-
-    <label for="state">State (2 letters) *</label>
-    <input type="text" id="state" maxlength="2" required />
-
-    <label for="zip">ZIP Code</label>
-    <input type="text" id="zip" />
-
-    <div class="side-by-side">
-      <div>
-        <label for="start_date">Start Date *</label>
-        <input type="date" id="start_date" required />
-      </div>
-      <div>
-        <label for="end_date">End Date *</label>
-        <input type="date" id="end_date" required />
-      </div>
+    <!-- LOGIN WALL -->
+    <div class="login-wall" id="loginWall" style="display:none;">
+      <h2>🔒 Sign In Required</h2>
+      <p>You need a FairQuest account to submit a fair.<br>It only takes a minute to sign up!</p>
+      <a href="/profile/index.html">Create Account / Sign In</a>
     </div>
 
-    <label for="website">Website</label>
-    <input type="url" id="website" />
-
-    <label for="image_url">Image URL</label>
-    <input type="url" id="image_url" />
-
-    <div id="weekendContainer"></div>
-    <div style="text-align: center;">
-      <button id="addWeekendBtn" type="button" onclick="addWeekend()">➕ Add Weekend</button>
+    <!-- SUCCESS -->
+    <div class="success-box" id="successBox">
+      <div class="success-icon">🎪</div>
+      <div class="success-title">Fair Submitted!</div>
+      <div class="success-msg" id="successMsg"></div>
+      <a href="/fairs/explore.html" class="success-btn">🧭 Explore Fairs</a>
     </div>
 
-    <button type="button" class="submit" onclick="submitFair()">📬 Submit Fair</button>
-  </form>
-  </div><!-- /fairFormWrap -->
+    <!-- FORM -->
+    <div id="formWrap">
+
+      <div class="page-header">
+        <h1>🎪 Submit a Fair</h1>
+        <p>Help grow the FairQuest community by adding a Renaissance faire to our database.</p>
+      </div>
+
+      <div class="notice">
+        📋 <strong>All submissions are reviewed before going live.</strong> Your fair will not appear publicly until a FairQuest admin approves it. If you are the fair organizer, check the box below to also request admin access.
+      </div>
+
+      <!-- FAIR INFO -->
+      <div class="card">
+        <div class="card-title">🏰 Fair Information</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Fair Name *</label>
+            <input type="text" id="name" placeholder="e.g. Ohio Renaissance Festival" />
+          </div>
+          <div class="form-group full">
+            <label>Address *</label>
+            <input type="text" id="address" placeholder="Street address or venue name" />
+          </div>
+          <div class="form-group">
+            <label>City *</label>
+            <input type="text" id="city" />
+          </div>
+          <div class="form-group">
+            <label>State * (2 letters)</label>
+            <input type="text" id="state" maxlength="2" placeholder="OH" style="text-transform:uppercase;" />
+          </div>
+          <div class="form-group">
+            <label>ZIP Code</label>
+            <input type="text" id="zip" />
+          </div>
+          <div class="form-group">
+            <label>Website</label>
+            <input type="url" id="website" placeholder="https://" />
+          </div>
+        </div>
+      </div>
+
+      <!-- DATES -->
+      <div class="card">
+        <div class="card-title">📅 Dates & Weekends</div>
+        <div class="form-grid" style="margin-bottom:14px;">
+          <div class="form-group">
+            <label>Start Date (Weekend 1) *</label>
+            <input type="date" id="start_date" />
+          </div>
+          <div class="form-group">
+            <label>End Date (Weekend 1) *</label>
+            <input type="date" id="end_date" />
+          </div>
+        </div>
+        <div id="weekendContainer"></div>
+        <button type="button" class="add-weekend-btn" onclick="addWeekend()" id="addWeekendBtn">
+          ➕ Add Another Weekend
+        </button>
+      </div>
+
+      <!-- ORGANIZER -->
+      <div class="card">
+        <div class="card-title">🏅 Are You the Fair Organizer?</div>
+
+        <div class="organizer-toggle" onclick="toggleOrganizer()">
+          <input type="checkbox" id="isOrganizer" onclick="event.stopPropagation(); toggleOrganizer()" />
+          <div class="organizer-toggle-text">
+            <div class="organizer-toggle-label">Yes, I am the fair organizer or owner</div>
+            <div class="organizer-toggle-sub">Check this to also request admin access for your fair. We will verify your identity before granting access.</div>
+          </div>
+        </div>
+
+        <div class="organizer-section" id="organizerSection">
+          <div class="section-note">✅ Fill in your contact details below. Once we approve your fair we will also review your admin access request.</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Your Name *</label>
+              <input type="text" id="contactName" placeholder="Full name" />
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="text" id="contactPhone" placeholder="Optional" />
+            </div>
+            <div class="form-group">
+              <label>Your Role</label>
+              <select id="fairRole">
+                <option value="owner">Owner</option>
+                <option value="organizer">Organizer</option>
+                <option value="manager">Manager</option>
+                <option value="staff">Staff</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Alternate Email (optional)</label>
+              <input type="email" id="extraEmail" placeholder="If different from account email" />
+            </div>
+            <div class="form-group full">
+              <label>Additional Notes</label>
+              <input type="text" id="fairNotes" placeholder="Anything else you want us to know" />
+            </div>
+          </div>
+        </div>
+
+        <div class="terms-box">
+          <input type="checkbox" id="termsCheck" />
+          <label for="termsCheck">
+            I confirm that the information I have provided is accurate to the best of my knowledge, and I understand this submission will be reviewed before going live on FairQuest.
+          </label>
+        </div>
+
+        <div class="form-error" id="formError"></div>
+        <button class="submit-btn" id="submitBtn" onclick="submitFair()">📬 Submit Fair</button>
+      </div>
+
+    </div><!-- /formWrap -->
+  </div><!-- /page -->
 
   <script>
     const supabaseClient = window.supabase.createClient(
@@ -146,100 +347,146 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
-async function submitFair() {
-  const name = document.getElementById('name').value.trim();
-  const address = document.getElementById('address').value.trim();
-  const city = document.getElementById('city').value.trim();
-  const state = document.getElementById('state').value.trim();
-  const zip = document.getElementById('zip').value.trim();
-  const start_date = document.getElementById('start_date').value;
-  const end_date = document.getElementById('end_date').value;
-  const website = document.getElementById('website').value.trim();
-  const image_url = document.getElementById('image_url').value.trim();
-
-  const weekends = {};
-  for (let i = 2; i <= 10; i++) {
-    const start = document.getElementById(`week${i}_start_date`);
-    const end = document.getElementById(`week${i}_end_date`);
-    if (start && end) {
-      weekends[`week${i}_start_date`] = start.value || null;
-      weekends[`week${i}_end_date`] = end.value || null;
-    }
-  }
-
-  if (!name || !address || !city || !state || !start_date || !end_date) {
-    alert('Please fill in all required fields.');
-    return;
-  }
-
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) {
-    alert('You must be logged in to submit a fair.');
-    return;
-  }
-
-  const { error } = await supabaseClient.from('renaissance_fairs').insert([
-    {
-      name,
-      address,
-      city,
-      state,
-      zip,
-      start_date,
-      end_date,
-      website,
-      image_url,
-      verified: false,
-      submitted_by_user_id: user.id,
-      ...weekends
-    }
-  ]);
-
-  if (error) {
-    alert('❌ ' + error.message);
-  } else {
-    alert('✅ Fair submitted! It will appear publicly while we review it.');
-    window.location.href = 'explore.html';
-  }
-}
-
-
+    let currentUser = null;
     let weekendCount = 2;
 
-    function addWeekend() {
-      if (weekendCount > 10) {
-        alert("You've reached the max of 10 weekends.");
-        return;
+    async function init() {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      currentUser = user;
+      if (!user) {
+        document.getElementById('formWrap').style.display = 'none';
+        document.getElementById('loginWall').style.display = 'block';
       }
+    }
 
-      const container = document.getElementById("weekendContainer");
-      const div = document.createElement("div");
-      div.className = "weekend-pair";
+    function toggleOrganizer() {
+      const cb = document.getElementById('isOrganizer');
+      cb.checked = !cb.checked;
+      document.getElementById('organizerSection').classList.toggle('show', cb.checked);
+    }
+
+    function addWeekend() {
+      if (weekendCount > 10) { alert("Max 10 weekends reached."); return; }
+      const container = document.getElementById('weekendContainer');
+      const div = document.createElement('div');
+      div.className = 'weekend-pair';
       div.innerHTML = `
         <div>
-          <label for="week${weekendCount}_start_date">Start Date (Weekend ${weekendCount})</label>
+          <label>Start Date (Weekend ${weekendCount})</label>
           <input type="date" id="week${weekendCount}_start_date" />
         </div>
         <div>
-          <label for="week${weekendCount}_end_date">End Date (Weekend ${weekendCount})</label>
+          <label>End Date (Weekend ${weekendCount})</label>
           <input type="date" id="week${weekendCount}_end_date" />
         </div>
       `;
       container.appendChild(div);
       weekendCount++;
+      if (weekendCount > 10) document.getElementById('addWeekendBtn').style.display = 'none';
     }
 
-   addWeekend();
+    function showError(msg) {
+      const el = document.getElementById('formError');
+      el.textContent = msg;
+      el.classList.add('show');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    function clearError() {
+      const el = document.getElementById('formError');
+      el.textContent = '';
+      el.classList.remove('show');
+    }
 
-    // Login gate — show form only if logged in
-   (async () => {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (user) {
-        document.getElementById('fairFormWrap').style.display = 'block';
-      } else {
-        document.getElementById('loginGate').style.display = 'block';
+    async function submitFair() {
+      clearError();
+      if (!currentUser) { showError('You must be logged in.'); return; }
+
+      const name       = document.getElementById('name').value.trim();
+      const address    = document.getElementById('address').value.trim();
+      const city       = document.getElementById('city').value.trim();
+      const state      = document.getElementById('state').value.trim().toUpperCase();
+      const zip        = document.getElementById('zip').value.trim();
+      const website    = document.getElementById('website').value.trim();
+      const start_date = document.getElementById('start_date').value;
+      const end_date   = document.getElementById('end_date').value;
+      const isOrganizer = document.getElementById('isOrganizer').checked;
+      const termsCheck  = document.getElementById('termsCheck').checked;
+
+      if (!name)                    { showError('Fair name is required.'); return; }
+      if (!address)                 { showError('Address is required.'); return; }
+      if (!city)                    { showError('City is required.'); return; }
+      if (!state || state.length !== 2) { showError('Please enter a valid 2-letter state code.'); return; }
+      if (!start_date)              { showError('Start date is required.'); return; }
+      if (!end_date)                { showError('End date is required.'); return; }
+      if (!termsCheck)              { showError('Please confirm the information is accurate before submitting.'); return; }
+      if (isOrganizer && !document.getElementById('contactName').value.trim()) {
+        showError('Please enter your name as the fair organizer.'); return;
       }
-    })();
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+
+      try {
+        // Submit to new_fair_addition
+        const { data: fairId, error: fairErr } = await supabaseClient.rpc('submit_new_fair', {
+          p_name:       name,
+          p_address:    address,
+          p_city:       city,
+          p_state:      state,
+          p_zip:        zip || null,
+          p_website:    website || null,
+          p_start_date: start_date,
+          p_end_date:   end_date,
+          p_user_id:    currentUser.id
+        });
+
+        if (fairErr) {
+          showError('❌ ' + fairErr.message);
+          btn.disabled = false;
+          btn.textContent = '📬 Submit Fair';
+          return;
+        }
+
+        // If organizer — also submit verification request
+        if (isOrganizer) {
+          const { error: verErr } = await supabaseClient.rpc('submit_fair_verification_request', {
+            p_user_id:                currentUser.id,
+            p_fair_name:              name,
+            p_fair_city:              city,
+            p_fair_state:             state,
+            p_fair_website:           website || null,
+            p_fair_role:              document.getElementById('fairRole').value,
+            p_role_details:           null,
+            p_fair_notes:             document.getElementById('fairNotes').value.trim() || null,
+            p_contact_name:           document.getElementById('contactName').value.trim(),
+            p_contact_phone:          document.getElementById('contactPhone').value.trim() || null,
+            p_extra_email:            document.getElementById('extraEmail').value.trim() || null,
+            p_fair_id:                null,
+            p_authorization_confirmed: true,
+            p_terms_version:          '1.0',
+            p_terms_agreed_at:        new Date().toISOString(),
+            p_terms_confirmed:        true
+          });
+          if (verErr) console.warn('Verification request failed:', verErr.message);
+        }
+
+        // Success
+        document.getElementById('formWrap').style.display = 'none';
+        document.getElementById('successMsg').textContent = isOrganizer
+          ? `Thank you! "${name}" has been submitted for review. We also received your request for admin access as the fair organizer. We will be in touch soon.`
+          : `Thank you! "${name}" has been submitted and will appear on FairQuest once our team approves it.`;
+        document.getElementById('successBox').classList.add('show');
+
+      } catch (e) {
+        showError('Something went wrong. Please try again.');
+        console.error(e);
+        btn.disabled = false;
+        btn.textContent = '📬 Submit Fair';
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>

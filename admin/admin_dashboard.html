@@ -712,6 +712,11 @@ fileInput.addEventListener('change', () => {
   document.getElementById('verificationCount').innerText = verCount;
   if (verCount > 0) document.getElementById('statVerifications').classList.add('has-pending');
 
+  const { data: submissionData } = await supabaseClient.rpc('get_pending_fair_submissions');
+  const submissionCount = (submissionData || []).length;
+  document.getElementById('fairCount').innerText = submissionCount;
+  if (submissionCount > 0) document.getElementById('statFairs').classList.add('has-pending');
+
   // Contact messages
   const { data: msgCount } = await supabaseClient.rpc('get_unread_contact_message_count');
   document.getElementById('messageCount').innerText = msgCount ?? 0;

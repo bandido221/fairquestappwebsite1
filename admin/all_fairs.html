@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All Fairs | FairQuest Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
+    body {
+      font-family: 'Domine', serif;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--gold-light);
+      letter-spacing: 0.05em;
+    }
+    .topnav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-btn:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: var(--gold-light);
+    }
+
+    /* ── PAGE ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 32px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+    }
+    .page-header p {
+      font-size: 13px;
+      color: var(--gold);
+      margin-top: 6px;
+      opacity: 0.85;
+    }
+
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: rgba(241,223,153,0.93) !important;
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+      border: 1px solid rgba(201,168,76,0.4);
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .stat-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+    .stat-val {
+      font-family: 'Cinzel', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #111 !important;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: #555 !important;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 3px;
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .search-input {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.4);
+      background: rgba(201,168,76,0.1);
+      color: var(--gold-light);
+      outline: none;
+      flex: 1;
+      min-width: 200px;
+    }
+    .search-input::placeholder { color: rgba(241,223,153,0.4); }
+    .search-input:focus {
+      border-color: rgba(201,168,76,0.7);
+      background: rgba(201,168,76,0.15);
+    }
+    .filter-select {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.4);
+      background: rgba(201,168,76,0.1);
+      color: var(--gold-light);
+      outline: none;
+      cursor: pointer;
+    }
+    .filter-select option { background: #1a1208; color: #f1df99; }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      background: rgba(241,223,153,0.93) !important;
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      box-shadow:
+        0 2px 0 rgba(201,168,76,0.35),
+        0 8px 28px rgba(0,0,0,0.55);
+      border: 1px solid rgba(201,168,76,0.4);
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      background: rgba(201,168,76,0.25);
+      padding: 12px 14px;
+      text-align: left;
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #111 !important;
+      border-bottom: 2px solid rgba(201,168,76,0.3);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 11px 14px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      color: #111 !important;
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: rgba(255,255,255,0.5); }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-gold    { background: rgba(240,180,20,0.25); color: #7a5200 !important; border: 1px solid rgba(240,180,20,0.4); }
+    .badge-silver  { background: rgba(180,200,220,0.25); color: #2a4a6a !important; border: 1px solid rgba(180,200,220,0.4); }
+    .badge-basic   { background: rgba(150,150,150,0.2); color: #444 !important; border: 1px solid rgba(150,150,150,0.3); }
+    .badge-verified   { background: rgba(46,125,50,0.15); color: #1b5e20 !important; border: 1px solid rgba(46,125,50,0.3); }
+    .badge-unverified { background: rgba(180,30,30,0.12); color: #7a0000 !important; border: 1px solid rgba(180,30,30,0.3); }
+
+    .btn {
+      font-family: 'Domine', serif;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 11px;
+      border-radius: 7px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #fff; }
+    .btn-blue { background: rgba(26,86,160,0.12); border-color: rgba(26,86,160,0.3); color: #0a3a7a !important; }
+    .btn-blue:hover { background: rgba(26,86,160,0.22); }
+
+    #emptyMsg {
+      text-align: center;
+      color: var(--gold);
+      padding: 40px 0;
+      font-size: 15px;
+    }
+
+    /* ── EDIT MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      z-index: 500;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 30px 16px;
+      overflow-y: auto;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: var(--parchment);
+      border-radius: var(--card-radius);
+      padding: 28px 24px;
+      max-width: 680px;
+      width: 100%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      border: 1px solid rgba(201,168,76,0.4);
+      position: relative;
+    }
+    .modal-box, .modal-box * { color: #111 !important; }
+
+    .modal-title {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(0,0,0,0.12);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #444 !important;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 8px 11px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.9);
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      color: #111;
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+    }
+    .modal-btn {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .modal-btn:hover { background: #fff; }
+    .modal-btn-primary { background: var(--gold); border-color: var(--gold-dark); }
+    .modal-btn-primary:hover { background: var(--gold-light); }
+    .modal-btn-danger { background: rgba(180,30,30,0.12); border-color: rgba(180,30,30,0.3); color: #7a0000 !important; }
+    .modal-btn-danger:hover { background: rgba(180,30,30,0.22); }
+
+    #modalStatus { font-size: 13px; margin-top: 8px; font-weight: bold; }
+    #modalStatus.ok  { color: #1b5e20 !important; }
+    #modalStatus.err { color: #7a0000 !important; }
+
+    .close-btn {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #555 !important;
+      line-height: 1;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: rgba(13,10,4,0.95);
+      border: 1px solid rgba(201,168,76,0.4);
+      color: var(--gold-light) !important;
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      padding: 12px 22px;
+      border-radius: 12px;
+      z-index: 999;
+      transition: transform 0.3s ease;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      table { font-size: 12px; }
+      thead th, tbody td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- EDIT MODAL -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+      <button class="close-btn" onclick="closeModal()">✕</button>
+      <div class="modal-title" id="modalTitle">✏️ Edit Fair</div>
+
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Fair Name</label>
+          <input type="text" id="editName" />
+        </div>
+        <div class="form-group full">
+          <label>Address</label>
+          <input type="text" id="editAddress" />
+        </div>
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" id="editCity" />
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <input type="text" id="editState" maxlength="2" />
+        </div>
+        <div class="form-group">
+          <label>ZIP</label>
+          <input type="text" id="editZip" />
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" id="editPhone" />
+        </div>
+        <div class="form-group full">
+          <label>Website</label>
+          <input type="text" id="editWebsite" />
+        </div>
+        <div class="form-group">
+          <label>Contact Name</label>
+          <input type="text" id="editContactName" />
+        </div>
+        <div class="form-group">
+          <label>Contact Email</label>
+          <input type="text" id="editContactEmail" />
+        </div>
+        <div class="form-group full">
+          <label>Description (max 400 chars)</label>
+          <textarea id="editDescription" maxlength="400"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Hours</label>
+          <input type="text" id="editHours" />
+        </div>
+        <div class="form-group full">
+          <label>Image URL</label>
+          <input type="text" id="editImageUrl" />
+        </div>
+        <div class="form-group">
+          <label>Tier</label>
+          <select id="editTier">
+            <option value="">Basic (no tier)</option>
+            <option value="silver">Silver</option>
+            <option value="gold">Gold</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Verified</label>
+          <select id="editVerified">
+            <option value="true">✅ Verified</option>
+            <option value="false">⚠️ Not Verified</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-primary" onclick="saveFair()">💾 Save Changes</button>
+        <button class="modal-btn" onclick="closeModal()">✕ Cancel</button>
+        <a id="viewDetailLink" href="#" target="_blank" class="modal-btn btn-blue">🔍 Full Detail ↗</a>
+      </div>
+      <div id="modalStatus"></div>
+    </div>
+  </div>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/admin/admin_dashboard.html" class="nav-btn">⬅ Dashboard</a>
+      <a href="/admin/fair_approval.html" class="nav-btn">📝 Pending Fairs</a>
+      <a href="/index.html" class="nav-btn">🏠 Home</a>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <div class="page-header">
+      <h1>🎪 All Fairs</h1>
+      <p>Browse, search, and edit all fairs in the system</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-box">
+        <span class="stat-icon">🎪</span>
+        <div class="stat-val" id="statTotal">…</div>
+        <div class="stat-label">Total Fairs</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-icon">✅</span>
+        <div class="stat-val" id="statVerified">…</div>
+        <div class="stat-label">Verified</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-icon">⚠️</span>
+        <div class="stat-val" id="statUnverified">…</div>
+        <div class="stat-label">Unverified</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-icon">🥇</span>
+        <div class="stat-val" id="statGold">…</div>
+        <div class="stat-label">Gold Tier</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-icon">🥈</span>
+        <div class="stat-val" id="statSilver">…</div>
+        <div class="stat-label">Silver Tier</div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <input class="search-input" type="text" id="searchInput" placeholder="🔍 Search by name, city, state..." oninput="renderTable()" />
+      <select class="filter-select" id="filterTier" onchange="renderTable()">
+        <option value="">All Tiers</option>
+        <option value="gold">Gold</option>
+        <option value="silver">Silver</option>
+        <option value="basic">Basic</option>
+      </select>
+      <select class="filter-select" id="filterVerified" onchange="renderTable()">
+        <option value="">All</option>
+        <option value="true">Verified</option>
+        <option value="false">Unverified</option>
+      </select>
+      <select class="filter-select" id="filterState" onchange="renderTable()">
+        <option value="">All States</option>
+      </select>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Tier</th>
+            <th>Verified</th>
+            <th>Website</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="fairTableBody"></tbody>
+      </table>
+    </div>
+
+    <div id="emptyMsg" style="display:none;">No fairs found.</div>
+
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    let allFairs = [];
+    let editingFair = null;
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function loadFairs() {
+      const { data, error } = await supabaseClient.rpc('admin_get_all_fairs_list');
+      if (error) {
+        document.getElementById('fairTableBody').innerHTML = `<tr><td colspan="6" style="color:#c0392b;padding:20px;">Error: ${error.message}</td></tr>`;
+        return;
+      }
+      allFairs = data || [];
+
+      // Stats
+      document.getElementById('statTotal').innerText = allFairs.length;
+      document.getElementById('statVerified').innerText = allFairs.filter(f => f.verified).length;
+      document.getElementById('statUnverified').innerText = allFairs.filter(f => !f.verified).length;
+      document.getElementById('statGold').innerText = allFairs.filter(f => f.fair_tier === 'gold').length;
+      document.getElementById('statSilver').innerText = allFairs.filter(f => f.fair_tier === 'silver').length;
+
+      // State dropdown
+      const states = [...new Set(allFairs.map(f => (f.state || '').toUpperCase()))].sort();
+      const stateSelect = document.getElementById('filterState');
+      states.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s;
+        o.textContent = s;
+        stateSelect.appendChild(o);
+      });
+
+      renderTable();
+    }
+
+    function renderTable() {
+      const query     = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const tierFilter = document.getElementById('filterTier').value;
+      const verFilter  = document.getElementById('filterVerified').value;
+      const stateFilter = document.getElementById('filterState').value;
+      const tbody = document.getElementById('fairTableBody');
+      const emptyMsg = document.getElementById('emptyMsg');
+      tbody.innerHTML = '';
+
+      let filtered = allFairs.filter(f => {
+        if (query && !(
+          (f.name || '').toLowerCase().includes(query) ||
+          (f.city || '').toLowerCase().includes(query) ||
+          (f.state || '').toLowerCase().includes(query)
+        )) return false;
+
+        if (tierFilter) {
+          const ft = (f.fair_tier || 'basic').toLowerCase();
+          if (tierFilter === 'basic' && ft !== 'basic' && f.fair_tier !== null) return false;
+          if (tierFilter === 'gold' && ft !== 'gold') return false;
+          if (tierFilter === 'silver' && ft !== 'silver') return false;
+        }
+
+        if (verFilter === 'true' && !f.verified) return false;
+        if (verFilter === 'false' && f.verified) return false;
+
+        if (stateFilter && (f.state || '').toUpperCase() !== stateFilter) return false;
+
+        return true;
+      });
+
+      if (!filtered.length) {
+        emptyMsg.style.display = 'block';
+        return;
+      }
+      emptyMsg.style.display = 'none';
+
+      filtered.forEach(f => {
+        const tier = (f.fair_tier || 'basic').toLowerCase();
+        const tierBadge = tier === 'gold'
+          ? `<span class="badge badge-gold">Gold</span>`
+          : tier === 'silver'
+          ? `<span class="badge badge-silver">Silver</span>`
+          : `<span class="badge badge-basic">Basic</span>`;
+
+        const verBadge = f.verified
+          ? `<span class="badge badge-verified">✓ Verified</span>`
+          : `<span class="badge badge-unverified">⚠ Unverified</span>`;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${f.name}</strong></td>
+          <td>${f.city || '—'}, ${f.state || '—'}</td>
+          <td>${tierBadge}</td>
+          <td>${verBadge}</td>
+          <td>${f.website ? `<a href="${f.website}" target="_blank" style="color:#1a3a6b !important; font-size:11px;">Visit ↗</a>` : '—'}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn" onclick="openEdit(${f.id})">✏️ Edit</button>
+              <a href="/admin/fair_admin_detail.html?fair_id=${f.id}" target="_blank" class="btn btn-blue">🔍 Detail</a>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openEdit(id) {
+      const f = allFairs.find(x => x.id === id);
+      if (!f) return;
+      editingFair = f;
+
+      document.getElementById('modalTitle').textContent = `✏️ Edit — ${f.name}`;
+      document.getElementById('editName').value        = f.name || '';
+      document.getElementById('editAddress').value     = f.address || '';
+      document.getElementById('editCity').value        = f.city || '';
+      document.getElementById('editState').value       = f.state || '';
+      document.getElementById('editZip').value         = f.zip || '';
+      document.getElementById('editPhone').value       = f.phone_number || '';
+      document.getElementById('editWebsite').value     = f.website || '';
+      document.getElementById('editContactName').value = f.contact_name || '';
+      document.getElementById('editContactEmail').value= f.contact_email || '';
+      document.getElementById('editDescription').value = f.description || '';
+      document.getElementById('editHours').value       = f.hours || '';
+      document.getElementById('editImageUrl').value    = f.image_url || '';
+      document.getElementById('editTier').value        = f.fair_tier || '';
+      document.getElementById('editVerified').value    = String(f.verified);
+      document.getElementById('viewDetailLink').href   = `/admin/fair_admin_detail.html?fair_id=${f.id}`;
+      document.getElementById('modalStatus').textContent = '';
+      document.getElementById('modalStatus').className = '';
+
+      document.getElementById('editModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').classList.remove('show');
+      editingFair = null;
+    }
+
+    async function saveFair() {
+      if (!editingFair) return;
+      const statusEl = document.getElementById('modalStatus');
+      statusEl.textContent = 'Saving…';
+      statusEl.className = '';
+
+      const { error } = await supabaseClient.rpc('admin_update_fair', {
+        p_id:            editingFair.id,
+        p_name:          document.getElementById('editName').value.trim(),
+        p_address:       document.getElementById('editAddress').value.trim(),
+        p_city:          document.getElementById('editCity').value.trim(),
+        p_state:         document.getElementById('editState').value.trim().toUpperCase(),
+        p_zip:           document.getElementById('editZip').value.trim(),
+        p_website:       document.getElementById('editWebsite').value.trim(),
+        p_phone_number:  document.getElementById('editPhone').value.trim(),
+        p_contact_name:  document.getElementById('editContactName').value.trim(),
+        p_contact_email: document.getElementById('editContactEmail').value.trim(),
+        p_description:   document.getElementById('editDescription').value.trim(),
+        p_hours:         document.getElementById('editHours').value.trim(),
+        p_fair_tier:     document.getElementById('editTier').value,
+        p_verified:      document.getElementById('editVerified').value === 'true',
+        p_image_url:     document.getElementById('editImageUrl').value.trim(),
+      });
+
+      if (error) {
+        statusEl.textContent = '❌ Error: ' + error.message;
+        statusEl.className = 'err';
+        return;
+      }
+
+      // Update local data
+      const idx = allFairs.findIndex(x => x.id === editingFair.id);
+      if (idx !== -1) {
+        allFairs[idx] = {
+          ...allFairs[idx],
+          name:          document.getElementById('editName').value.trim(),
+          address:       document.getElementById('editAddress').value.trim(),
+          city:          document.getElementById('editCity').value.trim(),
+          state:         document.getElementById('editState').value.trim().toUpperCase(),
+          zip:           document.getElementById('editZip').value.trim(),
+          website:       document.getElementById('editWebsite').value.trim(),
+          phone_number:  document.getElementById('editPhone').value.trim(),
+          contact_name:  document.getElementById('editContactName').value.trim(),
+          contact_email: document.getElementById('editContactEmail').value.trim(),
+          description:   document.getElementById('editDescription').value.trim(),
+          hours:         document.getElementById('editHours').value.trim(),
+          fair_tier:     document.getElementById('editTier').value || null,
+          verified:      document.getElementById('editVerified').value === 'true',
+          image_url:     document.getElementById('editImageUrl').value.trim(),
+        };
+      }
+
+      statusEl.textContent = '✅ Saved!';
+      statusEl.className = 'ok';
+      showToast('✅ Fair updated successfully!');
+      renderTable();
+      setTimeout(() => closeModal(), 1200);
+    }
+
+    // Close modal on overlay click
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    loadFairs();
+  </script>
+
+</body>
+</html>

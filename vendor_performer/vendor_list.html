@@ -288,8 +288,8 @@ if (trimmed.length >= 2) {
     const { data, error } = await q.range(from, to);
 
     if (error) {
-      console.error('vendor fetch failed:', error);
-      if (offset === 0) container.innerHTML = '<p>⚠️ Failed to load vendors.</p>';
+     console.error('vendor fetch failed:', error);
+if (offset === 0) container.innerHTML = `<p>⚠️ Error: ${JSON.stringify(error)}</p>`;
       isLoading = false;
       setLoading(false);
       return;

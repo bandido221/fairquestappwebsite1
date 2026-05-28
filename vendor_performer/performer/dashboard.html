@@ -446,31 +446,59 @@ function handleAddNewPerformerAccount() {
       }
     }
 
-    async function loadDashboard(userId) {
+  async function loadDashboard(userId) {
   const container = document.getElementById('dashboardContent');
   container.innerHTML = '';
 
-  const { data: apps, error } = await window.supabaseClient
+  // Load apps the user owns
+  const { data: ownedApps, error } = await window.supabaseClient
     .from('vendor_performer_applications')
     .select('*')
     .eq('user_id', userId)
     .eq('application_type', true)
     .order('id', { ascending: false });
 
-  window.currentUserIsGoldTier = (apps || []).some(app =>
+  // Also load apps where user is an accepted team member
+  const { data: teamRows } = await window.supabaseClient
+    .from('vp_team_members')
+    .select('vpa_id')
+    .eq('member_user_id', userId)
+    .eq('invite_status', 'accepted');
+
+  const teamVpaIds = (teamRows || []).map(r => r.vpa_id);
+
+  let teamApps = [];
+  if (teamVpaIds.length > 0) {
+    const { data: ta } = await window.supabaseClient
+      .from('vendor_performer_applications')
+      .select('*')
+      .in('id', teamVpaIds)
+      .eq('application_type', true)
+      .order('id', { ascending: false });
+    teamApps = ta || [];
+  }
+
+  // Merge, avoiding duplicates
+  const seenIds = new Set((ownedApps || []).map(a => a.id));
+  const apps = [
+    ...(ownedApps || []),
+    ...teamApps.filter(a => !seenIds.has(a.id))
+  ];
+
+  window.currentUserIsGoldTier = apps.some(app =>
     app.approval_status === 'approved' &&
     (app.tier || '').toLowerCase() === 'gold'
   );
 
-      if (error) {
-        container.innerHTML = `<p>Error loading dashboard. Please try again.</p>`;
-        return;
-      }
+  if (error) {
+    container.innerHTML = `<p>Error loading dashboard. Please try again.</p>`;
+    return;
+  }
 
-      if (!apps.length) {
-        container.innerHTML = `<div class="info"><p>You haven’t submitted any performer applications yet.</p></div>`;
-        return;
-      }
+  if (!apps.length) {
+    container.innerHTML = `<div class="info"><p>You haven't submitted any performer applications yet.</p></div>`;
+    return;
+  }
 
       for (let i = 0; i < apps.length; i++) {
         const perf = apps[i];

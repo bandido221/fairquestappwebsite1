@@ -221,12 +221,13 @@
     list.forEach(vendor => {
       const websiteUrl = normalizeUrl(vendor.website);
 
-        const liveUrl = `vendor/vp_vendor_live_page.html?vpa_id=${encodeURIComponent(vendor.id)}`;
+     const detailUrl = `vp_detail.html?vpa_id=${encodeURIComponent(vendor.id)}`;
+const liveUrl = `vp_live_page.html?vpa_id=${encodeURIComponent(vendor.id)}`;
 
       container.innerHTML += `
         <div class="vendor-card">
           <div class="card-media">
-            <a class="card-link" href="${escapeHtml(liveUrl)}" aria-label="Open ${escapeHtml(vendor.name)}">
+         <a class="card-link" href="${escapeHtml(detailUrl)}" aria-label="Open ${escapeHtml(vendor.name)}">
               ${
                 vendor.photo_url
                   ? `<img src="${escapeHtml(vendor.photo_url)}" alt="${escapeHtml(vendor.name)}">`
@@ -236,9 +237,9 @@
           </div>
 
           <div class="card-body">
-            <a class="card-link" href="${escapeHtml(liveUrl)}">
-              <h2 class="card-title">${escapeHtml(vendor.name)}</h2>
-            </a>
+           <a class="card-link" href="${escapeHtml(detailUrl)}">
+  <h2 class="card-title">${escapeHtml(vendor.name)}</h2>
+</a>
 
             <div class="card-actions">
               ${

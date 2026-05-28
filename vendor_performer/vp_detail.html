@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile | FairQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
+
+  <style>
+    body{
+      font-family:'Domine', serif;
+      background:#000;
+      padding:26px;
+      color:#f0e6d2;
+      margin:0;
+      text-align:center;
+    }
+    h1,h2,h3{ font-family:'Cinzel', serif; margin:0 0 10px; }
+    .top-banner{
+      width:100%;
+      max-width:760px;
+      height:auto;
+      object-fit:contain;
+      display:block;
+      margin:0 auto 16px auto;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.35);
+    }
+    .logo{
+      max-width:92px;
+      height:auto;
+      margin:0 auto 14px auto;
+      display:block;
+      filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .card{
+      max-width:900px;
+      margin:0 auto 16px auto;
+      background:rgba(251,241,200,0.90);
+      border:2px solid #aa8425;
+      border-radius:14px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.45);
+      color:#3b1f1f;
+      text-align:left;
+      padding:20px;
+    }
+    .hero{
+      display:flex;
+      gap:16px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+    .heroPhoto{
+      width:160px;
+      height:160px;
+      object-fit:cover;
+      border-radius:12px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.25);
+      flex-shrink:0;
+    }
+    .heroRight{ flex:1; min-width:200px; }
+    .heroName{ font-size:26px; line-height:1.2; margin:0 0 6px 0; }
+    .muted{ opacity:.85; font-size:15px; }
+    .pill{
+      display:inline-block;
+      padding:5px 10px;
+      border-radius:999px;
+      font-size:13px;
+      background:rgba(0,0,0,0.08);
+      margin:0 0 12px;
+    }
+    .section{
+      margin-top:16px;
+      padding-top:14px;
+      border-top:1px solid rgba(0,0,0,0.12);
+    }
+    .kv{ margin:6px 0; font-size:16px; }
+    .kv b{ display:inline-block; min-width:120px; }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      margin-top:16px;
+    }
+    button, .btnlink{
+      padding:10px 14px;
+      font-size:15px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-block;
+      text-align:center;
+      font-family:'Domine', serif;
+    }
+    .btn-back{ background:#444; color:#fff; }
+    .btn-refresh{ background:#f39c12; color:#fff; }
+    .btn-review{ background:#5b2a86; color:#fff; }
+    .btn-more{ background:#aa8425; color:#fff; width:100%; margin-top:12px; padding:12px; font-size:15px; }
+    .btn-login{ background:#111; color:#f0e6d2; border:1px solid rgba(0,0,0,0.25); }
+    .error{ color:#7f1d1d; font-weight:bold; }
+    .ok{ color:#14532d; font-weight:bold; }
+
+    /* Review items */
+    .review-item{
+      background:rgba(255,255,255,0.55);
+      border:1px solid rgba(0,0,0,0.10);
+      border-radius:10px;
+      padding:14px;
+      margin-top:10px;
+    }
+    .review-stars{ font-size:18px; color:#aa8425; }
+    .review-meta{ font-size:13px; opacity:.75; margin-top:2px; }
+    .review-text{ margin-top:8px; font-size:15px; line-height:1.5; white-space:pre-wrap; }
+
+    /* Review modal */
+    .modal-backdrop{
+      display:none;
+      position:fixed;
+      top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.65);
+      z-index:999;
+      justify-content:center;
+      align-items:center;
+      padding:16px;
+    }
+    .modal-backdrop.open{ display:flex; }
+    .modal-box{
+      background:rgba(251,241,200,0.97);
+      color:#3b1f1f;
+      border:2px solid #aa8425;
+      border-radius:14px;
+      padding:24px;
+      width:100%;
+      max-width:460px;
+      box-shadow:0 6px 24px rgba(0,0,0,0.5);
+      text-align:left;
+    }
+    .modal-box h3{ margin:0 0 14px; font-family:'Cinzel',serif; }
+    label{ display:block; font-weight:bold; margin:10px 0 6px; }
+    select, textarea{
+      width:100%;
+      box-sizing:border-box;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,0.20);
+      font-family:'Domine', serif;
+      font-size:16px;
+    }
+    textarea{ min-height:90px; resize:vertical; }
+
+    @media (max-width:768px){
+      body{ padding:16px; }
+      .card{ padding:16px; }
+      .actions{ flex-direction:column; }
+      button, .btnlink{ width:100%; }
+      .heroPhoto{ width:120px; height:120px; }
+      .heroName{ font-size:22px; }
+      .kv b{ min-width:auto; display:block; margin-bottom:2px; }
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <img src="../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+  <!-- Profile Card -->
+  <div class="card" id="profileCard" style="display:none;">
+    <div id="pillBox"><div class="pill">Profile</div></div>
+
+    <div class="hero">
+      <img id="heroPhoto" class="heroPhoto" src="" alt="Profile photo" style="display:none;">
+      <div class="heroRight">
+        <h1 id="titleName" class="heroName">—</h1>
+        <div id="typeVal" class="muted"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Basics</h3>
+      <div class="kv" id="locationRow" style="display:none;"><b>Location:</b> <span id="locationVal">—</span></div>
+      <div class="kv" id="websiteRow" style="display:none;"><b>Website:</b> <a id="websiteVal" href="#" target="_blank" rel="noopener">—</a></div>
+    </div>
+
+    <div class="section" id="aboutSection" style="display:none;">
+      <h3>About</h3>
+      <div id="aboutVal" style="white-space:pre-wrap; font-size:16px; line-height:1.6;"></div>
+    </div>
+
+    <div class="actions" style="margin-top:20px;">
+      <button class="btn-back" type="button" onclick="goBack()">← Back</button>
+      <button class="btn-refresh" type="button" onclick="loadPage()">Refresh</button>
+    </div>
+  </div>
+
+  <div id="statusMsg" style="color:#f0e6d2; padding:20px;">Loading…</div>
+
+  <!-- Reviews Card -->
+  <div class="card" id="reviewsCard" style="display:none;">
+    <h2 style="margin-bottom:4px;">Reviews</h2>
+    <div id="avgLine" class="muted" style="margin-bottom:14px;">—</div>
+
+    <button class="btn-review" type="button" onclick="openReviewModal()">⭐ Leave a Review</button>
+
+    <div id="reviewsList" style="margin-top:14px;"></div>
+    <button class="btn-more" id="showMoreBtn" style="display:none;" onclick="showMoreReviews()">Show More Reviews</button>
+  </div>
+
+  <!-- Review Modal -->
+  <div class="modal-backdrop" id="reviewModal">
+    <div class="modal-box">
+      <h3>Leave a Review</h3>
+      <div id="reviewModalBody"></div>
+    </div>
+  </div>
+
+<script>
+  window.supabaseClient = window.supabaseClient || window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
+  const sb = window.supabaseClient;
+
+  const params = new URLSearchParams(window.location.search);
+  const vpaId = params.get('vpa_id');
+
+  let appRow = null;
+  let myUserId = null;
+  let myReviewRow = null;
+  let allReviews = [];
+  let shownCount = 0;
+  const FIRST_BATCH = 2;
+  const MORE_BATCH = 5;
+
+  function setStatus(html){
+    document.getElementById('statusMsg').innerHTML = html;
+  }
+
+  function safeText(v){
+    return (v === null || v === undefined || String(v).trim() === '') ? null : String(v);
+  }
+
+  function goBack(){
+    if(window.history.length > 1) window.history.back();
+    else window.location.href = '/index.html';
+  }
+
+  function starsHtml(rating){
+    const n = Number(rating) || 0;
+    return '★'.repeat(n) + '☆'.repeat(5 - n);
+  }
+
+  async function getSessionUser(){
+    const { data:{ session } } = await sb.auth.getSession();
+    myUserId = session?.user?.id || null;
+  }
+
+  async function loadAppRow(){
+    if(!vpaId){ setStatus('<p class="error">Missing vpa_id in URL.</p>'); return false; }
+
+    const { data, error } = await sb
+      .from('vendor_performer_applications')
+      .select('id, name, description, website, vendor_type, city, state, photo_url, application_type, tier, approval_status')
+      .eq('id', Number(vpaId))
+      .maybeSingle();
+
+    if(error){ setStatus(`<p class="error">Could not load profile: ${error.message}</p>`); return false; }
+    if(!data){ setStatus('<p class="error">Profile not found.</p>'); return false; }
+
+    appRow = data;
+    return true;
+  }
+
+  function renderProfile(){
+    const isPerformer = appRow.application_type === true;
+    document.getElementById('pillBox').innerHTML =
+      `<div class="pill">${isPerformer ? 'Performer' : 'Vendor'} Public Profile</div>`;
+
+    const name = safeText(appRow.name) || (isPerformer ? 'Performer' : 'Vendor');
+    document.getElementById('titleName').textContent = name;
+    document.title = `${name} | FairQuest`;
+
+    const type = safeText(appRow.vendor_type);
+    const typeEl = document.getElementById('typeVal');
+    typeEl.textContent = type || '';
+    typeEl.style.display = type ? 'block' : 'none';
+
+    const photoUrl = safeText(appRow.photo_url);
+    const photoEl = document.getElementById('heroPhoto');
+    if(photoUrl){ photoEl.src = photoUrl; photoEl.style.display = 'block'; }
+    else { photoEl.style.display = 'none'; }
+
+    const location = [safeText(appRow.city), safeText(appRow.state)].filter(Boolean).join(', ');
+    const locationRow = document.getElementById('locationRow');
+    if(location){ document.getElementById('locationVal').textContent = location; locationRow.style.display = 'block'; }
+    else { locationRow.style.display = 'none'; }
+
+    const site = safeText(appRow.website);
+    const websiteRow = document.getElementById('websiteRow');
+    if(site){
+      const a = document.getElementById('websiteVal');
+      a.href = site.startsWith('http') ? site : 'https://' + site;
+      a.textContent = site;
+      websiteRow.style.display = 'block';
+    } else { websiteRow.style.display = 'none'; }
+
+    const about = safeText(appRow.description);
+    const aboutSection = document.getElementById('aboutSection');
+    if(about){ document.getElementById('aboutVal').textContent = about; aboutSection.style.display = 'block'; }
+    else { aboutSection.style.display = 'none'; }
+
+    document.getElementById('profileCard').style.display = 'block';
+    document.getElementById('statusMsg').style.display = 'none';
+  }
+
+  async function loadReviews(){
+    const { data, error } = await sb
+      .from('vp_web_reviews')
+      .select('id, reviewer_user_id, rating, review_text, created_at')
+      .eq('vpa_id', Number(vpaId))
+      .eq('is_visible', true)
+      .order('rating', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if(error){
+      document.getElementById('reviewsList').innerHTML =
+        `<p class="error">Could not load reviews: ${error.message}</p>`;
+      document.getElementById('reviewsCard').style.display = 'block';
+      return;
+    }
+
+    allReviews = Array.isArray(data) ? data : [];
+    myReviewRow = myUserId ? (allReviews.find(r => r.reviewer_user_id === myUserId) || null) : null;
+
+    shownCount = 0;
+    document.getElementById('reviewsList').innerHTML = '';
+
+    // Avg line
+    const avgLine = document.getElementById('avgLine');
+    if(allReviews.length){
+      const avg = allReviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) / allReviews.length;
+      avgLine.textContent = `${starsHtml(Math.round(avg))}  ${avg.toFixed(1)} / 5  (${allReviews.length} review${allReviews.length !== 1 ? 's' : ''})`;
+    } else {
+      avgLine.textContent = 'No reviews yet for this page.';
+    }
+
+    renderNextBatch(FIRST_BATCH);
+    document.getElementById('reviewsCard').style.display = 'block';
+  }
+
+  function renderNextBatch(count){
+    const container = document.getElementById('reviewsList');
+    const batch = allReviews.slice(shownCount, shownCount + count);
+
+    batch.forEach(r => {
+      const who = 'Anonymous';
+      const text = safeText(r.review_text) || '';
+      const when = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
+      const div = document.createElement('div');
+      div.className = 'review-item';
+      div.innerHTML = `
+        <div class="review-stars">${starsHtml(r.rating)}</div>
+        <div class="review-meta">by ${who}${when ? ' • ' + when : ''}</div>
+        ${text ? `<div class="review-text">${text}</div>` : ''}
+      `;
+      container.appendChild(div);
+    });
+
+    shownCount += batch.length;
+
+    const showMoreBtn = document.getElementById('showMoreBtn');
+    showMoreBtn.style.display = shownCount < allReviews.length ? 'block' : 'none';
+  }
+
+  function showMoreReviews(){
+    renderNextBatch(MORE_BATCH);
+  }
+
+  function openReviewModal(){
+    const modal = document.getElementById('reviewModal');
+    const body = document.getElementById('reviewModalBody');
+
+    if(!myUserId){
+      const returnUrl = encodeURIComponent(window.location.href);
+      body.innerHTML = `
+        <p>You need to be signed in to leave a review.</p>
+        <div class="actions" style="margin-top:14px;">
+          <a class="btnlink btn-review" href="/vendor_performer/vendor/index.html?returnUrl=${returnUrl}">Sign In / Sign Up</a>
+          <button class="btn-back" type="button" onclick="closeReviewModal()">Cancel</button>
+        </div>
+      `;
+    } else {
+      const existingRating = myReviewRow ? String(myReviewRow.rating) : '5';
+      const existingText = myReviewRow ? (myReviewRow.review_text || '') : '';
+      body.innerHTML = `
+        <label for="ratingInput">Rating</label>
+        <select id="ratingInput">
+          <option value="5" ${existingRating==='5'?'selected':''}>5 - Excellent</option>
+          <option value="4" ${existingRating==='4'?'selected':''}>4 - Good</option>
+          <option value="3" ${existingRating==='3'?'selected':''}>3 - OK</option>
+          <option value="2" ${existingRating==='2'?'selected':''}>2 - Not great</option>
+          <option value="1" ${existingRating==='1'?'selected':''}>1 - Bad</option>
+        </select>
+        <label for="reviewTextInput">Comment (optional)</label>
+        <textarea id="reviewTextInput" placeholder="Share what you liked…">${existingText}</textarea>
+        <div id="reviewModalMsg" style="margin-top:10px;"></div>
+        <div class="actions" style="margin-top:14px;">
+          <button class="btn-review" type="button" onclick="saveReview()">Save Review</button>
+          ${myReviewRow ? `<button class="btn-back" type="button" onclick="deleteMyReview()">Delete My Review</button>` : ''}
+          <button class="btn-back" type="button" onclick="closeReviewModal()">Cancel</button>
+        </div>
+      `;
+    }
+
+    modal.classList.add('open');
+  }
+
+  function closeReviewModal(){
+    document.getElementById('reviewModal').classList.remove('open');
+  }
+
+  document.getElementById('reviewModal').addEventListener('click', function(e){
+    if(e.target === this) closeReviewModal();
+  });
+
+  async function saveReview(){
+    const msg = document.getElementById('reviewModalMsg');
+    msg.innerHTML = '<span class="muted">Saving…</span>';
+
+    const rating = Number(document.getElementById('ratingInput').value);
+    const reviewText = document.getElementById('reviewTextInput').value.trim() || null;
+
+    if(myReviewRow?.id){
+      const { error } = await sb
+        .from('vp_web_reviews')
+        .update({ rating, review_text: reviewText })
+        .eq('id', myReviewRow.id);
+      if(error){ msg.innerHTML = `<div class="error">Save failed: ${error.message}</div>`; return; }
+    } else {
+      const { error } = await sb
+        .from('vp_web_reviews')
+        .insert([{
+          vpa_id: Number(vpaId),
+          reviewer_user_id: myUserId,
+          rating,
+          review_text: reviewText,
+          is_visible: true
+        }]);
+      if(error){ msg.innerHTML = `<div class="error">Save failed: ${error.message}</div>`; return; }
+    }
+
+    closeReviewModal();
+    await loadReviews();
+  }
+
+  async function deleteMyReview(){
+    const msg = document.getElementById('reviewModalMsg');
+    msg.innerHTML = '<span class="muted">Deleting…</span>';
+    if(!myReviewRow?.id) return;
+
+    const { error } = await sb.from('vp_web_reviews').delete().eq('id', myReviewRow.id);
+    if(error){ msg.innerHTML = `<div class="error">Delete failed: ${error.message}</div>`; return; }
+
+    myReviewRow = null;
+    closeReviewModal();
+    await loadReviews();
+  }
+
+  async function loadPage(){
+    document.getElementById('profileCard').style.display = 'none';
+    document.getElementById('reviewsCard').style.display = 'none';
+    document.getElementById('statusMsg').style.display = 'block';
+    setStatus('Loading…');
+
+    await getSessionUser();
+    const ok = await loadAppRow();
+    if(!ok) return;
+
+    renderProfile();
+    await loadReviews();
+  }
+
+  window.addEventListener('DOMContentLoaded', loadPage);
+</script>
+
+</body>
+</html>

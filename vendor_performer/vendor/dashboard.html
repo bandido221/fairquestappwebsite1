@@ -429,19 +429,48 @@ async function loadDashboard(userId){
   const container = document.getElementById('dashboardContent');
   container.innerHTML = '';
 
-  let { data: apps, error } = await sb
+  // Load apps the user owns
+  let { data: ownedApps, error } = await sb
     .from('vendor_performer_applications')
     .select('*')
-    .eq('user_id',userId)
+    .eq('user_id', userId)
     .eq('application_type', false)
-    .order('id',{ascending:false});
+    .order('id', {ascending: false});
+
+  // Also load apps where user is an accepted team member
+  let { data: teamRows } = await sb
+    .from('vp_team_members')
+    .select('vpa_id')
+    .eq('member_user_id', userId)
+    .eq('invite_status', 'accepted');
+
+  const teamVpaIds = (teamRows || []).map(r => r.vpa_id);
+
+  let teamApps = [];
+  if (teamVpaIds.length > 0) {
+    let { data: ta } = await sb
+      .from('vendor_performer_applications')
+      .select('*')
+      .in('id', teamVpaIds)
+      .eq('application_type', false)
+      .order('id', {ascending: false});
+    teamApps = ta || [];
+  }
+
+  // Merge, avoiding duplicates
+  const seenIds = new Set((ownedApps || []).map(a => a.id));
+  const apps = [
+    ...(ownedApps || []),
+    ...teamApps.filter(a => !seenIds.has(a.id))
+  ];
+  const error2 = error; // keep original error check
 
   window.currentUserIsGoldTier = (apps || []).some(app =>
     app.approval_status === 'approved' &&
     (app.tier || '').toLowerCase() === 'gold'
   );
 
-  if(error) return container.innerHTML=`<p>Error loading dashboard.</p>`;
+  if(error2) return container.innerHTML=`<p>Error loading dashboard.</p>`;
   if(!apps.length) return container.innerHTML=`<div class="info"><p>No vendor applications yet.</p></div>`;
   for(let i=0;i<apps.length;i++){
     const v = apps[i];

@@ -221,7 +221,7 @@
       .replaceAll("'", '&#039;');
   }
 function goToPerformerLivePage(vpaId){
-  window.location.href = `/vendor_performer/performer/vp_performer_live_page.html?vpa_id=${encodeURIComponent(vpaId)}`;
+  window.location.href = `/vendor_performer/vp_detail.html?vpa_id=${encodeURIComponent(vpaId)}`;
 }
   function appendPerformers(list){
     const container = document.getElementById('performerGrid');

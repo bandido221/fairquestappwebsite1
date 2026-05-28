@@ -904,6 +904,8 @@ function renderWeekendRows(rows) {
               <div style="padding:8px;">
                 <div style="font-size:11px; font-weight:700; color:#2f1a12; word-break:break-all; margin-bottom:4px;">${f.nickname||f.file_name}</div>
             <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+                  <button onclick="vaultPreview('${f.file_path}','image')" style="font-size:12px; padding:6px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif; font-weight:700;">👁 View</button>
+                  <button onclick="vaultShare('${f.file_path}','${(f.nickname||f.file_name).replace(/'/g,"\\'")}');" style="font-size:12px; padding:6px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif; font-weight:700;">📤 Share</button>
                   <button onclick="vaultDownload('${f.file_path}','${f.file_name}')" style="font-size:12px; padding:6px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif; font-weight:700;">⬇ Download</button>
                   <button onclick="vaultToggleEdit('${f.id}')" style="font-size:12px; padding:6px 12px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif; font-weight:700;">✏️ Edit</button>
                   <button onclick="vaultConfirmDelete('${f.id}','${f.file_name.replace(/'/g,"\\'")}','${f.file_path}')" style="font-size:12px; padding:6px 12px; border-radius:6px; border:1px solid rgba(180,30,30,0.2); background:rgba(180,30,30,0.08); color:#c0392b; cursor:pointer; font-family:'Domine',serif; font-weight:700;">🗑 Delete</button>
@@ -947,6 +949,8 @@ function renderWeekendRows(rows) {
                 ${f.nickname ? `<div style="font-size:11px; color:#5a4335; font-style:italic;">${f.file_name}</div>` : ''}
                 <div style="font-size:11px; color:#6a4a1d; margin-top:2px;">${sizeMb}${sizeMb?' · ':''}${dateStr}</div>
                 <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+                  <button onclick="vaultPreview('${f.file_path}','${f.mime_type}')" style="font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif;">👁 View</button>
+                  <button onclick="vaultShare('${f.file_path}','${(f.nickname||f.file_name).replace(/'/g,"\\'")}');" style="font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif;">📤 Share</button>
                   <button onclick="vaultDownload('${f.file_path}','${f.file_name}')" style="font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif;">⬇ Download</button>
                   <button onclick="vaultToggleEdit('${f.id}')" style="font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:rgba(255,255,255,0.7); color:#2f1a12; cursor:pointer; font-family:'Domine',serif;">✏️ Edit</button>
                   <button onclick="vaultConfirmDelete('${f.id}','${f.file_name.replace(/'/g,"\\'")}','${f.file_path}')" style="font-size:12px; padding:5px 10px; border-radius:6px; border:1px solid rgba(180,30,30,0.2); background:rgba(180,30,30,0.08); color:#c0392b; cursor:pointer; font-family:'Domine',serif;">🗑 Delete</button>
@@ -972,6 +976,41 @@ function renderWeekendRows(rows) {
       const { data, error } = await VAULT_SB.storage.from('vp-fair-documents').createSignedUrl(filePath, 3600);
       if (error) return null;
       return data.signedUrl;
+    }
+
+    async function vaultPreview(filePath, mimeType) {
+      const url = await vaultSignedUrl(filePath);
+      if (!url) return;
+      if (mimeType === 'image' || (mimeType && mimeType.startsWith('image/'))) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;z-index:9999;cursor:zoom-out;padding:20px;`;
+        overlay.innerHTML = `
+          <img src="${url}" style="max-width:100%;max-height:90vh;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,0.8);object-fit:contain;" />
+          <button style="position:absolute;top:16px;right:20px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.3);color:#fff;font-size:22px;border-radius:50%;width:40px;height:40px;cursor:pointer;line-height:1;">✕</button>`;
+        overlay.addEventListener('click', () => document.body.removeChild(overlay));
+        document.body.appendChild(overlay);
+      } else {
+        window.open(url, '_blank');
+      }
+    }
+
+    async function vaultShare(filePath, fileName) {
+      const url = await vaultSignedUrl(filePath);
+      if (!url) return;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: fileName, text: `Check out: ${fileName}`, url });
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        showMessage('📋 Link copied to clipboard — paste anywhere to share!');
+      } catch {
+        prompt('Copy this link to share:', url);
+      }
     }
 
     async function vaultDownload(filePath, fileName) {

@@ -700,6 +700,8 @@ async function renderImages(images) {
         <div class="image-grid-name">${f.nickname || f.file_name}</div>
         ${f.nickname ? `<div class="image-grid-nick">${f.file_name}</div>` : ''}
         <div class="image-grid-actions">
+          <button class="file-btn" onclick="previewFile('${f.file_path}','image')">👁 View</button>
+          <button class="file-btn" onclick="shareFile('${f.file_path}','${(f.nickname || f.file_name).replace(/'/g,"\\'")}')">📤 Share</button>
           <button class="file-btn" onclick="downloadFile('${f.file_path}')">⬇ Download</button>
           <button class="file-btn" onclick="toggleEdit('${f.id}')">✏️ Edit</button>
           <button class="file-btn danger" onclick="confirmDelete('${f.id}','${f.file_name.replace(/'/g,"\\'")}')">🗑</button>
@@ -755,6 +757,8 @@ async function renderDocuments(docs) {
         </div>
       </div>
       <div class="file-actions">
+        <button class="file-btn" onclick="previewFile('${f.file_path}','${f.mime_type}')">👁 View</button>
+        <button class="file-btn" onclick="shareFile('${f.file_path}','${(f.nickname || f.file_name).replace(/'/g,"\\'")}')">📤 Share</button>
         <button class="file-btn" onclick="downloadFile('${f.file_path}')">⬇ Download</button>
         <button class="file-btn" onclick="toggleEdit('${f.id}')">✏️ Edit Label</button>
         <button class="file-btn danger" onclick="confirmDelete('${f.id}','${f.file_name.replace(/'/g,"\\'")}')">🗑 Delete</button>
@@ -784,6 +788,62 @@ function getDocIcon(mime) {
 async function downloadFile(filePath) {
   const url = await getSignedUrl(filePath);
   if (url) window.open(url, '_blank');
+}
+
+// ── PREVIEW ──
+async function previewFile(filePath, mimeType) {
+  const url = await getSignedUrl(filePath);
+  if (!url) return;
+
+  // Images — lightbox
+  if (mimeType === 'image' || (mimeType && mimeType.startsWith('image/'))) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position:fixed; inset:0; background:rgba(0,0,0,0.92);
+      display:flex; align-items:center; justify-content:center;
+      z-index:9999; cursor:zoom-out; padding:20px;`;
+    overlay.innerHTML = `
+      <img src="${url}" style="max-width:100%; max-height:90vh; border-radius:10px;
+        box-shadow:0 8px 40px rgba(0,0,0,0.8); object-fit:contain;" />
+      <button style="position:absolute; top:16px; right:20px; background:rgba(0,0,0,0.6);
+        border:1px solid rgba(255,255,255,0.3); color:#fff; font-size:22px;
+        border-radius:50%; width:40px; height:40px; cursor:pointer; line-height:1;">✕</button>`;
+    overlay.addEventListener('click', () => document.body.removeChild(overlay));
+    document.body.appendChild(overlay);
+    return;
+  }
+
+  // PDFs and everything else — open in new tab
+  window.open(url, '_blank');
+}
+
+// ── SHARE ──
+async function shareFile(filePath, fileName) {
+  const url = await getSignedUrl(filePath);
+  if (!url) return;
+
+  // Use native share sheet if available (mobile)
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: fileName,
+        text: `Check out this file: ${fileName}`,
+        url: url
+      });
+      return;
+    } catch (err) {
+      // User cancelled or share failed — fall through to fallback
+      if (err.name === 'AbortError') return;
+    }
+  }
+
+  // Desktop fallback — copy link to clipboard
+  try {
+    await navigator.clipboard.writeText(url);
+    alert('📋 Link copied to clipboard! You can now paste it anywhere to share.');
+  } catch {
+    prompt('Copy this link to share:', url);
+  }
 }
 
 // ── TOGGLE EDIT ──

@@ -1139,13 +1139,17 @@ async function checkIfUserApplied() {
   }
 
   if (data?.has_performer_approved) {
-    document.getElementById('performerButton').innerText = '🎭 Performer Portal';
-    document.getElementById('performerButton').href = 'vendor_performer/performer/index.html';
+    const pBtn = document.getElementById('performerButton');
+    pBtn.innerText = '🎭 Performer Portal';
+    pBtn.href = 'vendor_performer/performer/index.html';
+    pBtn.removeAttribute('onclick');
   }
 
   if (data?.has_vendor_approved) {
-    document.getElementById('vendorButton').innerText = '🧺 Vendor Portal';
-    document.getElementById('vendorButton').href = 'vendor_performer/vendor/index.html';
+    const vBtn = document.getElementById('vendorButton');
+    vBtn.innerText = '🧺 Vendor Portal';
+    vBtn.href = 'vendor_performer/vendor/index.html';
+    vBtn.removeAttribute('onclick');
   }
 }
 async function checkSocialAccess() {

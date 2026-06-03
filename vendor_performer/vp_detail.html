@@ -229,6 +229,13 @@
     <div id="fairsList"></div>
   </div>
 
+  <!-- Menu Card -->
+  <div class="card" id="menuCard" style="display:none;">
+    <h2 style="margin-bottom:4px;">🍽️ Our Menu</h2>
+    <p class="muted" style="margin-bottom:16px;">Tap a category to browse items</p>
+    <div id="menuCardContent"></div>
+  </div>
+
   <!-- Review Modal -->
   <div class="modal-backdrop" id="reviewModal">
     <div class="modal-box">
@@ -283,7 +290,7 @@
 
     const { data, error } = await sb
       .from('vendor_performer_applications')
-      .select('id, name, description, website, vendor_type, city, state, photo_url, application_type, tier, approval_status')
+      .select('id, name, description, website, vendor_type, city, state, photo_url, application_type, tier, approval_status, is_food_vendor')
       .eq('id', Number(vpaId))
       .maybeSingle();
 
@@ -544,10 +551,135 @@
     card.style.display = 'block';
   }
 
+  async function loadMenu(){
+    const card = document.getElementById('menuCard');
+    const content = document.getElementById('menuCardContent');
+
+    // Only show for gold approved food vendors
+    const isGoldFoodVendor =
+      appRow.is_food_vendor === true &&
+      appRow.approval_status === 'approved' &&
+      (appRow.tier || '').toLowerCase() === 'gold';
+
+    if(!isGoldFoodVendor){ card.style.display = 'none'; return; }
+
+    const { data, error } = await sb
+      .from('food_menu_items')
+      .select('*')
+      .eq('vpa_id', Number(vpaId))
+      .eq('is_hidden', false)
+      .order('item_name', { ascending: true });
+
+    if(error || !data || !data.length){
+      card.style.display = 'none';
+      return;
+    }
+
+    // Group by category
+    const categories = {};
+    data.forEach(item => {
+      const cat = item.category || 'Food';
+      if(!categories[cat]) categories[cat] = [];
+      categories[cat].push(item);
+    });
+
+    const catIcons = {
+      'Food': '🍖', 'Drink': '🥤', 'Dessert': '🍰',
+      'Snack': '🥙', 'Special': '⭐'
+    };
+
+    content.innerHTML = Object.entries(categories).map(([cat, items]) => {
+      const icon = catIcons[cat] || '🍽️';
+      const itemsHtml = items.map((item, idx) => `
+        <div class="menu-item-row ${idx >= 5 ? 'menu-item-extra' : ''}"
+             data-cat="${cat}"
+             style="${idx >= 5 ? 'display:none;' : ''}">
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            ${item.image_url
+              ? `<img src="${item.image_url}" alt="${item.item_name}"
+                   style="width:70px; height:70px; object-fit:cover; border-radius:8px; flex-shrink:0;" />`
+              : `<div style="width:70px; height:70px; background:rgba(0,0,0,0.06); border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:24px;">🍽️</div>`
+            }
+            <div style="flex:1;">
+              <div style="font-family:'Cinzel',serif; font-size:15px; color:#111; margin-bottom:4px;">
+                ${item.item_name}
+                ${!item.is_available ? `<span style="display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:bold; background:#ffe0e0; color:#8f1f1f; border:1px solid #e19a9a; margin-left:6px;">Currently Unavailable</span>` : ''}
+              </div>
+              ${item.description ? `<div style="font-size:13px; color:#444; line-height:1.5; margin-bottom:4px;">${item.description}</div>` : ''}
+              ${item.allergen_notes ? `<div style="font-size:12px; color:#666;">⚠️ ${item.allergen_notes}</div>` : ''}
+              <div style="font-size:16px; font-weight:bold; color:#27ae60; margin-top:4px;">$${parseFloat(item.price || 0).toFixed(2)}</div>
+            </div>
+          </div>
+        </div>
+      `).join('<hr style="border:none; border-top:1px solid rgba(0,0,0,0.08); margin:8px 0;">');
+
+      const hasMore = items.length > 5;
+
+      return `
+        <div style="margin-bottom:16px; background:rgba(255,255,255,0.55); border-radius:12px; border:1px solid rgba(0,0,0,0.10); overflow:hidden;">
+          <div style="padding:12px 16px; background:rgba(201,168,76,0.15); border-bottom:1px solid rgba(0,0,0,0.08);
+                      display:flex; justify-content:space-between; align-items:center; cursor:pointer;"
+               onclick="toggleCategory('${cat}')">
+            <div style="font-family:'Cinzel',serif; font-size:17px; color:#111;">
+              ${icon} ${cat} <span style="font-size:13px; color:#666; font-family:'Domine',serif;">(${items.length} item${items.length !== 1 ? 's' : ''})</span>
+            </div>
+            <button id="toggleBtn-${cat}"
+                    style="background:none; border:1px solid rgba(0,0,0,0.2); border-radius:6px;
+                           padding:4px 10px; font-size:12px; cursor:pointer; min-width:0;
+                           font-family:'Domine',serif; color:#111; box-shadow:none;">
+              Hide ▲
+            </button>
+          </div>
+          <div id="catBody-${cat}" style="padding:12px 16px;">
+            ${itemsHtml}
+            ${hasMore ? `
+            <div style="text-align:center; margin-top:12px;">
+              <button id="moreBtn-${cat}" onclick="showMoreItems('${cat}', ${items.length})"
+                      style="background:rgba(201,168,76,0.2); border:1px solid rgba(201,168,76,0.5);
+                             border-radius:8px; padding:8px 20px; font-size:13px; cursor:pointer;
+                             min-width:0; font-family:'Domine',serif; color:#3b1f1f; box-shadow:none;">
+                Show More ▼
+              </button>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    card.style.display = 'block';
+  }
+
+  function toggleCategory(cat) {
+    const body = document.getElementById(`catBody-${cat}`);
+    const btn  = document.getElementById(`toggleBtn-${cat}`);
+    const isVisible = body.style.display !== 'none';
+    body.style.display = isVisible ? 'none' : 'block';
+    btn.textContent = isVisible ? 'Show Items ▼' : 'Hide ▲';
+  }
+
+  function showMoreItems(cat, total) {
+    const extras = document.querySelectorAll(`.menu-item-extra[data-cat="${cat}"]`);
+    let shown = 0;
+    extras.forEach(el => {
+      if(el.style.display === 'none' && shown < 5){
+        el.style.display = 'block';
+        shown++;
+      }
+    });
+    // Check if any more hidden remain
+    const remaining = Array.from(extras).filter(el => el.style.display === 'none').length;
+    if(remaining === 0){
+      const btn = document.getElementById(`moreBtn-${cat}`);
+      if(btn) btn.style.display = 'none';
+    }
+  }
+
   async function loadPage(){
     document.getElementById('profileCard').style.display = 'none';
     document.getElementById('reviewsCard').style.display = 'none';
     document.getElementById('fairsCard').style.display = 'none';
+    document.getElementById('menuCard').style.display = 'none';
     document.getElementById('statusMsg').style.display = 'block';
     setStatus('Loading…');
 
@@ -558,6 +690,7 @@
     renderProfile();
     await loadFairs();
     await loadReviews();
+    await loadMenu();
   }
 
   window.addEventListener('DOMContentLoaded', loadPage);

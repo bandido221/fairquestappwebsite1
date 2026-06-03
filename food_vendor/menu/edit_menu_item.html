@@ -1,185 +1,284 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Edit Menu Item | FairQuest</title>
-  <link rel="stylesheet" href="/css/style.css" />
-<link rel="stylesheet" href="/css/fq_theme.css" />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
   <style>
     body {
       font-family: 'Domine', serif;
-      background-color: #000;
-      color: #f0e6d2;
-      padding: 40px;
+      background: #0d0a04;
+      color: #f1df99;
+      margin: 0; padding: 20px;
       text-align: center;
     }
-    h1 {
-      font-family: 'Cinzel', serif;
-      margin-bottom: 20px;
+    h1, h2, h3 { font-family: 'Cinzel', serif; margin-top: 0; }
+    .top-banner {
+      width: 100%; max-width: 600px; display: block;
+      margin: 0 auto 20px; border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-    .card {
-      background: rgba(251,241,200,0.88);
-      padding: 20px;
-      border-radius: 12px;
-      margin: 20px auto;
-      max-width: 700px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-      color: #3b1f1f;
-      text-align: left;
+    .logo {
+      max-width: 100px; display: block; margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      transition: transform 0.3s ease;
     }
-    .button-link {
-      display: inline-block;
-      margin: 12px 8px;
-      padding: 10px 18px;
-      background: #4CAF50;
-      color: white;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
+    .logo:hover { transform: scale(1.05); }
+    .container {
+      max-width: 700px; margin: 0 auto;
+      background: rgba(241,223,153,0.93);
+      color: #111;
+      border: 1px solid rgba(201,168,76,0.4);
+      border-radius: 16px;
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+      padding: 24px; text-align: left;
     }
-    input, textarea {
-      width: 100%;
-      margin-top: 5px;
-      padding: 8px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      border: none;
+    .container h1 { text-align: center; margin-bottom: 24px; font-size: 28px; color: #111; }
+    label { display: block; font-weight: bold; margin: 14px 0 5px; color: #111; }
+    input, textarea, select {
+      width: 100%; padding: 10px; box-sizing: border-box;
+      border: 1px solid rgba(0,0,0,0.2); border-radius: 8px;
+      font-family: 'Domine', serif; font-size: 15px;
+      background: #fdf7e1; color: #111;
     }
-    .overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    textarea { min-height: 80px; resize: vertical; }
+    .preview-img {
+      width: 100%; max-height: 200px; object-fit: cover;
+      border-radius: 10px; margin-top: 10px;
     }
-    .overlay-box {
-      background: #fdf3cc;
-      padding: 30px;
-      border-radius: 12px;
-      max-width: 500px;
-      color: #3b1f1f;
+    .top-actions {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      margin-bottom: 24px; justify-content: center;
+    }
+    button {
+      border: none; border-radius: 10px; padding: 14px 18px;
+      font-size: 16px; font-family: 'Domine', serif;
+      cursor: pointer; min-width: 160px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .btn-green { background: #27ae60; color: #fff; }
+    .btn-dark { background: #444; color: #fff; }
+    .btn-orange { background: #e67e22; color: #fff; }
+    .btn-red { background: #c0392b; color: #fff; }
+    .error { color: #c0392b; font-weight: bold; margin-top: 10px; }
+    .success { color: #17643d; font-weight: bold; margin-top: 10px; }
+    footer { margin-top: 40px; font-size: 14px; text-align: center; }
+    footer a { color: #aa8452; text-decoration: none; margin: 0 8px; }
+    footer a:hover { text-decoration: underline; }
+    @media (max-width: 768px) {
+      body { padding: 14px; }
+      .container { padding: 18px; }
+      .top-actions { flex-direction: column; }
+      button { width: 100%; min-width: 0; }
     }
   </style>
+  <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <a class="button-link" href="/food_vendor/index.html">🏠 Dashboard</a>
-  <a class="button-link" href="/profile/index.html">👤 Profile</a>
-  <h1>Edit Menu Item</h1>
-  <div id="itemCard" class="card"></div>
-  <div id="confirmBox" class="overlay" style="display:none;">
-    <div class="overlay-box">
-      <h2>Confirm Changes</h2>
-      <div id="changeSummary"></div>
-      <button onclick="submitChanges()" class="button-link">✅ Save</button>
-      <button onclick="cancelChanges()" class="button-link" style="background:#B22222;">❌ Cancel</button>
+  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+  <div class="container">
+    <h1>✏️ Edit Menu Item</h1>
+
+    <div class="top-actions">
+      <button class="btn-orange" onclick="goBack()">⬅ Back to Menu</button>
+    </div>
+
+    <div id="loadMsg" style="text-align:center; color:#111; padding:20px;">Loading item...</div>
+
+    <div id="formWrap" style="display:none;">
+      <label for="itemName">Item Name: *</label>
+      <input type="text" id="itemName" />
+
+      <label for="itemCategory">Category: *</label>
+      <select id="itemCategory">
+        <option value="Food">🍖 Food</option>
+        <option value="Drink">🥤 Drink</option>
+        <option value="Dessert">🍰 Dessert</option>
+        <option value="Snack">🥙 Snack</option>
+        <option value="Special">⭐ Special</option>
+      </select>
+
+      <label for="itemPrice">Price ($): *</label>
+      <input type="number" id="itemPrice" step="0.01" min="0" />
+
+      <label for="itemDesc">Description:</label>
+      <textarea id="itemDesc"></textarea>
+
+      <label for="itemAllergens">Allergen Notes:</label>
+      <input type="text" id="itemAllergens" placeholder="e.g. Contains gluten, nuts, dairy" />
+
+      <label>Visible to Public:</label>
+      <select id="itemHidden">
+        <option value="false">👁️ Visible — Show on menu</option>
+        <option value="true">🙈 Hidden — Hide from public</option>
+      </select>
+
+      <label>Available:</label>
+      <select id="itemAvailable">
+        <option value="true">✅ Yes — Available</option>
+        <option value="false">❌ No — Not Available</option>
+      </select>
+
+      <label>Photo:</label>
+      <div id="currentPhoto"></div>
+      <button type="button" class="btn-dark" style="min-width:0; padding:10px 16px; font-size:14px; margin-top:6px;"
+        onclick="openUpload()">📷 Change Photo</button>
+      <input type="hidden" id="imageUrl" />
+
+      <div id="formMsg" style="margin-top:14px;"></div>
+
+      <div class="top-actions" style="margin-top:24px;">
+        <button class="btn-green" onclick="saveItem()">✅ Save Changes</button>
+        <button class="btn-dark" onclick="goBack()">Cancel</button>
+      </div>
     </div>
   </div>
 
+  <footer>
+    <a href="/index.html">Home</a> |
+    <a href="/terms.html">Terms</a> |
+    <a href="/privacy.html">Privacy</a> |
+    <a href="/faq.html">FAQ</a> |
+    <a href="/contact.html">Contact</a>
+  </footer>
+
   <script>
-    const supabase = window.supabase.createClient(
+    const sb = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
-    let original = {};
-    let itemId = new URLSearchParams(window.location.search).get('id');
+    const params = new URLSearchParams(window.location.search);
+    const itemId = params.get('id');
+    const vpaId = params.get('vpa_id');
+    let originalItem = null;
+
+    function goBack() {
+      window.location.href = `menu.html?vpa_id=${vpaId}`;
+    }
+
+    function openUpload() {
+      cloudinary.openUploadWidget({
+        cloudName: 'dft7xclvh',
+        uploadPreset: 'vendor_upload',
+        cropping: false,
+        multiple: false,
+        folder: 'food_menu',
+        sources: ['local', 'camera'],
+        clientAllowedFormats: ['jpg', 'jpeg', 'png'],
+        transformation: [{ width: 600, height: 400, crop: 'limit', quality: 'auto' }],
+        resourceType: 'image'
+      }, (error, result) => {
+        if (!error && result && result.event === 'success') {
+          const url = result.info.secure_url;
+          document.getElementById('imageUrl').value = url;
+          document.getElementById('currentPhoto').innerHTML =
+            `<img src="${url}" class="preview-img" alt="Preview" />`;
+        }
+      });
+    }
 
     async function loadItem() {
-      const { data, error } = await supabase
+      if (!itemId) {
+        document.getElementById('loadMsg').innerHTML = '<div class="error">Missing item ID.</div>';
+        return;
+      }
+
+      const { data, error } = await sb
         .from('food_menu_items')
         .select('*')
         .eq('id', itemId)
         .single();
 
-      if (!data) return;
-      original = data;
+      if (error || !data) {
+        document.getElementById('loadMsg').innerHTML = '<div class="error">Item not found.</div>';
+        return;
+      }
 
-      document.getElementById('itemCard').innerHTML = `
-        <p><strong>Name:</strong> ${data.item_name}</p>
-        <input id="nameInput" placeholder="No update" />
+      originalItem = data;
 
-        <p><strong>Description:</strong> ${data.description}</p>
-        <textarea id="descInput" placeholder="No update"></textarea>
+      // Fill form
+      document.getElementById('itemName').value = data.item_name || '';
+      document.getElementById('itemCategory').value = data.category || 'Food';
+      document.getElementById('itemPrice').value = data.price || '';
+      document.getElementById('itemDesc').value = data.description || '';
+      document.getElementById('itemAllergens').value = data.allergen_notes || '';
+      document.getElementById('itemAvailable').value = String(data.is_available !== false);
+      document.getElementById('itemHidden').value = String(!!data.is_hidden);
+      document.getElementById('imageUrl').value = data.image_url || '';
 
-        <p><strong>Price:</strong> $${data.price}</p>
-        <input id="priceInput" type="number" step="0.01" placeholder="No update" />
+      if (data.image_url) {
+        document.getElementById('currentPhoto').innerHTML =
+          `<img src="${data.image_url}" class="preview-img" alt="Current photo" />`;
+      }
 
-        <p><strong>Type:</strong> ${data.is_drink ? 'Drink' : 'Food'}</p>
-        <select id="typeInput">
-          <option value="">No update</option>
-          <option value="food">Food</option>
-          <option value="drink">Drink</option>
-        </select>
-
-        <p><strong>Available:</strong> ${data.is_available ? '✅ Yes' : '❌ No'}</p>
-        <select id="availInput">
-          <option value="">No update</option>
-          <option value="true">Yes</option>
-          <option value="false">No</option>
-        </select>
-
-        <p><strong>Image:</strong> ${data.url_image || '📸 None'}</p>
-        <input id="imageInput" placeholder="No update" />
-
-        <button class="button-link" onclick="previewChanges()">💾 Save Changes</button>
-      `;
+      document.getElementById('loadMsg').style.display = 'none';
+      document.getElementById('formWrap').style.display = 'block';
     }
 
-    function previewChanges() {
-      const updates = {};
-      const summary = [];
+    async function saveItem() {
+      const msg = document.getElementById('formMsg');
+      const name = document.getElementById('itemName').value.trim();
+      const price = document.getElementById('itemPrice').value.trim();
+      const category = document.getElementById('itemCategory').value;
+      const description = document.getElementById('itemDesc').value.trim();
+      const allergen_notes = document.getElementById('itemAllergens').value.trim();
+      const is_available = document.getElementById('itemAvailable').value === 'true';
+      const image_url = document.getElementById('imageUrl').value.trim() || null;
 
-      const name = document.getElementById('nameInput').value.trim();
-      const desc = document.getElementById('descInput').value.trim();
-      const price = document.getElementById('priceInput').value.trim();
-      const type = document.getElementById('typeInput').value;
-      const avail = document.getElementById('availInput').value;
-      const image = document.getElementById('imageInput').value.trim();
+      if (!name) { msg.innerHTML = '<div class="error">Item name is required.</div>'; return; }
+      if (!price || isNaN(price)) { msg.innerHTML = '<div class="error">Valid price is required.</div>'; return; }
 
-      if (name) { updates.item_name = name; summary.push(`<p><strong>Name:</strong> ${name}</p>`); }
-      if (desc) { updates.description = desc; summary.push(`<p><strong>Description:</strong> ${desc}</p>`); }
-      if (price) { updates.price = parseFloat(price); summary.push(`<p><strong>Price:</strong> $${price}</p>`); }
-      if (type === 'food') { updates.is_drink = false; summary.push('<p><strong>Type:</strong> Food</p>'); }
-      if (type === 'drink') { updates.is_drink = true; summary.push('<p><strong>Type:</strong> Drink</p>'); }
-      if (avail === 'true') { updates.is_available = true; summary.push('<p><strong>Available:</strong> ✅ Yes</p>'); }
-      if (avail === 'false') { updates.is_available = false; summary.push('<p><strong>Available:</strong> ❌ No</p>'); }
-      if (image) { updates.url_image = image; summary.push(`<p><strong>Image:</strong> ${image}</p>`); }
+      if (!confirm(`Save changes to "${name}"?`)) return;
 
-      if (Object.keys(updates).length === 0) {
-  alert('No changes made.');
-  window.location.href = "menu.html";
-  return;
-}
+      msg.innerHTML = '<div style="color:#111;">Saving...</div>';
 
-
-      window.itemUpdates = updates;
-      document.getElementById('changeSummary').innerHTML = summary.join('');
-      document.getElementById('confirmBox').style.display = 'flex';
-    }
-
-    async function submitChanges() {
-      const { error } = await supabase
+      const { error } = await sb
         .from('food_menu_items')
-        .update(window.itemUpdates)
+        .update({
+          item_name: name,
+          category,
+          price: parseFloat(price),
+          description: description || null,
+          allergen_notes: allergen_notes || null,
+          is_available,
+          is_hidden: document.getElementById('itemHidden').value === 'true',
+        is_drink: category === 'Drink',
+          image_url
+        })
         .eq('id', itemId);
 
-      if (!error) {
-  window.location.href = "menu.html";
-}
- else {
-        alert('❌ Error saving changes.');
+      if (error) {
+        msg.innerHTML = `<div class="error">Error saving: ${error.message}</div>`;
+        return;
       }
+
+      msg.innerHTML = '<div class="success">✅ Saved! Redirecting...</div>';
+      setTimeout(() => goBack(), 1200);
     }
 
-    function cancelChanges() {
-      document.getElementById('confirmBox').style.display = 'none';
-    }
-
-    loadItem();
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        alert('Please log in first.');
+        window.location.href = '/user_login.html';
+        return;
+      }
+      await loadItem();
+    });
   </script>
 </body>
 </html>

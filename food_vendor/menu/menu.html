@@ -1,127 +1,362 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manage Menu | FairQuest</title>
-  <link rel="stylesheet" href="/css/style.css" />
-<link rel="stylesheet" href="/css/fq_theme.css" />
+  <title>My Menu | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
   <style>
     body {
       font-family: 'Domine', serif;
-      background-color: #000;
-      color: #f0e6d2;
-      padding: 40px;
+      background: #0d0a04;
+      color: #f1df99;
+      margin: 0; padding: 20px;
       text-align: center;
     }
-    h1 {
-      font-family: 'Cinzel', serif;
-      margin-bottom: 20px;
+    h1, h2, h3 { font-family: 'Cinzel', serif; margin-top: 0; }
+    .top-banner {
+      width: 100%; max-width: 600px; display: block;
+      margin: 0 auto 20px; border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-    .card {
-      background: rgba(251,241,200,0.88);
-      padding: 20px;
-      border-radius: 12px;
-      margin: 20px auto;
-      max-width: 700px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-      color: #3b1f1f;
-      text-align: left;
+    .logo {
+      max-width: 100px; display: block; margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      transition: transform 0.3s ease;
     }
-    .button-link {
-      display: inline-block;
-      margin: 12px 8px;
-      padding: 10px 18px;
-      background: #4CAF50;
-      color: white;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
+    .logo:hover { transform: scale(1.05); }
+    .container {
+      max-width: 900px; margin: 0 auto;
+      background: rgba(241,223,153,0.93);
+      color: #111;
+      border: 1px solid rgba(201,168,76,0.4);
+      border-radius: 16px;
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+      padding: 24px; text-align: left;
+    }
+    .container h1 { text-align: center; margin-bottom: 24px; font-size: 28px; color: #111; }
+    .top-actions {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      margin-bottom: 24px; justify-content: center;
+    }
+    button {
+      border: none; border-radius: 10px; padding: 14px 18px;
+      font-size: 16px; font-family: 'Domine', serif;
+      cursor: pointer; min-width: 160px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .btn-green  { background: #27ae60; color: #fff; }
+    .btn-red    { background: #c0392b; color: #fff; }
+    .btn-blue   { background: #2471a3; color: #fff; }
+    .btn-dark   { background: #444; color: #fff; }
+    .btn-orange { background: #e67e22; color: #fff; }
+    .btn-purple { background: #6b3fa0; color: #fff; }
+
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-bottom: 20px; align-items: center;
+    }
+    .filter-bar label { color: #111; font-weight: bold; margin: 0; }
+    .filter-bar select, .filter-bar input {
+      padding: 8px 12px; border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2);
+      font-family: 'Domine', serif; font-size: 14px;
+      background: #fdf7e1; color: #111;
+    }
+    .filter-bar input { min-width: 180px; }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .menu-card {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 12px; padding: 14px;
+      text-align: left; display: flex;
+      flex-direction: column; gap: 8px;
+      position: relative;
+    }
+    .menu-card.hidden-item {
+      opacity: 0.55;
+      border: 1px dashed rgba(0,0,0,0.25);
+    }
+    .hidden-banner {
+      background: rgba(100,100,100,0.15);
+      border-radius: 6px; padding: 4px 10px;
+      font-size: 12px; color: #555; font-style: italic;
+      text-align: center;
+    }
+    .menu-card img {
+      width: 100%; height: 160px;
+      object-fit: cover; border-radius: 8px;
+    }
+    .menu-card-name { font-family: 'Cinzel', serif; font-size: 16px; color: #111; }
+    .menu-card-price { font-size: 18px; font-weight: bold; color: #27ae60; }
+    .menu-card-desc { font-size: 13px; color: #444; line-height: 1.5; }
+    .menu-card-meta { font-size: 12px; color: #666; }
+    .avail-badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 999px; font-size: 12px; font-weight: bold;
+    }
+    .avail-yes { background: #dff6e7; color: #17643d; border: 1px solid #8fd2ab; }
+    .avail-no  { background: #ffe0e0; color: #8f1f1f; border: 1px solid #e19a9a; }
+    .cat-badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 999px; font-size: 12px;
+      background: rgba(201,168,76,0.2); color: #5c3a1e;
+      border: 1px solid rgba(201,168,76,0.4);
+    }
+    .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+    .card-actions button { min-width: 0; padding: 8px 12px; font-size: 12px; }
+    .no-items {
+      text-align: center; color: #666; font-style: italic;
+      padding: 30px; grid-column: 1 / -1;
+    }
+    footer { margin-top: 40px; font-size: 14px; text-align: center; }
+    footer a { color: #aa8452; text-decoration: none; margin: 0 8px; }
+    footer a:hover { text-decoration: underline; }
+    @media (max-width: 768px) {
+      body { padding: 14px; }
+      .container { padding: 18px; }
+      .top-actions { flex-direction: column; }
+      button { width: 100%; min-width: 0; }
+      .menu-grid { grid-template-columns: 1fr; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h1>Manage Menu</h1>
-  <div id="menuItems"></div>
-  <div id="menuButtons"></div>
+  <img src="../../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+  <div class="container">
+    <h1>🍖 My Menu</h1>
+
+    <div class="top-actions">
+      <button class="btn-orange" onclick="window.location.href='/vendor_performer/vendor/dashboard.html'">⬅ Dashboard</button>
+      <button class="btn-green" id="addBtn" onclick="goAdd()">➕ Add Item</button>
+    </div>
+
+    <div class="filter-bar">
+      <label>Search:</label>
+      <input type="text" id="searchInput" placeholder="Search by name…" oninput="renderMenu()" />
+
+      <label>Category:</label>
+      <select id="categoryFilter" onchange="renderMenu()">
+        <option value="">All</option>
+        <option value="Food">Food</option>
+        <option value="Drink">Drink</option>
+        <option value="Dessert">Dessert</option>
+        <option value="Snack">Snack</option>
+        <option value="Special">Special</option>
+      </select>
+
+      <label>Status:</label>
+      <select id="availFilter" onchange="renderMenu()">
+        <option value="">All Items</option>
+        <option value="available">Available</option>
+        <option value="unavailable">Unavailable</option>
+        <option value="visible">Visible Only</option>
+        <option value="hidden">Hidden Only</option>
+      </select>
+
+      <label>Sort:</label>
+      <select id="sortSelect" onchange="renderMenu()">
+        <option value="name_asc">Name A→Z</option>
+        <option value="name_desc">Name Z→A</option>
+        <option value="price_asc">Price Low→High</option>
+        <option value="price_desc">Price High→Low</option>
+        <option value="hidden_first">Hidden First</option>
+        <option value="visible_first">Visible First</option>
+      </select>
+    </div>
+
+    <div class="menu-grid" id="menuGrid">
+      <div class="no-items">Loading menu...</div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="/index.html">Home</a> |
+    <a href="/terms.html">Terms</a> |
+    <a href="/privacy.html">Privacy</a> |
+    <a href="/faq.html">FAQ</a> |
+    <a href="/contact.html">Contact</a>
+  </footer>
 
   <script>
-    const supabase = window.supabase.createClient(
+    const sb = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
 
-    async function loadMenuPage() {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        document.getElementById('menuItems').innerHTML = '<p>❌ Please log in to manage your menu.</p>';
-        return;
-      }
+    const params = new URLSearchParams(window.location.search);
+    let vpaId = params.get('vpa_id');
+    let allItems = [];
 
-      const { data: vendors } = await supabase
-        .from('food_vendors')
-        .select('*')
-        .eq('approved', true)
-        .eq('user_id', user.id);
-
-      if (!vendors || vendors.length === 0) {
-        document.getElementById('menuItems').innerHTML = '<p>⏳ No approved food vendor found.</p>';
-        return;
-      }
-
-      const vendor = vendors[0];
-      const { data: menuItems } = await supabase
-        .from('food_menu_items')
-        .select('*')
-        .eq('food_vendor_id', vendor.id);
-
-      if (!menuItems || menuItems.length === 0) {
-        document.getElementById('menuItems').innerHTML = '<p>🍽 No menu items added yet.</p>';
-      } else {
-        menuItems.forEach(item => {
-          const card = document.createElement('div');
-          card.className = 'card';
-       card.innerHTML = `
-  <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
-    <div style="flex: 1;">
-      <h2>${item.item_name}</h2>
-      <p>${item.description || 'No description provided.'}</p>
-      <p><strong>Price:</strong> $${item.price}</p>
-      <p><strong>Type:</strong> ${item.is_drink ? 'Drink' : 'Food'}</p>
-      <p><strong>Available:</strong> ${item.is_available ? '✅ Yes' : '❌ No'}</p>
-      <a class="button-link" href="edit_menu_item.html?id=${item.id}">✏️ Edit Item</a>
-    </div>
-    <div style="flex-shrink: 0;">
-      ${item.url_image ? `
-        <a href="${item.url_image}" target="_blank" rel="noopener noreferrer">
-          <img src="${item.url_image}" alt="${item.item_name}" 
-               style="width: 100px; height: auto; border-radius: 8px;" />
-        </a>
-      ` : `<p><em>📸 Image coming soon</em></p>`}
-    </div>
-  </div>
-`;
-
-
-
-          document.getElementById('menuItems').appendChild(card);
-        });
-      }
-
-      const buttonContainer = document.getElementById('menuButtons');
-      if (menuItems && menuItems.length > 0) {
-        buttonContainer.innerHTML += `<a class="button-link" href="edit_menu.html">✏️ Edit Menu</a>`;
-      }
-      buttonContainer.innerHTML += `
-        <a class="button-link" href="add_menu_item.html">➕ Add Item</a>
-        <a class="button-link" href="/food_vendor/index.html">🏠 Go to Vendor Dashboard</a>
-        <a class="button-link" href="/profile/index.html">👤 Profile</a>
-      `;
+    function goAdd() {
+      window.location.href = `add_menu_item.html?vpa_id=${vpaId}`;
     }
 
-    loadMenuPage();
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        alert('Please log in first.');
+        window.location.href = '/user_login.html';
+        return;
+      }
+
+      if (!vpaId) {
+        const { data } = await sb
+          .from('vendor_performer_applications')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .eq('is_food_vendor', true)
+          .eq('approval_status', 'approved')
+          .limit(1)
+          .single();
+        if (data) vpaId = data.id;
+      }
+
+      if (!vpaId) {
+        document.getElementById('menuGrid').innerHTML =
+          '<div class="no-items">No approved food vendor account found.</div>';
+        return;
+      }
+
+      await loadMenu();
+    }
+
+    async function loadMenu() {
+      const { data, error } = await sb
+        .from('food_menu_items')
+        .select('*')
+        .eq('vpa_id', vpaId)
+        .order('item_name', { ascending: true });
+
+      if (error) {
+        document.getElementById('menuGrid').innerHTML =
+          '<div class="no-items">Error loading menu.</div>';
+        return;
+      }
+
+      allItems = data || [];
+      renderMenu();
+    }
+
+    function renderMenu() {
+      const grid = document.getElementById('menuGrid');
+      const catFilter   = document.getElementById('categoryFilter').value;
+      const availFilter = document.getElementById('availFilter').value;
+      const sortSelect  = document.getElementById('sortSelect').value;
+      const search      = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      let filtered = [...allItems];
+
+      // Search
+      if (search) filtered = filtered.filter(i => i.item_name.toLowerCase().includes(search));
+
+      // Category
+      if (catFilter) filtered = filtered.filter(i => i.category === catFilter);
+
+      // Availability / visibility
+      if (availFilter === 'available')   filtered = filtered.filter(i => i.is_available);
+      if (availFilter === 'unavailable') filtered = filtered.filter(i => !i.is_available);
+      if (availFilter === 'visible')     filtered = filtered.filter(i => !i.is_hidden);
+      if (availFilter === 'hidden')      filtered = filtered.filter(i => i.is_hidden);
+
+      // Sort
+      if (sortSelect === 'name_asc')      filtered.sort((a,b) => a.item_name.localeCompare(b.item_name));
+      if (sortSelect === 'name_desc')     filtered.sort((a,b) => b.item_name.localeCompare(a.item_name));
+      if (sortSelect === 'price_asc')     filtered.sort((a,b) => a.price - b.price);
+      if (sortSelect === 'price_desc')    filtered.sort((a,b) => b.price - a.price);
+      if (sortSelect === 'hidden_first')  filtered.sort((a,b) => (b.is_hidden ? 1 : 0) - (a.is_hidden ? 1 : 0));
+      if (sortSelect === 'visible_first') filtered.sort((a,b) => (a.is_hidden ? 1 : 0) - (b.is_hidden ? 1 : 0));
+
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="no-items">No menu items match your filters.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => `
+        <div class="menu-card ${item.is_hidden ? 'hidden-item' : ''}">
+          ${item.is_hidden ? `<div class="hidden-banner">👁️ Hidden from public</div>` : ''}
+          ${item.image_url
+            ? `<img src="${item.image_url}" alt="${item.item_name}" />`
+            : `<div style="width:100%;height:160px;background:rgba(0,0,0,0.08);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:40px;">🍽️</div>`
+          }
+          <div class="menu-card-name">${item.item_name}</div>
+          <div class="menu-card-price">$${parseFloat(item.price || 0).toFixed(2)}</div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="cat-badge">${item.category || 'Food'}</span>
+            <span class="avail-badge ${item.is_available ? 'avail-yes' : 'avail-no'}">
+              ${item.is_available ? '✅ Available' : '❌ Unavailable'}
+            </span>
+          </div>
+          ${item.description ? `<div class="menu-card-desc">${item.description}</div>` : ''}
+          ${item.allergen_notes ? `<div class="menu-card-meta">⚠️ ${item.allergen_notes}</div>` : ''}
+          <div class="card-actions">
+            <button class="btn-blue"
+              onclick="window.location.href='edit_menu_item.html?id=${item.id}&vpa_id=${vpaId}'">
+              ✏️ Edit
+            </button>
+            <button class="${item.is_available ? 'btn-dark' : 'btn-green'}"
+              onclick="toggleAvailable('${item.id}', ${item.is_available})">
+              ${item.is_available ? '⏸ Unavailable' : '▶ Available'}
+            </button>
+            <button class="${item.is_hidden ? 'btn-green' : 'btn-purple'}"
+              onclick="toggleHidden('${item.id}', ${item.is_hidden})">
+              ${item.is_hidden ? '👁️ Unhide' : '🙈 Hide'}
+            </button>
+            <button class="btn-red"
+              onclick="deleteItem('${item.id}', '${item.item_name.replace(/'/g,"\\'")}')">
+              🗑️ Delete
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function toggleAvailable(itemId, current) {
+      const { error } = await sb
+        .from('food_menu_items')
+        .update({ is_available: !current })
+        .eq('id', itemId);
+      if (error) { alert('Error updating item.'); return; }
+      await loadMenu();
+    }
+
+    async function toggleHidden(itemId, current) {
+      const action = current ? 'unhide' : 'hide';
+      if (!confirm(`Are you sure you want to ${action} this item?`)) return;
+      const { error } = await sb
+        .from('food_menu_items')
+        .update({ is_hidden: !current })
+        .eq('id', itemId);
+      if (error) { alert('Error updating item.'); return; }
+      await loadMenu();
+    }
+
+    async function deleteItem(itemId, itemName) {
+      if (!confirm(`Are you sure you want to delete "${itemName}"? This cannot be undone.`)) return;
+      const { error } = await sb.from('food_menu_items').delete().eq('id', itemId);
+      if (error) { alert('Error deleting item.'); return; }
+      await loadMenu();
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>

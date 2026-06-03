@@ -666,15 +666,15 @@ fairHtml += `<div class="fair-cards-list">`;
         ${isGoldApproved ? `
         <div style="display:flex; flex-wrap:wrap; gap:10px;">
           <button class="start-app" style="background:#e67e22;"
-            onclick="alert('View Menu — coming soon!')">
+            onclick="window.location.href='/food_vendor/menu/menu.html?vpa_id=${v.id}'">
             📋 View Menu
           </button>
           <button class="start-app" style="background:#e67e22;"
-            onclick="alert('Add Menu Item — coming soon!')">
+            onclick="window.location.href='/food_vendor/menu/add_menu_item.html?vpa_id=${v.id}'">
             ➕ Add Menu Item
           </button>
           <button class="start-app" style="background:#e67e22;"
-            onclick="alert('Edit Menu — coming soon!')">
+            onclick="window.location.href='/food_vendor/menu/menu.html?vpa_id=${v.id}'">
             ✏️ Edit Menu
           </button>
         </div>

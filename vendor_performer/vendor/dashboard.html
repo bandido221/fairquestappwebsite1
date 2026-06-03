@@ -477,8 +477,9 @@ async function loadDashboard(userId){
 
     let { data: fairs=[] } = await sb
       .from('vendor_application_fairs')
-      .select('start_date,end_date,renaissance_fairs(name)')
-      .eq('application_id', v.id);
+      .select('id,start_date,end_date,renaissance_fairs(name)')
+      .eq('application_id', v.id)
+      .eq('is_archived', false);
 
     let { data: manual=[] } = await sb
       .from('suggested_fairs')
@@ -499,6 +500,12 @@ fairHtml += `<div style="text-align:center; margin-bottom:12px;">
     onclick="window.location.href='/vendor_performer/manage_fairs.html?vpa_id=${v.id}&type=vendor'">
     ✏️ Add / Edit Fairs
   </button>
+  ${isGoldApproved ? `
+  <button class="start-app" style="min-width:0; padding:9px 18px; font-size:14px; background:#4a2a0a;"
+    onclick="window.location.href='/vendor_performer/archived_fairs.html?vpa_id=${v.id}&type=vendor'">
+    🗄️ Archived Fairs
+  </button>
+  ` : ''}
 </div>`;
 fairHtml += `<div class="fair-cards-list">`;
 
@@ -515,7 +522,7 @@ fairHtml += `<div class="fair-cards-list">`;
 
         const fairInfoUrl = isGoldApproved
           ? `vendor_fair_information_preview.html?vpa_id=${v.id}&fair_name=${encodeURIComponent(fairName)}`
-: `/vendor_performer/fair_info_gold_card_preview.html?vpa_id=${v.id}&fair_name=${encodeURIComponent(fairName)}`;
+          : `/vendor_performer/fair_info_gold_card_preview.html?vpa_id=${v.id}&fair_name=${encodeURIComponent(fairName)}`;
         fairHtml += `
           <div class="fair-card">
             <div class="fair-card-top">
@@ -523,10 +530,22 @@ fairHtml += `<div class="fair-cards-list">`;
                 <div class="fair-card-name">${fairName}</div>
                 <div class="fair-card-date">${new Date(f.start_date).getFullYear()}</div>
               </div>
-              <button class="start-app"
-                onclick="window.location.href='${fairInfoUrl}'">
-                ${fairInfoButtonLabel}
-              </button>
+              <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+                <button class="start-app"
+                  onclick="window.location.href='${fairInfoUrl}'">
+                  ${fairInfoButtonLabel}
+                </button>
+                <div style="display:flex; gap:8px;">
+                  <button class="start-app" style="background:#7a5c2e; min-width:0; padding:8px 14px; font-size:13px;"
+                    onclick="archiveFair(${f.id}, '${fairName.replace(/'/g,"\\'")}')">
+                    🗄️ Archive
+                  </button>
+                  <button class="start-app" style="background:#c0392b; min-width:0; padding:8px 14px; font-size:13px;"
+                    onclick="deleteFairFromDashboard(${f.id}, '${fairName.replace(/'/g,"\\'")}', ${v.id})">
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         `;
@@ -641,30 +660,6 @@ fairHtml += `<div class="fair-cards-list">`;
         ${statusBadge}
       </div>
 
-      ${fairHtml}
-
-      <div class="sub-actions">
-        <button class="update-app" onclick="startUpdate(${v.id})">Update Profile</button>
-        <button class="delete-app" onclick="goToMainPage(${v.id})" style="display:none;">Main Page</button>
-        <button class="delete-app" onclick="deleteApplication(${v.id},'${safeName}')">Delete</button>
-      </div>
-
-     <div class="sub-actions" style="margin-top:14px;">
-        <button class="start-app"
-          onclick="window.location.href='fair_applications.html?vpa_id=${v.id}'">
-          Fair Applications
-        </button>
-        <button class="btn-billing"
-  onclick="alert('Billing is coming soon! This feature is currently under development.')">
-  💳 Billing
-</button>
-<button class="start-app"
-  onclick="window.location.href='/vendor_performer/vp_team_manage.html?vpa_id=${v.id}&type=vendor'"
-  style="background:#2471a3;">
-  👥 Team
-</button>
-      </div>
-
       ${v.is_food_vendor ? `
       <div style="margin-top:18px; background:rgba(255,140,0,0.12); border:1px solid rgba(255,140,0,0.35); border-radius:12px; padding:16px;">
         <div style="font-family:'Cinzel',serif; font-size:17px; font-weight:bold; margin-bottom:12px; color:#111;">🍖 Food Vendor Menu</div>
@@ -689,10 +684,58 @@ fairHtml += `<div class="fair-cards-list">`;
       </div>
       ` : ''}
 
+      ${fairHtml}
+
+      <div class="sub-actions">
+        <button class="update-app" onclick="startUpdate(${v.id})">Update Profile</button>
+        <button class="delete-app" onclick="goToMainPage(${v.id})" style="display:none;">Main Page</button>
+        <button class="delete-app" onclick="deleteApplication(${v.id},'${safeName}')">Delete</button>
+      </div>
+
+     <div class="sub-actions" style="margin-top:14px;">
+        <button class="start-app"
+          onclick="window.location.href='fair_applications.html?vpa_id=${v.id}'">
+          Fair Applications
+        </button>
+        <button class="btn-billing"
+  onclick="alert('Billing is coming soon! This feature is currently under development.')">
+  💳 Billing
+</button>
+<button class="start-app"
+  onclick="window.location.href='/vendor_performer/vp_team_manage.html?vpa_id=${v.id}&type=vendor'"
+  style="background:#2471a3;">
+  👥 Team
+</button>
+      </div>
+
       ${await buildFairApplicationsSection(v.id, userId)}
         `;
        container.appendChild(box);
   }
+}
+
+async function archiveFair(fairRowId, fairName) {
+  if (!confirm(`Are you sure you want to archive "${fairName}"?`)) return;
+  const { error } = await sb
+    .from('vendor_application_fairs')
+    .update({ is_archived: true })
+    .eq('id', fairRowId);
+  if (error) { alert('Error archiving fair.'); return; }
+  alert('✅ Fair archived.');
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session?.user?.id) loadDashboard(session.user.id);
+}
+
+async function deleteFairFromDashboard(fairRowId, fairName, vpaId) {
+  if (!confirm(`Are you sure you want to delete "${fairName}"? This cannot be undone.`)) return;
+  const { error } = await sb
+    .from('vendor_application_fairs')
+    .delete()
+    .eq('id', fairRowId);
+  if (error) { alert('Error deleting fair.'); return; }
+  alert('✅ Fair deleted.');
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session?.user?.id) loadDashboard(session.user.id);
 }
 
 function goToMainPage(vpaId){

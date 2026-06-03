@@ -505,8 +505,9 @@ function handleAddNewPerformerAccount() {
 
         const { data: fairs = [] } = await window.supabaseClient
           .from('vendor_application_fairs')
-          .select('start_date,end_date,renaissance_fairs(name)')
-          .eq('application_id', perf.id);
+          .select('id,start_date,end_date,renaissance_fairs(name)')
+          .eq('application_id', perf.id)
+          .eq('is_archived', false);
 
         const { data: manual = [] } = await window.supabaseClient
           .from('suggested_fairs')
@@ -527,6 +528,12 @@ fairHtml += `<div style="text-align:center; margin-bottom:12px;">
     onclick="window.location.href='/vendor_performer/manage_fairs.html?vpa_id=${perf.id}&type=performer'">
     ✏️ Add / Edit Fairs
   </button>
+  ${isGoldApproved ? `
+  <button class="start-app" style="min-width:0; padding:9px 18px; font-size:14px; background:#4a2a0a;"
+    onclick="window.location.href='/vendor_performer/archived_fairs.html?vpa_id=${perf.id}&type=performer'">
+    🗄️ Archived Fairs
+  </button>
+  ` : ''}
 </div>`;
 fairHtml += `<div class="fair-cards-list">`;
 
@@ -553,10 +560,22 @@ fairHtml += `<div class="fair-cards-list">`;
                     <div class="fair-card-name">${fairName}</div>
                     <div class="fair-card-date">${fairYear || ''}</div>
                   </div>
-                  <button class="start-app"
-                    onclick="window.location.href='${fairInfoUrl}'">
-                    ${fairInfoButtonLabel}
-                  </button>
+                  <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+                    <button class="start-app"
+                      onclick="window.location.href='${fairInfoUrl}'">
+                      ${fairInfoButtonLabel}
+                    </button>
+                    <div style="display:flex; gap:8px;">
+                      <button class="start-app" style="background:#7a5c2e; min-width:0; padding:8px 14px; font-size:13px;"
+                        onclick="archiveFair(${f.id}, '${fairName.replace(/'/g,"\\'")}')">
+                        🗄️ Archive
+                      </button>
+                      <button class="start-app" style="background:#c0392b; min-width:0; padding:8px 14px; font-size:13px;"
+                        onclick="deleteFairFromDashboard(${f.id}, '${fairName.replace(/'/g,"\\'")}', ${perf.id})">
+                        🗑️ Delete
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             `;
@@ -738,6 +757,30 @@ fairHtml += `<div class="fair-cards-list">`;
 
         container.appendChild(box);
       }
+    }
+
+    async function archiveFair(fairRowId, fairName) {
+      if (!confirm(`Are you sure you want to archive "${fairName}"?`)) return;
+      const { error } = await window.supabaseClient
+        .from('vendor_application_fairs')
+        .update({ is_archived: true })
+        .eq('id', fairRowId);
+      if (error) { alert('Error archiving fair.'); return; }
+      alert('✅ Fair archived.');
+      const { data:{ session } } = await window.supabaseClient.auth.getSession();
+      if (session?.user?.id) loadDashboard(session.user.id);
+    }
+
+    async function deleteFairFromDashboard(fairRowId, fairName, vpaId) {
+      if (!confirm(`Are you sure you want to delete "${fairName}"? This cannot be undone.`)) return;
+      const { error } = await window.supabaseClient
+        .from('vendor_application_fairs')
+        .delete()
+        .eq('id', fairRowId);
+      if (error) { alert('Error deleting fair.'); return; }
+      alert('✅ Fair deleted.');
+      const { data:{ session } } = await window.supabaseClient.auth.getSession();
+      if (session?.user?.id) loadDashboard(session.user.id);
     }
 
     function goToMainPage(vpaId) {

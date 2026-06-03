@@ -2,18 +2,11 @@
 <html lang="en">
 <head>
   <link rel="stylesheet" href="/css/style.css" />
-<link rel="stylesheet" href="/css/fq_theme.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Food Vendor Application | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-HP222J86X0');
-  </script>
   <style>
     body {
       font-family: 'Domine', serif;
@@ -24,26 +17,19 @@
     }
     h1, h2 { font-family: 'Cinzel', serif; }
     .top-banner {
-      width: 100%; max-width: 600px;
-      margin: 0 auto 20px;
-      border-radius: 12px;
+      width: 100%; max-width: 600px; display: block;
+      margin: 0 auto 20px; border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      display: block;
     }
     .logo {
-      max-width: 80px;
-      margin: 0 auto 20px;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      max-width: 100px; display: block;
+      margin: 0 auto 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
       transition: transform 0.3s ease;
-      display: block;
     }
     .logo:hover { transform: scale(1.05); }
     form {
-      max-width: 700px; margin: auto;
-      background: rgba(251,241,200,0.88);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      max-width: 700px; margin: auto; background: rgba(251,241,200,0.88);
+      padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
       color: #3b1f1f;
     }
     label { margin-top: 12px; display: block; text-align: left; }
@@ -52,245 +38,396 @@
       border: 1px solid #aa8452; border-radius: 6px;
       background-color: #fdf7e1; color: #3b1f1f;
     }
-    #imagePreview {
-      margin-top: 10px;
-      max-height: 100px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    .fair-block {
+      border: 1px solid #999; padding: 10px; margin-bottom: 10px;
+      background: #f9f9f9; position: relative;
     }
-    .card-style {
-      background: rgba(251,241,200,0.88);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-      margin-bottom: 30px;
-      color: #3b1f1f;
+    .close-btn {
+      position: absolute; top: 5px; right: 10px;
+      cursor: pointer; font-size: 18px;
     }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      font-size: 16px;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 20px;
+    .fair-results { text-align: left; margin-top: 6px; }
+    .fair-row {
+      padding: 6px 8px; cursor: pointer; border-bottom: 1px solid #ddd;
+    }
+    .fair-row:hover { background: #eee; }
+    .selected-fair { font-size: 14px; color: green; margin-top: 6px; }
+    .add-fair-btn {
+      background-color: #e0e0e0; border: 1px dashed #999;
+      padding: 10px; cursor: pointer; margin-top: 10px;
+      border-radius: 6px; color: #3b1f1f;
+    }
+    #dashboardButton {
+      background-color: #156918; color: white; font-size: 16px;
+      border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer;
+    }
+    #reviewButton {
+      background-color: #4CAF50; color: white; font-size: 16px;
+      border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer;
     }
     #validationMessage {
-      color: red;
-      font-weight: bold;
-      margin-top: 12px;
-      white-space: pre-line;
+      color: red; font-weight: bold; margin-top: 12px; white-space: pre-line;
     }
+    input[type="checkbox"] { transform: scale(1.3); cursor: pointer; }
+    footer { margin-top: 40px; font-size: 14px; }
+    footer a { color: #aa8452; text-decoration: none; margin: 0 8px; }
+    footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
   <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
-  <button onclick="location.href='/index.html'" style="
-  background-color: #444;
-  color: white;
-  font-size: 14px;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 6px;
-  margin-bottom: 20px;
-  cursor: pointer;">🏠 Back to Home</button>
+  <h1>Food Vendor Application Form</h1>
 
-<h1>Food Vendor Application Form</h1>
-
-  <div class="card-style">
-    <form id="applicationForm">
-      <label for="name">Food Vendor Name: *</label>
-      <input type="text" id="name" required />
-
-      <label for="description">Food Type / Menu Summary (max 50 words): *</label>
-      <textarea id="description" required></textarea>
-
-      <label for="photoUpload">Upload Logo or Banner Photo:</label>
-      <input type="hidden" id="photoUrl" />
-      <input type="file" id="photoUpload" accept="image/*" />
-      <div id="photoPreviewContainer"></div>
-
-      <label for="vendorType">Vendor Category: *</label>
-      <select id="vendorType" required>
-        <option value="Food">Food</option>
-        <option value="Drink">Drink</option>
-        <option value="Dessert">Dessert</option>
-      </select>
-
-      <label for="contactName">Contact Person: *</label>
-      <input type="text" id="contactName" required />
-
-      <label for="contactEmail">Contact Email: *</label>
-      <input type="email" id="contactEmail" required />
-
-      <label for="website">Website or Menu Link (optional):</label>
-      <input type="url" id="website" />
-
-      <label for="comments">Additional Notes:</label>
-      <textarea id="comments"></textarea>
-
-      <div style="margin-top:20px; text-align:left;">
-        <label>
-          <input type="checkbox" id="termsCheckbox" />
-          I agree to the <a href="terms.html" target="_blank">Terms & Conditions</a> *
-        </label>
-      </div>
-
-      <button type="button" id="previewButton">Preview</button>
-      <p id="validationMessage"></p>
-    </form>
+  <div style="text-align: center; margin-bottom: 20px;">
+    <a href="/how_to/help_center.html" target="_blank" style="background-color: #bb9457; color: black; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+      ❓ Need Help? Visit the Help Center
+    </a>
   </div>
+
+  <form id="applicationForm">
+    <label for="name">Food Vendor Name: *</label>
+    <input type="text" id="name" required />
+
+    <label for="description">Food Type / Menu Summary (max 50 words): *</label>
+    <textarea id="description" required></textarea>
+
+    <label for="photoUpload">
+      Upload Photo or Logo: *
+      <span style="cursor:pointer;color:#aa8452;"
+        onclick="alert('Upload an image from your device.')">❓</span>
+    </label>
+    <input type="url" id="photoUrl" placeholder="Photo URL" required style="display:none;" />
+    <input type="file" id="photoUpload" accept="image/*" style="margin-top: 8px;" />
+
+    <label for="vendorType">Food Category: *</label>
+    <select id="vendorType" required>
+      <option value="">-- Select Category --</option>
+      <option value="Food">Food</option>
+      <option value="Drink">Drink</option>
+      <option value="Dessert">Dessert</option>
+      <option value="Food & Drink">Food & Drink</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <label for="contactName">Contact Person: *</label>
+    <input type="text" id="contactName" required />
+
+    <label for="contactEmail">Contact Email: *</label>
+    <input type="email" id="contactEmail" required />
+
+    <label for="website">Website or Menu Link (optional):</label>
+    <input type="url" id="website" />
+
+    <h2>Fairs Attending *</h2>
+    <p style="font-size:14px; color:#501010;">
+      Type a fair name or state, then click one date. For multiple weekends, click "+ Add Another Fair" again.
+    </p>
+    <div id="fairsList"></div>
+    <div class="add-fair-btn" onclick="addFairSearch()">+ Add Another Fair</div>
+
+    <h2>Comments or Questions</h2>
+    <textarea id="comments" placeholder="Let us know any special requests or dietary info..."></textarea>
+
+    <div style="margin-top:20px; text-align:left;">
+      <label>
+        <input type="checkbox" id="termsCheckbox" />
+        I agree to the <a href="/terms.html" target="_blank">Terms & Conditions</a> *
+      </label>
+    </div>
+
+    <button type="button" id="reviewButton" onclick="goToReview()" disabled>Review</button>
+    <button type="button" id="dashboardButton" onclick="window.location.href='/vendor_performer/vendor/dashboard.html'">Dashboard</button>
+
+    <p id="validationMessage"></p>
+  </form>
+
+  <footer>
+    <a href="/index.html">Home</a> |
+    <a href="/terms.html">Terms</a> |
+    <a href="/privacy.html">Privacy</a> |
+    <a href="/faq.html">FAQ</a> |
+    <a href="/contact.html">Contact</a>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
-    const supabase = window.supabase.createClient(
+    const sb = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
-const validationDiv = document.getElementById('validationMessage');
-validationDiv.innerText = ''; // clear before validation starts
 
-    function checkFormValidity() {
-      const requiredFields = ['name','description','vendorType','contactName','contactEmail'];
-      const isChecked = document.getElementById('termsCheckbox').checked;
-      const allFilled = requiredFields.every(id => document.getElementById(id).value.trim() !== '');
-      document.getElementById('previewButton').disabled = !(allFilled && isChecked);
+    const stateMap = {
+      'iowa':'ia','texas':'tx','california':'ca','florida':'fl',
+      'new york':'ny','illinois':'il','georgia':'ga','ohio':'oh',
+      'michigan':'mi','pennsylvania':'pa','wisconsin':'wi','minnesota':'mn'
+    };
+    let fairSearchCount = 0;
+    let allFairs = [];
+
+    async function loadFairs() {
+      const { data, error } = await sb.from('renaissance_fairs').select('*');
+      if (error) console.error('Fairs load error:', error);
+      else allFairs = data;
     }
 
+    // Photo upload
     document.getElementById('photoUpload').addEventListener('change', async () => {
       const file = document.getElementById('photoUpload').files[0];
       if (!file) return;
       const fileExt = file.name.split('.').pop();
-      const fileName = `food_vendor/${crypto.randomUUID()}.${fileExt}`;
-
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', 'performer_upload');
-
-      const response = await fetch('https://api.cloudinary.com/v1_1/dft7xclvh/image/upload', {
-        method: 'POST', body: formData
-      });
-      const result = await response.json();
-      if (!result.secure_url) return;
-
-      document.getElementById('photoUrl').value = result.secure_url;
-
-      const preview = document.getElementById('photoPreviewContainer');
-      preview.innerHTML = `<img id="imagePreview" src="${result.secure_url}" alt="Preview" />`;
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'vendor_upload');
+        const response = await fetch('https://api.cloudinary.com/v1_1/dft7xclvh/image/upload', {
+          method: 'POST', body: formData
+        });
+        const result = await response.json();
+        if (!result.secure_url) { alert('Upload failed.'); return; }
+        const publicUrl = result.secure_url;
+        document.getElementById('photoUrl').value = publicUrl;
+        checkFormValidity();
+        let preview = document.getElementById('imagePreview');
+        if (!preview) {
+          preview = document.createElement('img');
+          preview.id = 'imagePreview';
+          preview.style = 'margin-top:10px; max-height: 150px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);';
+          document.getElementById('photoUpload').parentElement.appendChild(preview);
+        }
+        preview.src = publicUrl;
+      } catch (err) {
+        alert('Unexpected error: ' + err.message);
+      }
     });
+
+    function addFairSearch(prefill = null) {
+      if (fairSearchCount >= 20) return;
+      fairSearchCount++;
+      const container = document.getElementById('fairsList');
+      const div = document.createElement('div');
+      div.className = 'fair-block';
+      div.innerHTML = `
+        <span class="close-btn" onclick="
+          this.parentElement.remove();
+          fairSearchCount--;
+          checkFormValidity();
+        ">&times;</span>
+      `;
+      const input = document.createElement('input');
+      input.placeholder = 'Search fair name or state…';
+      div.appendChild(input);
+      const results = document.createElement('div');
+      results.className = 'fair-results';
+      div.appendChild(results);
+      const sel = document.createElement('div');
+      sel.className = 'selected-fair';
+      div.appendChild(sel);
+
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        const norm = stateMap[q];
+        results.innerHTML = '';
+        if (!q) return;
+
+        allFairs.forEach(fair => {
+          if (
+            !fair.name.toLowerCase().includes(q) &&
+            norm !== fair.state.toLowerCase()
+          ) return;
+
+          const dateRanges = [];
+          for (let i = 0; i <= 10; i++) {
+            const sKey = i === 0 ? 'start_date' : `week${i+1}_start_date`;
+            const eKey = i === 0 ? 'end_date'   : `week${i+1}_end_date`;
+            const s = fair[sKey], e = fair[eKey];
+            if (!s || !e) continue;
+            const key = `${fair.id}_${s}_${e}`;
+            const taken = Array.from(document.querySelectorAll('.fair-block'))
+              .some(b => `${b.dataset.fairId}_${b.dataset.start}_${b.dataset.end}` === key);
+            if (!taken) dateRanges.push({ s, e });
+          }
+          if (!dateRanges.length) return;
+
+          const fairDiv = document.createElement('div');
+          fairDiv.style.marginBottom = '8px';
+          const hdr = document.createElement('div');
+          hdr.innerHTML = `<strong>${fair.name} (${fair.state})</strong>`;
+          hdr.style.marginBottom = '4px';
+          fairDiv.appendChild(hdr);
+
+          dateRanges.forEach(({ s, e }) => {
+            const row = document.createElement('div');
+            row.style = 'display:flex;justify-content:space-between;padding:6px 8px;margin:4px 0;background:#fdf7e1;border:1px solid #ccc;border-radius:6px;';
+            const dateText = document.createElement('span');
+            dateText.textContent = `${formatDate(s)} → ${formatDate(e)}`;
+            row.appendChild(dateText);
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.onclick = () => {
+              if (!cb.checked) return;
+              sel.textContent = `${fair.name} (${fair.state}) — ${s} to ${e}`;
+              div.dataset.fairId   = fair.id;
+              div.dataset.start    = s;
+              div.dataset.end      = e;
+              div.dataset.fairName = fair.name;
+              input.style.display  = 'none';
+              results.innerHTML    = '';
+              checkFormValidity();
+            };
+            row.appendChild(cb);
+            fairDiv.appendChild(row);
+          });
+          results.appendChild(fairDiv);
+        });
+      });
+
+      if (prefill) {
+        sel.textContent = `${prefill.name} — ${prefill.start} to ${prefill.end}`;
+        div.dataset.fairId = prefill.id;
+        div.dataset.start  = prefill.start;
+        div.dataset.end    = prefill.end;
+        input.style.display = 'none';
+      }
+
+      container.appendChild(div);
+    }
+
+    // Auto-capitalize name
+    document.getElementById('name').addEventListener('blur', e => {
+      e.target.value = e.target.value
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
+    });
+
+    function checkFormValidity() {
+      const form = document.getElementById('applicationForm');
+      const btn  = document.getElementById('reviewButton');
+      const validationMessage = document.getElementById('validationMessage');
+      const errs = [];
+
+      if (!form.name.value.trim()) errs.push('Food Vendor Name is required.');
+      const bioWords = form.description.value.trim().split(/\s+/).filter(w => w).length;
+      if (!form.description.value.trim()) errs.push('Menu Summary is required.');
+      if (bioWords > 50) errs.push(`Menu Summary must be 50 words or less (you have ${bioWords}).`);
+      if (!document.getElementById('vendorType').value) errs.push('Food Category is required.');
+      if (!form.contactName.value.trim()) errs.push('Contact Person is required.');
+      if (!form.contactEmail.value.trim()) errs.push('Contact Email is required.');
+      if (!document.getElementById('termsCheckbox').checked)
+        errs.push('You must agree to the Terms & Conditions.');
+
+      const hasFair = Array.from(document.querySelectorAll('.fair-block'))
+        .some(b => b.dataset.fairId && b.dataset.start && b.dataset.end);
+      if (!hasFair) errs.push('Select at least one fair.');
+
+      if (errs.length) {
+        btn.disabled = true;
+        validationMessage.innerHTML = "⚠️ Please fix the following:\n<br>• " + errs.join("<br>• ");
+      } else {
+        btn.disabled = false;
+        validationMessage.innerHTML = "";
+      }
+      return errs;
+    }
 
     document.getElementById('applicationForm').addEventListener('input', checkFormValidity);
-    document.getElementById('termsCheckbox').addEventListener('change', checkFormValidity);
 
-   document.getElementById('previewButton').addEventListener('click', () => {
-  console.log('🔍 Preview button clicked');
-  const requiredFields = [
-    { id: 'name', label: 'Vendor Name' },
-    { id: 'description', label: 'Description' },
-    { id: 'vendorType', label: 'Vendor Category' },
-    { id: 'contactName', label: 'Contact Name' },
-    { id: 'contactEmail', label: 'Contact Email' }
-  ];
-
-  let errorMessages = [];
-
-  for (const field of requiredFields) {
-    const val = document.getElementById(field.id).value.trim();
-    if (!val) {
-      errorMessages.push(`❌ ${field.label} is required`);
-    }
-  }
-
-  const termsCheckbox = document.getElementById('termsCheckbox');
-if (!termsCheckbox || !termsCheckbox.checked) {
-  console.warn('❌ Terms not checked');
-  errorMessages.push('❌ You must agree to the Terms & Conditions');
-}
-
-
-  const nameError = document.getElementById('validationMessage').innerText;
-  if (nameError.includes('already in use')) {
-    errorMessages.push('❌ Vendor name already in use — choose another name');
-  }
-
-  const validationDiv = document.getElementById('validationMessage');
-  if (errorMessages.length > 0) {
-    console.warn('🛑 Validation errors:', errorMessages);
-    validationDiv.innerText = errorMessages.join('\n');
-    return;
-  }
-
-  console.log('✅ Validation passed, saving draft');
-
-  const draft = {
-    name: document.getElementById('name').value.trim(),
-    description: document.getElementById('description').value.trim(),
-    photoUrl: document.getElementById('photoUrl').value.trim(),
-    vendorType: document.getElementById('vendorType').value.trim(),
-    contactName: document.getElementById('contactName').value.trim(),
-    contactEmail: document.getElementById('contactEmail').value.trim(),
-    website: document.getElementById('website').value.trim(),
-    comments: document.getElementById('comments').value.trim()
-  };
-
-  localStorage.setItem('foodVendorAppDraft', JSON.stringify(draft));
-  window.location.href = 'review_food_vendor.html';
-});
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const draft = JSON.parse(localStorage.getItem('foodVendorAppDraft') || '{}');
-      if (!draft) return;
-
-      if (draft.name) document.getElementById('name').value = draft.name;
-      if (draft.description) document.getElementById('description').value = draft.description;
-      if (draft.photoUrl) {
-        document.getElementById('photoUrl').value = draft.photoUrl;
-        const preview = document.getElementById('photoPreviewContainer');
-        preview.innerHTML = `<img id="imagePreview" src="${draft.photoUrl}" alt="Preview" />`;
+    async function goToReview() {
+      const formErrors = checkFormValidity();
+      if (formErrors.length > 0) {
+        alert("⚠️ Please fix the following:\n\n• " + formErrors.join("\n• "));
+        return;
       }
-      if (draft.vendorType) document.getElementById('vendorType').value = draft.vendorType;
-      if (draft.contactName) document.getElementById('contactName').value = draft.contactName;
-      if (draft.contactEmail) document.getElementById('contactEmail').value = draft.contactEmail;
-      if (draft.website) document.getElementById('website').value = draft.website;
-      if (draft.comments) document.getElementById('comments').value = draft.comments;
 
+      const name = document.getElementById('name').value.trim();
+
+      // Duplicate check
+      const { data: existing, error } = await sb
+        .from('vendor_performer_applications')
+        .select('id')
+        .eq('name', name)
+        .eq('is_food_vendor', true)
+        .limit(1);
+
+      if (error) return alert("❌ Could not verify existing applications: " + error.message);
+
+      if (existing && existing.length > 0) {
+        return alert(
+          "It looks like you already applied under this business name. " +
+          "Please update your existing application or choose a different name."
+        );
+      }
+
+      const fairBlocks = document.querySelectorAll('.fair-block');
+      const selectedFairs = Array.from(fairBlocks)
+        .filter(b => b.dataset.fairId && b.dataset.start && b.dataset.end)
+        .map(b => ({
+          id:    b.dataset.fairId,
+          name:  b.querySelector('.selected-fair')?.textContent.split('—')[0].trim() || '',
+          start: b.dataset.start,
+          end:   b.dataset.end
+        }));
+
+      const draft = {
+        name,
+        description:  document.getElementById('description').value.trim(),
+        photoUrl:     document.getElementById('photoUrl').value.trim(),
+        vendorType:   document.getElementById('vendorType').value.trim(),
+        contactName:  document.getElementById('contactName').value.trim(),
+        contactEmail: document.getElementById('contactEmail').value.trim(),
+        website:      document.getElementById('website').value.trim(),
+        fairs:        selectedFairs,
+        comments:     document.getElementById('comments')?.value.trim() || "",
+        is_food_vendor: true,
+        application_type: false
+      };
+
+      localStorage.setItem('foodVendorAppDraft', JSON.stringify(draft));
+      window.location.href = 'review_food_vendor.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Auth check
+      const { data: sessionData } = await sb.auth.getSession();
+      if (!sessionData?.session) {
+        alert('⚠️ You must be logged in to access this page.');
+        window.location.href = '/user_login.html';
+        return;
+      }
+
+      await loadFairs();
+      if (!allFairs.length) {
+        alert("⚠️ Could not load fairs. Please refresh the page.");
+        return;
+      }
+
+      // Restore draft
+      const saved = JSON.parse(localStorage.getItem('foodVendorAppDraft') || 'null');
+      if (saved) {
+        document.getElementById('name').value         = saved.name        || '';
+        document.getElementById('description').value  = saved.description || '';
+        document.getElementById('photoUrl').value     = saved.photoUrl    || '';
+        document.getElementById('vendorType').value   = saved.vendorType  || '';
+        document.getElementById('contactName').value  = saved.contactName || '';
+        document.getElementById('contactEmail').value = saved.contactEmail || '';
+        document.getElementById('website').value      = saved.website     || '';
+        document.getElementById('comments').value     = saved.comments    || '';
+        document.getElementById('fairsList').innerHTML = '';
+        fairSearchCount = 0;
+        (saved.fairs || []).forEach(f => addFairSearch({
+          id: f.id, name: f.name || '', start: f.start, end: f.end
+        }));
+      } else {
+        addFairSearch();
+      }
       checkFormValidity();
     });
-    // 🔐 Check if user is authenticated
-supabase.auth.getSession().then(({ data, error }) => {
-  if (error || !data.session) {
-    alert('⚠️ You must be logged in to access this page.');
-    window.location.href = 'login.html';
-  }
-});
-document.getElementById('name').addEventListener('blur', async () => {
-  const name = document.getElementById('name').value.trim();
-  const validationDiv = document.getElementById('validationMessage');
 
-  if (!name) return;
-
-  const { data, error } = await supabase
-    .from('vendor_performer_applications')
-    .select('id')
-    .ilike('name', name) // case-insensitive match
-    .eq('is_food_vendor', true)
-    .limit(1);
-
-  if (error) {
-    console.error('Error checking name:', error.message);
-    validationDiv.innerText = '❌ Error checking name. Please try again.';
-    return;
-  }
-
-  if (data.length > 0) {
-    validationDiv.innerText = `❌ The vendor name "${name}" is already in use. Please choose another.`;
-  } else {
-    validationDiv.innerText = ''; // clear any previous warning
-  }
-});
-
+    function formatDate(isoDate) {
+      const [year, month, day] = isoDate.split("-");
+      return `${month}-${day}-${year.slice(2)}`;
+    }
   </script>
 </body>
 </html>

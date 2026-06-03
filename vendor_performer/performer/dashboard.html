@@ -23,7 +23,7 @@
   background: #0d0a04;
   color: #f1df99;
   margin: 0;
-  padding: 20px;
+  padding: 0;
   text-align: center;
 }
 
@@ -119,13 +119,17 @@
     }
 
   .info {
-  background: rgba(255,255,255,0.85);
-  border: 1px solid rgba(0,0,0,0.15);
-  border-radius: 14px;
-  padding: 18px;
+  background: rgba(241,223,153,0.93);
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 16px;
+  padding: 22px 20px;
   margin-bottom: 18px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+  box-shadow:
+    0 2px 0 rgba(201,168,76,0.35),
+    0 8px 28px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.3);
   text-align: left;
+  color: #111;
 }
 
     .loading {
@@ -380,28 +384,71 @@
   border: 2px solid #0d0a04;
   display: none;
 }
+    .topnav {
+      background: rgba(13,10,4,0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    .topnav-logo {
+      display: flex; align-items: center; gap: 10px; text-decoration: none;
+    }
+    .topnav-logo img { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 17px; color: #f1df99; letter-spacing: 0.05em; }
+    .topnav-links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      font-family: 'Domine', serif;
+      font-size: 13px; padding: 7px 14px; border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent; color: #c9a84c;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .topnav-links a:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.55);
+      color: #f1df99;
+    }
+    .topnav-links .nav-logout {
+      background: rgba(180,50,50,0.18); color: #f4a0a0;
+      border: 1px solid rgba(180,50,50,0.3);
+    }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+    .page-body { padding: 20px 20px 60px; max-width: 960px; margin: 0 auto; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
-  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
-
-  <div class="container">
-    <h1>Performer Dashboard</h1>
-
-    <div class="top-actions">
-      <button class="logout" onclick="logout()">Log Out</button>
-      <button class="start-app" onclick="window.location.href='/profile/index.html'">My Profile</button>
-      <button id="teamsBtn" class="btn-teams" onclick="window.location.href='/vendor_performer/vp_my_teams.html'">
-        👥 My Teams <span class="red-dot" id="teamsDot"></span>
-      </button>
-    </div>
-
-    <div id="dashboardContent" class="loading">Loading your information...</div>
+  <nav class="topnav">
+  <a class="topnav-logo" href="/index.html">
+    <img src="/images/logo.png" alt="FairQuest" />
+    <span>FairQuest</span>
+  </a>
+  <div class="topnav-links">
+    <a href="/index.html">🏡 Home</a>
+    <a href="/profile/index.html">👤 Profile</a>
+    <a id="teamsNavBtn" href="/vendor_performer/vp_my_teams.html" style="display:none;">
+      👥 My Teams <span id="teamsDot" style="width:8px; height:8px; background:#e74c3c; border-radius:50%; display:none; margin-left:4px;"></span>
+    </a>
+    <a href="#" class="nav-logout" onclick="logout(); return false;">Log Out</a>
   </div>
+</nav>
+
+<div class="page-body">
+  <h1 style="font-family:'Cinzel',serif; color:#f1df99; margin:20px 0 24px; font-size:28px;">🎭 Performer Dashboard</h1>
+  <div id="dashboardContent" class="loading" style="color:#f0e6d2;">Loading your information…</div>
+</div>
 
   <script>
     if (!window.supabaseClient) {
@@ -933,9 +980,9 @@ async function checkTeamMemberships(uid) {
 
   if (!data || !data.length) return;
 
-  const btn = document.getElementById('teamsBtn');
+  const btn = document.getElementById('teamsNavBtn');
   const dot = document.getElementById('teamsDot');
-  if (btn) btn.style.display = 'inline-block';
+  if (btn) btn.style.display = 'inline-flex';
 
   const hasPending = data.some(m => m.invite_status === 'pending');
   if (dot && hasPending) dot.style.display = 'block';

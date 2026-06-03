@@ -10,10 +10,10 @@
   <style>
     body {
       font-family: 'Domine', serif;
-      background-color: #000;
-      padding: 40px;
+      background: #0d0a04;
+      padding: 0;
       text-align: center;
-      color: #f0e6d2;
+      color: #f1df99;
     }
     h1, h2 { font-family: 'Cinzel', serif; }
     .top-banner {
@@ -72,12 +72,45 @@
     footer { margin-top: 40px; font-size: 14px; }
     footer a { color: #aa8452; text-decoration: none; margin: 0 8px; }
     footer a:hover { text-decoration: underline; }
+    .topnav {
+      background: rgba(13,10,4,0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 20px; height: 56px;
+      position: sticky; top: 0; z-index: 200;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 17px; color: #f1df99; letter-spacing: 0.05em; }
+    .topnav-links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      font-family: 'Domine', serif; font-size: 13px; padding: 7px 14px;
+      border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+      background: transparent; color: #c9a84c; cursor: pointer;
+      text-decoration: none; transition: background 0.2s, border-color 0.2s;
+    }
+    .topnav-links a:hover { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.55); color: #f1df99; }
+    .page-body { padding: 30px 20px 60px; max-width: 760px; margin: 0 auto; }
   </style>
 </head>
 <body>
-  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
-  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
-  <h1>Food Vendor Application Form</h1>
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="/index.html">🏡 Home</a>
+      <a href="/profile/index.html">👤 Profile</a>
+      <a href="/vendor_performer/vendor/dashboard.html">🧺 Dashboard</a>
+    </div>
+  </nav>
+
+  <div class="page-body">
+  <h1 style="font-family:'Cinzel',serif; color:#f1df99; margin:0 0 20px; font-size:28px;">🍖 Food Vendor Application</h1>
 
   <div style="text-align: center; margin-bottom: 20px;">
     <a href="/how_to/help_center.html" target="_blank" style="background-color: #bb9457; color: black; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
@@ -141,6 +174,8 @@
 
     <p id="validationMessage"></p>
   </form>
+
+  </div><!-- /page-body -->
 
   <footer>
     <a href="/index.html">Home</a> |

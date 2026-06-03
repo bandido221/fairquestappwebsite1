@@ -269,6 +269,10 @@
     <!-- Done -->
     <div class="bottom-actions">
       <button class="btn-done" onclick="goBack()">Done</button>
+      <button class="btn-done" id="archivedBtn" style="background:#4a2a0a; display:none;" 
+        onclick="window.location.href=`/vendor_performer/archived_fairs.html?vpa_id=${vpaId}&type=${type}`">
+        🗄️ Archived Fairs
+      </button>
     </div>
   </div>
 
@@ -309,6 +313,7 @@
       await loadAllFairs();
       await loadCurrentFairs();
       setupSearch();
+      await checkGoldAndShowArchive();
     }
 
     // ─── Load all renaissance fairs ──────────────────────────────────────────
@@ -325,7 +330,8 @@
       const { data: known } = await sb
         .from('vendor_application_fairs')
         .select('id, fair_id, start_date, end_date, renaissance_fairs(name, city, state)')
-        .eq('application_id', vpaId);
+        .eq('application_id', vpaId)
+        .eq('is_archived', false);
 
       (known || []).forEach(f => {
         currentFairs.push({
@@ -382,12 +388,25 @@
 
   container.innerHTML = Object.values(groups).map(group => {
     const f = group.fair;
-    const weekendRows = group.weekends.map(w => `
-      <div class="weekend-entry">
-        <span class="weekend-entry-dates">${formatDate(w.start_date)} → ${formatDate(w.end_date)}</span>
-        <button class="btn-remove-sm" onclick="removeFair(${w.idx})">Remove</button>
-      </div>
-    `).join('');
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const weekendRows = group.weekends.map(w => {
+      const endDate = w.end_date ? new Date(w.end_date + 'T00:00:00') : null;
+      const isPassed = endDate && endDate < today;
+      const passedBadge = isPassed ? `<span style="display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:bold; background:rgba(180,50,50,0.15); color:#8b1a1a; border:1px solid rgba(180,50,50,0.3); margin-left:6px;">Past Fair</span>` : '';
+      const archiveBtn = isPassed && w.source === 'known' ? `<button class="btn-remove-sm" style="background:#7a5c2e;" onclick="archiveFair(${w.idx})">Archive</button>` : '';
+
+      return `
+        <div class="weekend-entry">
+          <span class="weekend-entry-dates">${formatDate(w.start_date)} → ${formatDate(w.end_date)}${passedBadge}</span>
+          <div style="display:flex; gap:6px;">
+            ${archiveBtn}
+            <button class="btn-remove-sm" onclick="removeFair(${w.idx})">Remove</button>
+          </div>
+        </div>
+      `;
+    }).join('');
 
     return `
       <div class="fair-card">
@@ -397,6 +416,23 @@
     `;
   }).join('');
 }
+    // ─── Archive a fair ───────────────────────────────────────────────────────
+    async function archiveFair(idx) {
+      const fair = currentFairs[idx];
+      if (!confirm(`Archive "${fair.fair_name}" (${formatDate(fair.start_date)} → ${formatDate(fair.end_date)})?`)) return;
+
+      const { error } = await sb
+        .from('vendor_application_fairs')
+        .update({ is_archived: true })
+        .eq('id', fair.db_id);
+
+      if (error) { showToast('Error archiving fair.', true); return; }
+
+      currentFairs.splice(idx, 1);
+      renderCurrentFairs();
+      showToast('Fair archived.');
+    }
+
     // ─── Remove a fair ────────────────────────────────────────────────────────
     async function removeFair(idx) {
       const fair = currentFairs[idx];
@@ -598,7 +634,20 @@ wl.querySelectorAll('label').forEach(lbl => {
       t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 3000);
     }
+async function checkGoldAndShowArchive() {
+      const { data } = await sb
+        .from('vendor_performer_applications')
+        .select('tier, approval_status')
+        .eq('id', vpaId)
+        .maybeSingle();
 
+      const isGold = data?.approval_status === 'approved' &&
+        (data?.tier || '').toLowerCase() === 'gold';
+
+      if (isGold) {
+        document.getElementById('archivedBtn').style.display = 'inline-block';
+      }
+    }
     window.addEventListener('DOMContentLoaded', init);
   </script>
 

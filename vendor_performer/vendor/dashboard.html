@@ -645,7 +645,7 @@ fairHtml += `<div class="fair-cards-list">`;
 
       <div class="sub-actions">
         <button class="update-app" onclick="startUpdate(${v.id})">Update Profile</button>
-        <button class="delete-app" onclick="goToMainPage(${v.id})">Main Page</button>
+        <button class="delete-app" onclick="goToMainPage(${v.id})" style="display:none;">Main Page</button>
         <button class="delete-app" onclick="deleteApplication(${v.id},'${safeName}')">Delete</button>
       </div>
 
@@ -664,6 +664,30 @@ fairHtml += `<div class="fair-cards-list">`;
   👥 Team
 </button>
       </div>
+
+      ${v.is_food_vendor ? `
+      <div style="margin-top:18px; background:rgba(255,140,0,0.12); border:1px solid rgba(255,140,0,0.35); border-radius:12px; padding:16px;">
+        <div style="font-family:'Cinzel',serif; font-size:17px; font-weight:bold; margin-bottom:12px; color:#111;">🍖 Food Vendor Menu</div>
+        ${isGoldApproved ? `
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <button class="start-app" style="background:#e67e22;"
+            onclick="alert('View Menu — coming soon!')">
+            📋 View Menu
+          </button>
+          <button class="start-app" style="background:#e67e22;"
+            onclick="alert('Add Menu Item — coming soon!')">
+            ➕ Add Menu Item
+          </button>
+          <button class="start-app" style="background:#e67e22;"
+            onclick="alert('Edit Menu — coming soon!')">
+            ✏️ Edit Menu
+          </button>
+        </div>
+        ` : `
+        <p style="color:#111; font-size:14px;">🔒 Menu management is available for Gold Tier food vendors. Upgrade to Gold to unlock this feature.</p>
+        `}
+      </div>
+      ` : ''}
 
       ${await buildFairApplicationsSection(v.id, userId)}
         `;

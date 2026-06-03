@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Archived Fairs | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
+  <style>
+    body {
+      font-family: 'Domine', serif;
+      background: #0d0a04;
+      color: #f1df99;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1, h2, h3 { font-family: 'Cinzel', serif; margin-top: 0; }
+
+    .top-banner, .logo {
+      display: block;
+      margin: 0 auto 20px auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .top-banner { width: 100%; max-width: 600px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .logo { max-width: 100px; transition: transform 0.3s ease; }
+    .logo:hover { transform: scale(1.05); }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: rgba(241, 223, 153, 0.93);
+      color: #111;
+      border: 1px solid rgba(201,168,76,0.4);
+      border-radius: 16px;
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+      padding: 24px;
+      text-align: left;
+    }
+    .container h1 { text-align: center; margin-bottom: 6px; font-size: 28px; color: #111; }
+    .subtitle { text-align: center; font-size: 14px; color: #555; margin-bottom: 24px; }
+
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      color: #111;
+      margin: 24px 0 12px 0;
+      padding-bottom: 6px;
+      border-bottom: 2px solid rgba(170,132,82,0.4);
+    }
+
+    .fairs-list { display: grid; gap: 10px; }
+
+    .fair-card {
+      background: rgba(255,255,255,0.85);
+      border-radius: 12px;
+      padding: 14px 16px;
+      border: 1px solid rgba(0,0,0,0.15);
+    }
+    .fair-card-name {
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      color: #111;
+      margin-bottom: 8px;
+    }
+    .fair-card-location { font-size: 13px; color: #555; margin-bottom: 8px; }
+
+    .weekend-entry {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fdf7e1;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 14px;
+      color: #111;
+      margin-bottom: 6px;
+    }
+    .weekend-entry-dates { flex: 1; }
+
+    .btn-restore {
+      background: #27ae60;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-family: 'Domine', serif;
+      cursor: pointer;
+      white-space: nowrap;
+      margin-left: 10px;
+    }
+    .btn-restore:hover { background: #219a52; }
+
+    .btn-delete {
+      background: #c0392b;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-family: 'Domine', serif;
+      cursor: pointer;
+      white-space: nowrap;
+      margin-left: 6px;
+    }
+    .btn-delete:hover { background: #a93226; }
+
+    .past-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: bold;
+      background: rgba(180,50,50,0.15);
+      color: #8b1a1a;
+      border: 1px solid rgba(180,50,50,0.3);
+      margin-left: 6px;
+    }
+
+    .no-fairs-msg {
+      color: #666;
+      font-size: 14px;
+      font-style: italic;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    .bottom-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    .btn-done {
+      background: #7a5c2e;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 40px;
+      font-size: 17px;
+      font-family: 'Cinzel', serif;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .btn-done:hover { background: #5a3e18; }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #27ae60;
+      color: #fff;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: 'Domine', serif;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { background: #c0392b; }
+
+    .loading-msg { text-align: center; color: #555; padding: 20px; font-size: 15px; }
+
+    @media (max-width: 768px) {
+      body { padding: 14px; }
+      .container { padding: 18px; }
+      .btn-done { width: 100%; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <img src="../../images/banner.png" alt="FairQuest Banner" class="top-banner" />
+  <img src="../../images/logo.png" alt="FairQuest Logo" class="logo" />
+
+  <div class="container">
+    <h1>🗄️ Archived Fairs</h1>
+    <p class="subtitle">Past fairs you've archived. You can restore or permanently remove them.</p>
+
+    <div class="section-title">Your Archived Fairs</div>
+    <div id="archivedList" class="fairs-list">
+      <div class="loading-msg">Loading archived fairs…</div>
+    </div>
+
+    <div class="bottom-actions">
+      <button class="btn-done" onclick="goBack()">← Back to Fairs</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    if (!window.supabaseClient) {
+      window.supabaseClient = window.supabase.createClient(
+        'https://awtbjuiqgtdydsqzimul.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+      );
+    }
+    const sb = window.supabaseClient;
+
+    const params = new URLSearchParams(window.location.search);
+    const vpaId  = params.get('vpa_id');
+    const type   = params.get('type') || 'vendor';
+    const isPerformer = type === 'performer';
+
+    let archivedFairs = [];
+
+    async function init() {
+      // Gold check
+      const { data: vpa } = await sb
+        .from('vendor_performer_applications')
+        .select('tier, approval_status')
+        .eq('id', vpaId)
+        .maybeSingle();
+
+      const isGold = vpa?.approval_status === 'approved' &&
+        (vpa?.tier || '').toLowerCase() === 'gold';
+
+      if (!isGold) {
+        document.getElementById('archivedList').innerHTML =
+          '<div class="no-fairs-msg">🔒 Archived fairs are available for Gold Tier members only.</div>';
+        return;
+      }
+
+      await loadArchivedFairs();
+    }
+
+    async function loadArchivedFairs() {
+      const { data, error } = await sb
+        .from('vendor_application_fairs')
+        .select('id, fair_id, start_date, end_date, renaissance_fairs(name, city, state)')
+        .eq('application_id', vpaId)
+        .eq('is_archived', true);
+
+      if (error) {
+        document.getElementById('archivedList').innerHTML =
+          '<div class="no-fairs-msg">Error loading archived fairs.</div>';
+        return;
+      }
+
+      archivedFairs = data || [];
+      renderArchivedFairs();
+    }
+
+    function renderArchivedFairs() {
+      const container = document.getElementById('archivedList');
+
+      if (!archivedFairs.length) {
+        container.innerHTML = '<div class="no-fairs-msg">No archived fairs yet.</div>';
+        return;
+      }
+
+      const today = new Date();
+      today.setHours(0,0,0,0);
+
+      // Group by fair name
+      const groups = {};
+      archivedFairs.forEach((f, idx) => {
+        const key = f.renaissance_fairs?.name || 'Unknown Fair';
+        if (!groups[key]) {
+          groups[key] = {
+            name: key,
+            city: f.renaissance_fairs?.city || '',
+            state: f.renaissance_fairs?.state || '',
+            weekends: []
+          };
+        }
+        groups[key].weekends.push({ ...f, idx });
+      });
+
+      container.innerHTML = Object.values(groups).map(group => {
+        const location = [group.city, group.state].filter(Boolean).join(', ');
+
+        const weekendRows = group.weekends.map(w => {
+          const endDate = w.end_date ? new Date(w.end_date + 'T00:00:00') : null;
+          const isPassed = endDate && endDate < today;
+          const passedBadge = isPassed
+            ? `<span class="past-badge">Past Fair</span>`
+            : '';
+
+          return `
+            <div class="weekend-entry">
+              <span class="weekend-entry-dates">
+                ${formatDate(w.start_date)} → ${formatDate(w.end_date)}${passedBadge}
+              </span>
+              <div style="display:flex; gap:6px;">
+                <button class="btn-restore" onclick="restoreFair(${w.idx})">↩ Restore</button>
+                <button class="btn-delete" onclick="deleteFair(${w.idx})">🗑 Delete</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="fair-card">
+            <div class="fair-card-name">${group.name}</div>
+            ${location ? `<div class="fair-card-location">📍 ${location}</div>` : ''}
+            ${weekendRows}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function restoreFair(idx) {
+      const fair = archivedFairs[idx];
+      if (!confirm(`Restore this weekend back to your active fairs?`)) return;
+
+      const { error } = await sb
+        .from('vendor_application_fairs')
+        .update({ is_archived: false })
+        .eq('id', fair.id);
+
+      if (error) { showToast('Error restoring fair.', true); return; }
+
+      archivedFairs.splice(idx, 1);
+      renderArchivedFairs();
+      showToast('Fair restored to your active list!');
+    }
+
+    async function deleteFair(idx) {
+      const fair = archivedFairs[idx];
+      if (!confirm(`Permanently delete this weekend? This cannot be undone.`)) return;
+
+      const { error } = await sb
+        .from('vendor_application_fairs')
+        .delete()
+        .eq('id', fair.id);
+
+      if (error) { showToast('Error deleting fair.', true); return; }
+
+      archivedFairs.splice(idx, 1);
+      renderArchivedFairs();
+      showToast('Fair permanently deleted.');
+    }
+
+    function formatDate(d) {
+      if (!d) return '';
+      const dt = new Date(d + 'T00:00:00');
+      return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function goBack() {
+      window.location.href = `/vendor_performer/manage_fairs.html?vpa_id=${vpaId}&type=${type}`;
+    }
+
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast' + (isError ? ' error' : '');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+
+  <footer style="margin-top: 40px; font-size: 14px; text-align: center;">
+    <a href="/index.html" style="color: #aa8452;">Home</a> |
+    <a href="/terms.html" style="color: #aa8452;">Terms</a> |
+    <a href="/privacy.html" style="color: #aa8452;">Privacy</a> |
+    <a href="/faq.html" style="color: #aa8452;">FAQ</a> |
+    <a href="/contact.html" style="color: #aa8452;">Contact</a>
+  </footer>
+
+</body>
+</html>

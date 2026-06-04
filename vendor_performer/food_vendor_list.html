@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Food Vendor List | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HP222J86X0');
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Domine', serif;
+      background: #0d0a04;
+      color: #f1df99;
+      margin: 0; padding: 0;
+      text-align: center;
+    }
+    h1, h2, h3 { font-family: 'Cinzel', serif; margin-top: 0; }
+
+    /* TOPNAV */
+    .topnav {
+      background: rgba(13,10,4,0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 20px; height: 56px;
+      position: sticky; top: 0; z-index: 200;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 17px; color: #f1df99; letter-spacing: 0.05em; }
+    .topnav-links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      font-family: 'Domine', serif; font-size: 13px; padding: 7px 14px;
+      border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+      background: transparent; color: #c9a84c;
+      text-decoration: none; transition: background 0.2s, border-color 0.2s;
+    }
+    .topnav-links a:hover { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.55); color: #f1df99; }
+
+    /* PAGE */
+    .page-body { padding: 30px 20px 60px; max-width: 960px; margin: 0 auto; }
+
+    /* SEARCH BAR */
+    .search-bar {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-bottom: 24px; justify-content: center; align-items: center;
+    }
+    .search-bar input {
+      padding: 10px 16px; border-radius: 10px;
+      border: 1px solid rgba(201,168,76,0.4);
+      background: rgba(241,223,153,0.1); color: #f1df99;
+      font-family: 'Domine', serif; font-size: 15px;
+      width: 280px; outline: none;
+    }
+    .search-bar input::placeholder { color: rgba(241,223,153,0.5); }
+    .search-bar input:focus { border-color: rgba(201,168,76,0.7); }
+
+    /* GRID */
+    .vendor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    /* CARD */
+    .vendor-card {
+      background: rgba(251,241,200,0.90);
+      border: 2px solid #aa8425;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+      color: #3b1f1f;
+      text-align: left;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      text-decoration: none;
+      display: block;
+    }
+    .vendor-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+    }
+    .vendor-card-photo {
+      width: 100%; height: 180px;
+      object-fit: cover; display: block;
+    }
+    .vendor-card-photo-placeholder {
+      width: 100%; height: 180px;
+      background: rgba(201,168,76,0.15);
+      display: flex; align-items: center;
+      justify-content: center; font-size: 56px;
+    }
+    .vendor-card-body { padding: 16px; }
+    .vendor-card-name {
+      font-family: 'Cinzel', serif; font-size: 16px;
+      color: #3b1f1f; margin-bottom: 6px; line-height: 1.3;
+    }
+    .vendor-card-type {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 999px; font-size: 12px;
+      background: rgba(201,168,76,0.2); color: #5c3a1e;
+      border: 1px solid rgba(201,168,76,0.4);
+      margin-bottom: 8px;
+    }
+    .vendor-card-desc {
+      font-size: 13px; color: #5c3a1e;
+      line-height: 1.5; margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .vendor-card-fairs {
+      font-size: 12px; color: #7a5c2e;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      padding-top: 8px; margin-top: 4px;
+    }
+    .no-results {
+      text-align: center; color: #f1df99;
+      font-style: italic; padding: 40px;
+      grid-column: 1 / -1;
+    }
+
+    footer { margin-top: 40px; font-size: 14px; text-align: center; }
+    footer a { color: #aa8452; text-decoration: none; margin: 0 8px; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 768px) {
+      .vendor-grid { grid-template-columns: 1fr; }
+      .search-bar input { width: 100%; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="/index.html">🏡 Home</a>
+      <a href="/fairs/explore.html">🔍 Fairs</a>
+      <a href="/vendor_performer/vendor_list.html">🧺 Vendors</a>
+      <a href="/vendor_performer/performer_list.html">🎭 Performers</a>
+    </div>
+  </nav>
+
+  <div class="page-body">
+    <h1 style="color:#f1df99; margin-bottom:8px;">🍖 Food Vendors</h1>
+    <p style="color:rgba(241,223,153,0.7); margin-bottom:24px;">Browse our Renaissance fair food vendors</p>
+
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="🔍 Search food vendors…" oninput="renderVendors()" />
+    </div>
+
+    <div class="vendor-grid" id="vendorGrid">
+      <div class="no-results">Loading food vendors…</div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="/index.html">Home</a> |
+    <a href="/vendor_performer/vendor_list.html">Vendors</a> |
+    <a href="/vendor_performer/performer_list.html">Performers</a> |
+    <a href="/terms.html">Terms</a> |
+    <a href="/privacy.html">Privacy</a> |
+    <a href="/faq.html">FAQ</a> |
+    <a href="/contact.html">Contact</a>
+  </footer>
+
+  <script>
+    const sb = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    let allVendors = [];
+
+    async function loadVendors() {
+      const { data, error } = await sb
+        .from('vendor_performer_applications')
+        .select(`
+          id, name, description, vendor_type, photo_url, website,
+          vendor_application_fairs(
+            start_date, end_date,
+            renaissance_fairs(name, state)
+          )
+        `)
+        .eq('is_food_vendor', true)
+        .eq('approval_status', 'approved')
+        .order('name', { ascending: true });
+
+      if (error || !data) {
+        document.getElementById('vendorGrid').innerHTML =
+          '<div class="no-results">Could not load food vendors.</div>';
+        return;
+      }
+
+      allVendors = data;
+      renderVendors();
+    }
+
+    function renderVendors() {
+      const grid = document.getElementById('vendorGrid');
+      const search = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      let filtered = allVendors;
+      if (search) {
+        filtered = filtered.filter(v =>
+          v.name.toLowerCase().includes(search) ||
+          (v.description || '').toLowerCase().includes(search) ||
+          (v.vendor_type || '').toLowerCase().includes(search)
+        );
+      }
+
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="no-results">No food vendors found.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(v => {
+        // Group fairs
+        const fairMap = {};
+        (v.vendor_application_fairs || []).forEach(f => {
+          const name = f.renaissance_fairs?.name || 'Unknown Fair';
+          if (!fairMap[name]) fairMap[name] = [];
+          fairMap[name].push(f.start_date);
+        });
+
+        const fairNames = Object.keys(fairMap);
+        const fairsLine = fairNames.length
+          ? `🎪 ${fairNames.slice(0, 2).join(', ')}${fairNames.length > 2 ? ` +${fairNames.length - 2} more` : ''}`
+          : '';
+
+        return `
+          <a href="/vendor_performer/vp_detail.html?vpa_id=${v.id}" class="vendor-card">
+            ${v.photo_url
+              ? `<img src="${v.photo_url}" alt="${v.name}" class="vendor-card-photo" />`
+              : `<div class="vendor-card-photo-placeholder">🍖</div>`
+            }
+            <div class="vendor-card-body">
+              <div class="vendor-card-name">${v.name}</div>
+              ${v.vendor_type ? `<span class="vendor-card-type">${v.vendor_type}</span>` : ''}
+              ${v.description ? `<div class="vendor-card-desc">${v.description}</div>` : ''}
+              ${fairsLine ? `<div class="vendor-card-fairs">${fairsLine}</div>` : ''}
+            </div>
+          </a>
+        `;
+      }).join('');
+    }
+
+    window.addEventListener('DOMContentLoaded', loadVendors);
+  </script>
+
+</body>
+</html>

@@ -10,10 +10,10 @@
 
   <style>
     body{
-      background-color:#000;
-      color:#f0e6d2;
+      background:#0d0a04;
+      color:#f1df99;
       font-family:'Domine', serif;
-      padding:20px;
+      padding:0;
       text-align:center;
     }
 
@@ -161,21 +161,58 @@
 @keyframes spin{
   to{ transform: rotate(360deg); }
 }
+    .topnav {
+      background: rgba(13,10,4,0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 20px; height: 56px;
+      position: sticky; top: 0; z-index: 200;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 17px; color: #f1df99; letter-spacing: 0.05em; }
+    .topnav-links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      font-family: 'Domine', serif; font-size: 13px; padding: 7px 14px;
+      border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+      background: transparent; color: #c9a84c;
+      text-decoration: none; transition: background 0.2s, border-color 0.2s;
+    }
+    .topnav-links a:hover { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.55); color: #f1df99; }
+    .page-body { padding: 30px 20px 60px; max-width: 1200px; margin: 0 auto; }
   </style>
 </head>
 <body>
 
-  <h1>🛍 Vendor List</h1>
+  <nav class="topnav">
+  <a class="topnav-logo" href="/index.html">
+    <img src="/images/logo.png" alt="FairQuest" />
+    <span>FairQuest</span>
+  </a>
+  <div class="topnav-links">
+    <a href="/index.html">🏡 Home</a>
+    <a href="/fairs/explore.html">🔍 Fairs</a>
+    <a href="/vendor_performer/performer_list.html">🎭 Performers</a>
+    <a href="/vendor_performer/food_vendor_list.html">🍖 Food Vendors</a>
+  </div>
+</nav>
 
-<a href="../index.html" class="home-button">🏠 Return to Main Site</a>
+<div class="page-body">
+  <h1 style="color:#f1df99; margin-bottom:8px;">🧺 Vendor List</h1>
+  <p style="color:rgba(241,223,153,0.7); margin-bottom:24px;">Browse our Renaissance fair vendors</p>
+
   <div class="filters">
     <input type="text" id="searchInput" placeholder="🔎 Search Vendor Name" />
   </div>
 
   <div class="vendor-grid" id="vendorGrid"></div>
 
-<div id="loader" class="loader hidden" aria-live="polite" aria-busy="true"></div>
-<div id="sentinel" style="height: 1px;"></div>
+  <div id="loader" class="loader hidden" aria-live="polite" aria-busy="true"></div>
+  <div id="sentinel" style="height: 1px;"></div>
+</div>
 
  <script>
   const supabaseClient = window.supabase.createClient(

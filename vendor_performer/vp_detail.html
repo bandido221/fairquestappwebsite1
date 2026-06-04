@@ -255,17 +255,17 @@
     <button class="btn-more" id="showMoreBtn" style="display:none;" onclick="showMoreReviews()">Show More Reviews</button>
   </div>
 
-  <!-- Fairs Card -->
-  <div class="card" id="fairsCard" style="display:none;">
-    <h2 style="margin-bottom:14px;">🏰 Appearing At</h2>
-    <div id="fairsList"></div>
-  </div>
-
   <!-- Menu Card -->
   <div class="card" id="menuCard" style="display:none;">
     <h2 style="margin-bottom:4px;">🍽️ Our Menu</h2>
     <p class="muted" style="margin-bottom:16px;">Tap a category to browse items</p>
     <div id="menuCardContent"></div>
+  </div>
+
+  <!-- Fairs Card -->
+  <div class="card" id="fairsCard" style="display:none;">
+    <h2 style="margin-bottom:14px;">🏰 Appearing At</h2>
+    <div id="fairsList"></div>
   </div>
 
   </div><!-- /page-body -->
@@ -540,7 +540,14 @@
     const list = document.getElementById('fairsList');
 
     if(error || !data || !data.length){
-      card.style.display = 'none';
+      content.innerHTML = `
+        <div style="text-align:center; padding:24px;">
+          <div style="font-size:40px; margin-bottom:12px;">🍽️</div>
+          <div style="font-family:'Cinzel',serif; font-size:16px; color:#111; margin-bottom:8px;">Menu Coming Soon</div>
+          <div style="font-size:14px; color:#5c3a1e;">We're working on adding our full menu. Check back soon!</div>
+        </div>
+      `;
+      card.style.display = 'block';
       return;
     }
 
@@ -559,18 +566,20 @@
       }
     });
 
-    list.innerHTML = Object.values(fairMap).map(group => {
+    const fairGroups = Object.values(fairMap);
+    let shownFairs = 0;
+    const FAIRS_BATCH = 5;
+
+    function renderFairItem(group) {
       const fair = group.fair;
       const name = fair?.name || 'Unknown Fair';
       const location = [fair?.city, fair?.state].filter(Boolean).join(', ');
-
       const weekendsHtml = group.weekends.map(w => {
         const start = w.start ? new Date(w.start).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : null;
         const end = w.end ? new Date(w.end).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : null;
         const dateLine = start && end ? `${start} – ${end}` : (start || '');
         return dateLine ? `<div style="font-size:14px; color:#5c3a1e; margin-top:2px;">📅 ${dateLine}</div>` : '';
       }).join('');
-
       return `
         <div style="padding:14px 16px; background:rgba(255,255,255,0.45); border-radius:10px; margin-bottom:10px; text-align:left; border:1px solid rgba(0,0,0,0.10);">
           <a href="/fairs/fair_detail.html?id=${fair?.id}" style="font-family:'Cinzel',serif; font-size:1.05rem; font-weight:bold; color:#3b1f1f; text-decoration:none;">
@@ -580,7 +589,52 @@
           ${weekendsHtml}
         </div>
       `;
-    }).join('');
+    }
+
+    function renderFairsBatch() {
+      const fairsContainer = document.getElementById('fairsList');
+      const nextBatch = fairGroups.slice(shownFairs, shownFairs + FAIRS_BATCH);
+      nextBatch.forEach(group => {
+        const div = document.createElement('div');
+        div.innerHTML = renderFairItem(group);
+        fairsContainer.insertBefore(div, document.getElementById('fairsShowMoreBtn'));
+      });
+      shownFairs += nextBatch.length;
+      const btn = document.getElementById('fairsShowMoreBtn');
+      if(shownFairs >= fairGroups.length) btn.style.display = 'none';
+      else btn.style.display = 'block';
+    }
+
+    // Show only first 1 initially
+    const firstGroup = fairGroups[0];
+    list.innerHTML = `
+      <div id="fairsInitial">${renderFairItem(firstGroup)}</div>
+      <div id="fairsMore"></div>
+      <div id="fairsShowMoreBtn" style="text-align:center; margin-top:8px; display:${fairGroups.length > 1 ? 'block' : 'none'};">
+        <button onclick="loadMoreFairs()"
+          style="background:rgba(201,168,76,0.2); border:1px solid rgba(201,168,76,0.5);
+                 border-radius:8px; padding:8px 20px; font-size:13px; cursor:pointer;
+                 min-width:0; font-family:'Domine',serif; color:#3b1f1f; box-shadow:none;">
+          Show More Fairs (${fairGroups.length - 1} more) ▼
+        </button>
+      </div>
+    `;
+    shownFairs = 1;
+
+    window.loadMoreFairs = function() {
+      const moreContainer = document.getElementById('fairsMore');
+      const nextBatch = fairGroups.slice(shownFairs, shownFairs + FAIRS_BATCH);
+      nextBatch.forEach(group => {
+        const div = document.createElement('div');
+        div.innerHTML = renderFairItem(group);
+        moreContainer.appendChild(div);
+      });
+      shownFairs += nextBatch.length;
+      const btn = document.getElementById('fairsShowMoreBtn');
+      const remaining = fairGroups.length - shownFairs;
+      if(remaining <= 0) btn.style.display = 'none';
+      else btn.querySelector('button').textContent = `Show More Fairs (${remaining} more) ▼`;
+    };
 
     card.style.display = 'block';
   }

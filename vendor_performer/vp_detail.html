@@ -540,14 +540,7 @@
     const list = document.getElementById('fairsList');
 
     if(error || !data || !data.length){
-      content.innerHTML = `
-        <div style="text-align:center; padding:24px;">
-          <div style="font-size:40px; margin-bottom:12px;">🍽️</div>
-          <div style="font-family:'Cinzel',serif; font-size:16px; color:#111; margin-bottom:8px;">Menu Coming Soon</div>
-          <div style="font-size:14px; color:#5c3a1e;">We're working on adding our full menu. Check back soon!</div>
-        </div>
-      `;
-      card.style.display = 'block';
+      card.style.display = 'none';
       return;
     }
 
@@ -659,7 +652,14 @@
       .order('item_name', { ascending: true });
 
     if(error || !data || !data.length){
-      card.style.display = 'none';
+      content.innerHTML = `
+        <div style="text-align:center; padding:24px;">
+          <div style="font-size:40px; margin-bottom:12px;">🍽️</div>
+          <div style="font-family:'Cinzel',serif; font-size:16px; color:#111; margin-bottom:8px;">Menu Coming Soon</div>
+          <div style="font-size:14px; color:#5c3a1e;">We're working on adding our full menu. Check back soon!</div>
+        </div>
+      `;
+      card.style.display = 'block';
       return;
     }
 

@@ -471,9 +471,35 @@
   <button class="btn-action" id="favoriteBtn" style="display:none;">
     ❤️ Save to Favorites
   </button>
+  <button class="btn-action" id="reportInfoBtn" onclick="openReportModal()" style="background:rgba(120,60,0,0.15); border-color:rgba(180,100,0,0.4); color:#5a2d00 !important;">
+    ✏️ Report Wrong Info
+  </button>
+  <button class="btn-action" id="claimFairBtn" style="display:none; background:rgba(0,80,30,0.12); border-color:rgba(0,120,50,0.4); color:#003d15 !important;">
+    🏰 Take Ownership of This Fair
+  </button>
 </div>
 <div class="hint" id="applyHint" style="display:none;">
   To apply, you must be logged in and have an approved Vendor/Performer profile.
+</div>
+
+<!-- ── REPORT MODAL ── -->
+<div id="reportModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:500; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#1a1208; border:1px solid rgba(201,168,76,0.4); border-radius:16px; padding:28px; max-width:480px; width:100%; box-shadow:0 8px 36px rgba(0,0,0,0.6);">
+    <h3 style="font-family:'Cinzel',serif; color:var(--gold-light); margin-bottom:12px;">✏️ Report Wrong Info</h3>
+    <p style="font-size:13px; color:var(--gold); margin-bottom:16px; line-height:1.6;">
+      Let us know what looks incorrect and we'll review it. Be as specific as you can — e.g. "the start date is wrong, it should be June 14."
+    </p>
+    <textarea id="reportText" rows="5" placeholder="What information is wrong? What should it be?" style="width:100%; border-radius:8px; border:1px solid rgba(201,168,76,0.35); background:#0d0a04; color:var(--gold-light); font-family:'Domine',serif; font-size:13px; padding:10px; resize:vertical;"></textarea>
+    <div id="reportMsg" style="font-size:13px; margin-top:8px; min-height:18px;"></div>
+    <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+      <button class="btn-action" onclick="submitReport()" style="background:var(--gold); color:#111 !important; border-color:var(--gold-dark);">
+        📤 Submit Report
+      </button>
+      <button class="btn-action" onclick="closeReportModal()" style="background:rgba(255,255,255,0.1); color:var(--gold-light) !important;">
+        Cancel
+      </button>
+    </div>
+  </div>
 </div>
 
 </div><!-- close fairCard -->
@@ -759,6 +785,7 @@ document.getElementById('fairWebsite').innerHTML = data.website
 
   // NEW: gate Apply button
   await setupApplyButton(data);
+  setupClaimButton(data);
 };
 
 loadFair();
@@ -824,7 +851,47 @@ function updateFavBtn(btn, isFav) {
     btn.style.color = '';
   }
 }
+// ── REPORT WRONG INFO ────────────────────────────────────────
+function openReportModal() {
+  document.getElementById('reportText').value = '';
+  document.getElementById('reportMsg').textContent = '';
+  const m = document.getElementById('reportModal');
+  m.style.display = 'flex';
+}
+function closeReportModal() {
+  document.getElementById('reportModal').style.display = 'none';
+}
+async function submitReport() {
+  const text = (document.getElementById('reportText').value || '').trim();
+  const msgEl = document.getElementById('reportMsg');
+  if (!text) { msgEl.style.color = '#cc4400'; msgEl.textContent = 'Please describe what is wrong.'; return; }
+  msgEl.style.color = 'var(--gold)';
+  msgEl.textContent = 'Submitting…';
+  try {
+    const { error } = await supabaseClient
+      .from('fair_corrections')
+      .insert([{ fair_id: fairId, message: text }]);
+    if (error) throw error;
+    msgEl.style.color = '#2e7d32';
+    msgEl.textContent = '✅ Thanks! We\'ll review this soon.';
+    setTimeout(closeReportModal, 2000);
+  } catch (e) {
+    console.error(e);
+    msgEl.style.color = '#cc0000';
+    msgEl.textContent = '❌ Something went wrong. Please email fairquestapp@gmail.com directly.';
+  }
+}
 
+// ── CLAIM FAIR BUTTON ────────────────────────────────────────
+function setupClaimButton(fairData) {
+  const btn = document.getElementById('claimFairBtn');
+  if (!fairData.approved_for_admin) {
+    btn.style.display = 'inline-flex';
+    btn.onclick = () => {
+      window.location.href = `/fair_admin/fair_verification/fair-access.html?prefill_id=${fairData.id}&prefill_name=${encodeURIComponent(fairData.name)}`;
+    };
+  }
+}
   </script>
   <!-- ── BETA NOTICE MODAL ── -->
 <div id="betaNoticeModal">

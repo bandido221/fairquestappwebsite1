@@ -470,7 +470,143 @@
   white-space: nowrap;
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
+/* ── BETA NOTICE MODAL ── */
+#betaNoticeModal {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.82);
+  display: none; justify-content: center; align-items: center;
+  z-index: 99999;
+}
+#betaNoticeModal .beta-box {
+  background: #1a1208;
+  border: 1px solid rgba(201,168,76,0.45);
+  border-radius: 14px;
+  padding: 30px 28px;
+  max-width: 460px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+}
+#betaNoticeModal h3 {
+  font-family: 'Cinzel', serif;
+  color: #f1df99;
+  margin: 0 0 14px 0;
+  font-size: 1.3rem;
+}
+#betaNoticeModal p {
+  color: #e0d0a0;
+  font-size: 0.97rem;
+  margin: 0 0 22px 0;
+  line-height: 1.6;
+}
+#betaNoticeModal .page-tag {
+  display: inline-block;
+  background: rgba(201,168,76,0.15);
+  border: 1px solid rgba(201,168,76,0.35);
+  color: #f1df99;
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+#betaNoticeModal button {
+  background: rgba(201,168,76,0.2);
+  border: 1.5px solid rgba(201,168,76,0.6);
+  color: #f1df99;
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  padding: 10px 28px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#betaNoticeModal button:hover { background: rgba(201,168,76,0.35); }
 
+/* ── FEEDBACK MODAL ── */
+#feedbackModal {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.82);
+  display: none; justify-content: center; align-items: center;
+  z-index: 99999;
+}
+#feedbackModal .feedback-box {
+  background: #1a1208;
+  border: 1px solid rgba(201,168,76,0.45);
+  border-radius: 14px;
+  padding: 28px 26px;
+  max-width: 440px;
+  width: 90%;
+  text-align: left;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+}
+#feedbackModal h3 {
+  font-family: 'Cinzel', serif;
+  color: #f1df99;
+  margin: 0 0 6px 0;
+  font-size: 1.2rem;
+}
+#feedbackModal .fb-page-tag {
+  display: inline-block;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.3);
+  color: #c9a84c;
+  font-size: 0.78rem;
+  padding: 2px 9px;
+  border-radius: 5px;
+  margin-bottom: 14px;
+}
+#feedbackModal label {
+  display: block;
+  color: #c9a84c;
+  font-size: 0.88rem;
+  margin-bottom: 4px;
+  margin-top: 12px;
+}
+#feedbackModal input, #feedbackModal textarea {
+  width: 100%;
+  background: rgba(241,223,153,0.08);
+  border: 1px solid rgba(201,168,76,0.35);
+  color: #f1df99;
+  border-radius: 7px;
+  padding: 9px 10px;
+  font-family: 'Domine', serif;
+  font-size: 0.93rem;
+  box-sizing: border-box;
+}
+#feedbackModal textarea { height: 100px; resize: vertical; }
+#feedbackModal .fb-actions {
+  display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end;
+}
+#feedbackModal .fb-btn-send {
+  background: rgba(201,168,76,0.2);
+  border: 1.5px solid rgba(201,168,76,0.6);
+  color: #f1df99;
+  font-family: 'Cinzel', serif;
+  padding: 9px 22px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.93rem;
+  transition: background 0.2s;
+}
+#feedbackModal .fb-btn-send:hover { background: rgba(201,168,76,0.35); }
+#feedbackModal .fb-btn-cancel {
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.25);
+  color: #c9a84c;
+  font-family: 'Domine', serif;
+  padding: 9px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.93rem;
+}
+#feedbackModal .fb-status {
+  font-size: 0.88rem;
+  margin-top: 10px;
+  text-align: center;
+  color: #a0e0a0;
+  display: none;
+}
 </style>
 </head>
 <body>
@@ -491,10 +627,11 @@
       <img src="/images/logo.png" alt="FairQuest" />
       <span>FairQuest</span>
     </a>
-    <div class="topnav-right" id="menuRight">
-      <a href="/fairs/explore.html" class="nav-btn">🎪 Fairs</a>
-      <a href="/profile/index.html" class="nav-btn">👤 Profile</a>
-    </div>
+   <div class="topnav-right" id="menuRight">
+  <a href="/fairs/explore.html" class="nav-btn">🎪 Fairs</a>
+  <a href="/profile/index.html" class="nav-btn">👤 Profile</a>
+  <a href="#" class="nav-btn" onclick="openFeedbackModal(); return false;">📣 Feedback</a>
+</div>
   </nav>
 
   <div class="page-wrap">
@@ -624,7 +761,7 @@ const imgUrl = (fair.image_url || '').trim();
 
 const imageHtml = imgUrl
   ? `<div class="card-image"><img src="${imgUrl}" alt="${fair.name}" /></div>`
-  : '';
+  : `<div class="card-image"><div class="no-image-msg">Waiting for fair to add image</div></div>`;
 
 
 const isFav = userFavorites.has(String(fair.id));
@@ -775,5 +912,135 @@ monthDropdown.addEventListener('change', () => {
  
   
 </div><!-- /page-wrap -->
+
+<!-- ── BETA NOTICE MODAL ── -->
+<div id="betaNoticeModal">
+  <div class="beta-box">
+    <h3>🛠️ We're Still Building!</h3>
+    <div class="page-tag">📄 Page: Explore Fairs</div>
+    <p>
+      We're actively improving FairQuest and still testing many features.
+      If you notice something wrong on this page, use the
+      <strong>📣 Feedback</strong> button in the top menu to let us know —
+      we read every report and fix things fast. Thank you for your help! 🙏
+    </p>
+    <button onclick="closeBetaNotice()">Got it, thanks!</button>
+  </div>
+</div>
+
+<!-- ── FEEDBACK MODAL ── -->
+<div id="feedbackModal">
+  <div class="feedback-box">
+    <h3>📣 Send Feedback</h3>
+    <div class="fb-page-tag">📄 Page: Explore Fairs</div>
+    <div id="fbAnonFields">
+      <label>Your Name</label>
+      <input type="text" id="fbName" placeholder="Your name" />
+      <label>Your Email</label>
+      <input type="email" id="fbEmail" placeholder="your@email.com" />
+    </div>
+    <label>What did you notice?</label>
+    <textarea id="fbMessage" placeholder="Describe the issue or feedback…"></textarea>
+    <div class="fb-actions">
+      <button class="fb-btn-cancel" onclick="closeFeedbackModal()">Cancel</button>
+      <button class="fb-btn-send" onclick="submitFeedback()">Send Feedback</button>
+    </div>
+    <div class="fb-status" id="fbStatus"></div>
+  </div>
+</div>
+
+<script>
+const PAGE_ID   = 'explore';
+const PAGE_NAME = 'Explore Fairs';
+
+// ── BETA NOTICE ──────────────────────────────────────────
+const betaKey = 'betaSeen_' + PAGE_ID;
+if (!localStorage.getItem(betaKey)) {
+  document.getElementById('betaNoticeModal').style.display = 'flex';
+}
+function closeBetaNotice() {
+  localStorage.setItem(betaKey, '1');
+  document.getElementById('betaNoticeModal').style.display = 'none';
+}
+
+// ── FEEDBACK MODAL ───────────────────────────────────────
+async function openFeedbackModal() {
+  const modal = document.getElementById('feedbackModal');
+  const anonFields = document.getElementById('fbAnonFields');
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    anonFields.style.display = user ? 'none' : 'block';
+  } catch(e) {
+    anonFields.style.display = 'block';
+  }
+  document.getElementById('fbMessage').value = '';
+  document.getElementById('fbStatus').style.display = 'none';
+  modal.style.display = 'flex';
+}
+
+function closeFeedbackModal() {
+  document.getElementById('feedbackModal').style.display = 'none';
+}
+
+async function submitFeedback() {
+  const message = document.getElementById('fbMessage').value.trim();
+  if (!message) { alert('Please enter your feedback.'); return; }
+
+  const statusEl = document.getElementById('fbStatus');
+  statusEl.style.display = 'none';
+
+  let userId = null, userName = null, userEmail = null;
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) {
+      userId = user.id;
+      const { data: profile } = await supabaseClient
+        .from('app_users')
+        .select('first_name, last_name, email')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (profile) {
+        userName  = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || null;
+        userEmail = profile.email || user.email || null;
+      } else {
+        userEmail = user.email || null;
+      }
+    } else {
+      userName  = document.getElementById('fbName').value.trim() || null;
+      userEmail = document.getElementById('fbEmail').value.trim() || null;
+    }
+  } catch(e) {
+    userName  = document.getElementById('fbName')?.value.trim() || null;
+    userEmail = document.getElementById('fbEmail')?.value.trim() || null;
+  }
+
+  const { error } = await supabaseClient.from('web_feedback').insert({
+    page_id:    PAGE_ID,
+    page_name:  PAGE_NAME,
+    message:    message,
+    user_id:    userId,
+    user_name:  userName,
+    user_email: userEmail
+  });
+
+  if (error) {
+    statusEl.textContent = '❌ Error sending feedback. Please try again.';
+    statusEl.style.color = '#f4a0a0';
+    statusEl.style.display = 'block';
+    console.error(error);
+    return;
+  }
+
+  statusEl.textContent = '✅ Feedback sent! Thank you!';
+  statusEl.style.color = '#a0e0a0';
+  statusEl.style.display = 'block';
+  setTimeout(() => closeFeedbackModal(), 2000);
+}
+
+document.getElementById('feedbackModal').addEventListener('click', function(e) {
+  if (e.target === this) closeFeedbackModal();
+});
+</script>
 </body>
 </html>

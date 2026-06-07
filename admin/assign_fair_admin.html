@@ -577,11 +577,20 @@ async function quickAssign() {
 div.innerHTML=`
   <span class="badge pending">PENDING</span>
   ${newFairBadge}
-  <h3>${r.fair_name} (${r.fair_state})</h3>
-        <p><b>Applicant:</b> ${r.contact_name}</p>
-        <p><b>Email:</b> ${r.user_email}</p>
-        <p><b>Role:</b> ${r.fair_role}</p>
-<p><b>Notes:</b> ${r.fair_notes || '—'}</p>
+  <h3>${r.fair_name} (${r.fair_city || ''}${r.fair_city && r.fair_state ? ', ' : ''}${r.fair_state || ''})</h3>
+
+  <div style="margin:10px 0; padding:10px 12px; background:rgba(0,0,0,0.12); border-radius:8px; display:grid; grid-template-columns:1fr 1fr; gap:4px 16px;">
+    <p><b>Applicant:</b> ${r.contact_name || '—'}</p>
+    <p><b>Phone:</b> ${r.contact_phone || '—'}</p>
+    <p><b>Email:</b> ${r.user_email || '—'}</p>
+    <p><b>Alt Email:</b> ${r.extra_email || '—'}</p>
+    <p><b>Role:</b> ${r.fair_role || '—'}</p>
+    <p><b>Role Details:</b> ${r.role_details || '—'}</p>
+    <p><b>Website:</b> ${r.fair_website ? `<a href="${r.fair_website}" target="_blank" style="color:#1a6e8e;">${r.fair_website}</a>` : '—'}</p>
+    <p><b>Submitted:</b> ${new Date(r.submitted_at).toLocaleString()}</p>
+  </div>
+
+  ${r.fair_notes ? `<p style="margin-bottom:8px;"><b>Notes:</b> ${r.fair_notes}</p>` : ''}
 
 ${!r.fair_id ? `
 <div style="margin-top:10px; padding:10px; background:#3b2a12; border-radius:6px;">
@@ -603,15 +612,13 @@ ${!r.fair_id ? `
 </div>
 ` : ``}
 
-<p><b>Submitted:</b> ${new Date(r.submitted_at).toLocaleString()}</p>
-
 <div class="btn-row" id="actionBtns_${r.id}">
   ${r.fair_id ? `
   <button class="btn btn-approve" onclick="approve('${r.id}','${r.user_id}','${r.fair_id}','${escapeQuotes(r.fair_name)}')">
     ✅ Approve & Assign Admin
   </button>
   ` : `
-  <button class="btn btn-blue" onclick="createFair('${r.id}','${escapeQuotes(r.fair_name)}','${escapeQuotes(r.fair_city)}','${escapeQuotes(r.fair_state)}')">
+  <button class="btn btn-blue" onclick="createFair('${r.id}','${escapeQuotes(r.fair_name)}','${escapeQuotes(r.fair_city)}','${escapeQuotes(r.fair_state)}','${escapeQuotes(r.fair_website || '')}')">
     🏰 Create Fair
   </button>
   `}
@@ -650,7 +657,7 @@ var fairState = r.fair_state || '';
   function escapeQuotes(s){
     return String(s || '').replace(/'/g, "\\'");
   }
-async function createFair(verificationId, fairName, fairCity, fairState){
+async function createFair(verificationId, fairName, fairCity, fairState, fairWebsite){
 
   var ok = await requireAdminLogin();
   if (!ok) return;
@@ -661,7 +668,8 @@ var insertFair = await supabase
   .rpc('create_renaissance_fair', {
     p_name: fairName,
     p_city: fairCity,
-    p_state: fairState
+    p_state: fairState,
+    p_website: fairWebsite || null
   });
 
   if(insertFair.error){

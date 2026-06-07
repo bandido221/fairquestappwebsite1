@@ -531,31 +531,65 @@
   }
 
   async function loadFairs(){
-    const { data, error } = await sb
+    const card = document.getElementById('fairsCard');
+    const list = document.getElementById('fairsList');
+
+    // Pull known fairs (linked to renaissance_fairs table)
+    const { data: knownData } = await sb
       .from('vendor_application_fairs')
       .select('fair_id, start_date, end_date, renaissance_fairs(id, name, city, state)')
       .eq('application_id', Number(vpaId));
 
-    const card = document.getElementById('fairsCard');
-    const list = document.getElementById('fairsList');
+    // Pull manual/suggested fairs
+    const { data: manualData } = await sb
+      .from('suggested_fairs')
+      .select('fair_name, start_date, end_date')
+      .eq('application_id', Number(vpaId));
 
-    if(error || !data || !data.length){
-      card.style.display = 'none';
+    // If nothing at all, hide the card
+    console.log('knownData:', knownData, 'manualData:', manualData);
+    const hasKnown = knownData && knownData.length > 0;
+    const hasManual = manualData && manualData.length > 0;
+    if(!hasKnown && !hasManual){
+      list.innerHTML = `
+        <div style="text-align:center; padding:24px;">
+          <div style="font-size:36px; margin-bottom:10px;">🏰</div>
+          <div style="font-family:'Cinzel',serif; font-size:16px; color:#3b1f1f; margin-bottom:6px;">No Fairs Listed Yet</div>
+          <div style="font-size:14px; color:#5c3a1e;">Check back soon — fairs will be announced here.</div>
+        </div>
+      `;
+      card.style.display = 'block';
       return;
     }
 
-    // Group rows by fair_id
+    // Group known fairs by fair_id
     const fairMap = {};
-    data.forEach(f => {
+    (knownData || []).forEach(f => {
       const fairId = f.renaissance_fairs?.id || f.fair_id;
       if(!fairMap[fairId]){
         fairMap[fairId] = {
           fair: f.renaissance_fairs,
-          weekends: []
+          weekends: [],
+          isManual: false
         };
       }
       if(f.start_date || f.end_date){
         fairMap[fairId].weekends.push({ start: f.start_date, end: f.end_date });
+      }
+    });
+
+    // Add manual fairs (no renaissance_fairs link)
+    (manualData || []).forEach(m => {
+      const key = 'manual_' + m.fair_name;
+      if(!fairMap[key]){
+        fairMap[key] = {
+          fair: { id: null, name: m.fair_name, city: '', state: '' },
+          weekends: [],
+          isManual: true
+        };
+      }
+      if(m.start_date || m.end_date){
+        fairMap[key].weekends.push({ start: m.start_date, end: m.end_date });
       }
     });
 
@@ -567,17 +601,25 @@
       const fair = group.fair;
       const name = fair?.name || 'Unknown Fair';
       const location = [fair?.city, fair?.state].filter(Boolean).join(', ');
-      const weekendsHtml = group.weekends.map(w => {
-        const start = w.start ? new Date(w.start).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : null;
-        const end = w.end ? new Date(w.end).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : null;
-        const dateLine = start && end ? `${start} – ${end}` : (start || '');
-        return dateLine ? `<div style="font-size:14px; color:#5c3a1e; margin-top:2px;">📅 ${dateLine}</div>` : '';
-      }).join('');
+
+      let weekendsHtml = '';
+      if(group.weekends.length === 0){
+        weekendsHtml = `<div style="font-size:13px; color:#7a6030; margin-top:6px; font-style:italic;">📅 Dates coming soon</div>`;
+      } else {
+        weekendsHtml = group.weekends.map(w => {
+          const start = w.start ? new Date(w.start + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : null;
+          const end = w.end ? new Date(w.end + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : null;
+          const dateLine = start && end ? `${start} – ${end}` : (start || end || '');
+          return dateLine ? `<div style="font-size:14px; color:#5c3a1e; margin-top:2px;">📅 ${dateLine}</div>` : '';
+        }).join('');
+      }
+
+      const linkStart = fair?.id ? `<a href="/fairs/fair_detail.html?id=${fair.id}" style="font-family:'Cinzel',serif; font-size:1.05rem; font-weight:bold; color:#3b1f1f; text-decoration:none;">` : `<span style="font-family:'Cinzel',serif; font-size:1.05rem; font-weight:bold; color:#3b1f1f;">`;
+      const linkEnd = fair?.id ? `</a>` : `</span>`;
+
       return `
         <div style="padding:14px 16px; background:rgba(255,255,255,0.45); border-radius:10px; margin-bottom:10px; text-align:left; border:1px solid rgba(0,0,0,0.10);">
-          <a href="/fairs/fair_detail.html?id=${fair?.id}" style="font-family:'Cinzel',serif; font-size:1.05rem; font-weight:bold; color:#3b1f1f; text-decoration:none;">
-            ${name}
-          </a>
+          ${linkStart}${name}${linkEnd}
           ${location ? `<div style="font-size:14px; color:#5c3a1e; margin-top:4px;">📍 ${location}</div>` : ''}
           ${weekendsHtml}
         </div>
@@ -777,6 +819,7 @@
 
     renderProfile();
     await loadFairs();
+    console.log('loadFairs done');
     await loadReviews();
     await loadMenu();
   }

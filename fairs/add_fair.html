@@ -426,8 +426,8 @@
       <div class="card">
         <div class="card-title">🏅 Are You the Fair Organizer?</div>
 
-        <div class="organizer-toggle" onclick="toggleOrganizer()">
-          <input type="checkbox" id="isOrganizer" onclick="event.stopPropagation(); toggleOrganizer()" />
+      <div class="organizer-toggle" onclick="if(event.target!==document.getElementById('isOrganizer')){document.getElementById('isOrganizer').click();}">
+  <input type="checkbox" id="isOrganizer" onchange="toggleOrganizer()" />
           <div class="organizer-toggle-text">
             <div class="organizer-toggle-label">Yes, I am the fair organizer or owner</div>
             <div class="organizer-toggle-sub">Check this to also request admin access for your fair. We will verify your identity before granting access.</div>
@@ -498,10 +498,9 @@
     }
 
     function toggleOrganizer() {
-      const cb = document.getElementById('isOrganizer');
-      cb.checked = !cb.checked;
-      document.getElementById('organizerSection').classList.toggle('show', cb.checked);
-    }
+  const cb = document.getElementById('isOrganizer');
+  document.getElementById('organizerSection').classList.toggle('show', cb.checked);
+}
 
     function addWeekend() {
       if (weekendCount > 10) { alert("Max 10 weekends reached."); return; }

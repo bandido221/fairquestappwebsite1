@@ -226,7 +226,7 @@
     </div>
 
     <div class="btn-row">
-      <button class="btn" id="btnBackToAdmin">⬅ Back to Admin Page</button>
+      <button class="btn" id="btnFairPage" style="background:#6b3fa0;">🖼️ Fair Page</button>
 
       <!-- ⚙️ Fair Settings dropdown -->
       <div class="dropdown-group" id="dropSettings">
@@ -401,10 +401,12 @@
         document.getElementById('navUpdateFair').href = `../fair_update.html?fair_id=${fairId}`;
       }
 
-      // Back button
-      document.getElementById('btnBackToAdmin').onclick = () => {
-        window.location.href = '../fair_admin.html';
-      };
+     // Fair Page button
+if (fairId) {
+ document.getElementById('btnFairPage').onclick = () => {
+  window.location.href = `/social/fairs/fair_profile_edit.html?fair_id=${fairId}`;
+};
+}
 
       if (!fairId) {
         showError('⚠️ Missing fair_id in URL.');

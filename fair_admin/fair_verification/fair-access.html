@@ -769,6 +769,8 @@ async function submitFairInfo() {
     return;
   }
 
+  sessionStorage.removeItem('fq_prefill_id');
+  sessionStorage.removeItem('fq_prefill_name');
   document.getElementById("modalFairName").textContent = fairNameVal;
   showSubmitModal();
   setTimeout(() => window.location.href = "https://www.fairquestapp.com/", 6000);
@@ -809,6 +811,55 @@ function addAnotherFairFromModal() {
   document.getElementById("stepFairForm").classList.remove("hidden");
 }
 
+async function prefillFairFromParams() {
+  const urlP = new URLSearchParams(window.location.search);
+  const prefillId   = urlP.get('prefill_id');
+  const prefillName = urlP.get('prefill_name');
+
+  // Also check sessionStorage (for after login/signup redirect)
+  const storedId   = sessionStorage.getItem('fq_prefill_id');
+  const storedName = sessionStorage.getItem('fq_prefill_name');
+
+  const id   = prefillId   || storedId;
+  const name = prefillName || storedName;
+
+  if (!id || !name) return;
+
+  // Save to sessionStorage so it survives login/signup
+  sessionStorage.setItem('fq_prefill_id', id);
+  sessionStorage.setItem('fq_prefill_name', name);
+
+  // Check if already claimed
+  const { data, error } = await supa.rpc('check_fair_admin_status', { p_fair_id: parseInt(id, 10) });
+  if (!error && data?.has_admin) {
+    document.getElementById('fairAlreadyClaimed').style.display = 'block';
+    document.getElementById('fairAlreadyClaimedName').textContent = name;
+    document.getElementById('fairFields').style.display = 'none';
+    document.getElementById('btnSubmit').disabled = true;
+    return;
+  }
+
+  // Pre-select the fair
+  document.getElementById('fairSearch').value = name;
+  document.getElementById('fairId').value = id;
+  document.getElementById('fairName').value = name;
+  document.getElementById('fairName').readOnly = true;
+  document.getElementById('fairFields').style.display = 'block';
+  document.getElementById('fairMatchedBadge').style.display = 'block';
+  document.getElementById('newFairNotice').style.display = 'none';
+  document.getElementById('fairAlreadyClaimed').style.display = 'none';
+
+  // Try to get city/state from DB
+  const { data: fairData } = await supa.from('renaissance_fairs')
+    .select('city, state')
+    .eq('id', parseInt(id, 10))
+    .maybeSingle();
+  if (fairData) {
+    document.getElementById('fairCity').value = fairData.city || '';
+    document.getElementById('fairState').value = fairData.state || '';
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   await loadTerms();
   const { data } = await supa.auth.getSession();
@@ -816,6 +867,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (session?.user) {
     document.getElementById("stepChoose").classList.add("hidden");
     document.getElementById("accountEmailDisplay").value = session.user.email || "";
+    await prefillFairFromParams();
     const { rows } = await loadPendingApplications(session.user.id);
     if (rows.length > 0) {
       renderPendingList(rows);
@@ -823,6 +875,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       document.getElementById("stepFairForm").classList.remove("hidden");
     }
+  } else {
+    // Not logged in — still pre-fill so they see it after login
+    await prefillFairFromParams();
   }
 });
 </script>

@@ -518,15 +518,22 @@ async function quickAssign() {
   if (!selectedFairId) { status.textContent = '⚠ Please select a fair.'; return; }
   if (!selectedUserId) { status.textContent = '⚠ Please select a user.'; return; }
 
-  const { error } = await supabase.rpc('assign_fair_admin', {
-    p_user_id: selectedUserId,
-    p_fair_id: parseInt(selectedFairId),
-    p_admin_level: role
-  });
+ const { error } = await supabase.rpc('assign_fair_admin', {
+  p_user_id: selectedUserId,
+  p_fair_id: parseInt(selectedFairId),
+  p_admin_level: role
+});
 
-  if (error) { status.textContent = '❌ Error: ' + error.message; return; }
+if (error) { status.textContent = '❌ Error: ' + error.message; return; }
 
-  status.textContent = '✅ Admin assigned successfully!';
+const { error: flagError } = await supabase
+  .from('renaissance_fairs')
+  .update({ approved_for_admin: true })
+  .eq('id', parseInt(selectedFairId));
+
+if (flagError) { status.textContent = '⚠ Admin assigned but fair flag failed.'; return; }
+
+status.textContent = '✅ Admin assigned successfully!';
   clearUser();
   await loadFairAdmins(selectedFairId);
 }
@@ -710,7 +717,7 @@ async function approve(verificationId, userId, fairId, fairName){
     return;
   }
 
-  var insertResp = await supabase.rpc(
+ var insertResp = await supabase.rpc(
   'assign_fair_admin',
   {
     p_user_id: userId,
@@ -719,11 +726,22 @@ async function approve(verificationId, userId, fairId, fairName){
   }
 );
 
-  if(insertResp.error){
-    console.error(insertResp.error);
-    alert('Error assigning admin.');
-    return;
-  }
+if(insertResp.error){
+  console.error(insertResp.error);
+  alert('Error assigning admin.');
+  return;
+}
+
+var flagResp = await supabase
+  .from('renaissance_fairs')
+  .update({ approved_for_admin: true })
+  .eq('id', finalFairId);
+
+if(flagResp.error){
+  console.error(flagResp.error);
+  alert('Admin assigned but could not flag fair. Please update manually.');
+  return;
+}
 
  var updateResp = await supabase.rpc(
   'approve_fair_verification',

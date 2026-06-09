@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fair Profile — Edit | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Domine:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --ink:         #1e1208;
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
+    body {
+      font-family: 'Domine', serif;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(13,10,4,0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; height: 56px;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 17px; color: var(--gold-light); letter-spacing: 0.05em; }
+    .topnav-right { display: flex; align-items: center; gap: 8px; }
+    .nav-btn {
+      font-family: 'Domine', serif; font-size: 13px; padding: 7px 14px;
+      border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+      background: transparent; color: var(--gold); cursor: pointer;
+      text-decoration: none; transition: background 0.2s, border-color 0.2s;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .nav-btn:hover { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.55); color: var(--gold-light); }
+    .nav-btn.logout { background: rgba(180,50,50,0.18); color: #f4a0a0; border-color: rgba(180,50,50,0.3); }
+    .nav-btn.logout:hover { background: rgba(180,50,50,0.32); }
+
+    /* ── ADMIN MODE BAR ── */
+    .admin-bar {
+      background: rgba(201,168,76,0.1);
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+      padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px; position: relative; z-index: 1;
+    }
+    .admin-bar-label { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; }
+    .admin-bar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .admin-pill {
+      font-family: 'Domine', serif; font-size: 13px; padding: 8px 14px; min-height: 44px;
+      border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+      background: transparent; color: var(--gold); cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+      transition: background 0.2s;
+    }
+    .admin-pill:hover { background: rgba(201,168,76,0.15); }
+    .admin-pill.live { background: rgba(46,125,50,0.15); border-color: rgba(46,125,50,0.35); color: #a0e0a0; }
+    .admin-pill.live:hover { background: rgba(46,125,50,0.25); }
+
+    /* ── PAGE ── */
+    .page {
+      position: relative; z-index: 1;
+      max-width: 680px; margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      text-align: center; margin-bottom: 28px;
+      animation: fadeDown 0.5s ease both;
+    }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 34px);
+      font-weight: 700; color: var(--gold-light);
+      letter-spacing: 0.04em; line-height: 1.2;
+    }
+    .page-header .subtitle { font-size: 14px; color: var(--gold); margin-top: 6px; opacity: 0.85; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card { animation: fadeUp 0.45s ease both; }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.12s; }
+    .card:nth-child(3) { animation-delay: 0.19s; }
+    .card:nth-child(4) { animation-delay: 0.26s; }
+    .card:nth-child(5) { animation-delay: 0.33s; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--parchment);
+      border-radius: var(--card-radius);
+      padding: 22px 20px; margin-bottom: 18px;
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
+      color: #111;
+    }
+    .card, .card * { color: #111 !important; }
+    /* exemptions */
+    .toggle-switch input { color: transparent !important; }
+    .publish-btn { color: #fff !important; }
+    .publish-btn * { color: #fff !important; }
+    .unpublish-btn { color: #fff !important; }
+
+    .card-title {
+      font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase; color: #111 !important;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.12); }
+
+    /* ── FAIR HERO (banner + avatar inside card) ── */
+    .fair-hero-card {
+      background: var(--parchment);
+      border-radius: var(--card-radius); overflow: hidden; margin-bottom: 18px;
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
+      animation: fadeUp 0.45s ease both;
+    }
+    .fair-banner-wrap {
+      position: relative; width: 100%; height: 160px;
+      background: linear-gradient(135deg, #1a1208, #2a1e0a); overflow: hidden;
+    }
+    .fair-banner-img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.8; }
+    .banner-edit-btn {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(13,10,4,0.8); border: 1px solid rgba(201,168,76,0.5);
+      color: var(--gold-light) !important; font-family: 'Domine', serif; font-size: 12px;
+      padding: 7px 12px; border-radius: 8px; cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 5px; min-height: 36px;
+    }
+    .banner-edit-btn:hover { background: rgba(201,168,76,0.25); }
+    .no-banner {
+      width: 100%; height: 100%; display: flex; align-items: center;
+      justify-content: center; flex-direction: column; gap: 8px;
+    }
+    .no-banner p { font-size: 13px; color: rgba(201,168,76,0.45); }
+
+    .fair-profile-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 20px; flex-wrap: wrap;
+    }
+    .fair-avatar-wrap { position: relative; flex-shrink: 0; }
+    .fair-avatar {
+      width: 80px; height: 80px; border-radius: 50%;
+      object-fit: cover; border: 3px solid var(--gold);
+      box-shadow: 0 0 0 4px rgba(201,168,76,0.2), 0 4px 14px rgba(0,0,0,0.4);
+      display: block; background: #1a1208;
+    }
+    .avatar-edit-btn {
+      position: absolute; bottom: -4px; right: -4px;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--gold-dark); border: 2px solid #fff;
+      color: #fff !important; font-size: 11px; display: flex; align-items: center;
+      justify-content: center; cursor: pointer; text-decoration: none;
+    }
+    .fair-info { flex: 1; min-width: 0; }
+    .fair-name-title {
+      font-family: 'Cinzel', serif; font-size: clamp(17px, 4.5vw, 22px);
+      font-weight: 700; color: #111 !important; line-height: 1.2; margin-bottom: 4px;
+    }
+    .fair-location { font-size: 13px; color: #444 !important; margin-bottom: 8px; }
+    .fair-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .tier-badge {
+      display: inline-block; padding: 3px 12px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; font-family: 'Cinzel', serif;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .tier-badge.gold   { background: #d4af37; color: #3b1f00; }
+    .tier-badge.silver { background: #c8d8e8; color: #1a3a5c; }
+    .tier-badge.standard { background: rgba(201,168,76,0.2); color: #5c3a1e; border: 1px solid rgba(201,168,76,0.4); }
+    .verified-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(46,125,50,0.15); border: 1px solid rgba(46,125,50,0.3);
+      color: #1b5e20 !important; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+    }
+    .unverified-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(230,100,0,0.1); border: 1px solid rgba(230,100,0,0.3);
+      color: #7a3300 !important; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+    }
+
+    /* ── PUBLISH BUTTON ── */
+    .publish-btn {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px; background: #2e7d32; border: none;
+      border-radius: 12px; cursor: pointer; font-family: 'Domine', serif;
+      font-size: 15px; font-weight: 700; color: #fff !important;
+      transition: background 0.15s, transform 0.1s; margin-bottom: 10px; min-height: 52px;
+    }
+    .publish-btn:hover { background: #1b5e20; transform: translateY(-1px); }
+    .unpublish-btn {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px; background: #c0392b; border: none;
+      border-radius: 12px; cursor: pointer; font-family: 'Domine', serif;
+      font-size: 15px; font-weight: 700; color: #fff !important;
+      transition: background 0.15s; margin-bottom: 10px; min-height: 52px;
+    }
+    .unpublish-btn:hover { background: #922b21; }
+
+    /* ── STATS GRID ── */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; margin-top: 0;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.85); border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 12px; padding: 12px 10px; text-align: center;
+    }
+    .stat-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+    .stat-val { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: #111 !important; line-height: 1; }
+    .stat-label { font-size: 11px; color: #111 !important; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ── INFO ROWS with toggle ── */
+    .info-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      background: rgba(255,255,255,0.85); border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; gap: 10px;
+    }
+    .info-row-content { flex: 1; min-width: 0; }
+    .info-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #555 !important; margin-bottom: 4px; }
+    .info-val { font-size: 14px; color: #111 !important; word-break: break-word; line-height: 1.5; }
+    .info-val a { color: #1a56a0 !important; }
+    .info-hidden { opacity: 0.4; }
+
+    /* ── TOGGLE SWITCH ── */
+    .toggle-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; padding-top: 2px; }
+    .toggle-label { font-size: 11px; color: #666 !important; white-space: nowrap; }
+    .toggle-switch { position: relative; display: inline-block; width: 38px; height: 22px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: #ccc; border-radius: 22px; transition: 0.3s;
+    }
+    .toggle-slider:before {
+      content: ''; position: absolute; height: 16px; width: 16px;
+      left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: #2e7d32; }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(16px); }
+
+    /* ── EDIT LINK ── */
+    .edit-link {
+      font-size: 12px; color: #1a56a0 !important; text-decoration: none; font-weight: 700;
+      padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(26,86,160,0.3);
+      background: rgba(26,86,160,0.08); white-space: nowrap; transition: background 0.15s;
+      display: inline-flex; align-items: center; gap: 5px; min-height: 44px;
+    }
+    .edit-link:hover { background: rgba(26,86,160,0.18); }
+
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
+    }
+
+    /* ── WEEKEND ROWS ── */
+    .weekend-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(255,255,255,0.85); border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;
+    }
+    .weekend-num { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: #555 !important; text-transform: uppercase; }
+    .weekend-dates { font-size: 14px; color: #111 !important; font-weight: 700; }
+
+    /* ── TEAM ROWS ── */
+    .team-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(255,255,255,0.85); border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;
+    }
+    .team-email { font-size: 14px; color: #111 !important; font-weight: 700; word-break: break-all; }
+    .team-level { font-size: 11px; color: #555 !important; text-transform: uppercase; background: rgba(0,0,0,0.07); padding: 3px 10px; border-radius: 999px; }
+
+    /* ── ACTION BUTTONS ── */
+    .role-btn {
+      display: flex; align-items: center; gap: 10px; padding: 14px;
+      background: rgba(255,255,255,0.85); border: 1.5px solid rgba(0,0,0,0.18);
+      border-radius: 12px; cursor: pointer; text-align: left;
+      transition: background 0.15s, transform 0.1s; width: 100%;
+      font-family: 'Domine', serif; margin-bottom: 10px; text-decoration: none;
+      min-height: 60px;
+    }
+    .role-btn:hover { background: rgba(255,255,255,1); transform: translateY(-1px); }
+    .role-btn:active { transform: scale(0.98); }
+    .role-btn.locked { opacity: 0.5; cursor: not-allowed; }
+    .role-btn.locked:hover { transform: none; background: rgba(255,255,255,0.85); }
+    .role-icon { font-size: 24px; flex-shrink: 0; }
+    .role-text { flex: 1; }
+    .role-name { font-size: 14px; font-weight: 700; color: #111 !important; line-height: 1.2; }
+    .role-sub { font-size: 11px; color: #111 !important; margin-top: 2px; }
+    .role-lock { font-size: 11px; color: #b85c00 !important; margin-top: 2px; font-weight: 700; }
+    .role-arrow { font-size: 16px; color: #111 !important; flex-shrink: 0; }
+
+    /* ── EMPTY MSG ── */
+    .empty-msg { font-size: 13px; color: #888 !important; font-style: italic; text-align: center; padding: 14px 0; }
+
+    /* ── SKELETON ── */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.08) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+      border-radius: 8px; height: 16px; margin: 6px 0;
+    }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+    /* ── LOADER ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loadingOverlay {
+      position: fixed; inset: 0; background: rgba(13,10,4,0.92);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; flex-direction: column; gap: 18px;
+    }
+    .spinner {
+      border: 4px solid rgba(201,168,76,0.2); border-top: 4px solid var(--gold);
+      border-radius: 50%; width: 48px; height: 48px; animation: spin 0.85s linear infinite;
+    }
+    #loadingOverlay p { font-family: 'Cinzel', serif; font-size: 14px; color: var(--gold); letter-spacing: 0.06em; }
+
+    /* ── FOOTER ── */
+    .footer-links {
+      text-align: center; margin-top: 28px; padding-top: 18px;
+      border-top: 1px solid rgba(201,168,76,0.15);
+      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    }
+    .footer-links a { color: var(--gold); font-size: 13px; text-decoration: none; opacity: 0.8; }
+    .footer-links a:hover { opacity: 1; text-decoration: underline; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 480px) {
+      .page { padding: 20px 12px 50px; }
+      .topnav { padding: 0 12px; }
+      .topnav-logo span { font-size: 15px; }
+      .topnav-right { gap: 6px; }
+      .nav-btn { font-size: 12px; padding: 6px 10px; }
+      .admin-bar { padding: 10px 12px; flex-direction: column; align-items: stretch; }
+      .admin-bar-actions { flex-direction: column; gap: 6px; }
+      .admin-pill { justify-content: center; }
+      .fair-banner-wrap { height: 130px; }
+      .fair-profile-row { padding: 14px; gap: 12px; }
+      .fair-avatar { width: 66px; height: 66px; }
+      .fair-name-title { font-size: 15px; }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .stat-val { font-size: 17px; }
+      .card { padding: 16px 14px; }
+    }
+
+    @media (max-width: 375px) {
+      .fair-name-title { font-size: 14px; }
+      .stat-val { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading your fair…</p>
+  </div>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <a href="/fair_admin/fair_admin.html" class="nav-btn">🏰 My Fairs</a>
+      <a href="#" id="navDashboard" class="nav-btn">📊 Dashboard</a>
+      <a href="#" onclick="logout(); return false;" class="nav-btn logout">Log Out</a>
+    </div>
+  </nav>
+
+  <div class="admin-bar">
+    <div class="admin-bar-label">⚙️ Edit Mode</div>
+    <div class="admin-bar-actions">
+      <a class="admin-pill" href="#" id="barUpdateFair">✏️ Update Info</a>
+      <a class="admin-pill" href="#" id="barUpdateDates">📅 Dates</a>
+      <a class="admin-pill live" href="#" id="barLivePage">🌐 Live Page</a>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <div class="page-header">
+      <h1>🏰 Fair Profile</h1>
+      <p class="subtitle" id="pageSubtitle">Edit Mode — Admin Only</p>
+    </div>
+
+    <!-- HERO CARD -->
+    <div class="fair-hero-card">
+      <div class="fair-banner-wrap">
+        <div class="no-banner" id="noBanner">
+          <span style="font-size:32px;">🏰</span>
+          <p>No banner — go to Update Info to add one</p>
+        </div>
+        <img id="bannerImg" class="fair-banner-img" src="" alt="" style="display:none;" />
+        <a class="banner-edit-btn" id="bannerEditBtn" href="#">✏️ Change Banner</a>
+      </div>
+      <div class="fair-profile-row">
+        <div class="fair-avatar-wrap">
+          <img id="fairAvatar" class="fair-avatar" src="/images/logo.png" alt="Fair" />
+          <a class="avatar-edit-btn" id="avatarEditBtn" href="#" title="Coming soon">✏️</a>
+        </div>
+        <div class="fair-info">
+          <div class="fair-name-title" id="fairNameTitle">Loading…</div>
+          <div class="fair-location" id="fairLocation"></div>
+          <div class="fair-badges">
+            <span id="verifiedBadge"></span>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUBLISH CARD -->
+    <div class="card">
+      <div class="card-title">🌐 Profile Status</div>
+      <div id="publishSection">
+        <div class="skeleton" style="height:52px; border-radius:12px;"></div>
+      </div>
+      <p style="font-size:12px; color:#666 !important; margin-top:8px; text-align:center;">
+        When published, your profile is visible to the public at your fair's live page.
+      </p>
+    </div>
+
+  
+
+    <!-- FAIR INFO CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Fair Info</div>
+        <a class="edit-link" id="editInfoLink" href="#">✏️ Edit</a>
+      </div>
+      <div id="infoRows">
+        <div class="skeleton" style="height:60px; border-radius:10px; margin-bottom:10px;"></div>
+        <div class="skeleton" style="height:60px; border-radius:10px; margin-bottom:10px;"></div>
+        <div class="skeleton" style="height:60px; border-radius:10px;"></div>
+      </div>
+    </div>
+
+    <!-- CONTACT CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📬 Contact</div>
+        <a class="edit-link" id="editContactLink" href="#">✏️ Edit</a>
+      </div>
+      <div id="contactRows">
+        <div class="skeleton" style="height:50px; border-radius:10px;"></div>
+      </div>
+    </div>
+
+    <!-- WEEKENDS CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📅 Weekends</div>
+        <a class="edit-link" id="editDatesLink" href="#">✏️ Edit Dates</a>
+      </div>
+      <div id="weekendsList">
+        <div class="skeleton" style="height:50px; border-radius:10px;"></div>
+      </div>
+    </div>
+
+    <!-- TEAM CARD -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">👥 Team</div>
+        <a class="edit-link" id="editTeamLink" href="#">Manage</a>
+      </div>
+      <div id="teamList"><div class="empty-msg">Loading…</div></div>
+    </div>
+
+   
+
+    <div class="footer-links">
+      <a href="/index.html">Home</a>
+      <a href="/terms.html">Terms</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/contact.html">Contact</a>
+    </div>
+
+  </div>
+
+  <script>
+    const sb = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    const params = new URLSearchParams(location.search);
+    const fairId = parseInt(params.get('fair_id'), 10);
+    let socialProfile = null;
+
+    function fmt(d) {
+      if (!d) return '';
+      const [y, m, dd] = d.split('-');
+      return `${m}-${dd}-${y.slice(-2)}`;
+    }
+
+    async function logout() {
+      await sb.auth.signOut();
+      location.href = '/index.html';
+    }
+
+    // Save a single visibility toggle to DB
+    async function saveToggle(field, value) {
+      const update = {};
+      update[field] = value;
+      await sb.from('social.fair_social_profile').update(update).eq('fair_id', fairId);
+    }
+
+    // Build a toggle switch
+    function buildToggle(field, currentVal, label) {
+      const id = `toggle_${field}`;
+      return `
+        <div class="toggle-wrap">
+          <span class="toggle-label">${currentVal ? 'Shown' : 'Hidden'}</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="${id}" ${currentVal ? 'checked' : ''}
+              onchange="handleToggle('${field}', this.checked, '${label}')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>`;
+    }
+
+    async function handleToggle(field, value, label) {
+      const el = document.getElementById(`toggle_${field}`);
+      const labelEl = el ? el.closest('.toggle-wrap').querySelector('.toggle-label') : null;
+      if (labelEl) labelEl.textContent = value ? 'Shown' : 'Hidden';
+
+      const update = {};
+      update[field] = value;
+      const { error } = await sb.rpc('update_fair_social_profile', { p_fair_id: fairId, p_data: update });
+      if (error) {
+        alert('Error saving. Please try again.');
+        if (el) { el.checked = !value; if (labelEl) labelEl.textContent = !value ? 'Shown' : 'Hidden'; }
+      }
+    }
+
+    async function togglePublish(currentlyPublished) {
+      const newVal = !currentlyPublished;
+      const { error } = await sb.rpc('update_fair_social_profile', { p_fair_id: fairId, p_data: { is_published: newVal } });
+      if (error) { alert('Error updating publish status.'); return; }
+      socialProfile.is_published = newVal;
+      renderPublishBtn(newVal);
+    }
+
+    function renderPublishBtn(isPublished) {
+      document.getElementById('publishSection').innerHTML = isPublished
+        ? `<button class="unpublish-btn" onclick="togglePublish(true)">🔴 Unpublish Profile</button>`
+        : `<button class="publish-btn" onclick="togglePublish(false)">🟢 Publish Profile — Go Live</button>`;
+    }
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { location.href = '/user_login.html'; return; }
+      if (!fairId)  { document.getElementById('loadingOverlay').style.display = 'none'; return; }
+
+      const { data: isAdmin } = await sb.rpc('check_fair_permission', { p_fair_id: fairId, p_permission: 'edit_fair_info' });
+      if (!isAdmin) { location.href = '/fair_admin/fair_admin.html'; return; }
+
+      const updateUrl = `/fair_admin/fair_update.html?fair_id=${fairId}`;
+      const dashUrl   = `/fair_admin/fair_info/fair_dashboard.html?fair_id=${fairId}`;
+      const liveUrl   = `/social/fairs/fair_profile.html?fair_id=${fairId}`;
+      const teamUrl   = `/fair_admin/fair_info/fair_team.html?fair_id=${fairId}`;
+
+      document.getElementById('navDashboard').href    = dashUrl;
+      document.getElementById('barUpdateFair').href   = updateUrl;
+      document.getElementById('barUpdateDates').href  = updateUrl;
+      document.getElementById('barLivePage').href     = liveUrl;
+      document.getElementById('bannerEditBtn').href   = updateUrl;
+      document.getElementById('avatarEditBtn').href   = updateUrl;
+      document.getElementById('editInfoLink').href    = updateUrl;
+      document.getElementById('editContactLink').href = updateUrl;
+      document.getElementById('editDatesLink').href   = updateUrl;
+      document.getElementById('editTeamLink').href    = teamUrl;
+
+   const [{ data: fair }, { data: sp }] = await Promise.all([
+  sb.from('renaissance_fairs').select('*').eq('id', fairId).single(),
+  sb.rpc('get_fair_social_profile', { p_fair_id: fairId }).single()
+]);
+
+      if (!fair || !sp) { document.getElementById('loadingOverlay').style.display = 'none'; return; }
+      socialProfile = sp;
+
+      const tier     = (fair.fair_tier || 'standard').toLowerCase();
+      const isGold   = tier === 'gold';
+      const isSilver = tier === 'silver' || isGold;
+
+      // BANNER
+      if (sp.banner_url) {
+        document.getElementById('bannerImg').src = sp.banner_url;
+        document.getElementById('bannerImg').style.display = 'block';
+        document.getElementById('noBanner').style.display = 'none';
+      }
+
+      // HEADER
+      document.getElementById('fairNameTitle').textContent = sp.display_name || '—';
+      document.getElementById('fairLocation').textContent  = [sp.city, sp.state].filter(Boolean).join(', ');
+      document.getElementById('pageSubtitle').textContent  = `Edit Mode — ${sp.is_published ? '🟢 Published' : '⚫ Unpublished'}`;
+      document.getElementById('verifiedBadge').innerHTML   = fair.verified
+        ? `<span class="verified-pill">✅ Verified</span>`
+        : `<span class="unverified-pill">⚠️ Unverified</span>`;
+   
+
+      // PUBLISH BTN
+      renderPublishBtn(sp.is_published);
+
+ 
+      const infoFields = [
+        { label:'Name',        val: sp.display_name,  field: null },
+        { label:'City / State',val: [sp.city, sp.state].filter(Boolean).join(', '), field: null },
+        { label:'Address',     val: sp.address,       field: 'show_address' },
+        { label:'Website',     val: sp.website_url,   field: 'show_website', link: true },
+        { label:'Hours',       val: sp.hours,         field: 'show_hours' },
+        { label:'Description', val: sp.description,   field: null, full: true },
+      ];
+
+      document.getElementById('infoRows').innerHTML = infoFields.map(f => {
+        const shown = f.field ? sp[f.field] : true;
+        const valHtml = f.link && f.val
+          ? `<a href="${f.val}" target="_blank">${f.val}</a>`
+          : (f.val || '<span style="color:#aaa;">Not set</span>');
+        return `
+          <div class="info-row ${!shown ? 'info-hidden' : ''}">
+            <div class="info-row-content">
+              <div class="info-label">${f.label}</div>
+              <div class="info-val">${valHtml}</div>
+            </div>
+            ${f.field ? buildToggle(f.field, shown, f.label) : ''}
+          </div>`;
+      }).join('');
+
+      // CONTACT ROWS with toggles
+      const contactFields = [
+        { label:'Contact Name',  val: sp.contact_name,  field: 'show_contact_name' },
+        { label:'Contact Email', val: sp.contact_email, field: 'show_contact_email' },
+        { label:'Phone',         val: sp.phone_number,  field: 'show_phone' },
+      ];
+
+      document.getElementById('contactRows').innerHTML = contactFields.map(f => {
+        const shown = sp[f.field];
+        return `
+          <div class="info-row ${!shown ? 'info-hidden' : ''}">
+            <div class="info-row-content">
+              <div class="info-label">${f.label}</div>
+              <div class="info-val">${f.val || '<span style="color:#aaa;">Not set</span>'}</div>
+            </div>
+            ${buildToggle(f.field, shown, f.label)}
+          </div>`;
+      }).join('');
+
+      // WEEKENDS
+      const wFields = [['start_date','end_date'], ...Array.from({length:4},(_,i)=>[`week${i+2}_start_date`,`week${i+2}_end_date`])];
+      const wRows = []; let wNum = 1;
+      wFields.forEach(([s,e]) => {
+        if (sp[s] && sp[e]) {
+          wRows.push(`<div class="weekend-row"><span class="weekend-num">Weekend ${wNum}</span><span class="weekend-dates">${fmt(sp[s])} → ${fmt(sp[e])}</span></div>`);
+          wNum++;
+        }
+      });
+      document.getElementById('weekendsList').innerHTML = wRows.length
+        ? wRows.join(``) + buildToggle('show_dates', sp.show_dates, 'Dates').replace('toggle-wrap', 'toggle-wrap" style="margin-top:10px; justify-content:flex-end;')
+        : `<div class="empty-msg">No dates yet. <a href="${updateUrl}" style="color:#1a56a0;">Add dates →</a></div>`;
+
+      // TEAM
+      const teamList = document.getElementById('teamList');
+      if (isSilver) {
+        const { data: team } = await sb.rpc('get_fair_admins', { p_fair_id: fairId });
+        teamList.innerHTML = (team && team.length)
+          ? team.map(m=>`<div class="team-row"><span class="team-email">${m.email||'—'}</span><span class="team-level">${m.admin_level||'staff'}</span></div>`).join('')
+          : `<div class="empty-msg">No team yet. <a href="${teamUrl}" style="color:#1a56a0;">Add members →</a></div>`;
+      } else {
+        teamList.innerHTML = `<div class="empty-msg">🔒 Team management requires Silver or Gold.</div>`;
+      }
+
+     
+
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    init();
+  </script>
+</body>
+</html>

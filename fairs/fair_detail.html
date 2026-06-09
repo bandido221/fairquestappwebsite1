@@ -448,7 +448,7 @@
 
   <div class="card" id="fairCard">
 
-    <p><strong></strong><br><img id="fairImage" src="" style="width:100%; max-width:600px; border-radius:10px; margin-top:10px;" /></p>
+    <p><strong></strong><br><img id="fairImage" src="" style="width:100%; max-width:600px; max-height:400px; object-fit:contain; border-radius:10px; margin-top:10px; background:#000;" /></p>
 <h2 id="fairName">Loading...</h2>
 <p id="descriptionRow" style="display:none;">
   <strong>📜 Description:</strong> <span id="fairDescription"></span>
@@ -489,6 +489,12 @@
     <p style="font-size:13px; color:var(--gold); margin-bottom:16px; line-height:1.6;">
       Let us know what looks incorrect and we'll review it. Be as specific as you can — e.g. "the start date is wrong, it should be June 14."
     </p>
+    <div id="reportAnonFields">
+      <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+        <input id="reporterName" type="text" placeholder="Your name (optional)" style="flex:1; min-width:140px; border-radius:8px; border:1px solid rgba(201,168,76,0.35); background:#0d0a04; color:var(--gold-light); font-family:'Domine',serif; font-size:13px; padding:9px 10px;" />
+        <input id="reporterEmail" type="email" placeholder="Your email (optional)" style="flex:1; min-width:140px; border-radius:8px; border:1px solid rgba(201,168,76,0.35); background:#0d0a04; color:var(--gold-light); font-family:'Domine',serif; font-size:13px; padding:9px 10px;" />
+      </div>
+    </div>
     <textarea id="reportText" rows="5" placeholder="What information is wrong? What should it be?" style="width:100%; border-radius:8px; border:1px solid rgba(201,168,76,0.35); background:#0d0a04; color:var(--gold-light); font-family:'Domine',serif; font-size:13px; padding:10px; resize:vertical;"></textarea>
     <div id="reportMsg" style="font-size:13px; margin-top:8px; min-height:18px;"></div>
     <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
@@ -852,9 +858,15 @@ function updateFavBtn(btn, isFav) {
   }
 }
 // ── REPORT WRONG INFO ────────────────────────────────────────
-function openReportModal() {
+async function openReportModal() {
   document.getElementById('reportText').value = '';
   document.getElementById('reportMsg').textContent = '';
+  document.getElementById('reporterName').value = '';
+  document.getElementById('reporterEmail').value = '';
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  document.getElementById('reportAnonFields').style.display = user ? 'none' : 'block';
+
   const m = document.getElementById('reportModal');
   m.style.display = 'flex';
 }
@@ -867,10 +879,31 @@ async function submitReport() {
   if (!text) { msgEl.style.color = '#cc4400'; msgEl.textContent = 'Please describe what is wrong.'; return; }
   msgEl.style.color = 'var(--gold)';
   msgEl.textContent = 'Submitting…';
+
+  let reporterName = null, reporterEmail = null;
+
   try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabaseClient
+        .from('app_users')
+        .select('first_name, last_name, email')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (profile) {
+        reporterName  = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || null;
+        reporterEmail = profile.email || user.email || null;
+      } else {
+        reporterEmail = user.email || null;
+      }
+    } else {
+      reporterName  = document.getElementById('reporterName').value.trim() || null;
+      reporterEmail = document.getElementById('reporterEmail').value.trim() || null;
+    }
+
     const { error } = await supabaseClient
       .from('fair_corrections')
-      .insert([{ fair_id: fairId, message: text }]);
+      .insert([{ fair_id: fairId, message: text, reporter_name: reporterName, reporter_email: reporterEmail }]);
     if (error) throw error;
     msgEl.style.color = '#2e7d32';
     msgEl.textContent = '✅ Thanks! We\'ll review this soon.';
@@ -884,10 +917,10 @@ async function submitReport() {
 
 // ── CLAIM FAIR BUTTON ────────────────────────────────────────
 function setupClaimButton(fairData) {
-  const btn = document.getElementById('claimFairBtn');
+  const claimBtn = document.getElementById('claimFairBtn');
   if (!fairData.approved_for_admin) {
-    btn.style.display = 'inline-flex';
-    btn.onclick = () => {
+    claimBtn.style.display = 'inline-flex';
+    claimBtn.onclick = () => {
       window.location.href = `/fair_admin/fair_verification/fair-access.html?prefill_id=${fairData.id}&prefill_name=${encodeURIComponent(fairData.name)}`;
     };
   }

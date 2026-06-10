@@ -763,11 +763,8 @@ document.getElementById('fairWebsite').innerHTML = data.website
   }
 
   function formatDate(d) {
-    const date = new Date(d);
-    const dd = String(date.getDate()).padStart(2, '0');
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const yy = String(date.getFullYear()).slice(-2);
-    return `${dd}-${mm}-${yy}`;
+    const [year, month, day] = d.split('-');
+    return `${day}-${month}-${String(year).slice(-2)}`;
   }
 
   const weekendFields = [

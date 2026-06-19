@@ -149,6 +149,13 @@
       <button id="removeImageBtn" class="button" style="display:none; background:#c0392b;">Remove Image</button>
       <img id="fairImagePreview" style="max-width:250px;margin-top:15px;display:none;border-radius:6px;">
 
+      <label style="margin-top:20px; display:block;">Profile Avatar (shown on your social profile):</label>
+      <div class="info" id="currentFairAvatar"></div>
+      <input type="file" id="fairAvatarFile" accept="image/*" style="display:none;">
+      <button class="button" onclick="document.getElementById('fairAvatarFile').click()">Upload Avatar</button>
+      <button id="removeAvatarBtn" class="button" style="display:none; background:#c0392b;">Remove Avatar</button>
+      <img id="fairAvatarPreview" style="max-width:150px;margin-top:15px;display:none;border-radius:50%;">
+
       <!-- ── CONTACTS SECTION ── -->
       <div class="contacts-section">
         <h3>📬 Contact Information</h3>
@@ -342,6 +349,16 @@ document.getElementById('currentFairHours').textContent       = fairData.hours  
 document.getElementById('currentFairImage').innerHTML = fairData.image_url
         ? `<img src="${fairData.image_url}" style="max-width:250px;border-radius:6px;">` : '';
 
+      // Load existing avatar from social profile
+      const { data: socialRows } = await sb.rpc('get_fair_social_profile', { p_fair_id: parseInt(fairId, 10) });
+      const socialData = Array.isArray(socialRows) ? socialRows[0] : socialRows;
+      if (socialData?.profile_image_url) {
+        document.getElementById('currentFairAvatar').innerHTML =
+          `<img src="${socialData.profile_image_url}" style="max-width:150px;border-radius:50%;">`;
+        document.getElementById('removeAvatarBtn').style.display = 'inline-block';
+        sessionStorage.setItem('fair_avatar_url', socialData.profile_image_url);
+      }
+
       if (fairData.hours && fairData.hours.includes("to")) {
         const parts = fairData.hours.split(" ");
         document.getElementById("hours_start_time").value  = parts[0];
@@ -396,6 +413,8 @@ document.getElementById('currentFairImage').innerHTML = fairData.image_url
       sessionStorage.setItem('fair_id', fairId);
 
       const fairImageURL = sessionStorage.getItem("fair_image_url") || document.querySelector("#currentFairImage img")?.src || "";
+      const fairAvatarURL = sessionStorage.getItem("fair_avatar_url") || document.querySelector("#currentFairAvatar img")?.src || "";
+      sessionStorage.setItem("fair_avatar_url_final", fairAvatarURL);
 
       const startTime = document.getElementById("hours_start_time").value.trim();
       const startAP   = document.getElementById("hours_start_ampm").value.trim();
@@ -455,6 +474,23 @@ description: document.getElementById('newFairDescription').value    || document.
       sessionStorage.setItem("update_fair_draft", JSON.stringify(tempDraft));
     });
 
+    document.getElementById("fairAvatarFile").addEventListener("change", async function(e) {
+      const file = e.target.files[0]; if (!file) return;
+      const compressed = await compressImage(file, 0.6);
+      const formData = new FormData();
+      formData.append("file", compressed); formData.append("upload_preset", uploadPreset);
+      const res  = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: formData });
+      const data = await res.json();
+      sessionStorage.setItem("fair_avatar_url", data.secure_url);
+      sessionStorage.setItem("uploaded_avatar_public_id", data.public_id);
+      document.getElementById("currentFairAvatar").innerHTML = `<img id="uploadedFairAvatar" src="${data.secure_url}" style="max-width:150px;border-radius:50%;">`;
+      document.getElementById("fairAvatarPreview").style.display = "none";
+      document.getElementById("removeAvatarBtn").style.display = "inline-block";
+      const tempDraft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
+      tempDraft.fair_avatar_url = data.secure_url;
+      sessionStorage.setItem("update_fair_draft", JSON.stringify(tempDraft));
+    });
+
     function compressImage(file, quality) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -482,6 +518,19 @@ description: document.getElementById('newFairDescription').value    || document.
       sessionStorage.removeItem("fair_image_url");
       const draft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
       delete draft.fair_image_url;
+      sessionStorage.setItem("update_fair_draft", JSON.stringify(draft));
+    };
+
+    document.getElementById("removeAvatarBtn").onclick = async function() {
+      document.getElementById("currentFairAvatar").innerHTML = "";
+      document.getElementById("removeAvatarBtn").style.display = "none";
+      document.getElementById("fairAvatarPreview").style.display = "none";
+      document.getElementById("fairAvatarPreview").src = "";
+      document.getElementById("fairAvatarFile").value = "";
+      sessionStorage.removeItem("uploaded_avatar_public_id");
+      sessionStorage.removeItem("fair_avatar_url");
+      const draft = JSON.parse(sessionStorage.getItem("update_fair_draft") || "{}");
+      delete draft.fair_avatar_url;
       sessionStorage.setItem("update_fair_draft", JSON.stringify(draft));
     };
 

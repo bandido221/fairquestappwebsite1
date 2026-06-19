@@ -252,6 +252,7 @@
       .nav-btn { font-size: 12px; padding: 6px 10px; }
       .fair-banner-wrap { height: 130px; }
       .fair-profile-row { padding: 14px; gap: 12px; }
+      .hero-about-section { padding: 0 14px 14px; }
       .fair-avatar { width: 66px; height: 66px; }
       .fair-name-title { font-size: 15px; }
       .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -263,6 +264,73 @@
       .fair-name-title { font-size: 14px; }
       .stat-val { font-size: 15px; }
     }
+.fav-btn-small {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 16px; background: rgba(255,255,255,0.85); border: 1.5px solid rgba(0,0,0,0.18);
+      border-radius: 999px; cursor: pointer; font-family: 'Domine', serif;
+      font-size: 13px; font-weight: 700; color: #111 !important;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .fav-btn-small:hover { background: rgba(255,255,255,1); }
+    .fav-btn-small.active { background: rgba(180,30,30,0.12); border-color: rgba(180,30,30,0.3); color: #cc0000 !important; }
+
+    .hero-top-row {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    }
+
+    .about-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .about-grid .info-item { margin-bottom: 0; padding: 8px 10px; }
+    .about-grid .info-label { margin-bottom: 2px; font-size: 10px; }
+    .about-grid .info-val { font-size: 13px; line-height: 1.4; }
+    .about-col-left { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .about-col-right .info-item { height: 100%; }
+
+    .weekend-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .weekend-grid .weekend-row { margin-bottom: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+
+    @media (max-width: 600px) {
+      .about-grid { grid-template-columns: 1fr; }
+      .about-col-left { grid-template-columns: 1fr 1fr; }
+      .weekend-grid { grid-template-columns: 1fr; }
+    }
+.hero-about-section {
+      padding: 0 20px 18px;
+    }
+.post-card-item {
+      position: relative;
+      background: rgba(255,255,255,0.85); border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px; padding: 14px; margin-bottom: 10px;
+    }
+    .post-menu-btn {
+      position: absolute; top: 8px; right: 8px;
+      width: 28px; height: 28px; border-radius: 50%;
+      border: none; background: rgba(0,0,0,0.06); color: #444;
+      font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .post-menu-btn:hover { background: rgba(0,0,0,0.12); }
+    .post-menu-dropdown {
+      display: none; position: absolute; top: 38px; right: 8px;
+      background: #fff; border: 1px solid rgba(0,0,0,0.15); border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.2); min-width: 140px; z-index: 10; overflow: hidden;
+    }
+    .post-menu-dropdown.show { display: block; }
+    .post-menu-dropdown button {
+      width: 100%; text-align: left; padding: 10px 14px; border: none; background: none;
+      font-family: 'Domine', serif; font-size: 13px; cursor: pointer; color: #111;
+    }
+    .post-menu-dropdown button:hover { background: rgba(0,0,0,0.05); }
+    .post-menu-dropdown button.delete-opt { color: #c0392b; }
+
+    .composer-box textarea {
+      width: 100%; border-radius: 10px; border: 1px solid rgba(0,0,0,0.18);
+      background: rgba(255,255,255,0.85); color: #111; font-family: 'Domine', serif;
+      font-size: 14px; padding: 12px; resize: vertical; box-sizing: border-box;
+    }
+
   </style>
 </head>
 <body>
@@ -279,6 +347,8 @@
     </a>
     <div class="topnav-right">
       <a href="/fairs/explore.html" class="nav-btn">🎪 Fairs</a>
+      <a href="#" class="nav-btn" id="navEditProfile" style="display:none;">✏️ Update Fair Page</a>
+      <a href="#" class="nav-btn" id="navDashboard" style="display:none;">📊 Dashboard</a>
       <a href="/profile/index.html" class="nav-btn" id="navProfile" style="display:none;">👤 Profile</a>
     </div>
   </nav>
@@ -315,16 +385,11 @@
         return;
       }
 
-      // Load social profile — public read only works if is_published = true
-      const { data: sp, error } = await sb
-        .schema('social')
-        .from('fair_social_profile')
-        .select('*')
-        .eq('fair_id', fairId)
-        .eq('is_published', true)
-        .single();
+      // Load social profile via RPC (Supabase JS v2 doesn't support .schema().from())
+      const { data: spRows, error } = await sb.rpc('get_fair_social_profile', { p_fair_id: fairId });
+      const sp = Array.isArray(spRows) ? spRows[0] : spRows;
 
-      if (error || !sp) {
+      if (error || !sp || !sp.is_published) {
         renderComingSoon();
         return;
       }
@@ -337,6 +402,7 @@
         .single();
 
      const tier = (fair?.fair_tier || 'standard').toLowerCase();
+     const isGold = tier === 'gold';
 
       renderProfile(sp, fair, tier, isGold, session);
       document.getElementById('loadingOverlay').style.display = 'none';
@@ -376,7 +442,7 @@
         <p class="subtitle">${[sp.city, sp.state].filter(Boolean).join(', ')}</p>`;
       page.appendChild(header);
 
-      // HERO CARD
+      // HERO CARD (with inline favorite button)
       const heroCard = document.createElement('div');
       heroCard.className = 'fair-hero-card';
       heroCard.innerHTML = `
@@ -389,42 +455,39 @@
         <div class="fair-profile-row">
           <img class="fair-avatar" src="${sp.profile_image_url || '/images/logo.png'}" alt="Fair" />
           <div class="fair-info">
-            <div class="fair-name-title">${sp.display_name || '—'}</div>
-            <div class="fair-location">${[sp.city, sp.state].filter(Boolean).join(', ')}</div>
+            <div class="hero-top-row">
+              <div>
+                <div class="fair-name-title">${sp.display_name || '—'}</div>
+                <div class="fair-location">${[sp.city, sp.state].filter(Boolean).join(', ')}</div>
+              </div>
+              <button class="fav-btn-small" id="favBtn" onclick="toggleFavorite()">❤️ Save</button>
+            </div>
             <div class="fair-badges">
               ${fair?.verified ? `<span class="verified-pill">✅ Verified</span>` : ''}
-              <span class="tier-badge ${tier}">${tier.charAt(0).toUpperCase() + tier.slice(1)}</span>
             </div>
           </div>
-        </div>`;
+        </div>
+        ${(sp.show_address && sp.address) || (sp.show_hours && sp.hours) || sp.description ? `
+          <div class="hero-about-section">
+            <div class="about-grid">
+              ${sp.show_address && sp.address ? `
+                <div class="info-item">
+                  <div class="info-label">📍 Address</div>
+                  <div class="info-val"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([sp.address, sp.city, sp.state].filter(Boolean).join(', '))}" target="_blank" rel="noopener">${[sp.address, sp.city, sp.state].filter(Boolean).join(', ')}</a></div>
+                </div>` : `<div></div>`}
+              ${sp.show_hours && sp.hours ? `
+                <div class="info-item">
+                  <div class="info-label">🕒 Hours</div>
+                  <div class="info-val">${sp.hours}</div>
+                </div>` : `<div></div>`}
+            </div>
+            ${sp.description ? `
+              <div class="info-item" style="margin-top:10px;">
+                <div class="info-label">📜 Description</div>
+                <div class="info-val">${sp.description}</div>
+              </div>` : ''}
+          </div>` : ''}`;
       page.appendChild(heroCard);
-
-     // FAVORITE CARD (all fairs)
-const actCard = document.createElement('div');
-actCard.className = 'card';
-actCard.innerHTML = `
-  <button class="fav-btn" id="favBtn" onclick="toggleFavorite()">❤️ Save to Favorites</button>`;
-page.appendChild(actCard);
-
-      // FAIR INFO CARD
-      const infoFields = [];
-      if (sp.description) infoFields.push({ label:'About', val: sp.description });
-      if (sp.show_address && sp.address) infoFields.push({ label:'Address', val: [sp.address, sp.city, sp.state].filter(Boolean).join(', ') });
-      if (sp.show_website && sp.website_url) infoFields.push({ label:'Website', val: sp.website_url, link: true });
-      if (sp.show_hours && sp.hours) infoFields.push({ label:'Hours', val: sp.hours });
-
-      if (infoFields.length) {
-        const infoCard = document.createElement('div');
-        infoCard.className = 'card';
-        infoCard.innerHTML = `
-          <div class="card-title">📋 About This Fair</div>
-          ${infoFields.map(f => `
-            <div class="info-item">
-              <div class="info-label">${f.label}</div>
-              <div class="info-val">${f.link ? `<a href="${f.val}" target="_blank">${f.val}</a>` : f.val}</div>
-            </div>`).join('')}`;
-        page.appendChild(infoCard);
-      }
 
       // CONTACT CARD
       const contactFields = [];
@@ -445,7 +508,7 @@ page.appendChild(actCard);
         page.appendChild(contactCard);
       }
 
-      // WEEKENDS CARD
+      // WEEKENDS CARD — 2 column grid
       if (sp.show_dates) {
         const wFields = [['start_date','end_date'], ...Array.from({length:4},(_,i)=>[`week${i+2}_start_date`,`week${i+2}_end_date`])];
         const wRows = []; let wNum = 1;
@@ -458,10 +521,21 @@ page.appendChild(actCard);
         if (wRows.length) {
           const dateCard = document.createElement('div');
           dateCard.className = 'card';
-          dateCard.innerHTML = `<div class="card-title">📅 Weekends</div>${wRows.join('')}`;
+          dateCard.innerHTML = `<div class="card-title">📅 Weekends</div><div class="weekend-grid">${wRows.join('')}</div>`;
           page.appendChild(dateCard);
         }
       }
+
+      // POSTS CARD (with composer for admins)
+      const postsCard = document.createElement('div');
+      postsCard.className = 'card';
+      postsCard.innerHTML = `
+        <div class="card-title">📝 Updates</div>
+        <div id="composerWrap"></div>
+        <div id="postsList"><div class="empty-msg" style="font-size:13px; color:#888; text-align:center; padding:14px 0;">Loading…</div></div>`;
+      page.appendChild(postsCard);
+      checkIsAdminAndRenderComposer();
+      loadFairPosts();
 
       // FOOTER
       const footer = document.createElement('div');
@@ -484,15 +558,242 @@ page.appendChild(actCard);
         if (isFav) {
           await sb.rpc('app_remove_favorite', { p_entity_type: 'fair', p_entity_id: fairId.toString() });
           btn.classList.remove('active');
-          btn.textContent = '❤️ Save to Favorites';
+          btn.innerHTML = '❤️ Save';
         } else {
           await sb.rpc('app_add_favorite', { p_entity_type: 'fair', p_entity_id: fairId.toString() });
           btn.classList.add('active');
-          btn.textContent = '💔 Remove from Favorites';
+          btn.innerHTML = '💔 Saved';
         }
       } catch(e) { console.error(e); }
     }
+async function loadFairPosts() {
+      const { data, error } = await sb.rpc('get_fair_posts', { p_fair_id: fairId, p_limit: 10, p_offset: 0 });
+      const list = document.getElementById('postsList');
+      if (!list) return;
 
+      if (error || !data || !data.length) {
+        list.innerHTML = `<div style="font-size:13px; color:#888; text-align:center; padding:14px 0;">No updates yet.</div>`;
+        return;
+      }
+
+      list.innerHTML = data.map(p => {
+        const date = new Date(p.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        const menuHtml = isFairAdmin ? `
+          <button class="post-menu-btn" onclick="togglePostMenu('${p.id}')">⋯</button>
+          <div class="post-menu-dropdown" id="postMenu-${p.id}">
+            <button onclick="startEditPost('${p.id}')">✏️ Edit</button>
+            <button class="delete-opt" onclick="confirmDeletePost('${p.id}')">🗑️ Delete</button>
+          </div>` : '';
+
+        return `
+          <div class="post-card-item">
+            ${menuHtml}
+            <div style="font-size:11px; color:#666; margin-bottom:6px;">${date}${p.is_edited ? ' · edited' : ''}</div>
+            <div class="post-view-${p.id}">
+              ${p.content ? `<div style="font-size:14px; color:#111; line-height:1.5; white-space:pre-wrap; margin-bottom:${p.image_url ? '10px' : '0'};">${escapeHtml(p.content)}</div>` : ''}
+              ${p.image_url ? `<img src="${p.image_url}" style="width:100%; max-height:320px; object-fit:cover; border-radius:8px; display:block;" />` : ''}
+            </div>
+            ${isFairAdmin ? `
+              <div class="post-edit-${p.id}" style="display:none;">
+                <textarea id="editTextarea-${p.id}" rows="3" style="width:100%; border-radius:10px; border:1px solid rgba(0,0,0,0.18); background:rgba(255,255,255,0.85); color:#111; font-family:'Domine',serif; font-size:14px; padding:10px; resize:vertical; box-sizing:border-box; margin-bottom:8px;">${escapeHtml(p.content)}</textarea>
+                <div style="display:flex; gap:8px;">
+                  <button class="apply-btn" style="width:auto; padding:8px 16px; min-height:auto;" onclick="saveEditPost('${p.id}')">💾 Save</button>
+                  <button style="background:none; border:1px solid rgba(0,0,0,0.2); border-radius:8px; padding:8px 16px; font-family:'Domine',serif; font-size:13px; cursor:pointer;" onclick="cancelEditPost('${p.id}')">Cancel</button>
+                </div>
+                <div id="editMsg-${p.id}" style="font-size:12px; margin-top:6px;"></div>
+              </div>` : ''}
+          </div>`;
+      }).join('');
+    }
+    let isFairAdmin = false;
+    let selectedPostImage = null;
+
+    async function checkIsAdminAndRenderComposer() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { isFairAdmin = false; return; }
+
+      const { data: allowed } = await sb.rpc('check_fair_permission', { p_fair_id: fairId, p_permission: 'edit_fair_info' });
+      isFairAdmin = !!allowed;
+      if (!isFairAdmin) return;
+
+      document.getElementById('navEditProfile').href = `/social/fairs/fair_profile_edit.html?fair_id=${fairId}`;
+      document.getElementById('navEditProfile').style.display = 'inline-flex';
+      document.getElementById('navDashboard').href = `/fair_admin/fair_info/fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('navDashboard').style.display = 'inline-flex';
+
+      document.getElementById('composerWrap').innerHTML = `
+        <div class="composer-box" style="margin-bottom:14px;">
+          <textarea id="postContent" placeholder="Share an update with visitors…" rows="3"></textarea>
+          <div id="postImagePreviewWrap" style="display:none; margin-top:10px; position:relative;">
+            <img id="postImagePreview" style="width:100%; max-height:220px; object-fit:cover; border-radius:10px; display:block;" />
+            <button type="button" id="removePostImageBtn" style="position:absolute; top:8px; right:8px; width:30px; height:30px; border-radius:50%; border:none; background:rgba(0,0,0,0.65); color:#fff; font-size:14px; cursor:pointer;">✕</button>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; flex-wrap:wrap; gap:10px;">
+            <input type="file" id="postImageInput" accept="image/*" style="display:none;">
+            <button type="button" id="addPostImageBtn" style="background:rgba(26,86,160,0.08); border:1px solid rgba(26,86,160,0.3); color:#1a56a0; border-radius:8px; padding:8px 14px; font-size:12px; cursor:pointer; font-family:'Domine',serif;">🖼️ Add Image</button>
+            <button type="button" id="submitPostBtn" class="apply-btn" style="width:auto; padding:9px 20px; min-height:auto;">📬 Post</button>
+          </div>
+          <div id="postStatusMsg" style="font-size:12px; margin-top:8px; min-height:16px;"></div>
+        </div>`;
+
+      wireComposerEvents();
+    }
+
+    function resizePostImage(file) {
+      const MAX_SIZE = 1200, QUALITY = 0.82;
+      return new Promise((resolve) => {
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = e => { img.src = e.target.result; };
+        img.onload = () => {
+          let width = img.width, height = img.height;
+          if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } }
+          else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          canvas.toBlob(blob => {
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }));
+          }, 'image/jpeg', QUALITY);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function wireComposerEvents() {
+      document.getElementById('addPostImageBtn').addEventListener('click', () => {
+        document.getElementById('postImageInput').click();
+      });
+
+      document.getElementById('postImageInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        selectedPostImage = file;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          document.getElementById('postImagePreview').src = ev.target.result;
+          document.getElementById('postImagePreviewWrap').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      });
+
+      document.getElementById('removePostImageBtn').addEventListener('click', () => {
+        selectedPostImage = null;
+        document.getElementById('postImageInput').value = '';
+        document.getElementById('postImagePreviewWrap').style.display = 'none';
+        document.getElementById('postImagePreview').src = '';
+      });
+
+      document.getElementById('submitPostBtn').addEventListener('click', async () => {
+        const content = document.getElementById('postContent').value.trim();
+        const statusEl = document.getElementById('postStatusMsg');
+        if (!content && !selectedPostImage) {
+          statusEl.style.color = '#c0392b';
+          statusEl.textContent = 'Write something or add an image first.';
+          return;
+        }
+
+        const btn = document.getElementById('submitPostBtn');
+        btn.disabled = true;
+        statusEl.style.color = '#666';
+        statusEl.textContent = 'Posting…';
+
+        try {
+          let imageUrl = null;
+          if (selectedPostImage) {
+            const { data: { user } } = await sb.auth.getUser();
+            const resized = await resizePostImage(selectedPostImage);
+            const fileName = `${crypto.randomUUID()}.jpg`;
+            const filePath = `${user.id}/${fileName}`;
+
+            const { error: uploadError } = await sb.storage.from('social-portrait-gallery').upload(filePath, resized);
+            if (uploadError) throw uploadError;
+
+            const { data: urlData } = sb.storage.from('social-portrait-gallery').getPublicUrl(filePath);
+            imageUrl = urlData?.publicUrl || null;
+          }
+
+          const { error } = await sb.rpc('create_social_post', {
+            p_content: content,
+            p_audience: 'public',
+            p_image_url: imageUrl,
+            p_vpa_id: null,
+            p_fair_id: fairId
+          });
+          if (error) throw error;
+
+          statusEl.style.color = '#2e7d32';
+          statusEl.textContent = '✅ Posted!';
+          document.getElementById('postContent').value = '';
+          document.getElementById('removePostImageBtn').click();
+          setTimeout(() => { statusEl.textContent = ''; }, 2500);
+          await loadFairPosts();
+        } catch (e) {
+          console.error(e);
+          statusEl.style.color = '#c0392b';
+          statusEl.textContent = '❌ Something went wrong. Please try again.';
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function togglePostMenu(postId) {
+      document.querySelectorAll('.post-menu-dropdown').forEach(d => {
+        if (d.id !== `postMenu-${postId}`) d.classList.remove('show');
+      });
+      document.getElementById(`postMenu-${postId}`).classList.toggle('show');
+    }
+
+    function startEditPost(postId) {
+      document.getElementById(`postMenu-${postId}`).classList.remove('show');
+      document.querySelector(`.post-view-${postId}`).style.display = 'none';
+      document.querySelector(`.post-edit-${postId}`).style.display = 'block';
+    }
+
+    function cancelEditPost(postId) {
+      document.querySelector(`.post-view-${postId}`).style.display = 'block';
+      document.querySelector(`.post-edit-${postId}`).style.display = 'none';
+    }
+
+    async function saveEditPost(postId) {
+      const textarea = document.getElementById(`editTextarea-${postId}`);
+      const msgEl = document.getElementById(`editMsg-${postId}`);
+      const content = textarea.value.trim();
+      if (!content) {
+        msgEl.style.color = '#c0392b';
+        msgEl.textContent = 'Post content cannot be empty.';
+        return;
+      }
+      msgEl.style.color = '#666';
+      msgEl.textContent = 'Saving…';
+
+      const { error } = await sb.rpc('update_social_post', { p_post_id: postId, p_content: content });
+      if (error) {
+        msgEl.style.color = '#c0392b';
+        msgEl.textContent = '❌ ' + error.message;
+        return;
+      }
+      await loadFairPosts();
+    }
+
+    async function confirmDeletePost(postId) {
+      document.getElementById(`postMenu-${postId}`).classList.remove('show');
+      if (!confirm('Delete this post? This cannot be undone.')) return;
+      const { error } = await sb.rpc('delete_post_soft', { p_post_id: postId });
+      if (error) { alert('Error deleting post: ' + error.message); return; }
+      await loadFairPosts();
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.post-menu-btn') && !e.target.closest('.post-menu-dropdown')) {
+        document.querySelectorAll('.post-menu-dropdown').forEach(d => d.classList.remove('show'));
+      }
+    });
     init();
   </script>
 </body>

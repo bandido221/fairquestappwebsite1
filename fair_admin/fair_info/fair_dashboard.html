@@ -401,10 +401,16 @@
         document.getElementById('navUpdateFair').href = `../fair_update.html?fair_id=${fairId}`;
       }
 
-     // Fair Page button
+     // Fair Page button — go live page if published, otherwise edit page
 if (fairId) {
- document.getElementById('btnFairPage').onclick = () => {
-  window.location.href = `/social/fairs/fair_profile_edit.html?fair_id=${fairId}`;
+ document.getElementById('btnFairPage').onclick = async () => {
+  const { data: spRows } = await supabaseClient.rpc('get_fair_social_profile', { p_fair_id: fairId });
+  const sp = Array.isArray(spRows) ? spRows[0] : spRows;
+  if (sp && sp.is_published) {
+    window.location.href = `/social/fairs/fair_profile.html?fair_id=${fairId}`;
+  } else {
+    window.location.href = `/social/fairs/fair_profile_edit.html?fair_id=${fairId}`;
+  }
 };
 }
 

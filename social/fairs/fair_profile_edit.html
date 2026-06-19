@@ -457,7 +457,7 @@
       </p>
     </div>
 
-  
+    
 
     <!-- FAIR INFO CARD -->
     <div class="card">
@@ -494,14 +494,7 @@
       </div>
     </div>
 
-    <!-- TEAM CARD -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">👥 Team</div>
-        <a class="edit-link" id="editTeamLink" href="#">Manage</a>
-      </div>
-      <div id="teamList"><div class="empty-msg">Loading…</div></div>
-    </div>
+    
 
    
 
@@ -606,7 +599,7 @@
       document.getElementById('editInfoLink').href    = updateUrl;
       document.getElementById('editContactLink').href = updateUrl;
       document.getElementById('editDatesLink').href   = updateUrl;
-      document.getElementById('editTeamLink').href    = teamUrl;
+      
 
    const [{ data: fair }, { data: sp }] = await Promise.all([
   sb.from('renaissance_fairs').select('*').eq('id', fairId).single(),
@@ -625,6 +618,11 @@
         document.getElementById('bannerImg').src = sp.banner_url;
         document.getElementById('bannerImg').style.display = 'block';
         document.getElementById('noBanner').style.display = 'none';
+      }
+
+      // AVATAR
+      if (sp.profile_image_url) {
+        document.getElementById('fairAvatar').src = sp.profile_image_url;
       }
 
       // HEADER
@@ -696,16 +694,7 @@
         ? wRows.join(``) + buildToggle('show_dates', sp.show_dates, 'Dates').replace('toggle-wrap', 'toggle-wrap" style="margin-top:10px; justify-content:flex-end;')
         : `<div class="empty-msg">No dates yet. <a href="${updateUrl}" style="color:#1a56a0;">Add dates →</a></div>`;
 
-      // TEAM
-      const teamList = document.getElementById('teamList');
-      if (isSilver) {
-        const { data: team } = await sb.rpc('get_fair_admins', { p_fair_id: fairId });
-        teamList.innerHTML = (team && team.length)
-          ? team.map(m=>`<div class="team-row"><span class="team-email">${m.email||'—'}</span><span class="team-level">${m.admin_level||'staff'}</span></div>`).join('')
-          : `<div class="empty-msg">No team yet. <a href="${teamUrl}" style="color:#1a56a0;">Add members →</a></div>`;
-      } else {
-        teamList.innerHTML = `<div class="empty-msg">🔒 Team management requires Silver or Gold.</div>`;
-      }
+      
 
      
 

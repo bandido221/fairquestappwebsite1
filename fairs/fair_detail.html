@@ -705,6 +705,16 @@ loadFair = async function() {
     return;
   }
 
+  // Redirect to social profile page only if fair has admin AND a published profile
+  if (data.approved_for_admin) {
+    const { data: spRows } = await supabaseClient.rpc('get_fair_social_profile', { p_fair_id: parseInt(fairId, 10) });
+    const sp = Array.isArray(spRows) ? spRows[0] : spRows;
+    if (sp && sp.is_published) {
+      window.location.href = `/social/fairs/fair_profile.html?fair_id=${fairId}`;
+      return;
+    }
+  }
+
   document.getElementById('fairName').textContent = data.name;
 
   // Unverified notice

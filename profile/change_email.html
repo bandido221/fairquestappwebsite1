@@ -170,13 +170,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
-const supabase = window.supabase.createClient(
+const supabaseClient = window.supabase.createClient(
   'https://awtbjuiqgtdydsqzimul.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
 );
 
 async function loadCurrentUser() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   document.getElementById('currentEmail').textContent = user ? user.email : 'Not logged in';
 }
 
@@ -187,7 +187,7 @@ async function changeEmail() {
     return;
   }
 
-  const { error } = await supabase.auth.updateUser({ email: newEmail });
+  const { error } = await supabaseClient.auth.updateUser({ email: newEmail });
 
   if (error) {
     document.getElementById('statusMessage').innerHTML = '❌ ' + error.message;

@@ -194,10 +194,10 @@ async function changeEmail() {
   } else {
     document.getElementById('statusMessage').innerHTML = `
       ✅ <strong>Email change requested!</strong><br><br>
-      We sent a confirmation link to <strong>${newEmail}</strong>.<br><br>
-      Click that link to confirm the change. Once confirmed, you will need to
+      We sent confirmation links to <strong>both</strong> your current email and <strong>${newEmail}</strong>.<br><br>
+      You must click the link in <strong>both</strong> emails before the change takes effect. Once confirmed, you will need to
       use <strong>${newEmail}</strong> to log in going forward.<br><br>
-      Your email will <strong>not</strong> change until you click the confirmation link.
+      Your email will <strong>not</strong> change until both links are clicked.
     `;
   }
 }

@@ -311,8 +311,19 @@ a.button:hover {
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
   );
 
+  let isSubmittingContactForm = false;
+
   document.getElementById('contactForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+
+    if (isSubmittingContactForm) return;
+    isSubmittingContactForm = true;
+
+    const submitBtn = document.querySelector('#contactForm .submit-btn');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+    }
 
     const name    = document.getElementById('name').value.trim();
     const email   = document.getElementById('email').value.trim();
@@ -326,6 +337,11 @@ a.button:hover {
     if (error) {
       alert('Something went wrong. Please email us directly at fairquestapp@gmail.com');
       console.error(error);
+      isSubmittingContactForm = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✉️ Send Message';
+      }
       return;
     }
 

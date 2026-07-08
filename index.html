@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FairQuest | Discover Renaissance Fairs FairQuest App | Renaissance Fair Finder & Festival Companion</title>
 
-    <!-- Google verification for AdSense -->
-  <meta name="google-adsense-account" content="ca-pub-3110601517763616">
+    
 
   <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  
 
     <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-HP222J86X0"></script>
@@ -21,8 +22,7 @@
     gtag('config', 'G-HP222J86X0');
   </script>
 
- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3110601517763616"
-     crossorigin="anonymous"></script>
+ 
 
 <style>
   *, *::before, *::after { box-sizing: border-box; }
@@ -97,7 +97,7 @@
     gap: 8px;
   }
 
-  .menu-left a, .menu-right a {
+  .menu-left a:not(.topnav-logo), .menu-right a {
     color: var(--gold);
     font-family: 'Cinzel', serif;
     font-size: 0.95rem;
@@ -110,7 +110,7 @@
     transition: background 0.2s, border-color 0.2s, color 0.2s;
   }
 
-  .menu-left a:hover, .menu-right a:hover {
+  .menu-left a:not(.topnav-logo):hover, .menu-right a:hover {
     background: rgba(201,168,76,0.12);
     border-color: rgba(201,168,76,0.55);
     color: var(--gold-light);
@@ -118,6 +118,24 @@
 
   .menu-btn {
     background: rgba(201,168,76,0.10) !important;
+  }
+
+  .topnav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .topnav-logo img.logo-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(201,168,76,0.3);
+  }
+  .topnav-logo img.menu-banner {
+    height: 30px;
+    width: auto;
+    border-radius: 6px;
   }
 
   .menu-email-bar {
@@ -337,10 +355,9 @@
   }
 
   .social-icons a {
-    display: inline-block;
+    display: inline-flex;
     margin: 0 10px;
     color: var(--gold-light);
-    font-size: 24px;
     transition: color 0.3s;
   }
 
@@ -542,8 +559,9 @@
   <div class="menu-inner">
     <div class="menu-row-1">
       <div class="menu-left">
-        <a class="menu-btn" href="/index.html">
-          <img src="/images/logo.png" alt="FairQuest" style="height:22px; vertical-align:middle; margin-right:6px;">
+        <a class="topnav-logo" href="/index.html">
+          <img src="/images/logo.png" alt="FairQuest" class="logo-icon" />
+          <img src="images/banner.png" alt="FairQuest" class="menu-banner" />
         </a>
         <a class="menu-btn" href="/fairs/explore.html">🔍 Fairs</a>
         <a class="menu-btn" id="topMenuSocialButton" href="#" onclick="openSocial()" style="display:none;">👥 Social</a>
@@ -556,9 +574,7 @@
   </div>
 </div>
 
-  <img src="images/banner.png" alt="FairQuest Banner" class="top-banner" />
   <header>
-    <img src="images/logo.png" alt="FairQuest Logo" class="logo" />
     <h1>Welcome to FairQuest</h1>
     <p>
       Your gateway to magical weekends! Discover upcoming Renaissance fairs, apply as a vendor or performer,
@@ -786,21 +802,7 @@ function applyManualLocation() {
   </p>
 </section>
 
-  <div id="ad-container" style="max-width:700px; margin:0 auto;">
-
-    <ins class="adsbygoogle"
-         style="display:block; text-align:center; min-height:90px;"
-         data-ad-client="ca-pub-3110601517763616"
-         data-ad-slot="4178733051"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
- 
-  </div>
-
-
-  <script>
-    (adsbygoogle = window.adsbygoogle || []).push({});
-  </script>
+  
 
 
 
@@ -817,8 +819,12 @@ function applyManualLocation() {
     <a href="faq.html">FAQ</a> |
 
     <div class="social-icons">
-      <a href="https://www.facebook.com/fairquestapp/" target="_blank" aria-label="Facebook"><i class="fa fa-facebook"></i></a>
-      <a href="https://www.instagram.com/YourFairQuestPage" target="_blank" aria-label="Instagram"><i class="fa fa-instagram"></i></a>
+      <a href="https://www.facebook.com/fairquestapp/" target="_blank" aria-label="Facebook">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12.06C22 6.51 17.52 2 12 2S2 6.51 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94z"/></svg>
+      </a>
+      <a href="https://www.instagram.com/YourFairQuestPage" target="_blank" aria-label="Instagram">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c2.72 0 3.06.01 4.12.06 1.06.05 1.79.22 2.43.47.66.26 1.21.6 1.76 1.15.55.55.9 1.1 1.15 1.76.25.64.42 1.37.47 2.43C21.99 8.94 22 9.28 22 12s-.01 3.06-.06 4.12c-.05 1.06-.22 1.79-.47 2.43-.26.66-.6 1.21-1.15 1.76-.55.55-1.1.9-1.76 1.15-.64.25-1.37.42-2.43.47C15.06 21.99 14.72 22 12 22s-3.06-.01-4.12-.06c-1.06-.05-1.79-.22-2.43-.47-.66-.26-1.21-.6-1.76-1.15-.55-.55-.9-1.1-1.15-1.76-.25-.64-.42-1.37-.47-2.43C2.01 15.06 2 14.72 2 12s.01-3.06.06-4.12c.05-1.06.22-1.79.47-2.43.26-.66.6-1.21 1.15-1.76.55-.55 1.1-.9 1.76-1.15.64-.25 1.37-.42 2.43-.47C8.94 2.01 9.28 2 12 2zm0 1.8c-2.67 0-2.99.01-4.04.06-.87.04-1.34.18-1.65.3-.42.16-.71.35-1.02.66-.31.31-.5.6-.66 1.02-.12.31-.26.78-.3 1.65C4.28 8.68 4.27 9 4.27 12s.01 3.32.06 4.37c.04.87.18 1.34.3 1.65.16.42.35.71.66 1.02.31.31.6.5 1.02.66.31.12.78.26 1.65.3 1.05.05 1.37.06 4.04.06s2.99-.01 4.04-.06c.87-.04 1.34-.18 1.65-.3.42-.16.71-.35 1.02-.66.31-.31.5-.6.66-1.02.12-.31.26-.78.3-1.65.05-1.05.06-1.37.06-4.37s-.01-3.32-.06-4.37c-.04-.87-.18-1.34-.3-1.65-.16-.42-.35-.71-.66-1.02-.31-.31-.6-.5-1.02-.66-.31-.12-.78-.26-1.65-.3-1.05-.05-1.37-.06-4.04-.06zM12 7a5 5 0 110 10 5 5 0 010-10zm0 1.8a3.2 3.2 0 100 6.4 3.2 3.2 0 000-6.4zm5.2-2.9a1.17 1.17 0 110 2.34 1.17 1.17 0 010-2.34z"/></svg>
+      </a>
     </div>
 
     <p>If you're searching for the Fair Quest app — you're in the right place!</p>
@@ -881,8 +887,7 @@ function applyManualLocation() {
 </div>
 
 <script>
-async function updateMenuBar() {
-  const { data: sessionData } = await supabaseClient.auth.getSession();
+async function updateMenuBar(sessionData) {
   const menuRight = document.getElementById("menuRight");
 
   if (!menuRight) return;
@@ -1003,44 +1008,23 @@ async function loadNearbyFairsCard(options = {}) {
 
   window.__nearbyFairsCache = window.__nearbyFairsCache || {
     userLat: null,
-    userLon: null,
-    withDistances: null,
-    allFairs: null
+    userLon: null
   };
 
   const defaultRadius = 50;
 
   const clearResults = () => {
     resultsEl.innerHTML = "";
-    window.__nearbyFairsCache.withDistances = null;
     window.__nearbyFairsCache.userLat = null;
     window.__nearbyFairsCache.userLon = null;
   };
 
-  const render = (radiusMiles) => {
-    const cache = window.__nearbyFairsCache;
-    resultsEl.innerHTML = "";
-
-    if (!cache.withDistances) {
-      return;
-    }
-
-    const r = Number(radiusMiles || defaultRadius);
-    const within = cache.withDistances.filter((f) => f._miles <= r).slice(0, 3);
-
-    if (within.length === 0) {
-      msgEl.innerText = `No fairs found within ${r} miles.`;
-      return;
-    }
-
-    msgEl.innerText = `Showing fairs within ${r} miles:`;
-
-    resultsEl.innerHTML = within.map((f) => {
-      const miles = Math.round(f._miles);
-      const startDate = formatNearbyFairDate(f.start_date);
-      const endDate = formatNearbyFairDate(f.end_date);
-      const dateLine = (startDate && endDate) ? `${startDate} – ${endDate}` : "";
- return `
+  const renderCard = (f) => {
+    const miles = Math.round(f.distance_miles);
+    const startDate = formatNearbyFairDate(f.start_date);
+    const endDate = formatNearbyFairDate(f.end_date);
+    const dateLine = (startDate && endDate) ? `${startDate} – ${endDate}` : "";
+    return `
 <a href="/fairs/fair_detail.html?id=${f.id}" style="display:block; text-align:left; padding:14px 16px; background:rgba(30,18,8,0.75); border-radius:10px; margin:10px 0; color:#ffffff; border: 1px solid rgba(201,168,76,0.3); text-decoration:none;">
   <div style="font-weight:bold;">
     ${f.name}
@@ -1054,30 +1038,62 @@ async function loadNearbyFairsCard(options = {}) {
 
 </a>
 `;
-    }).join("");
+  };
+
+  const render = (fairs, radiusMiles) => {
+    resultsEl.innerHTML = "";
+    window.__nearbyFairsCache.allResults = fairs || [];
+
+    if (!fairs || fairs.length === 0) {
+      msgEl.innerText = `No fairs found within ${radiusMiles} miles.`;
+      return;
+    }
+
+    msgEl.innerText = `Showing fairs within ${radiusMiles} miles:`;
+
+    const initial = fairs.slice(0, 3);
+    resultsEl.innerHTML = initial.map(renderCard).join("");
+
+    if (fairs.length > 3) {
+      const showMoreBtn = document.createElement("button");
+      showMoreBtn.textContent = `Show More (${fairs.length - 3} more)`;
+      showMoreBtn.style.cssText = "margin-top:10px; padding:10px 20px; border-radius:8px; border:none; background:#d4af37; font-weight:bold; cursor:pointer;";
+      showMoreBtn.onclick = () => {
+        resultsEl.innerHTML = fairs.map(renderCard).join("");
+      };
+      resultsEl.appendChild(showMoreBtn);
+    }
+  };
+
+  const fetchAndRenderNearby = async (lat, lon, radius) => {
+    msgEl.innerText = "Searching nearby fairs…";
+    try {
+      const { data, error } = await supabaseClient.rpc("app_get_nearby_fairs", {
+        p_lat: lat,
+        p_lng: lon,
+        p_radius_miles: radius
+      });
+
+      if (error) throw new Error(error.message);
+
+      render(data, radius);
+    } catch (e) {
+      console.error(e);
+      resultsEl.innerHTML = "";
+      msgEl.innerText = "Unexpected error loading nearby fairs.";
+    }
   };
 
   if (!radiusSelect.__listenerAttached) {
-    radiusSelect.addEventListener("change", () => render(radiusSelect.value));
+    radiusSelect.addEventListener("change", () => {
+      const cache = window.__nearbyFairsCache;
+      if (cache.userLat == null || cache.userLon == null) return;
+      fetchAndRenderNearby(cache.userLat, cache.userLon, Number(radiusSelect.value));
+    });
     radiusSelect.__listenerAttached = true;
   }
 
   if (!radiusSelect.value) radiusSelect.value = String(defaultRadius);
-
-  const ensureAllFairsLoaded = async () => {
-    if (window.__nearbyFairsCache.allFairs) return window.__nearbyFairsCache.allFairs;
-
-    const { data, error } = await supabaseClient
-      .from("renaissance_fairs")
-      .select("id,name,city,state,latitude,longitude,start_date,end_date,website")
-      .not("latitude", "is", null)
-      .not("longitude", "is", null);
-
-    if (error) throw new Error(error.message);
-
-    window.__nearbyFairsCache.allFairs = (data || []);
-    return window.__nearbyFairsCache.allFairs;
-  };
 
   if (options.source === "manual") {
     clearResults();
@@ -1120,13 +1136,7 @@ async function loadNearbyFairsCard(options = {}) {
 
       locationLabelEl.innerText = label;
 
-      const allFairs = await ensureAllFairsLoaded();
-      window.__nearbyFairsCache.withDistances = allFairs
-        .map((f) => ({ ...f, _miles: milesBetween(userLat, userLon, f.latitude, f.longitude) }))
-        .filter((f) => Number.isFinite(f._miles))
-        .sort((a, b) => a._miles - b._miles);
-
-      render(radiusSelect.value || defaultRadius);
+      await fetchAndRenderNearby(userLat, userLon, Number(radiusSelect.value || defaultRadius));
     } catch (e) {
       console.error(e);
       clearResults();
@@ -1159,14 +1169,8 @@ async function loadNearbyFairsCard(options = {}) {
         const cityState = await reverseGeocodeCityState(userLat, userLon);
         locationLabelEl.innerText = cityState || `${userLat.toFixed(4)}, ${userLon.toFixed(4)}`;
 
-        const allFairs = await ensureAllFairsLoaded();
-        window.__nearbyFairsCache.withDistances = allFairs
-          .map((f) => ({ ...f, _miles: milesBetween(userLat, userLon, f.latitude, f.longitude) }))
-          .filter((f) => Number.isFinite(f._miles))
-          .sort((a, b) => a._miles - b._miles);
-
         radiusSelect.value = String(defaultRadius);
-        render(defaultRadius);
+        await fetchAndRenderNearby(userLat, userLon, defaultRadius);
       } catch (e) {
         console.error(e);
         clearResults();
@@ -1247,10 +1251,9 @@ loadSpotlights();
 </script>
 <script>
 
-async function loadEarlyTesterCard() {
+async function loadEarlyTesterCard(sessionData) {
   const card = document.getElementById('earlyTesterCard');
   
-  const { data: sessionData } = await supabaseClient.auth.getSession();
   const isLoggedIn = sessionData?.session?.user != null;
 
   let userCount = 50; 
@@ -1275,8 +1278,7 @@ async function loadEarlyTesterCard() {
 }
 
 
-async function checkIfUserApplied() {
-  const { data: sessionData } = await supabaseClient.auth.getSession();
+async function checkIfUserApplied(sessionData) {
   const isLoggedIn = sessionData?.session?.user != null;
   if (!isLoggedIn) return;
 
@@ -1301,9 +1303,8 @@ async function checkIfUserApplied() {
     vBtn.removeAttribute('onclick');
   }
 }
-async function checkSocialAccess() {
+async function checkSocialAccess(sessionData) {
 
-  const { data: sessionData } = await supabaseClient.auth.getSession();
   const user = sessionData?.session?.user;
 
   if (!user) return;
@@ -1398,11 +1399,13 @@ supabaseClient.auth.getUser().then(({ data }) => {
   }
 });
 
-loadEarlyTesterCard();
-checkIfUserApplied();
-updateMenuBar();
+supabaseClient.auth.getSession().then(({ data: sessionData }) => {
+  loadEarlyTesterCard(sessionData);
+  checkIfUserApplied(sessionData);
+  updateMenuBar(sessionData);
+  checkSocialAccess(sessionData);
+});
 loadNearbyFairsCard();
-checkSocialAccess();
 
 
 

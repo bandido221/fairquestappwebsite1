@@ -726,7 +726,21 @@ const states = [
     let allFairs = [], featuredIndex = 0;
 
     async function loadFairs() {
-      const { data, error } = await supabaseClient.from('renaissance_fairs').select('*');
+      const { data, error } = await supabaseClient
+        .from('renaissance_fairs')
+        .select(`
+          id, name, address, city, state, zip, website, image_url, verified,
+          start_date, end_date,
+          week2_start_date, week2_end_date,
+          week3_start_date, week3_end_date,
+          week4_start_date, week4_end_date,
+          week5_start_date, week5_end_date,
+          week6_start_date, week6_end_date,
+          week7_start_date, week7_end_date,
+          week8_start_date, week8_end_date,
+          week9_start_date, week9_end_date,
+          week10_start_date, week10_end_date
+        `);
       if (error) {
         resultsContainer.innerHTML = `<p>Error loading fairs: ${error.message}</p>`;
         return;

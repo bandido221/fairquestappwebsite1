@@ -399,6 +399,8 @@
     const state = new URLSearchParams(window.location.search).get('state');
     document.getElementById('stateName').textContent = state || 'Unknown';
 
+ let publishedProfileIds = new Set();
+
     async function fetchFairsByState() {
       const { data, error } = await supabaseClient
         .from('renaissance_fairs')
@@ -408,6 +410,12 @@
       if (error) {
         document.getElementById('fairResults').innerHTML = `<p>Error: ${error.message}</p>`;
         return;
+      }
+
+      const ids = data.map(f => f.id);
+      if (ids.length) {
+        const { data: publishedIds } = await supabaseClient.rpc('get_published_fair_ids', { p_fair_ids: ids });
+        if (Array.isArray(publishedIds)) publishedProfileIds = new Set(publishedIds.map(String));
       }
 
       displayFairs(data);
@@ -420,7 +428,11 @@ function formatDateMMDDYY(dateStr){
   if (!yyyy || !mm || !dd) return String(dateStr);
   return `${mm}-${dd}-${yyyy.slice(-2)}`;
 }
-
+function fairHref(fair) {
+  return publishedProfileIds.has(String(fair.id))
+    ? `/social/fairs/fair_profile.html?fair_id=${fair.id}`
+    : `fair_detail.html?id=${fair.id}`;
+}
     function displayFairs(fairs) {
       const container = document.getElementById('fairResults');
       container.innerHTML = '';
@@ -461,8 +473,7 @@ container.innerHTML += `
           ⚠️ This fair was submitted by a community member and has not yet been verified by FairQuest.
         </div>
       ` : ''}
-      <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
-      <p><span class="badge">${fair.state}</span></p>
+      <a href="${fairHref(fair)}" class="fair-link">${fair.name}</a>      <p><span class="badge">${fair.state}</span></p>
       <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
       <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${fair.address}, ${fair.city}, ${fair.state} ${fair.zip || ''}`)}" target="_blank" class="directions-btn">📍 Get Directions</a></p>
       ${fair.website ? `

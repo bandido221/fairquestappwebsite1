@@ -511,10 +511,12 @@
   </div>
 
   <script>
-    const supabaseClient = window.supabase.createClient(
+   const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
+
+    let publishedProfileIds = new Set();
 
     function hideLoader() {
       document.getElementById('loadingOverlay').style.display = 'none';
@@ -532,8 +534,12 @@
       const date = new Date(d);
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
-
-    function buildFairItem(fair) {
+function fairHref(fairId) {
+      return publishedProfileIds.has(String(fairId))
+        ? `/social/fairs/fair_profile.html?fair_id=${fairId}`
+        : `/fairs/fair_detail.html?id=${fairId}`;
+    }
+     function buildFairItem(fair) {
       const item = document.createElement('div');
       item.className = 'fair-item';
       item.dataset.fairId = fair.fair_id;
@@ -548,6 +554,7 @@
       const endFmt   = formatDate(fair.end_date);
       const datesStr = (fair.start_date || fair.end_date) ? `${startFmt} → ${endFmt}` : 'Dates TBD';
       const address  = fair.address || 'Address not available';
+      const href = fairHref(fair.fair_id);
 
       item.innerHTML = `
         ${thumbHtml}
@@ -558,7 +565,7 @@
           <div class="fair-address">🏠 ${address}</div>
         </div>
         <div class="fair-actions">
-          <a class="btn-view" href="/fairs/fair_detail.html?id=${fair.fair_id}">View Fair</a>
+          <a class="btn-view" href="${href}">View Fair</a>
           <button class="btn-remove" data-fair-id="${fair.fair_id}" onclick="removeFavorite(event, '${fair.fair_id}')">
             🗑 Remove
           </button>
@@ -568,12 +575,11 @@
       // clicking the card body (not buttons) navigates to fair
       item.addEventListener('click', (e) => {
         if (e.target.closest('.btn-remove') || e.target.closest('.btn-view')) return;
-        window.location.href = `/fairs/fair_detail.html?id=${fair.fair_id}`;
+        window.location.href = href;
       });
 
       return item;
     }
-
     async function loadFavorites() {
       try {
         const { data: sessionData } = await supabaseClient.auth.getSession();
@@ -587,6 +593,12 @@
         document.getElementById('skeletonList').style.display = 'none';
 
         if (error) throw error;
+
+        const ids = (data || []).map(f => f.fair_id);
+        if (ids.length) {
+          const { data: publishedIds } = await supabaseClient.rpc('get_published_fair_ids', { p_fair_ids: ids });
+          if (Array.isArray(publishedIds)) publishedProfileIds = new Set(publishedIds.map(String));
+        }
 
         const list = document.getElementById('fairList');
         const empty = document.getElementById('emptyState');

@@ -675,6 +675,7 @@
 
     let currentUser = null;
 let userFavorites = new Set();
+let publishedProfileIds = new Set();
 
 async function initUser() {
   const { data: { user } } = await supabaseClient.auth.getUser();
@@ -745,7 +746,14 @@ const states = [
         resultsContainer.innerHTML = `<p>Error loading fairs: ${error.message}</p>`;
         return;
       }
-      allFairs = data;
+     allFairs = data;
+
+      const ids = allFairs.map(f => f.id);
+      if (ids.length) {
+        const { data: publishedIds } = await supabaseClient.rpc('get_published_fair_ids', { p_fair_ids: ids });
+        if (Array.isArray(publishedIds)) publishedProfileIds = new Set(publishedIds.map(String));
+      }
+
       updateFeatured();
     }
 
@@ -755,7 +763,13 @@ const states = [
   const featured = shuffled.slice(0, 5);
   featured.forEach(fair => resultsContainer.appendChild(renderFairCard(fair)));
 }
+function fairHref(fair) {
+      return publishedProfileIds.has(String(fair.id))
+        ? `/social/fairs/fair_profile.html?fair_id=${fair.id}`
+        : `fair_detail.html?id=${fair.id}`;
+    }
 
+    
     function renderFairCard(fair) {
       const div = document.createElement('div');
  const weekends = [];
@@ -789,7 +803,7 @@ div.innerHTML = `
           ⚠️ This fair was submitted by a community member and has not yet been verified by FairQuest.
         </div>
       ` : ''}
-      <a href="fair_detail.html?id=${fair.id}" class="fair-link">${fair.name}</a>
+      <a href="${fairHref(fair)}" class="fair-link">${fair.name}</a>
       <p><span class="badge">${fair.state}</span></p>
       <p><strong>📍 Location:</strong> ${fair.address}, ${fair.city}, ${fair.zip || ''}</p>
       <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${fair.address}, ${fair.city}, ${fair.state} ${fair.zip || ''}`)}" target="_blank" class="directions-btn">📍 Get Directions</a></p>

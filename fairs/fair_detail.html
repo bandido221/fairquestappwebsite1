@@ -694,11 +694,16 @@ applyBtn.onclick = () => {
 
 const _origLoadFair = loadFair;
 loadFair = async function() {
-  const { data, error } = await supabaseClient
-    .from('renaissance_fairs')
-    .select('*')
-    .eq('id', fairId)
-    .single();
+  // Ask both questions at the same time instead of one after the other —
+  // cuts the wait roughly in half for fairs that DO have a published page.
+  const [mainResult, profileResult] = await Promise.all([
+    supabaseClient.from('renaissance_fairs').select('*').eq('id', fairId).single(),
+    supabaseClient
+      .rpc('get_fair_social_profile', { p_fair_id: parseInt(fairId, 10) })
+      .then(r => r, () => ({ data: null }))
+  ]);
+
+  const { data, error } = mainResult;
 
   if (error || !data) {
     document.getElementById('fairCard').innerHTML = '<p>❌ Failed to load fair information.</p>';
@@ -707,7 +712,7 @@ loadFair = async function() {
 
   // Redirect to social profile page only if fair has admin AND a published profile
   if (data.approved_for_admin) {
-    const { data: spRows } = await supabaseClient.rpc('get_fair_social_profile', { p_fair_id: parseInt(fairId, 10) });
+    const spRows = profileResult && profileResult.data;
     const sp = Array.isArray(spRows) ? spRows[0] : spRows;
     if (sp && sp.is_published) {
       window.location.href = `/social/fairs/fair_profile.html?fair_id=${fairId}`;

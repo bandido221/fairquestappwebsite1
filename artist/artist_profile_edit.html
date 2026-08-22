@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Set Up Your Artist Page | FairQuest</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+*{box-sizing:border-box;}
+body{
+  font-family:'Domine',serif;
+  background:#000;
+  color:#f0e6d2;
+  margin:0;
+}
+
+.header{
+  background:#111;
+  border-bottom:2px solid #bb9457;
+  padding:14px 18px;
+  font-family:'Cinzel',serif;
+  font-size:1.3rem;
+}
+.header-inner{
+  max-width:700px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.header-back{
+  background:#1f2125;
+  border:none;
+  color:#f0e6d2;
+  border-radius:999px;
+  padding:8px 14px;
+  cursor:pointer;
+  font-size:0.85rem;
+}
+
+.wrap{
+  max-width:700px;
+  margin:24px auto;
+  padding:0 16px 80px;
+}
+
+.card{
+  background:rgba(214,197,126,0.9);
+  border-radius:18px;
+  padding:24px;
+  color:#111;
+  margin-bottom:18px;
+}
+.card h1{ font-family:'Cinzel',serif; font-size:1.4rem; margin:0 0 4px; }
+.card h2{ font-family:'Cinzel',serif; font-size:1.1rem; margin:0 0 14px; }
+.card .sub{ font-size:0.85rem; color:#333; margin-bottom:18px; line-height:1.5; }
+
+.id-row{
+  display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;
+}
+.id-chip{
+  background:#111; color:#f0e6d2; padding:8px 14px; border-radius:999px;
+  font-family:'Cinzel',serif; font-size:0.85rem;
+}
+
+label{ display:block; font-weight:bold; font-size:0.85rem; margin:14px 0 6px; }
+input[type="text"], input[type="email"], input[type="tel"], input[type="url"], textarea{
+  width:100%; padding:12px; border-radius:10px;
+  border:1px solid rgba(0,0,0,0.25); font-family:'Domine',serif; font-size:1rem;
+  background:#fffdf7; color:#111;
+}
+textarea{ min-height:90px; resize:vertical; }
+.hint{ font-size:0.75rem; color:#555; margin-top:4px; }
+
+.toggle-row{
+  display:flex; align-items:center; gap:8px; margin-top:8px;
+}
+.toggle-row label{ margin:0; font-weight:normal; font-size:0.85rem; }
+
+.photo-upload{
+  width:140px; height:140px; border-radius:50%;
+  border:2px dashed rgba(0,0,0,0.3); background:#fffdf7;
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
+  cursor:pointer; overflow:hidden; position:relative; margin:0 auto 10px;
+  font-size:0.75rem; color:#555; text-align:center;
+}
+.photo-upload img{ width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; }
+.photo-upload input[type="file"]{ display:none; }
+
+.save-btn, .publish-btn{
+  width:100%; margin-top:20px; padding:14px; border:none; border-radius:10px;
+  font-family:'Cinzel',serif; font-size:1rem; cursor:pointer;
+}
+.save-btn{ background:#111; color:#f0e6d2; }
+.publish-btn{ background:#2e7d32; color:#fff; }
+.publish-btn.unpublish{ background:#7a2e2e; }
+.save-btn:disabled, .publish-btn:disabled{ opacity:0.5; cursor:not-allowed; }
+
+.status-msg{ margin-top:14px; font-size:0.85rem; font-weight:bold; display:none; text-align:center; }
+.status-msg.error{ color:#c0392b; }
+.status-msg.success{ color:#2e7d32; }
+
+.publish-state{
+  text-align:center; font-size:0.85rem; font-weight:bold; margin-bottom:10px;
+}
+.publish-state.live{ color:#1b5e20; }
+.publish-state.draft{ color:#7a5c00; }
+
+.no-artist-box{
+  background:rgba(214,197,126,0.9); border-radius:18px; padding:30px 24px;
+  text-align:center; color:#111;
+}
+.no-artist-box a{
+  display:inline-block; margin-top:14px; padding:12px 22px; background:#111;
+  color:#f0e6d2; border-radius:10px; text-decoration:none; font-family:'Cinzel',serif;
+}
+
+@media (max-width:520px){
+  .card{ padding:18px; border-radius:14px; }
+  .card h1{ font-size:1.2rem; }
+  .photo-upload{ width:110px; height:110px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div>FairQuest — Artists</div>
+    <button class="header-back" onclick="location.href='index.html'">⬅ Back</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="no-artist-box" id="noArtistBox" style="display:none;">
+    <h2>No Artist Page Found</h2>
+    <p>You don't have an approved Artist application yet.</p>
+    <a href="artist_application.html">Apply to Become an Artist</a>
+  </div>
+
+  <div class="no-artist-box" id="alreadyDoneBox" style="display:none;">
+    <h2>Setup Already Completed</h2>
+    <p>You've already set up your Artist page. Use the edit page to make changes.</p>
+    <a href="artist_profile_edit.html">Edit My Artist Page</a>
+  </div>
+
+  <div id="setupContent" style="display:none;">
+
+    <div class="card">
+      <h1 id="displayNamePreview">Set Up Your Artist Page</h1>
+      <div class="id-row">
+        <span class="id-chip" id="artistIdChip"></span>
+        <span class="id-chip" id="artistNameChip"></span>
+      </div>
+      <div class="publish-state" id="publishState"></div>
+    </div>
+
+    <div class="card">
+      <h2>Profile</h2>
+
+      <div class="photo-upload" id="photoUpload" onclick="document.getElementById('photoInput').click()">
+        <span id="photoLabel">📷 Add Photo</span>
+        <input type="file" id="photoInput" accept="image/*">
+      </div>
+
+      <label for="displayName">Display Name</label>
+      <input type="text" id="displayName" placeholder="Your public name">
+      <div class="hint">Shown on your profile card. Doesn't need to match your Artist Name handle.</div>
+
+      <label for="bio">Bio</label>
+      <textarea id="bio" placeholder="Tell visitors about yourself and your work..."></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Contact Info (optional)</h2>
+      <div class="sub">Only shown to logged-in visitors, and only for fields you turn on below.</div>
+
+      <label for="contactEmail">Contact Email</label>
+      <input type="email" id="contactEmail" placeholder="you@email.com">
+      <div class="toggle-row">
+        <input type="checkbox" id="showEmail">
+        <label for="showEmail">Show this on my public page</label>
+      </div>
+
+      <label for="contactPhone">Phone</label>
+      <input type="tel" id="contactPhone" placeholder="(555) 555-5555">
+      <div class="toggle-row">
+        <input type="checkbox" id="showPhone">
+        <label for="showPhone">Show this on my public page</label>
+      </div>
+
+      <label for="websiteUrl">Website</label>
+      <input type="url" id="websiteUrl" placeholder="https://...">
+      <div class="toggle-row">
+        <input type="checkbox" id="showWebsite">
+        <label for="showWebsite">Show this on my public page</label>
+      </div>
+    </div>
+
+    <button class="save-btn" id="saveBtn">Save Changes</button>
+    <button class="publish-btn" id="publishBtn">Publish My Page</button>
+    <div class="status-msg" id="statusMsg"></div>
+
+  </div>
+
+</div>
+
+<script>
+const supabaseClient = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+const CLOUDINARY_CLOUD_NAME = 'dft7xclvh';
+const CLOUDINARY_UPLOAD_PRESET = 'artist_application_upload'; // reusing the same unsigned preset for now
+
+let artistRow = null;
+let profilePhotoUrl = null;
+
+async function init(){
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const userId = sessionData?.session?.user?.id;
+  if(!userId){
+    window.location.href = '/user_login.html?redirect=/artist_setup.html';
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from('ar_artist')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if(error || !data){
+    document.getElementById('noArtistBox').style.display = 'block';
+    return;
+  }
+
+  if(data.setup_completed){
+    document.getElementById('alreadyDoneBox').style.display = 'block';
+    return;
+  }
+
+  artistRow = data;
+  profilePhotoUrl = data.profile_photo_url;
+  document.getElementById('setupContent').style.display = 'block';
+  fillForm();
+}
+init();
+
+function fillForm(){
+  document.getElementById('artistIdChip').textContent = 'ID: ' + artistRow.artist_id;
+  document.getElementById('artistNameChip').textContent = '@' + artistRow.artist_name;
+  document.getElementById('displayNamePreview').textContent = artistRow.display_name || artistRow.artist_name;
+
+  document.getElementById('displayName').value = artistRow.display_name || '';
+  document.getElementById('bio').value = artistRow.bio || '';
+  document.getElementById('contactEmail').value = artistRow.contact_email || '';
+  document.getElementById('contactPhone').value = artistRow.contact_phone || '';
+  document.getElementById('websiteUrl').value = artistRow.website_url || '';
+  document.getElementById('showEmail').checked = !!artistRow.show_email;
+  document.getElementById('showPhone').checked = !!artistRow.show_phone;
+  document.getElementById('showWebsite').checked = !!artistRow.show_website;
+
+  if(profilePhotoUrl){
+    document.getElementById('photoUpload').innerHTML =
+      `<img src="${profilePhotoUrl}"><input type="file" id="photoInput" accept="image/*">`;
+    document.getElementById('photoInput').addEventListener('change', handlePhotoChange);
+  }
+
+  updatePublishUI();
+}
+
+document.getElementById('photoInput').addEventListener('change', handlePhotoChange);
+
+async function handlePhotoChange(e){
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const label = document.getElementById('photoLabel');
+  if(label) label.textContent = 'Uploading...';
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+  try{
+    const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+      method: 'POST', body: formData
+    });
+    const result = await resp.json();
+    if(!result.secure_url){
+      alert('Photo upload failed.');
+      return;
+    }
+    profilePhotoUrl = result.secure_url;
+    document.getElementById('photoUpload').innerHTML =
+      `<img src="${profilePhotoUrl}"><input type="file" id="photoInput" accept="image/*">`;
+    document.getElementById('photoInput').addEventListener('change', handlePhotoChange);
+  }catch(err){
+    alert('Unexpected error uploading photo: ' + err.message);
+  }
+}
+
+function updatePublishUI(){
+  const stateEl = document.getElementById('publishState');
+  const btn = document.getElementById('publishBtn');
+  if(artistRow.is_published){
+    stateEl.textContent = '🟢 Your page is LIVE';
+    stateEl.className = 'publish-state live';
+    btn.textContent = 'Unpublish My Page';
+    btn.classList.add('unpublish');
+  }else{
+    stateEl.textContent = '🟡 Draft — not visible to the public yet';
+    stateEl.className = 'publish-state draft';
+    btn.textContent = 'Publish My Page';
+    btn.classList.remove('unpublish');
+  }
+}
+
+async function saveFields(){
+  const updates = {
+    display_name: document.getElementById('displayName').value.trim() || null,
+    bio: document.getElementById('bio').value.trim() || null,
+    profile_photo_url: profilePhotoUrl,
+    contact_email: document.getElementById('contactEmail').value.trim() || null,
+    contact_phone: document.getElementById('contactPhone').value.trim() || null,
+    website_url: document.getElementById('websiteUrl').value.trim() || null,
+    show_email: document.getElementById('showEmail').checked,
+    show_phone: document.getElementById('showPhone').checked,
+    show_website: document.getElementById('showWebsite').checked,
+    setup_completed: true
+  };
+
+  const { error } = await supabaseClient
+    .from('ar_artist')
+    .update(updates)
+    .eq('id', artistRow.id);
+
+  return error;
+}
+
+document.getElementById('saveBtn').addEventListener('click', async function(){
+  const btn = this;
+  const statusMsg = document.getElementById('statusMsg');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  const error = await saveFields();
+
+  btn.disabled = false;
+  btn.textContent = 'Save Changes';
+
+  if(error){
+    statusMsg.textContent = 'Error saving: ' + error.message;
+    statusMsg.className = 'status-msg error';
+  }else{
+    Object.assign(artistRow, {
+      display_name: document.getElementById('displayName').value.trim() || null,
+      bio: document.getElementById('bio').value.trim() || null
+    });
+    document.getElementById('displayNamePreview').textContent = artistRow.display_name || artistRow.artist_name;
+    statusMsg.textContent = '✔ Saved!';
+    statusMsg.className = 'status-msg success';
+  }
+  statusMsg.style.display = 'block';
+  setTimeout(() => statusMsg.style.display = 'none', 2500);
+});
+
+document.getElementById('publishBtn').addEventListener('click', async function(){
+  const btn = this;
+  const statusMsg = document.getElementById('statusMsg');
+  const goingLive = !artistRow.is_published;
+
+  if(goingLive && !document.getElementById('displayName').value.trim()){
+    statusMsg.textContent = 'Add a Display Name before publishing.';
+    statusMsg.className = 'status-msg error';
+    statusMsg.style.display = 'block';
+    return;
+  }
+  if(goingLive && !profilePhotoUrl){
+    statusMsg.textContent = 'Add a profile photo before publishing.';
+    statusMsg.className = 'status-msg error';
+    statusMsg.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+
+  // save current fields first, then flip publish state
+  const saveError = await saveFields();
+  if(saveError){
+    statusMsg.textContent = 'Error saving before publish: ' + saveError.message;
+    statusMsg.className = 'status-msg error';
+    statusMsg.style.display = 'block';
+    btn.disabled = false;
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from('ar_artist')
+    .update({ is_published: goingLive })
+    .eq('id', artistRow.id);
+
+  btn.disabled = false;
+
+  if(error){
+    statusMsg.textContent = 'Error: ' + error.message;
+    statusMsg.className = 'status-msg error';
+  }else{
+    artistRow.is_published = goingLive;
+    updatePublishUI();
+    statusMsg.textContent = goingLive ? '🎉 Your page is now live!' : 'Page unpublished.';
+    statusMsg.className = 'status-msg success';
+  }
+  statusMsg.style.display = 'block';
+});
+</script>
+
+</body>
+</html>

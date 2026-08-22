@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Album | FairQuest</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+*{box-sizing:border-box;}
+body{
+  font-family:'Domine',serif;
+  background:#000;
+  color:#f0e6d2;
+  margin:0;
+}
+
+.topnav{
+  background: rgba(13,10,4,0.95);
+  border-bottom: 1px solid rgba(201,168,76,0.25);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 20px; height: 56px;
+  position: sticky; top: 0; z-index: 200;
+  flex-wrap: wrap;
+}
+.topnav-logo{ display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.topnav-logo img{ width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+.topnav-logo span{ font-family: 'Cinzel', serif; font-size: 17px; color: #f1df99; letter-spacing: 0.05em; }
+.topnav-links{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.topnav-links a{
+  font-family: 'Domine', serif; font-size: 13px; padding: 7px 14px;
+  border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+  background: transparent; color: #c9a84c;
+  text-decoration: none;
+}
+.topnav-links a:hover{ background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.55); color: #f1df99; }
+
+.wrap{
+  max-width:900px;
+  margin:24px auto;
+  padding:0 16px 60px;
+}
+
+.card{
+  background:rgba(214,197,126,0.9);
+  border-radius:18px;
+  padding:24px;
+  margin-bottom:18px;
+}
+.card, .card *{ color:#111 !important; }
+
+.book-header h1{ font-family:'Cinzel',serif; font-size:1.5rem; margin:0 0 6px; color:#000 !important; }
+.book-desc{ font-size:0.9rem; line-height:1.5; margin-bottom:10px; }
+.book-vis{
+  display:inline-block; font-size:0.75rem; padding:4px 10px; border-radius:999px;
+  background:#111; color:#f0e6d2 !important; font-family:'Cinzel',serif;
+}
+.book-vis *{ color:#f0e6d2 !important; }
+
+.add-image-btn{
+  margin-top:14px; padding:10px 18px; border:none; border-radius:8px;
+  background:#111; color:#f0e6d2 !important; font-family:'Cinzel',serif; font-size:0.85rem; cursor:pointer;
+}
+.add-image-btn *{ color:#f0e6d2 !important; }
+
+.image-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(160px,1fr));
+  gap:14px;
+}
+.image-item{
+  border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.5);
+  border:1px solid rgba(0,0,0,0.12);
+}
+.image-item img{
+  width:100%; aspect-ratio:1/1; object-fit:cover; display:block; cursor:pointer;
+}
+.image-meta{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:6px 8px; font-size:0.7rem;
+}
+.vis-toggle{
+  border:none; border-radius:6px; padding:6px 10px; font-size:0.7rem;
+  font-weight:bold; cursor:pointer; font-family:'Domine',serif;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.vis-toggle.public{
+  background: linear-gradient(180deg, #6fbf73, #2e7d32);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -2px 2px rgba(0,0,0,0.25), 0 3px 0 #1b5e20, 0 4px 4px rgba(0,0,0,0.35);
+}
+.vis-toggle.private{
+  background: linear-gradient(180deg, #e05c5c, #b41e1e);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -2px 2px rgba(0,0,0,0.25), 0 3px 0 #7a1414, 0 4px 4px rgba(0,0,0,0.35);
+}
+.vis-toggle:active{
+  transform: translateY(2px);
+}
+.vis-toggle.public:active{ box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
+.vis-toggle.private:active{ box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
+.menu-wrap{ position:relative; }
+.menu-btn{
+  border:none; background:transparent; cursor:pointer; font-size:1rem;
+  padding:2px 8px; border-radius:6px; line-height:1;
+}
+.menu-btn:hover{ background:rgba(0,0,0,0.08); }
+.menu-dropdown{
+  position:absolute; right:0; bottom:100%; margin-bottom:4px;
+  background:#fffdf7; border:1px solid rgba(0,0,0,0.15); border-radius:8px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.3); min-width:170px; overflow:hidden;
+  display:none; z-index:10;
+}
+.menu-dropdown.open{ display:block; }
+.menu-item{
+  display:block; width:100%; text-align:left; padding:10px 12px; border:none;
+  background:transparent; cursor:pointer; font-size:0.8rem; font-family:'Domine',serif;
+  color:#111 !important;
+}
+.menu-item:hover{ background:rgba(0,0,0,0.06); }
+.menu-item.danger{ color:#b41e1e !important; }
+
+.empty-msg{ text-align:center; color:#000 !important; padding:20px 0; }
+.not-found{ text-align:center; padding:60px 20px; }
+.not-found h1{ font-family:'Cinzel',serif; }
+
+.upload-status{ font-size:0.8rem; margin-top:8px; }
+
+.lightbox{
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center;
+  z-index:2500; padding:16px;
+}
+.lightbox img{ max-width:100%; max-height:90vh; border-radius:8px; }
+
+@media (max-width:520px){
+  .card{ padding:18px; border-radius:14px; }
+}
+
+/* ── HALLWAY WALK-THROUGH ── */
+.walk-btn{
+  margin-top:14px; margin-left:8px; padding:10px 18px; border:none; border-radius:8px;
+  background:#111; color:#f0e6d2 !important; font-family:'Cinzel',serif; font-size:0.85rem; cursor:pointer;
+}
+.walk-btn *{ color:#f0e6d2 !important; }
+
+.hw-overlay{
+  position:fixed; inset:0; background:#0b0b0d; color:#eee; z-index:2000;
+  font-family:Georgia,serif; display:none; overflow:hidden;
+}
+.hw-overlay.open{ display:block; }
+.hw-hud{
+  position:fixed; top:0; left:0; right:0; padding:12px 16px;
+  display:flex; justify-content:space-between; align-items:center;
+  z-index:50; background:linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+  gap:12px; flex-wrap:wrap;
+}
+.hw-hud h1{ font-size:0.95rem; margin:0; letter-spacing:1px; color:#d9b46a !important; white-space:nowrap; }
+.hw-jumpbar{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.hw-jumpbar input{
+  width:90px; padding:7px 9px; border-radius:6px; border:1px solid #b89252;
+  background:#1a1a1d; color:#eee !important; font-size:0.8rem;
+}
+.hw-jumpbar button, .hw-close-btn{
+  padding:7px 12px; border-radius:6px; border:1px solid #b89252;
+  background:#2a2a2e; color:#e6c98a !important; font-size:0.8rem; cursor:pointer;
+}
+.hw-jumpbar button:hover, .hw-close-btn:hover{ background:#b89252; color:#111 !important; }
+.hw-progress{ position:fixed; top:58px; left:50%; transform:translateX(-50%); font-size:0.72rem; color:#777; z-index:50; }
+.hw-scene-wrap{ position:relative; width:100%; height:100vh; perspective:900px; overflow:hidden; }
+.hw-floor{ position:absolute; bottom:0; left:0; right:0; height:45%; background:linear-gradient(to bottom, #1a1a1d, #050505); }
+.hw-ceiling{ position:absolute; top:0; left:0; right:0; height:20%; background:linear-gradient(to top, #1a1a1d, #050505); }
+.hw-corridor{ position:absolute; top:0; left:0; width:100%; height:100%; transform-style:preserve-3d; }
+.hw-frame-pair{ position:absolute; top:36%; width:260px; }
+.hw-frame{
+  position:relative; width:260px; height:190px; background:#0e0e10; border:10px solid #b89252;
+  border-radius:2px; box-shadow:0 0 30px rgba(0,0,0,0.7), inset 0 0 20px rgba(0,0,0,0.6);
+  transform-style:preserve-3d; transition:border-color 0.3s, box-shadow 0.3s;
+}
+.hw-frame.hw-target-glow{ border-color:#fff2c9; box-shadow:0 0 45px #e6c98a; }
+.hw-img-slot{
+  width:100%; height:100%; background-size:cover; background-position:center;
+  cursor:pointer; border-radius:2px;
+}
+.hw-img-slot:hover{ outline:2px solid #fff2c9; }
+.hw-label{
+  position:absolute; bottom:-26px; left:0; right:0; text-align:center; font-size:0.7rem;
+  color:#c9a45c !important; letter-spacing:0.5px; white-space:nowrap; overflow:hidden;
+}
+.hw-left-wall .hw-frame{ transform: rotateY(35deg); }
+.hw-right-wall .hw-frame{ transform: rotateY(-35deg); }
+.hw-vignette{
+  position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.75) 100%); z-index:40;
+}
+.hw-controls{ position:fixed; bottom:20px; left:0; right:0; display:flex; justify-content:center; gap:10px; z-index:50; }
+.hw-controls button{
+  width:56px; height:56px; border-radius:50%; border:1px solid #b89252;
+  background:rgba(20,20,20,0.85); color:#e6c98a !important; font-size:1.3rem; cursor:pointer;
+}
+.hw-controls button:active{ background:#b89252; color:#000 !important; }
+</style>
+</head>
+
+<body>
+
+<nav class="topnav">
+  <a class="topnav-logo" href="/index.html">
+    <img src="/images/logo.png" alt="FairQuest" />
+    <span>FairQuest</span>
+  </a>
+  <div class="topnav-links">
+    <a href="/index.html">🏠 Home</a>
+    <a href="artist_list.html">🎨 All Artists</a>
+    <a href="#" id="backToProfileLink">⬅ Artist Profile</a>
+  </div>
+</nav>
+
+<div class="wrap" id="wrap">
+  <div class="empty-msg">Loading...</div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg">
+</div>
+
+<div class="hw-overlay" id="hwOverlay">
+  <div class="hw-hud">
+    <h1>WALKING THE GALLERY</h1>
+    <div class="hw-jumpbar">
+      <input id="hwJumpNumber" type="number" min="1" placeholder="Frame #">
+      <button onclick="hwJumpToNumber()">Go to #</button>
+      <button class="hw-close-btn" onclick="closeHallway()">🖼️ Normal View</button>
+    </div>
+  </div>
+  <div class="hw-progress" id="hwProgress">Frame 1</div>
+  <div class="hw-scene-wrap">
+    <div class="hw-ceiling"></div>
+    <div class="hw-floor"></div>
+    <div class="hw-corridor" id="hwCorridor"></div>
+    <div class="hw-vignette"></div>
+  </div>
+  <div class="hw-controls">
+    <button id="hwBtnLeft">◀</button>
+    <button id="hwBtnForward">▲</button>
+    <button id="hwBtnBack">▼</button>
+    <button id="hwBtnRight">▶</button>
+  </div>
+</div>
+
+<script>
+const supabaseClient = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+const CLOUDINARY_CLOUD_NAME = 'dft7xclvh';
+const CLOUDINARY_UPLOAD_PRESET = 'artist_gallery_upload';
+
+const urlParams = new URLSearchParams(window.location.search);
+const galleryId = urlParams.get('gallery_id');
+
+let currentBook = null;
+let currentArtist = null;
+let isOwner = false;
+let images = [];
+
+function escHtml(s){
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function init(){
+  const wrap = document.getElementById('wrap');
+
+  if(!galleryId){
+    wrap.innerHTML = `<div class="not-found"><h1>No album specified</h1><p>Missing ?gallery_id= in the URL.</p></div>`;
+    return;
+  }
+
+  const { data: book, error: bookErr } = await supabaseClient
+    .from('ar_gallery')
+    .select('*')
+    .eq('id', galleryId)
+    .maybeSingle();
+
+  if(bookErr || !book){
+    wrap.innerHTML = `<div class="not-found"><h1>Album Not Found</h1><p>This album doesn't exist or you don't have access to it.</p></div>`;
+    return;
+  }
+  currentBook = book;
+
+  const { data: artist, error: artistErr } = await supabaseClient
+    .from('ar_artist')
+    .select('id, artist_id, display_name, artist_name, is_published')
+    .eq('id', book.artist_id)
+    .maybeSingle();
+
+  if(artistErr || !artist){
+    wrap.innerHTML = `<div class="not-found"><h1>Album Not Found</h1></div>`;
+    return;
+  }
+  currentArtist = artist;
+  document.getElementById('backToProfileLink').href = `artist_profile.html?id=${encodeURIComponent(artist.artist_id)}`;
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(session){
+    const { data: ownerRow } = await supabaseClient
+      .from('ar_artist')
+      .select('id')
+      .eq('id', artist.id)
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+    isOwner = !!ownerRow;
+  }
+
+  await loadImages();
+  render();
+  if(images.length){
+    openHallway();
+  }
+}
+init();
+
+async function loadImages(){
+  const { data } = await supabaseClient
+    .from('ar_gallery_image')
+    .select('*')
+    .eq('gallery_id', galleryId)
+    .order('sort_order', { ascending: true });
+  images = data || [];
+}
+
+const visLabel = { public: '🌍 Public Album', logged_in: '🔒 Logged-in Visitors Only', private: '🚫 Private Album' };
+
+function render(){
+  const wrap = document.getElementById('wrap');
+
+  const imagesHtml = images.length
+    ? `<div class="image-grid">${images.map(img => `
+        <div class="image-item">
+          <img src="${img.image_url}" onclick="openLightbox('${img.image_url}')">
+          ${isOwner ? `
+            <div class="image-meta">
+              <button class="vis-toggle ${img.is_public ? 'public' : 'private'}" onclick="toggleImageVisibility('${img.id}', ${img.is_public})">
+                ${img.is_public ? '🌍 Public' : '🚫 Private'}
+              </button>
+              <div class="menu-wrap">
+                <button class="menu-btn" onclick="toggleMenu('${img.id}', event)">⋮</button>
+                <div class="menu-dropdown" id="menu-${img.id}">
+                  <button class="menu-item" onclick="setAsThumbnail('${img.id}')">⭐ Set as Album Thumbnail</button>
+                  <button class="menu-item danger" onclick="deleteImage('${img.id}')">🗑️ Delete</button>
+                </div>
+              </div>
+            </div>` : ''}
+        </div>
+      `).join('')}</div>`
+    : `<div class="empty-msg">No images in this album yet.</div>`;
+
+  wrap.innerHTML = `
+    <div class="card book-header">
+      <h1>${escHtml(currentBook.title)}</h1>
+      ${currentBook.description ? `<div class="book-desc">${escHtml(currentBook.description)}</div>` : ''}
+      <span class="book-vis">${visLabel[currentBook.visibility] || currentBook.visibility}</span>
+      <div>
+        ${isOwner ? `
+          <input type="file" id="imageInput" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(event)">
+          <button class="add-image-btn" onclick="document.getElementById('imageInput').click()">+ Add Image</button>
+        ` : ''}
+        ${images.length ? `<button class="walk-btn" onclick="openHallway()">🚶 Walk Through Gallery</button>` : ''}
+        <div class="upload-status" id="uploadStatus"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      ${imagesHtml}
+    </div>
+  `;
+}
+
+async function handleImageUpload(event){
+  const files = Array.from(event.target.files || []);
+  if(!files.length) return;
+
+  const statusEl = document.getElementById('uploadStatus');
+  let startOrder = images.length;
+
+  for(let i = 0; i < files.length; i++){
+    const file = files[i];
+    statusEl.textContent = `Uploading ${i + 1} of ${files.length}...`;
+
+    try{
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST', body: formData
+      });
+      const result = await resp.json();
+
+      if(!result.secure_url){
+        statusEl.textContent = `Upload failed for ${file.name}.`;
+        continue;
+      }
+
+      await supabaseClient.from('ar_gallery_image').insert({
+        gallery_id: galleryId,
+        cloudinary_public_id: result.public_id,
+        image_url: result.secure_url,
+        sort_order: startOrder + i,
+        is_public: true
+      });
+    }catch(err){
+      statusEl.textContent = `Error uploading ${file.name}: ${err.message}`;
+    }
+  }
+
+  statusEl.textContent = 'Done!';
+  await loadImages();
+  render();
+  setTimeout(() => { const s = document.getElementById('uploadStatus'); if(s) s.textContent = ''; }, 2000);
+}
+
+async function toggleImageVisibility(imageId, currentlyPublic){
+  await supabaseClient
+    .from('ar_gallery_image')
+    .update({ is_public: !currentlyPublic })
+    .eq('id', imageId);
+  await loadImages();
+  render();
+}
+
+function toggleMenu(imageId, event){
+  event.stopPropagation();
+  document.querySelectorAll('.menu-dropdown.open').forEach(el => {
+    if(el.id !== `menu-${imageId}`) el.classList.remove('open');
+  });
+  document.getElementById(`menu-${imageId}`)?.classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  document.querySelectorAll('.menu-dropdown.open').forEach(el => el.classList.remove('open'));
+});
+
+async function setAsThumbnail(imageId){
+  const minOrder = Math.min(...images.map(i => i.sort_order ?? 0));
+  await supabaseClient
+    .from('ar_gallery_image')
+    .update({ sort_order: minOrder - 1 })
+    .eq('id', imageId);
+  await loadImages();
+  render();
+}
+
+async function deleteImage(imageId){
+  if(!confirm('Delete this image? This cannot be undone.')) return;
+  await supabaseClient.from('ar_gallery_image').delete().eq('id', imageId);
+  await loadImages();
+  render();
+}
+
+function openLightbox(url){
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').style.display = 'flex';
+}
+function closeLightbox(){
+  document.getElementById('lightbox').style.display = 'none';
+}
+
+/* ── HALLWAY WALK-THROUGH ── */
+const HW_SPACING = 420;
+let hwCamZ = 0;
+let hwCamX = 0;
+let hwMaxZ = 0;
+let hwActive = false;
+let hwKeys = {};
+let hwFrameEls = [];
+
+let hwWrapEls = [];
+let hwWrapMeta = [];
+
+function buildHallwayScene(){
+  const corridor = document.getElementById('hwCorridor');
+  corridor.innerHTML = '';
+  hwFrameEls = [];
+  hwWrapEls = [];
+  hwWrapMeta = [];
+
+  images.forEach((img, i) => {
+    const side = i % 2 === 0 ? 'left' : 'right';
+    const z = i * HW_SPACING;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'hw-frame-pair ' + (side === 'left' ? 'hw-left-wall' : 'hw-right-wall');
+    wrap.style.transform = `translateZ(${-z}px)`;
+
+    const frame = document.createElement('div');
+    frame.className = 'hw-frame';
+
+    const slot = document.createElement('div');
+    slot.className = 'hw-img-slot';
+    slot.style.backgroundImage = `url('${img.image_url}')`;
+    slot.onclick = (e) => { e.stopPropagation(); openLightbox(img.image_url); };
+    frame.appendChild(slot);
+
+    const label = document.createElement('div');
+    label.className = 'hw-label';
+    label.textContent = `#${i + 1}` + (img.caption ? ` · ${img.caption}` : '');
+    frame.appendChild(label);
+
+    wrap.appendChild(frame);
+    corridor.appendChild(wrap);
+    hwFrameEls.push(frame);
+    hwWrapEls.push(wrap);
+    hwWrapMeta.push({ side, z });
+  });
+
+  hwMaxZ = Math.max(0, images.length * HW_SPACING - 200);
+  hwUpdateFramePositions();
+}
+
+function hwUpdateFramePositions(){
+  const CENTER_LEFT = 46, CENTER_RIGHT = 54;
+  const WALL_LEFT = 6, WALL_RIGHT = 62;
+
+  hwWrapMeta.forEach((meta, i) => {
+    const depth = meta.z - hwCamZ;
+    const progress = 1 - Math.min(1, Math.max(0, depth / HW_SPACING));
+    const leftPct = meta.side === 'left'
+      ? CENTER_LEFT + (WALL_LEFT - CENTER_LEFT) * progress
+      : CENTER_RIGHT + (WALL_RIGHT - CENTER_RIGHT) * progress;
+    hwWrapEls[i].style.left = leftPct + '%';
+  });
+}
+
+function hwRender(){
+  const corridor = document.getElementById('hwCorridor');
+  corridor.style.transform = `translateX(${-hwCamX}px) translateZ(${hwCamZ}px)`;
+  hwUpdateFramePositions();
+  const idx = images.length ? Math.min(images.length, Math.max(1, Math.floor(hwCamZ / HW_SPACING) + 1)) : 0;
+  document.getElementById('hwProgress').textContent = `Frame ${idx} of ${images.length}`;
+}
+
+function hwLoop(){
+  if(!hwActive) return;
+  const speed = 6;
+  if(hwKeys['ArrowUp'] || hwKeys['w']) hwCamZ = Math.min(hwCamZ + speed, hwMaxZ);
+  if(hwKeys['ArrowDown'] || hwKeys['s']) hwCamZ = Math.max(hwCamZ - speed, 0);
+  if(hwKeys['ArrowLeft'] || hwKeys['a']) hwCamX = Math.max(hwCamX - speed, -80);
+  if(hwKeys['ArrowRight'] || hwKeys['d']) hwCamX = Math.min(hwCamX + speed, 80);
+  hwRender();
+  requestAnimationFrame(hwLoop);
+}
+
+function hwKeydownHandler(e){
+  if(!hwActive) return;
+  if(document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  hwKeys[e.key] = true;
+}
+function hwKeyupHandler(e){ hwKeys[e.key] = false; }
+window.addEventListener('keydown', hwKeydownHandler);
+window.addEventListener('keyup', hwKeyupHandler);
+
+function hwHoldButton(id, fn){
+  const el = document.getElementById(id);
+  if(!el) return;
+  let interval;
+  const start = () => { fn(); interval = setInterval(fn, 30); };
+  const stop = () => clearInterval(interval);
+  el.addEventListener('mousedown', start);
+  el.addEventListener('mouseup', stop);
+  el.addEventListener('mouseleave', stop);
+  el.addEventListener('touchstart', e => { e.preventDefault(); start(); });
+  el.addEventListener('touchend', stop);
+}
+hwHoldButton('hwBtnForward', () => hwCamZ = Math.min(hwCamZ + 8, hwMaxZ));
+hwHoldButton('hwBtnBack', () => hwCamZ = Math.max(hwCamZ - 8, 0));
+hwHoldButton('hwBtnLeft', () => hwCamX = Math.max(hwCamX - 8, -80));
+hwHoldButton('hwBtnRight', () => hwCamX = Math.min(hwCamX + 8, 80));
+
+let hwJumpAnim = null;
+function hwAnimateCamZTo(targetZ, idx){
+  if(hwJumpAnim) cancelAnimationFrame(hwJumpAnim);
+  const startZ = hwCamZ;
+  const dist = targetZ - startZ;
+  const duration = 700;
+  const t0 = performance.now();
+  function step(t){
+    const p = Math.min(1, (t - t0) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    hwCamZ = startZ + dist * eased;
+    hwRender();
+    if(p < 1){
+      hwJumpAnim = requestAnimationFrame(step);
+    }else{
+      hwFlashFrame(idx);
+    }
+  }
+  hwJumpAnim = requestAnimationFrame(step);
+}
+function hwFlashFrame(idx){
+  const frame = hwFrameEls[idx];
+  if(!frame) return;
+  frame.classList.add('hw-target-glow');
+  setTimeout(() => frame.classList.remove('hw-target-glow'), 1400);
+}
+function hwJumpToNumber(){
+  const val = parseInt(document.getElementById('hwJumpNumber').value, 10);
+  if(!val || val < 1 || val > images.length) return;
+  const idx = val - 1;
+  hwAnimateCamZTo(idx * HW_SPACING, idx);
+}
+
+function openHallway(){
+  hwCamZ = 0;
+  hwCamX = 0;
+  hwKeys = {};
+  buildHallwayScene();
+  hwRender();
+  document.getElementById('hwOverlay').classList.add('open');
+  hwActive = true;
+  hwLoop();
+}
+function closeHallway(){
+  hwActive = false;
+  document.getElementById('hwOverlay').classList.remove('open');
+}
+</script>
+
+</body>
+</html>

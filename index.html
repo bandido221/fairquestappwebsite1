@@ -604,6 +604,7 @@
   <a class="btn" href="/vendor_performer/vendor_list.html">🧺 Vendor List</a>
   <a class="btn" href="/vendor_performer/performer_list.html">🎭 Performer List</a>
   <a class="btn" href="/vendor_performer/food_vendor_list.html">🍖 Food Vendors</a>
+  <a class="btn" id="artistListButton" href="/artist/artist_list.html" style="display:none;">🎨 Artist List</a>
   <a class="btn" id="socialButton" href="#" onclick="openSocial()" style="display:none;">👥 Social</a>
 </div>
 
@@ -611,6 +612,7 @@
   <a class="btn" id="vendorButton" href="#" onclick="requireLoginAndRedirect('vendor_performer/vendor/application.html')">🧺 Apply Vendor</a>
   <a class="btn" id="performerButton" href="#" onclick="requireLoginAndRedirect('vendor_performer/performer/application.html')">🎭 Apply Performer</a>
   <a class="btn" id="foodVendorButton" href="#" onclick="requireLoginAndRedirect('food_vendor/apply_food_vendor.html')">🍔 Food Vendor</a>
+  <a class="btn" id="artistButton" href="#" onclick="requireLoginAndRedirect('/artist/artist_application.html')">🎨 Apply Artist</a>
   <a class="btn" href="/how_to/help_center.html">❓ Help Center</a>
 </div>
 
@@ -1339,6 +1341,33 @@ async function checkIfUserApplied(sessionData) {
     vBtn.innerText = '🧺 Vendor Portal';
     vBtn.href = 'vendor_performer/vendor/index.html';
     vBtn.removeAttribute('onclick');
+  }
+
+  // ── Artist test-access gate (Artist List only — Apply Artist stays open to everyone) ──
+  const userId = sessionData.session.user.id;
+  const { data: userRow } = await supabaseClient
+    .from('app_users')
+    .select('artist_test')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (userRow?.artist_test) {
+    document.getElementById('artistListButton').style.display = '';
+  }
+
+   const { data: artistRow } = await supabaseClient
+    .from('ar_artist')
+    .select('artist_id, setup_completed')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (artistRow) {
+    const aBtn = document.getElementById('artistButton');
+    aBtn.innerText = '🎨 Artist Portal';
+    aBtn.href = artistRow.setup_completed
+      ? `/artist/artist_profile.html?id=${encodeURIComponent(artistRow.artist_id)}`
+      : '/artist/artist_setup.html';
+    aBtn.removeAttribute('onclick');
   }
 }
 async function checkSocialAccess(sessionData) {

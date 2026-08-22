@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artist | FairQuest</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+*{box-sizing:border-box;}
+body{
+  font-family:'Domine',serif;
+  background:#000;
+  color:#f0e6d2;
+  margin:0;
+}
+
+.topnav{
+  background: rgba(13,10,4,0.95);
+  border-bottom: 1px solid rgba(201,168,76,0.25);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 20px; height: 56px;
+  position: sticky; top: 0; z-index: 200;
+  flex-wrap: wrap;
+}
+.topnav-logo{ display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.topnav-logo img{ width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+.topnav-logo span{ font-family: 'Cinzel', serif; font-size: 17px; color: #f1df99; letter-spacing: 0.05em; }
+.topnav-links{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.topnav-links a{
+  font-family: 'Domine', serif; font-size: 13px; padding: 7px 14px;
+  border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+  background: transparent; color: #c9a84c;
+  text-decoration: none;
+}
+.topnav-links a:hover{ background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.55); color: #f1df99; }
+
+.wrap{
+  max-width:800px;
+  margin:24px auto;
+  padding:0 16px 60px;
+}
+
+.card{
+  background:rgba(214,197,126,0.9);
+  border-radius:18px;
+  padding:24px;
+  color:#111;
+  margin-bottom:18px;
+}
+.card, .card *{ color:#111 !important; }
+.id-chip, .id-chip *{ color:#f0e6d2 !important; }
+.message-btn, .message-btn *{ color:#f0e6d2 !important; }
+
+.profile-top{
+  display:flex;
+  gap:18px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.profile-photo{
+  width:110px; height:110px; border-radius:50%;
+  object-fit:cover; border:3px solid #111; flex-shrink:0;
+  background:#ddd;
+}
+.profile-info{ flex:1; min-width:200px; }
+.profile-info h1{ font-family:'Cinzel',serif; font-size:1.5rem; margin:0 0 4px; }
+.profile-handle{ font-size:0.95rem; color:#444; margin-bottom:8px; }
+.id-chip{
+  display:inline-block; background:#111; color:#f0e6d2; padding:5px 12px;
+  border-radius:999px; font-family:'Cinzel',serif; font-size:0.75rem;
+}
+.bio{ margin-top:14px; font-size:0.95rem; line-height:1.6; }
+
+.contact-list{ margin-top:14px; }
+.contact-row{ font-size:0.9rem; margin-bottom:6px; }
+.contact-row a{ color:#1a3a6b; }
+.login-note{ font-size:0.8rem; color:#666; margin-top:8px; font-style:italic; }
+
+.message-btn{
+  margin-top:16px; padding:11px 20px; border:none; border-radius:10px;
+  background:#111; color:#f0e6d2; font-family:'Cinzel',serif; cursor:pointer;
+}
+.add-album-btn{
+  padding:8px 16px; border:none; border-radius:8px;
+  background:#111; color:#f0e6d2; font-family:'Cinzel',serif; font-size:0.85rem; cursor:pointer;
+}
+.modal-box select{
+  width:100%; padding:11px; border-radius:8px; border:1px solid rgba(0,0,0,0.25);
+  font-family:'Domine',serif; font-size:0.95rem; background:#fffdf7; color:#111;
+}
+
+.gallery-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
+  gap:14px;
+}
+.book-card{
+  cursor:pointer;
+  position:relative;
+}
+.book-cover{
+  width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px;
+  background:#ddd;
+}
+.book-title{ font-size:0.85rem; font-weight:bold; margin-top:6px; }
+.book-count{ font-size:0.75rem; color:#555; }
+
+.album-menu-wrap{ position:absolute; top:6px; right:6px; z-index:5; }
+.album-menu-btn{
+  border:none; background:rgba(0,0,0,0.55); color:#fff !important;
+  width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:1rem; line-height:1;
+}
+.album-menu-btn:hover{ background:rgba(0,0,0,0.8); }
+.album-menu-dropdown{
+  position:absolute; top:100%; right:0; margin-top:4px;
+  background:#fffdf7; border:1px solid rgba(0,0,0,0.15); border-radius:8px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.3); min-width:180px; overflow:hidden;
+  display:none; z-index:10;
+}
+.album-menu-dropdown.open{ display:block; }
+.album-menu-item{
+  display:block; width:100%; text-align:left; padding:10px 12px; border:none;
+  background:transparent; cursor:pointer; font-size:0.8rem; font-family:'Domine',serif;
+  color:#111 !important;
+}
+.album-menu-item:hover{ background:rgba(0,0,0,0.06); }
+.album-menu-item.danger{ color:#b41e1e !important; }
+
+.btn-delete-confirm{ background:#b41e1e; color:#fff !important; }
+
+.empty-msg{ text-align:center; color:#555; padding:20px 0; }
+.not-found{ text-align:center; padding:60px 20px; }
+.not-found h1{ font-family:'Cinzel',serif; }
+
+/* message modal */
+.modal-bg{
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.8); display:none; align-items:center;
+  justify-content:center; z-index:999; padding:16px;
+}
+.modal-box{
+  background:rgba(214,197,126,0.97); border-radius:16px; padding:22px;
+  max-width:420px; width:100%; color:#111;
+}
+.modal-box, .modal-box *{ color:#111 !important; }
+.modal-box input, .modal-box textarea{ color:#111 !important; }
+.btn-send, .btn-send *{ color:#f0e6d2 !important; }
+.modal-box h2{ font-family:'Cinzel',serif; font-size:1.2rem; margin:0 0 14px; }
+.modal-box label{ display:block; font-weight:bold; font-size:0.85rem; margin:10px 0 5px; }
+.modal-box input, .modal-box textarea{
+  width:100%; padding:11px; border-radius:8px; border:1px solid rgba(0,0,0,0.25);
+  font-family:'Domine',serif; font-size:0.95rem; background:#fffdf7; color:#111;
+}
+.modal-box textarea{ min-height:100px; resize:vertical; }
+.modal-actions{ display:flex; gap:8px; margin-top:16px; }
+.modal-actions button{
+  flex:1; padding:11px; border:none; border-radius:8px; cursor:pointer;
+  font-family:'Cinzel',serif; font-size:0.9rem;
+}
+.btn-send{ background:#111; color:#f0e6d2; }
+.btn-cancel{ background:transparent; border:1px solid rgba(0,0,0,0.3) !important; }
+.modal-status{ font-size:0.8rem; margin-top:10px; text-align:center; display:none; }
+
+@media (max-width:520px){
+  .card{ padding:18px; border-radius:14px; }
+  .profile-top{ flex-direction:column; text-align:center; }
+  .profile-info{ text-align:center; }
+}
+</style>
+</head>
+
+<body>
+
+<nav class="topnav">
+  <a class="topnav-logo" href="/index.html">
+    <img src="/images/logo.png" alt="FairQuest" />
+    <span>FairQuest</span>
+  </a>
+  <div class="topnav-links">
+    <a href="/index.html">🏠 Home</a>
+    <a href="artist_list.html">🎨 All Artists</a>
+  </div>
+</nav>
+
+<div class="wrap" id="wrap">
+  <div class="empty-msg">Loading...</div>
+</div>
+
+<div class="modal-bg" id="messageModal">
+  <div class="modal-box">
+    <h2>Message This Artist</h2>
+    <label for="msgSenderName">Your Name</label>
+    <input type="text" id="msgSenderName" placeholder="Your name">
+    <label for="msgSenderEmail">Your Email</label>
+    <input type="email" id="msgSenderEmail" placeholder="you@email.com">
+    <label for="msgBody">Message</label>
+    <textarea id="msgBody" placeholder="Say hello, ask about a piece, etc..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-send" id="msgSendBtn" onclick="sendMessage()">Send</button>
+      <button class="btn-cancel" onclick="closeMessageModal()">Cancel</button>
+    </div>
+    <div class="modal-status" id="modalStatus"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="addAlbumModal">
+  <div class="modal-box">
+    <h2>New Album</h2>
+    <label for="albumTitle">Album Title</label>
+    <input type="text" id="albumTitle" placeholder="e.g. Watercolor Studies">
+    <label for="albumDesc">Description (optional)</label>
+    <textarea id="albumDesc" placeholder="What's in this album?"></textarea>
+    <label for="albumVisibility">Who can see this album?</label>
+    <select id="albumVisibility">
+      <option value="public">🌍 Public — anyone</option>
+      <option value="logged_in">🔒 Logged-in visitors only</option>
+      <option value="private">🚫 Private — only me</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn-send" id="albumSaveBtn" onclick="createAlbum()">Create Album</button>
+      <button class="btn-cancel" onclick="closeAddAlbumModal()">Cancel</button>
+    </div>
+    <div class="modal-status" id="albumStatus"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="renameAlbumModal">
+  <div class="modal-box">
+    <h2>Rename Album</h2>
+    <label for="renameAlbumTitle">Album Title</label>
+    <input type="text" id="renameAlbumTitle" placeholder="Album title">
+    <input type="hidden" id="renameAlbumId">
+    <div class="modal-actions">
+      <button class="btn-send" id="renameSaveBtn" onclick="saveRenamedAlbum()">Save</button>
+      <button class="btn-cancel" onclick="closeRenameAlbumModal()">Cancel</button>
+    </div>
+    <div class="modal-status" id="renameStatus"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="deleteAlbumModal">
+  <div class="modal-box">
+    <h2>⚠️ Delete Album?</h2>
+    <p id="deleteAlbumWarning" style="margin:10px 0; font-size:0.9rem;"></p>
+    <input type="hidden" id="deleteAlbumId">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDeleteAlbumModal()">Cancel</button>
+      <button class="btn-delete-confirm" id="deleteAlbumConfirmBtn" onclick="confirmDeleteAlbum()">Delete Album</button>
+    </div>
+    <div class="modal-status" id="deleteAlbumStatus"></div>
+  </div>
+</div>
+
+<script>
+const supabaseClient = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+const FUNCTIONS_BASE = 'https://awtbjuiqgtdydsqzimul.supabase.co/functions/v1';
+
+const urlParams = new URLSearchParams(window.location.search);
+const lookup = urlParams.get('id');
+let currentArtist = null;
+let isOwner = false;
+
+async function checkOwner(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(!session) return false;
+  const { data } = await supabaseClient
+    .from('ar_artist')
+    .select('id')
+    .eq('id', currentArtist.id)
+    .eq('user_id', session.user.id)
+    .maybeSingle();
+  return !!data;
+}
+
+async function init(){
+  const wrap = document.getElementById('wrap');
+
+  if(!lookup){
+    wrap.innerHTML = `<div class="not-found"><h1>No artist specified</h1><p>Missing ?id= in the URL.</p></div>`;
+    return;
+  }
+
+  const { data, error } = await supabaseClient.rpc('get_ar_artist_public', { p_lookup: lookup });
+
+  if(error || !data || data.length === 0){
+    wrap.innerHTML = `<div class="not-found"><h1>Artist Not Found</h1><p>This artist page doesn't exist or isn't published.</p></div>`;
+    return;
+  }
+
+  currentArtist = data[0];
+  isOwner = await checkOwner();
+  renderProfile();
+  loadGallery();
+}
+init();
+
+function escHtml(s){
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escAttr(s){
+  return escHtml(s).replace(/"/g,'&quot;');
+}
+
+function renderProfile(){
+  const a = currentArtist;
+  const wrap = document.getElementById('wrap');
+
+  const photoHtml = a.profile_photo_url
+    ? `<img class="profile-photo" src="${a.profile_photo_url}">`
+    : `<div class="profile-photo"></div>`;
+
+  let contactHtml = '';
+  if(a.contact_email) contactHtml += `<div class="contact-row">✉️ <a href="mailto:${escHtml(a.contact_email)}">${escHtml(a.contact_email)}</a></div>`;
+  if(a.contact_phone) contactHtml += `<div class="contact-row">📞 ${escHtml(a.contact_phone)}</div>`;
+  if(a.website_url) contactHtml += `<div class="contact-row">🔗 <a href="${escHtml(a.website_url)}" target="_blank">${escHtml(a.website_url)}</a></div>`;
+
+  wrap.innerHTML = `
+    <div class="card">
+      <div class="profile-top">
+        ${photoHtml}
+        <div class="profile-info">
+          <h1>${escHtml(a.display_name || a.artist_name)}</h1>
+          <div class="profile-handle">@${escHtml(a.artist_name)}</div>
+          <span class="id-chip">ID: ${escHtml(a.artist_id)}</span>
+        </div>
+      </div>
+      ${a.bio ? `<div class="bio">${escHtml(a.bio)}</div>` : ''}
+      <div class="contact-list">
+        ${contactHtml}
+        ${!contactHtml ? `<div class="login-note">Contact info is only visible to logged-in visitors, if the artist chose to show it.</div>` : ''}
+      </div>
+      <button class="message-btn" onclick="openMessageModal()">✉️ Message This Artist</button>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+        <h2 style="font-family:'Cinzel',serif; margin:0;">Gallery</h2>
+        ${isOwner ? `<button class="add-album-btn" onclick="openAddAlbumModal()">+ Add Album</button>` : ''}
+      </div>
+      <div id="galleryContainer" class="empty-msg">Loading gallery...</div>
+    </div>
+  `;
+}
+
+async function loadGallery(){
+  const container = document.getElementById('galleryContainer');
+
+  const { data: books, error } = await supabaseClient
+    .from('ar_gallery')
+    .select('*')
+    .eq('artist_id', currentArtist.id)
+    .order('sort_order', { ascending: true });
+
+  if(error || !books || books.length === 0){
+    container.innerHTML = '<div class="empty-msg">No gallery books yet.</div>';
+    return;
+  }
+
+  const bookIds = books.map(b => b.id);
+  const { data: images } = await supabaseClient
+    .from('ar_gallery_image')
+    .select('gallery_id, image_url, sort_order')
+    .in('gallery_id', bookIds)
+    .order('sort_order', { ascending: true });
+
+  const coverByBook = {};
+  const countByBook = {};
+  (images || []).forEach(img => {
+    countByBook[img.gallery_id] = (countByBook[img.gallery_id] || 0) + 1;
+    if(!coverByBook[img.gallery_id]) coverByBook[img.gallery_id] = img.image_url;
+  });
+
+  container.className = 'gallery-grid';
+  container.innerHTML = books.map(b => `
+    <div class="book-card" onclick="location.href='artist_gallery_book.html?gallery_id=${b.id}'">
+      ${coverByBook[b.id]
+        ? `<img class="book-cover" src="${coverByBook[b.id]}">`
+        : `<div class="book-cover"></div>`}
+      <div class="book-title">${escHtml(b.title)}</div>
+      <div class="book-count">${countByBook[b.id] || 0} image${(countByBook[b.id] || 0) === 1 ? '' : 's'}</div>
+      ${isOwner ? `
+        <div class="album-menu-wrap" onclick="event.stopPropagation()">
+          <button class="album-menu-btn" onclick="toggleAlbumMenu('${b.id}', event)">⋮</button>
+          <div class="album-menu-dropdown" id="album-menu-${b.id}">
+            <button class="album-menu-item" onclick="toggleAlbumVisibility('${b.id}', '${b.visibility}')">
+              ${b.visibility === 'public' ? '🚫 Make Private' : '🌍 Make Public'}
+            </button>
+            <button class="album-menu-item" data-book-id="${b.id}" data-book-title="${escAttr(b.title)}" onclick="openRenameAlbumModal(this.dataset.bookId, this.dataset.bookTitle)">✏️ Rename Album</button>
+            <button class="album-menu-item danger" data-book-id="${b.id}" data-book-title="${escAttr(b.title)}" onclick="openDeleteAlbumModal(this.dataset.bookId, this.dataset.bookTitle)">🗑️ Delete Album</button>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+function openMessageModal(){
+  document.getElementById('modalStatus').style.display = 'none';
+  document.getElementById('msgSenderName').value = '';
+  document.getElementById('msgSenderEmail').value = '';
+  document.getElementById('msgBody').value = '';
+  document.getElementById('messageModal').style.display = 'flex';
+}
+function closeMessageModal(){
+  document.getElementById('messageModal').style.display = 'none';
+}
+
+function toggleAlbumMenu(bookId, event){
+  event.stopPropagation();
+  document.querySelectorAll('.album-menu-dropdown.open').forEach(el => {
+    if(el.id !== `album-menu-${bookId}`) el.classList.remove('open');
+  });
+  document.getElementById(`album-menu-${bookId}`)?.classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  document.querySelectorAll('.album-menu-dropdown.open').forEach(el => el.classList.remove('open'));
+});
+
+async function toggleAlbumVisibility(bookId, currentVisibility){
+  const newVisibility = currentVisibility === 'public' ? 'private' : 'public';
+  await supabaseClient.from('ar_gallery').update({ visibility: newVisibility }).eq('id', bookId);
+  loadGallery();
+}
+
+function openRenameAlbumModal(bookId, currentTitle){
+  document.getElementById('renameStatus').style.display = 'none';
+  document.getElementById('renameAlbumId').value = bookId;
+  document.getElementById('renameAlbumTitle').value = currentTitle;
+  document.getElementById('renameAlbumModal').style.display = 'flex';
+}
+function closeRenameAlbumModal(){
+  document.getElementById('renameAlbumModal').style.display = 'none';
+}
+async function saveRenamedAlbum(){
+  const bookId = document.getElementById('renameAlbumId').value;
+  const newTitle = document.getElementById('renameAlbumTitle').value.trim();
+  const statusEl = document.getElementById('renameStatus');
+  const btn = document.getElementById('renameSaveBtn');
+
+  if(!newTitle){
+    statusEl.textContent = 'Please enter a title.';
+    statusEl.style.color = '#c0392b';
+    statusEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  const { error } = await supabaseClient
+    .from('ar_gallery')
+    .update({ title: newTitle })
+    .eq('id', bookId);
+
+  btn.disabled = false;
+  btn.textContent = 'Save';
+
+  if(error){
+    statusEl.textContent = 'Error: ' + error.message;
+    statusEl.style.color = '#c0392b';
+    statusEl.style.display = 'block';
+    return;
+  }
+
+  closeRenameAlbumModal();
+  loadGallery();
+}
+
+function openDeleteAlbumModal(bookId, title){
+  document.getElementById('deleteAlbumStatus').style.display = 'none';
+  document.getElementById('deleteAlbumId').value = bookId;
+  document.getElementById('deleteAlbumWarning').textContent =
+    `This will permanently delete "${title}" and every image inside it. This cannot be undone.`;
+  document.getElementById('deleteAlbumModal').style.display = 'flex';
+}
+function closeDeleteAlbumModal(){
+  document.getElementById('deleteAlbumModal').style.display = 'none';
+}
+async function confirmDeleteAlbum(){
+  const bookId = document.getElementById('deleteAlbumId').value;
+  const statusEl = document.getElementById('deleteAlbumStatus');
+  const btn = document.getElementById('deleteAlbumConfirmBtn');
+
+  btn.disabled = true;
+  btn.textContent = 'Deleting...';
+
+  await supabaseClient.from('ar_gallery_image').delete().eq('gallery_id', bookId);
+  const { error } = await supabaseClient.from('ar_gallery').delete().eq('id', bookId);
+
+  btn.disabled = false;
+  btn.textContent = 'Delete Album';
+
+  if(error){
+    statusEl.textContent = 'Error: ' + error.message;
+    statusEl.style.color = '#c0392b';
+    statusEl.style.display = 'block';
+    return;
+  }
+
+  closeDeleteAlbumModal();
+  loadGallery();
+}
+
+async function sendMessage(){
+  const name = document.getElementById('msgSenderName').value.trim();
+  const email = document.getElementById('msgSenderEmail').value.trim();
+  const message = document.getElementById('msgBody').value.trim();
+  const statusEl = document.getElementById('modalStatus');
+  const btn = document.getElementById('msgSendBtn');
+
+  if(!name || !email || !message){
+    statusEl.textContent = 'Please fill in all fields.';
+    statusEl.style.color = '#c0392b';
+    statusEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try{
+    const resp = await fetch(`${FUNCTIONS_BASE}/send-artist-contact-message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        artist_id: currentArtist.artist_id,
+        sender_name: name,
+        sender_email: email,
+        message: message
+      })
+    });
+    const result = await resp.json();
+
+    if(!resp.ok || !result.ok){
+      throw new Error(result.error || 'Failed to send');
+    }
+
+    statusEl.textContent = '✔ Message sent!';
+    statusEl.style.color = '#2e7d32';
+    statusEl.style.display = 'block';
+    setTimeout(closeMessageModal, 1500);
+  }catch(err){
+    statusEl.textContent = 'Error: ' + err.message;
+    statusEl.style.color = '#c0392b';
+    statusEl.style.display = 'block';
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Send';
+  }
+}
+
+function openAddAlbumModal(){
+  document.getElementById('albumStatus').style.display = 'none';
+  document.getElementById('albumTitle').value = '';
+  document.getElementById('albumDesc').value = '';
+  document.getElementById('albumVisibility').value = 'public';
+  document.getElementById('addAlbumModal').style.display = 'flex';
+}
+function closeAddAlbumModal(){
+  document.getElementById('addAlbumModal').style.display = 'none';
+}
+
+async function createAlbum(){
+  const title = document.getElementById('albumTitle').value.trim();
+  const description = document.getElementById('albumDesc').value.trim();
+  const visibility = document.getElementById('albumVisibility').value;
+  const statusEl = document.getElementById('albumStatus');
+  const btn = document.getElementById('albumSaveBtn');
+
+  if(!title){
+    statusEl.textContent = 'Please give the album a title.';
+    statusEl.style.color = '#c0392b';
+    statusEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Creating...';
+
+  const { error } = await supabaseClient
+    .from('ar_gallery')
+    .insert({
+      artist_id: currentArtist.id,
+      title: title,
+      description: description || null,
+      visibility: visibility
+    });
+
+  btn.disabled = false;
+  btn.textContent = 'Create Album';
+
+  if(error){
+    statusEl.textContent = 'Error: ' + error.message;
+    statusEl.style.color = '#c0392b';
+    statusEl.style.display = 'block';
+    return;
+  }
+
+  closeAddAlbumModal();
+  loadGallery();
+}
+</script>
+
+</body>
+</html>

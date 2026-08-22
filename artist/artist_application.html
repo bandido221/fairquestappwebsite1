@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Become an Artist | FairQuest</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+*{box-sizing:border-box;}
+body{
+  font-family:'Domine',serif;
+  background:#000;
+  color:#f0e6d2;
+  margin:0;
+  padding:0;
+}
+
+.topnav{
+  background: rgba(13,10,4,0.95);
+  border-bottom: 1px solid rgba(201,168,76,0.25);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 20px; height: 56px;
+  position: sticky; top: 0; z-index: 200;
+  flex-wrap: wrap;
+}
+.topnav-logo{ display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.topnav-logo img{ width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+.topnav-logo span{ font-family: 'Cinzel', serif; font-size: 17px; color: #f1df99; letter-spacing: 0.05em; }
+.topnav-links{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.topnav-links a{
+  font-family: 'Domine', serif; font-size: 13px; padding: 7px 14px;
+  border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+  background: transparent; color: #c9a84c;
+  text-decoration: none;
+}
+.topnav-links a:hover{ background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.55); color: #f1df99; }
+
+.wrap{
+  max-width:700px;
+  margin:24px auto;
+  padding:0 16px 60px;
+}
+
+.card{
+  background:rgba(214,197,126,0.9);
+  border-radius:18px;
+  padding:24px;
+  color:#111;
+}
+
+.card h1{
+  font-family:'Cinzel',serif;
+  font-size:1.5rem;
+  margin:0 0 6px;
+}
+
+.card .sub{
+  font-size:0.9rem;
+  color:#333;
+  margin-bottom:22px;
+  line-height:1.5;
+}
+
+label{
+  display:block;
+  font-weight:bold;
+  font-size:0.85rem;
+  margin:16px 0 6px;
+}
+
+input[type="text"], input[type="email"], textarea{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid rgba(0,0,0,0.25);
+  font-family:'Domine',serif;
+  font-size:1rem;
+  background:#fffdf7;
+  color:#111;
+}
+
+textarea{
+  min-height:90px;
+  resize:vertical;
+}
+
+.hint{
+  font-size:0.75rem;
+  color:#555;
+  margin-top:5px;
+}
+
+.name-check{
+  font-size:0.8rem;
+  margin-top:6px;
+  font-weight:bold;
+  min-height:18px;
+}
+.name-check.ok{ color:#2e7d32; }
+.name-check.bad{ color:#c0392b; }
+.name-check.checking{ color:#777; }
+
+.submit-btn{
+  width:100%;
+  margin-top:26px;
+  padding:15px;
+  border:none;
+  border-radius:10px;
+  background:#111;
+  color:#f0e6d2;
+  font-family:'Cinzel',serif;
+  font-size:1rem;
+  cursor:pointer;
+}
+.submit-btn:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+.status-msg{
+  margin-top:16px;
+  font-size:0.9rem;
+  font-weight:bold;
+  display:none;
+}
+.status-msg.error{ color:#c0392b; }
+.status-msg.success{ color:#2e7d32; }
+
+.login-wall{
+  background:rgba(214,197,126,0.9);
+  border-radius:18px;
+  padding:30px 24px;
+  text-align:center;
+  color:#111;
+}
+.login-wall a{
+  display:inline-block;
+  margin-top:14px;
+  padding:12px 22px;
+  background:#111;
+  color:#f0e6d2;
+  border-radius:10px;
+  text-decoration:none;
+  font-family:'Cinzel',serif;
+}
+
+.success-box{
+  background:rgba(214,197,126,0.9);
+  border-radius:18px;
+  padding:30px 24px;
+  text-align:center;
+  color:#111;
+  display:none;
+}
+.success-box .icon{ font-size:2.2rem; margin-bottom:10px; }
+
+.image-upload-row{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.image-slot{
+  flex:1;
+  min-width:140px;
+  position:relative;
+}
+.image-slot .drop-box{
+  width:100%;
+  aspect-ratio:1/1;
+  border:2px dashed rgba(0,0,0,0.3);
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:6px;
+  cursor:pointer;
+  background:#fffdf7;
+  overflow:hidden;
+  position:relative;
+  text-align:center;
+  font-size:0.8rem;
+  color:#555;
+}
+.image-slot .drop-box img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  position:absolute;
+  top:0;left:0;
+}
+.image-slot .drop-box .upload-pct{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  background:rgba(0,0,0,0.65);
+  color:#fff;
+  font-size:0.7rem;
+  padding:3px 0;
+  display:none;
+}
+.image-slot input[type="file"]{ display:none; }
+.image-slot .remove-img{
+  position:absolute;
+  top:4px;right:4px;
+  background:rgba(0,0,0,0.7);
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:22px;height:22px;
+  font-size:0.75rem;
+  cursor:pointer;
+  display:none;
+  z-index:2;
+}
+
+/* mobile */
+@media (max-width:520px){
+  .header-inner h1{ font-size:1.1rem; }
+  .card, .login-wall, .success-box{ padding:18px; border-radius:14px; }
+  .card h1{ font-size:1.25rem; }
+  .submit-btn{ font-size:0.95rem; padding:14px; }
+}
+</style>
+</head>
+
+<body>
+
+<nav class="topnav">
+  <a class="topnav-logo" href="/index.html">
+    <img src="/images/logo.png" alt="FairQuest" />
+    <span>FairQuest</span>
+  </a>
+  <div class="topnav-links">
+    <a href="/index.html">🏠 Home</a>
+    <a href="artist_list.html">🎨 Artist List</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="login-wall" id="loginWall" style="display:none;">
+    <h2>🔒 Sign In Required</h2>
+    <p>You need a FairQuest account to apply as an Artist.</p>
+    <a href="/user_login.html?redirect=/artist_application.html">Sign In / Create Account</a>
+  </div>
+
+  <div class="card" id="formCard" style="display:none;">
+    <h1>🎨 Become an Artist</h1>
+    <div class="sub">
+      Apply for an Artist page on FairQuest. Once approved, you'll get your own public
+      profile and gallery. Applications are reviewed before going live.
+    </div>
+
+    <form id="applicationForm">
+
+      <label for="artistName">Requested Artist Name</label>
+      <input type="text" id="artistName" maxlength="12" placeholder="e.g. artlover" required>
+      <div class="hint">4–12 characters, any characters allowed. This is your unique searchable handle — not case sensitive.</div>
+      <div class="name-check" id="nameCheck"></div>
+
+      <label for="contactEmail">Contact Email</label>
+      <input type="email" id="contactEmail" placeholder="you@email.com" required>
+      <div class="hint">We'll send your approval/decline notice here.</div>
+
+      <label for="note">Tell us about your art (optional)</label>
+      <textarea id="note" placeholder="Medium, style, links to existing work, anything that helps us review your application..."></textarea>
+
+      <label>Sample Artwork (2 images required)</label>
+      <div class="image-upload-row">
+        <div class="image-slot">
+          <div class="drop-box" id="dropBox1" onclick="document.getElementById('fileInput1').click()">
+            <span id="dropLabel1">📷 Add image 1</span>
+            <div class="upload-pct" id="pct1"></div>
+          </div>
+          <button type="button" class="remove-img" id="removeBtn1" onclick="removeImage(1, event)">✕</button>
+          <input type="file" id="fileInput1" accept="image/*">
+        </div>
+        <div class="image-slot">
+          <div class="drop-box" id="dropBox2" onclick="document.getElementById('fileInput2').click()">
+            <span id="dropLabel2">📷 Add image 2</span>
+            <div class="upload-pct" id="pct2"></div>
+          </div>
+          <button type="button" class="remove-img" id="removeBtn2" onclick="removeImage(2, event)">✕</button>
+          <input type="file" id="fileInput2" accept="image/*">
+        </div>
+      </div>
+      <div class="hint">Two samples of your work, so we know what to expect on your gallery. JPG or PNG.</div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">Submit Application</button>
+
+      <div class="status-msg" id="statusMsg"></div>
+    </form>
+  </div>
+
+  <div class="success-box" id="successBox">
+    <div class="icon">🎉</div>
+    <h2>Application Submitted!</h2>
+    <p>We'll review your request and email you once a decision is made.</p>
+  </div>
+
+</div>
+
+<script>
+const supabaseClient = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+let nameCheckTimeout = null;
+let nameIsAvailable = false;
+
+// ---- Cloudinary config — update the preset name once it's created in your Cloudinary dashboard ----
+const CLOUDINARY_CLOUD_NAME = 'dft7xclvh'; // same cloud used elsewhere on the site (see update_application.html)
+const CLOUDINARY_UPLOAD_PRESET = 'artist_application_upload'; // <-- create this unsigned preset in Cloudinary first
+
+const sampleImageUrls = { 1: null, 2: null };
+
+async function uploadSampleImage(slot, file){
+  const dropLabel = document.getElementById('dropLabel' + slot);
+  const dropBox = document.getElementById('dropBox' + slot);
+  const pctEl = document.getElementById('pct' + slot);
+  const removeBtn = document.getElementById('removeBtn' + slot);
+
+  dropLabel.textContent = 'Uploading...';
+  pctEl.style.display = 'block';
+  pctEl.textContent = '0%';
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
+
+    xhr.upload.onprogress = (e) => {
+      if(e.lengthComputable){
+        const pct = Math.round((e.loaded / e.total) * 100);
+        pctEl.textContent = pct + '%';
+      }
+    };
+
+    xhr.onload = () => {
+      try{
+        const result = JSON.parse(xhr.responseText);
+        if(!result.secure_url){
+          dropLabel.textContent = '⚠ Upload failed — tap to retry';
+          pctEl.style.display = 'none';
+          resolve(null);
+          return;
+        }
+        sampleImageUrls[slot] = result.secure_url;
+        dropBox.style.backgroundImage = '';
+        dropBox.innerHTML = `<img src="${result.secure_url}"><div class="upload-pct" id="pct${slot}"></div>`;
+        removeBtn.style.display = 'block';
+        resolve(result.secure_url);
+      }catch(err){
+        dropLabel.textContent = '⚠ Upload failed — tap to retry';
+        pctEl.style.display = 'none';
+        resolve(null);
+      }
+    };
+
+    xhr.onerror = () => {
+      dropLabel.textContent = '⚠ Upload failed — tap to retry';
+      pctEl.style.display = 'none';
+      resolve(null);
+    };
+
+    xhr.send(formData);
+  });
+}
+
+function removeImage(slot, evt){
+  evt.stopPropagation();
+  sampleImageUrls[slot] = null;
+  document.getElementById('fileInput' + slot).value = '';
+  document.getElementById('dropBox' + slot).innerHTML =
+    `<span id="dropLabel${slot}">📷 Add image ${slot}</span><div class="upload-pct" id="pct${slot}"></div>`;
+  document.getElementById('removeBtn' + slot).style.display = 'none';
+}
+
+document.getElementById('fileInput1').addEventListener('change', function(){
+  if(this.files[0]) uploadSampleImage(1, this.files[0]);
+});
+document.getElementById('fileInput2').addEventListener('change', function(){
+  if(this.files[0]) uploadSampleImage(2, this.files[0]);
+});
+
+async function init(){
+  const { data } = await supabaseClient.auth.getSession();
+  if(!data.session){
+    document.getElementById('loginWall').style.display = 'block';
+    return;
+  }
+  document.getElementById('formCard').style.display = 'block';
+
+  // prefill contact email with their account email
+  const email = data.session.user.email;
+  if(email) document.getElementById('contactEmail').value = email;
+}
+init();
+
+document.getElementById('artistName').addEventListener('input', function(){
+  const val = this.value.trim();
+  const checkEl = document.getElementById('nameCheck');
+  nameIsAvailable = false;
+
+  if(nameCheckTimeout) clearTimeout(nameCheckTimeout);
+
+  if(val.length < 4 || val.length > 12){
+    checkEl.textContent = val.length ? 'Must be 4–12 characters.' : '';
+    checkEl.className = 'name-check bad';
+    return;
+  }
+
+  checkEl.textContent = 'Checking availability...';
+  checkEl.className = 'name-check checking';
+
+  nameCheckTimeout = setTimeout(async () => {
+    const { data, error } = await supabaseClient.rpc('check_artist_name_available', { p_name: val });
+    if(error){
+      checkEl.textContent = 'Could not check availability.';
+      checkEl.className = 'name-check bad';
+      return;
+    }
+    if(data === true){
+      nameIsAvailable = true;
+      checkEl.textContent = '✔ Available';
+      checkEl.className = 'name-check ok';
+    }else{
+      nameIsAvailable = false;
+      checkEl.textContent = '✘ Already taken';
+      checkEl.className = 'name-check bad';
+    }
+  }, 400);
+});
+
+document.getElementById('applicationForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+
+  const statusMsg = document.getElementById('statusMsg');
+  const submitBtn = document.getElementById('submitBtn');
+  statusMsg.style.display = 'none';
+
+  const artistName = document.getElementById('artistName').value.trim();
+  const contactEmail = document.getElementById('contactEmail').value.trim();
+  const note = document.getElementById('note').value.trim();
+
+  if(artistName.length < 4 || artistName.length > 12){
+    statusMsg.textContent = 'Artist name must be 4–12 characters.';
+    statusMsg.className = 'status-msg error';
+    statusMsg.style.display = 'block';
+    return;
+  }
+
+  if(!nameIsAvailable){
+    statusMsg.textContent = 'Please choose an available artist name before submitting.';
+    statusMsg.className = 'status-msg error';
+    statusMsg.style.display = 'block';
+    return;
+  }
+
+  if(!sampleImageUrls[1] || !sampleImageUrls[2]){
+    statusMsg.textContent = 'Please add both sample images before submitting.';
+    statusMsg.className = 'status-msg error';
+    statusMsg.style.display = 'block';
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const userId = sessionData?.session?.user?.id;
+  if(!userId){
+    statusMsg.textContent = 'You must be signed in to apply.';
+    statusMsg.className = 'status-msg error';
+    statusMsg.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit Application';
+    return;
+  }
+
+  const { error } = await supabaseClient.from('ar_artist_applications').insert({
+    user_id: userId,
+    requested_artist_name: artistName,
+    contact_email: contactEmail,
+    note: note || null,
+    sample_image_1_url: sampleImageUrls[1],
+    sample_image_2_url: sampleImageUrls[2]
+  });
+
+  if(error){
+    console.error(error);
+    statusMsg.textContent = 'Something went wrong: ' + error.message;
+    statusMsg.className = 'status-msg error';
+    statusMsg.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit Application';
+    return;
+  }
+
+  document.getElementById('formCard').style.display = 'none';
+  document.getElementById('successBox').style.display = 'block';
+});
+</script>
+
+</body>
+</html>

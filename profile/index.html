@@ -716,11 +716,22 @@ if (!data.profile?.username) {
       const grid = document.getElementById('dashboardsGrid');
       grid.innerHTML = '';
 
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const { data: artistRow } = await supabaseClient
+        .from('ar_artist')
+        .select('artist_id, setup_completed')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
       const roles = [
         { flag: r.is_admin,       icon: '🏰', name: 'Manage My Fairs',    sub: 'Fair organizer tools',   href: '/fair_admin/fair_admin.html' },
         { flag: r.is_vendor,      icon: '🧺', name: 'Vendor Dashboard',   sub: 'Applications & booth',   href: '/vendor_performer/vendor/dashboard.html' },
         { flag: r.is_performer,   icon: '🎭', name: 'Performer Dashboard',sub: 'Shows & bookings',       href: '/vendor_performer/performer/dashboard.html' },
         { flag: r.is_food_vendor, icon: '🍖', name: 'Food Vendor',        sub: 'Food stall management',  href: '/food_vendor/index.html' },
+        { flag: !!artistRow,      icon: '🎨', name: 'Artist Portal',      sub: 'Profile & gallery',
+          href: artistRow?.setup_completed
+            ? `/artist/artist_profile.html?id=${encodeURIComponent(artistRow.artist_id)}`
+            : '/artist/artist_setup.html' },
       ].filter(role => role.flag);
 
       if (roles.length === 0) {

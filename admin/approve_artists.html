@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Approve Artist Applications | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
+    body {
+      font-family: 'Domine', serif;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+    }
+
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+      flex-wrap: wrap;
+    }
+    .topnav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .topnav-logo img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .topnav-logo span {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--gold-light);
+    }
+    .topnav-links {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .page {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+
+    .page-header { text-align: center; margin-bottom: 24px; }
+    .page-header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 30px);
+      color: var(--gold-light);
+    }
+
+    .card {
+      background: var(--parchment) !important;
+      border-radius: var(--card-radius);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 8px 28px rgba(0,0,0,0.55);
+      border: 1px solid rgba(201,168,76,0.4);
+    }
+    .card, .card * { color: #111 !important; }
+
+    .app-name {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .app-field {
+      font-size: 13px;
+      margin-bottom: 5px;
+      line-height: 1.5;
+    }
+
+    .sample-images {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+      flex-wrap: wrap;
+    }
+    .sample-images img {
+      width: 130px;
+      height: 130px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid rgba(0,0,0,0.15);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn {
+      font-family: 'Domine', serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      cursor: pointer;
+      flex: 1 1 auto;
+      min-width: 100px;
+      text-align: center;
+    }
+    .btn-approve { background: rgba(46,125,50,0.15); border-color: rgba(46,125,50,0.4); }
+    .btn-decline { background: rgba(230,100,0,0.12); border-color: rgba(230,100,0,0.3); }
+    .btn-delete  { background: rgba(180,30,30,0.12); border-color: rgba(180,30,30,0.3); }
+
+    .empty-msg { text-align: center; color: var(--gold-light); padding: 30px 0; }
+
+    .modal {
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.85);
+      display: none; align-items: center; justify-content: center; z-index: 999;
+    }
+    .modal img { max-width: 92%; max-height: 92%; border-radius: 10px; }
+
+    @media (max-width: 480px){
+      .sample-images img{ width: 100px; height: 100px; }
+      .btn{ font-size: 11px; padding: 10px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="/admin/admin_dashboard.html" class="nav-btn">⬅ Dashboard</a>
+      <a href="/index.html" class="nav-btn">🏠 Home</a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="page-header">
+      <h1>🎨 Approve Artist Applications</h1>
+    </div>
+    <div id="applicationList">Loading applications...</div>
+  </div>
+
+  <div class="modal" id="imageModal" onclick="closeModal()">
+    <img id="modalImg">
+  </div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    // ── Admin auth gate ──
+    (async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = '/admin/alexander.html'; return; }
+      const { data: isAdmin } = await supabaseClient.rpc('is_admin_by_email', { p_email: session.user.email });
+      if (!isAdmin) { await supabaseClient.auth.signOut(); window.location.href = '/admin/alexander.html'; return; }
+      loadApplications();
+    })();
+
+    async function loadApplications() {
+      const container = document.getElementById('applicationList');
+
+      const { data: apps, error } = await supabaseClient
+        .from('ar_artist_applications')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        container.innerHTML = `<p class="empty-msg">Error loading applications: ${error.message}</p>`;
+        return;
+      }
+
+      if (!apps || apps.length === 0) {
+        container.innerHTML = '<p class="empty-msg">No pending artist applications.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      apps.forEach(app => {
+        const submitted = new Date(app.created_at).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric'
+        });
+
+        container.insertAdjacentHTML('beforeend', `
+          <div class="card" id="app-${app.id}">
+            <div class="app-name">${escHtml(app.requested_artist_name)}</div>
+            <div class="app-field"><strong>Contact:</strong> <a href="mailto:${escHtml(app.contact_email || '')}" style="color:#1a3a6b !important;">${escHtml(app.contact_email || 'none given')}</a></div>
+            <div class="app-field"><strong>Submitted:</strong> ${submitted}</div>
+            ${app.note ? `<div class="app-field"><strong>Note:</strong> ${escHtml(app.note)}</div>` : ''}
+            <div class="sample-images">
+              ${app.sample_image_1_url ? `<img src="${app.sample_image_1_url}" onclick="openModal('${app.sample_image_1_url}')">` : ''}
+              ${app.sample_image_2_url ? `<img src="${app.sample_image_2_url}" onclick="openModal('${app.sample_image_2_url}')">` : ''}
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-approve" onclick="approveApplication(${app.id})">✅ Approve</button>
+              <button class="btn btn-decline" onclick="declineApplication(${app.id})">❌ Decline</button>
+              <button class="btn btn-delete" onclick="deleteApplication(${app.id})">🗑️ Delete</button>
+            </div>
+          </div>
+        `);
+      });
+    }
+
+    function escHtml(s){
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    async function approveApplication(id) {
+      if (!confirm('Approve this artist application?')) return;
+      const { error } = await supabaseClient.rpc('approve_ar_artist_application', {
+        p_application_id: id,
+        p_decision: 'approved'
+      });
+      if (error) { alert('❌ Failed to approve: ' + error.message); return; }
+      alert('✅ Approved! The applicant will get an email, and their Artist page now exists (unpublished until they finish setup).');
+      loadApplications();
+    }
+
+    async function declineApplication(id) {
+      const reason = prompt('Reason for declining (sent to the applicant, optional):') || null;
+      const { error } = await supabaseClient.rpc('approve_ar_artist_application', {
+        p_application_id: id,
+        p_decision: 'declined',
+        p_rejection_reason: reason
+      });
+      if (error) { alert('❌ Failed to decline: ' + error.message); return; }
+      alert('❌ Application declined.');
+      loadApplications();
+    }
+
+    async function deleteApplication(id) {
+      if (!confirm('Permanently delete this application? This cannot be undone.')) return;
+      const { error } = await supabaseClient.from('ar_artist_applications').delete().eq('id', id);
+      if (error) { alert('❌ Failed to delete: ' + error.message); return; }
+      alert('🗑️ Application deleted.');
+      loadApplications();
+    }
+
+    function openModal(src){
+      document.getElementById('modalImg').src = src;
+      document.getElementById('imageModal').style.display = 'flex';
+    }
+    function closeModal(){
+      document.getElementById('imageModal').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

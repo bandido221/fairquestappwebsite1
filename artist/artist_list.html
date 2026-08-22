@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Artist List | FairQuest</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background: #0d0a04;
+      color: #f1df99;
+      font-family: 'Domine', serif;
+      padding: 0;
+      text-align: center;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      margin-bottom: 8px;
+    }
+
+    .filters {
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .filters input {
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+
+    .artist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .artist-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.92);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+      cursor: pointer;
+    }
+
+    .card-media {
+      width: 100%;
+      height: 200px;
+      background: rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .card-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-body { padding: 14px 16px 18px; text-align: left; }
+
+    .card-title {
+      font-family: 'Cinzel', serif;
+      text-align: center;
+      margin: 0 0 6px;
+      font-size: 20px;
+      line-height: 1.1;
+      color: #f0e6d2;
+    }
+
+    .card-handle {
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 8px;
+    }
+
+    .card-id {
+      text-align: center;
+      font-size: 11px;
+      color: #bb9457;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.05em;
+    }
+
+    .card-bio {
+      color: rgba(255,255,255,0.78);
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .loader {
+      width: 44px;
+      height: 44px;
+      margin: 18px auto 0;
+      border-radius: 50%;
+      border: 4px solid rgba(255,255,255,0.18);
+      border-top-color: #bb9457;
+      animation: spin 0.9s linear infinite;
+    }
+    .hidden { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .topnav {
+      background: rgba(13,10,4,0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 20px; height: 56px;
+      position: sticky; top: 0; z-index: 200;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 17px; color: #f1df99; letter-spacing: 0.05em; }
+    .topnav-links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a {
+      font-family: 'Domine', serif; font-size: 13px; padding: 7px 14px;
+      border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+      background: transparent; color: #c9a84c;
+      text-decoration: none;
+    }
+    .topnav-links a:hover { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.55); color: #f1df99; }
+    .page-body { padding: 30px 20px 60px; max-width: 1200px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+      <a href="/index.html">🏡 Home</a>
+      <a href="artist_application.html">🎨 Become an Artist</a>
+    </div>
+  </nav>
+
+  <div class="page-body">
+    <h1 style="color:#f1df99; margin-bottom:8px;">🎨 Artist List</h1>
+    <p style="color:rgba(241,223,153,0.7); margin-bottom:24px;">Browse artist pages on FairQuest</p>
+
+    <div class="filters">
+      <input type="text" id="searchInput" placeholder="🔎 Search Artist Name or ID" />
+    </div>
+
+    <div class="artist-grid" id="artistGrid"></div>
+
+    <div id="loader" class="loader hidden" aria-live="polite" aria-busy="true"></div>
+    <div id="sentinel" style="height: 1px;"></div>
+  </div>
+
+<script>
+  const supabaseClient = window.supabase.createClient(
+    'https://awtbjuiqgtdydsqzimul.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+  );
+
+  const PAGE_SIZE = 12;
+
+  let artists = [];
+  let offset = 0;
+  let isLoading = false;
+  let hasMore = true;
+  let currentSearch = '';
+  let searchTimer = null;
+
+  function setLoading(on){
+    const el = document.getElementById('loader');
+    if (!el) return;
+    el.classList.toggle('hidden', !on);
+  }
+
+  function escapeHtml(str){
+    return String(str ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function goToArtistProfile(artistId){
+    window.location.href = `artist_profile.html?id=${encodeURIComponent(artistId)}`;
+  }
+
+  function appendArtists(list){
+    const container = document.getElementById('artistGrid');
+
+    list.forEach(a => {
+      container.innerHTML += `
+        <div class="artist-card"
+          role="button" tabindex="0"
+          onclick="goToArtistProfile('${escapeHtml(a.artist_id)}')"
+          onkeydown="if(event.key==='Enter'||event.key===' '){ goToArtistProfile('${escapeHtml(a.artist_id)}'); }">
+          <div class="card-media">
+            ${a.profile_photo_url ? `<img src="${escapeHtml(a.profile_photo_url)}" alt="${escapeHtml(a.display_name || a.artist_name)}">` : ``}
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">${escapeHtml(a.display_name || a.artist_name)}</h2>
+            <div class="card-handle">@${escapeHtml(a.artist_name)}</div>
+            <div class="card-id">ID: ${escapeHtml(a.artist_id)}</div>
+            ${a.bio ? `<p class="card-bio">${escapeHtml(a.bio)}</p>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  async function fetchNextPage(){
+    if (isLoading || !hasMore) return;
+
+    isLoading = true;
+    setLoading(true);
+
+    const container = document.getElementById('artistGrid');
+
+    let q = supabaseClient
+      .from('ar_artist')
+      .select('artist_id, artist_name, display_name, profile_photo_url, bio')
+      .eq('is_published', true)
+      .order('display_name', { ascending: true });
+
+    const trimmedRaw = (currentSearch || '').trim();
+    const trimmed = trimmedRaw.replace(/[(),]/g, ' ').replace(/\s+/g, ' ').trim();
+
+    if (trimmed.length >= 1) {
+      q = q.or(`artist_name.ilike.*${trimmed}*,display_name.ilike.*${trimmed}*,artist_id.ilike.*${trimmed}*`);
+    }
+
+    const from = offset;
+    const to = offset + PAGE_SIZE - 1;
+
+    const { data, error } = await q.range(from, to);
+
+    if (error) {
+      console.error('artist fetch failed:', error);
+      if (offset === 0) container.innerHTML = '<p>⚠️ Failed to load artists.</p>';
+      isLoading = false;
+      setLoading(false);
+      return;
+    }
+
+    const rows = data || [];
+
+    if (offset === 0 && rows.length === 0) {
+      container.innerHTML = '<p>❌ No artists found.</p>';
+      hasMore = false;
+      isLoading = false;
+      setLoading(false);
+      return;
+    }
+
+    artists = artists.concat(rows);
+    appendArtists(rows);
+
+    offset += rows.length;
+    if (rows.length < PAGE_SIZE) hasMore = false;
+
+    isLoading = false;
+    setLoading(false);
+  }
+
+  function resetAndReload(){
+    artists = [];
+    offset = 0;
+    hasMore = true;
+    document.getElementById('artistGrid').innerHTML = '';
+    fetchNextPage();
+  }
+
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      currentSearch = e.target.value || '';
+      resetAndReload();
+    }, 350);
+  });
+
+  const sentinel = document.getElementById('sentinel');
+  const io = new IntersectionObserver((entries) => {
+    if (entries.some(en => en.isIntersecting)) {
+      fetchNextPage();
+    }
+  }, { root: null, rootMargin: '300px', threshold: 0.01 });
+
+  io.observe(sentinel);
+
+  fetchNextPage();
+</script>
+
+</body>
+</html>

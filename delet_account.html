@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Delete My Account | FairQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
       font-family: 'Domine', serif;
@@ -36,6 +37,52 @@
       text-decoration: underline;
       font-weight: bold;
     }
+    .warning-box {
+      background: rgba(180, 40, 40, 0.12);
+      border: 2px solid #b42828;
+      border-radius: 10px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+    .warning-box p {
+      margin: 6px 0;
+    }
+    #confirmInput {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-top: 14px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 2px solid #5b2a86;
+      text-align: center;
+      font-family: 'Domine', serif;
+    }
+    #deleteBtn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      background: #7a1f1f;
+      color: #f0e6d2;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    #deleteBtn.enabled {
+      cursor: pointer;
+      opacity: 1;
+    }
+    #deleteBtn.enabled:hover {
+      background: #931f1f;
+    }
+    #statusMsg {
+      margin-top: 14px;
+      font-weight: bold;
+      display: none;
+    }
     .back-link {
       display: inline-block;
       margin-top: 30px;
@@ -43,18 +90,109 @@
       font-weight: bold;
       text-decoration: none;
     }
+    #loadingMsg {
+      color: #f0e6d2;
+    }
   </style>
 </head>
 <body>
   <h1>Delete My Account</h1>
+
   <div class="card">
-    <p>If you wish to delete your FairQuest account and all associated data, please send an email to:</p>
-    <p><strong>✉️ <a href="mailto:fairquest2025@gmail.com">fairquest2025@gmail.com</a></strong></p>
-    <p>Include the subject line: <strong>"Delete My Account"</strong></p>
-    <p>Be sure to send the request from the email address linked to your FairQuest account. We will process the deletion within 7 days and confirm by reply email.</p>
-    <p><em>All personal data, check-in history, pet info, and associated records will be permanently removed from our system.</em></p>
+
+    <div id="loadingMsg">Checking your session…</div>
+
+    <div id="notLoggedIn" style="display:none;">
+      <p>You need to be logged in to delete your account.</p>
+      <p><a href="/user_login.html?redirect=/delet_account.html">Log in</a> and come back to this page.</p>
+    </div>
+
+    <div id="deleteForm" style="display:none;">
+      <p>This will delete your FairQuest account (<strong id="userEmailLabel"></strong>). Everything will be lost — your profile, posts, comments, calendar, favorites, and friend connections will all be removed, and you won't be able to log back in yourself afterward.</p>
+
+      <div class="warning-box">
+        <p>⚠️ If you have a Vendor or Performer account linked to this login, it will be deleted as well — including its fair listings, reviews, and photos.</p>
+        <p>If you need your Vendor/Performer account transferred to someone else instead of deleted, do NOT proceed — contact us first at
+          <strong><a href="mailto:fairquestapp@gmail.com">fairquestapp@gmail.com</a></strong>.
+        </p>
+      </div>
+
+      <p>If this was a mistake after deleting, contact support at
+        <strong><a href="mailto:fairquestapp@gmail.com">fairquestapp@gmail.com</a></strong> to have it restored.
+      </p>
+
+      <p>To continue, type <strong>DELETE</strong> below:</p>
+      <input type="text" id="confirmInput" placeholder="Type DELETE to confirm" autocomplete="off" />
+      <button id="deleteBtn" disabled>Delete My Account</button>
+      <p id="statusMsg"></p>
+    </div>
+
   </div>
 
   <a href="/index.html" class="back-link">🏡 Back to Home</a>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    let currentEmail = '';
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      document.getElementById('loadingMsg').style.display = 'none';
+
+      if (!session) {
+        document.getElementById('notLoggedIn').style.display = 'block';
+        return;
+      }
+
+      currentEmail = session.user.email || '';
+      document.getElementById('userEmailLabel').textContent = currentEmail;
+      document.getElementById('deleteForm').style.display = 'block';
+    }
+
+    const confirmInput = document.getElementById('confirmInput');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const statusMsg = document.getElementById('statusMsg');
+
+    confirmInput.addEventListener('input', () => {
+      const match = confirmInput.value.trim() === 'DELETE';
+      deleteBtn.disabled = !match;
+      deleteBtn.classList.toggle('enabled', match);
+    });
+
+    deleteBtn.addEventListener('click', async () => {
+      if (confirmInput.value.trim() !== 'DELETE') return;
+
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Deleting…';
+      statusMsg.style.display = 'none';
+
+      try {
+        const { error } = await supabaseClient.rpc('app_delete_my_account');
+        if (error) throw error;
+
+        await supabaseClient.auth.signOut();
+
+        statusMsg.style.display = 'block';
+        statusMsg.style.color = '#1a5c1e';
+        statusMsg.textContent = '✓ Your account has been deleted.';
+        document.getElementById('confirmInput').style.display = 'none';
+        deleteBtn.style.display = 'none';
+
+        setTimeout(() => { window.location.href = '/index.html'; }, 2500);
+      } catch (err) {
+        statusMsg.style.display = 'block';
+        statusMsg.style.color = '#8f1f1f';
+        statusMsg.textContent = '❌ Something went wrong: ' + (err.message || 'Unknown error') + '. Please email fairquestapp@gmail.com.';
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = 'Delete My Account';
+      }
+    });
+
+    init();
+  </script>
 </body>
 </html>

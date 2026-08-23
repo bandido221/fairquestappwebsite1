@@ -351,6 +351,29 @@ let byNumber = {};
 
 const SPACING = 420;
 const corridor = document.getElementById("corridor");
+
+corridor.addEventListener("click", function(e){
+  const candidates = document.elementsFromPoint(e.clientX, e.clientY)
+    .filter(n => n.dataset && n.dataset.role);
+  if(!candidates.length) return;
+
+  let best = null, bestDist = Infinity;
+  candidates.forEach(node => {
+    const entry = artistEntries[parseInt(node.dataset.entryIndex, 10)];
+    if(!entry) return;
+    const dist = Math.abs(entry.z - camZ);
+    if(dist < bestDist){ bestDist = dist; best = { node, entry }; }
+  });
+  if(!best) return;
+
+  if(best.node.dataset.role === "image"){
+    const slotIdx = parseInt(best.node.dataset.slotIndex, 10);
+    openLightbox(best.entry, best.entry.images[slotIdx]);
+  }else{
+    window.location.href = `artist_profile.html?id=${encodeURIComponent(best.entry.artist.artist_id)}`;
+  }
+});
+
 let camZ = 0;
 let camX = 0;
 let maxZ = 0;
@@ -434,6 +457,7 @@ async function loadArtGallery(){
 function buildScene(){
   artistEntries.forEach((entry, i) => {
     const z = i * SPACING;
+    entry.z = z;
     const wrap = document.createElement("div");
     wrap.className = "frame-pair " + (entry.side === "left" ? "left-wall" : "right-wall");
     wrap.style.left = entry.side === "left" ? "6%" : "58%";
@@ -443,13 +467,15 @@ function buildScene(){
     const frame = document.createElement("div");
     frame.className = "frame";
 
-    for(let slotIdx = 0; slotIdx < 2; slotIdx++){
+ for(let slotIdx = 0; slotIdx < 2; slotIdx++){
       const img = entry.images[slotIdx];
       const slot = document.createElement("div");
       if(img){
         slot.className = "img-slot";
         slot.style.backgroundImage = `url('${img.image_url}')`;
-        slot.onclick = (e) => { e.stopPropagation(); openLightbox(entry, img); };
+        slot.dataset.entryIndex = i;
+        slot.dataset.slotIndex = slotIdx;
+        slot.dataset.role = "image";
       }else{
         slot.className = "img-slot empty";
         slot.textContent = "";
@@ -461,7 +487,8 @@ function buildScene(){
     label.className = "label";
     const name = entry.artist.display_name || entry.artist.artist_name;
     label.textContent = `#${entry.number} · ${entry.artist.artist_id} · ${name}`;
-    label.onclick = () => { window.location.href = `artist_profile.html?id=${encodeURIComponent(entry.artist.artist_id)}`; };
+    label.dataset.entryIndex = i;
+    label.dataset.role = "label";
     frame.appendChild(label);
 
     wrap.appendChild(frame);
@@ -472,10 +499,10 @@ function buildScene(){
 
 function render(){
   corridor.style.transform = `translateX(${-camX}px) translateZ(${camZ}px)`;
+
   const idx = artistEntries.length ? Math.min(artistEntries.length, Math.max(1, Math.floor(camZ / SPACING) + 1)) : 0;
   document.getElementById("progress").textContent = `Frame ${idx} of ${artistEntries.length}`;
 }
-
 let keys = {};
 window.addEventListener("keydown", e => {
   if(document.activeElement && (document.activeElement.tagName === "INPUT")) return;

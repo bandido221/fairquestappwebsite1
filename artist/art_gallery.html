@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Art Gallery | FairQuest</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:#0b0b0d;
+  color:#eee;
+  font-family:Georgia,serif;
+  overflow:hidden;
+  height:100vh;
+}
+
+.topnav{
+  position:fixed; top:0; left:0; right:0; z-index:250;
+  background: rgba(13,10,4,0.95);
+  border-bottom: 1px solid rgba(201,168,76,0.25);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 20px; height: 56px;
+  flex-wrap: wrap;
+}
+.topnav-logo{ display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.topnav-logo img{ width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+.topnav-logo span{ font-family: 'Cinzel', serif; font-size: 17px; color: #f1df99; letter-spacing: 0.05em; }
+.topnav-links{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.topnav-links a{
+  font-family: 'Domine', serif; font-size: 13px; padding: 7px 14px;
+  border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+  background: transparent; color: #c9a84c;
+  text-decoration: none;
+}
+.topnav-links a:hover{ background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.55); color: #f1df99; }
+
+.hud{
+  position:fixed;
+  top:56px;left:0;right:0;
+  padding:12px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:50;
+  background:linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+  gap:12px;
+  flex-wrap:wrap;
+}
+.hud h1{
+  font-size:1rem;
+  margin:0;
+  letter-spacing:1px;
+  color:#d9b46a;
+  white-space:nowrap;
+}
+.jumpbar{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.jumpbar input{
+  width:110px;
+  padding:7px 9px;
+  border-radius:6px;
+  border:1px solid #b89252;
+  background:#1a1a1d;
+  color:#eee;
+  font-size:0.8rem;
+}
+.jumpbar button{
+  padding:7px 12px;
+  border-radius:6px;
+  border:1px solid #b89252;
+  background:#2a2a2e;
+  color:#e6c98a;
+  font-size:0.8rem;
+  cursor:pointer;
+}
+.jumpbar button:hover{ background:#b89252; color:#111; }
+.jump-status{
+  font-size:0.72rem;
+  color:#888;
+  white-space:nowrap;
+}
+.scene-wrap{
+  position:relative;
+  width:100%;
+  height:100vh;
+  perspective:900px;
+  overflow:hidden;
+}
+.floor{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  height:45%;
+  background:linear-gradient(to bottom, #1a1a1d, #050505);
+}
+.ceiling{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:20%;
+  background:linear-gradient(to top, #1a1a1d, #050505);
+}
+.corridor{
+  position:absolute;
+  top:0;left:0;width:100%;height:100%;
+  transform-style:preserve-3d;
+}
+.frame-pair{
+  position:absolute;
+  top:36%;
+  width:280px;
+}
+.frame{
+  position:relative;
+  width:280px;
+  height:190px;
+  background:#0e0e10;
+  border:10px solid #b89252;
+  border-radius:2px;
+  box-shadow:0 0 30px rgba(0,0,0,0.7), inset 0 0 20px rgba(0,0,0,0.6);
+  display:flex;
+  gap:6px;
+  padding:6px;
+  transform-style:preserve-3d;
+  transition:border-color 0.3s, box-shadow 0.3s;
+}
+.frame.target-glow{
+  border-color:#fff2c9;
+  box-shadow:0 0 45px #e6c98a;
+}
+.img-slot{
+  flex:1;
+  height:100%;
+  background-size:cover;
+  background-position:center;
+  cursor:pointer;
+  border-radius:2px;
+}
+.img-slot:hover{ outline:2px solid #fff2c9; }
+.img-slot.empty{
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.65rem; color:#555; cursor:default;
+}
+.img-slot.empty:hover{ outline:none; }
+.label{
+  position:absolute;
+  bottom:-32px;
+  left:0;
+  right:0;
+  text-align:center;
+  font-size:0.72rem;
+  color:#c9a45c;
+  letter-spacing:0.5px;
+  white-space:nowrap;
+  overflow:hidden;
+  cursor:pointer;
+}
+.label:hover{ color:#fff2c9; text-decoration:underline; }
+.left-wall .frame{ transform: rotateY(35deg); }
+.right-wall .frame{ transform: rotateY(-35deg); }
+
+.vignette{
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.75) 100%);
+  z-index:40;
+}
+.controls{
+  position:fixed;
+  bottom:20px;
+  left:0;right:0;
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  z-index:50;
+}
+.controls button{
+  width:56px;height:56px;
+  border-radius:50%;
+  border:1px solid #b89252;
+  background:rgba(20,20,20,0.85);
+  color:#e6c98a;
+  font-size:1.3rem;
+  cursor:pointer;
+}
+.controls button:active{ background:#b89252; color:#000; }
+
+.lightbox{
+  position:fixed;
+  top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.92);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:300;
+  flex-direction:column;
+  text-align:center;
+  padding:20px;
+}
+.lightbox img{
+  max-width:90vw;
+  max-height:70vh;
+  border-radius:8px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.7);
+  margin-bottom:16px;
+}
+.lightbox h2{ color:#d9b46a; margin:0 0 4px; font-family:'Cinzel',serif; }
+.lightbox .meta{ color:#aaa; font-size:0.85rem; margin-bottom:18px; }
+.lightbox .actions{ display:flex; gap:10px; }
+.lightbox button, .lightbox a.visit-btn{
+  padding:10px 22px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+  font-family:'Domine',serif;
+  text-decoration:none;
+  font-size:0.9rem;
+}
+.lightbox .close-btn{ background:#2a2a2e; color:#e6c98a; }
+.lightbox a.visit-btn{ background:#d9b46a; color:#111; }
+
+.progress{
+  position:fixed;
+  top:114px;left:50%;
+  transform:translateX(-50%);
+  font-size:0.72rem;
+  color:#777;
+  z-index:50;
+}
+.empty-state{
+  position:fixed; inset:0; display:none;
+  align-items:center; justify-content:center;
+  text-align:center; padding:20px; color:#aaa;
+}
+.empty-state h2{ font-family:'Cinzel',serif; color:#d9b46a; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="topnav-logo" href="/index.html">
+    <img src="/images/logo.png" alt="FairQuest" />
+    <span>FairQuest</span>
+  </a>
+  <div class="topnav-links">
+    <a href="/index.html">🏠 Home</a>
+    <a href="artist_list.html">🎨 All Artists</a>
+  </div>
+</nav>
+
+<div class="hud">
+  <h1>ART GALLERY</h1>
+  <div class="jumpbar">
+    <input id="jumpNumber" type="number" min="1" placeholder="Frame #">
+    <button onclick="jumpToNumber()">Go to #</button>
+    <input id="jumpId" type="text" placeholder="Artist ID (e.g. AB-042)">
+    <button onclick="jumpToId()">Go to ID</button>
+  </div>
+  <div class="jump-status" id="jumpStatus"></div>
+</div>
+
+<div class="progress" id="progress">Loading...</div>
+
+<div class="scene-wrap" id="sceneWrap">
+  <div class="ceiling"></div>
+  <div class="floor"></div>
+  <div class="corridor" id="corridor"></div>
+  <div class="vignette"></div>
+</div>
+
+<div class="controls">
+  <button id="btnLeft">◀</button>
+  <button id="btnForward">▲</button>
+  <button id="btnBack">▼</button>
+  <button id="btnRight">▶</button>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <img id="lightboxImg">
+  <h2 id="lightboxTitle"></h2>
+  <div class="meta" id="lightboxMeta"></div>
+  <div class="actions">
+    <a class="visit-btn" id="lightboxVisit" href="#">Visit Artist Profile</a>
+    <button class="close-btn" onclick="closeLightbox()">Keep Walking</button>
+  </div>
+</div>
+
+<div class="empty-state" id="emptyState">
+  <div>
+    <h2>No Featured Art Yet</h2>
+    <p>Artists haven't starred any pieces for the Art Gallery yet. Check back soon!</p>
+  </div>
+</div>
+
+<script>
+const supabaseClient = window.supabase.createClient(
+  'https://awtbjuiqgtdydsqzimul.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+);
+
+let artistEntries = [];
+let byId = {};
+let byNumber = {};
+
+const SPACING = 420;
+const corridor = document.getElementById("corridor");
+let camZ = 0;
+let camX = 0;
+let maxZ = 0;
+
+function escHtml(s){
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showEmpty(){
+  document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('progress').textContent = '';
+}
+
+async function loadArtGallery(){
+  const { data: images, error: imgErr } = await supabaseClient
+    .from('ar_gallery_image')
+    .select('id, image_url, gallery_id')
+    .eq('star_show', true)
+    .eq('is_public', true);
+
+  if(imgErr || !images || !images.length){ showEmpty(); return; }
+
+  const galleryIds = [...new Set(images.map(i => i.gallery_id))];
+
+  const { data: books } = await supabaseClient
+    .from('ar_gallery')
+    .select('id, artist_id, visibility')
+    .in('id', galleryIds)
+    .eq('visibility', 'public');
+
+  if(!books || !books.length){ showEmpty(); return; }
+
+  const bookById = {};
+  books.forEach(b => bookById[b.id] = b);
+
+  const artistIds = [...new Set(books.map(b => b.artist_id))];
+
+  const { data: artists } = await supabaseClient
+    .from('ar_artist')
+    .select('id, artist_id, display_name, artist_name')
+    .in('id', artistIds)
+    .eq('is_published', true);
+
+  if(!artists || !artists.length){ showEmpty(); return; }
+
+  const artistById = {};
+  artists.forEach(a => artistById[a.id] = a);
+
+  const imagesByArtist = {};
+  images.forEach(img => {
+    const book = bookById[img.gallery_id];
+    if(!book) return;
+    const artist = artistById[book.artist_id];
+    if(!artist) return;
+    if(!imagesByArtist[artist.id]) imagesByArtist[artist.id] = [];
+    if(imagesByArtist[artist.id].length < 2){
+      imagesByArtist[artist.id].push(img);
+    }
+  });
+
+  artistEntries = Object.keys(imagesByArtist)
+    .map(dbId => ({ artist: artistById[dbId], images: imagesByArtist[dbId] }))
+    .filter(e => e.images.length > 0)
+    .sort((a, b) => (a.artist.display_name || a.artist.artist_name)
+      .localeCompare(b.artist.display_name || b.artist.artist_name));
+
+  if(!artistEntries.length){ showEmpty(); return; }
+
+  artistEntries.forEach((e, i) => {
+    e.number = i + 1;
+    e.side = i % 2 === 0 ? "left" : "right";
+    byId[e.artist.artist_id.toLowerCase()] = i;
+    byNumber[e.number] = i;
+  });
+
+  maxZ = artistEntries.length * SPACING - 200;
+  buildScene();
+  render();
+}
+
+function buildScene(){
+  artistEntries.forEach((entry, i) => {
+    const z = i * SPACING;
+    const wrap = document.createElement("div");
+    wrap.className = "frame-pair " + (entry.side === "left" ? "left-wall" : "right-wall");
+    wrap.style.left = entry.side === "left" ? "6%" : "58%";
+    wrap.style.transform = `translateZ(${-z}px)`;
+    wrap.id = "frame-" + i;
+
+    const frame = document.createElement("div");
+    frame.className = "frame";
+
+    for(let slotIdx = 0; slotIdx < 2; slotIdx++){
+      const img = entry.images[slotIdx];
+      const slot = document.createElement("div");
+      if(img){
+        slot.className = "img-slot";
+        slot.style.backgroundImage = `url('${img.image_url}')`;
+        slot.onclick = (e) => { e.stopPropagation(); openLightbox(entry, img); };
+      }else{
+        slot.className = "img-slot empty";
+        slot.textContent = "";
+      }
+      frame.appendChild(slot);
+    }
+
+    const label = document.createElement("div");
+    label.className = "label";
+    const name = entry.artist.display_name || entry.artist.artist_name;
+    label.textContent = `#${entry.number} · ${entry.artist.artist_id} · ${name}`;
+    label.onclick = () => { window.location.href = `artist_profile.html?id=${encodeURIComponent(entry.artist.artist_id)}`; };
+    frame.appendChild(label);
+
+    wrap.appendChild(frame);
+    corridor.appendChild(wrap);
+    entry._frameEl = frame;
+  });
+}
+
+function render(){
+  corridor.style.transform = `translateX(${-camX}px) translateZ(${camZ}px)`;
+  const idx = artistEntries.length ? Math.min(artistEntries.length, Math.max(1, Math.floor(camZ / SPACING) + 1)) : 0;
+  document.getElementById("progress").textContent = `Frame ${idx} of ${artistEntries.length}`;
+}
+
+let keys = {};
+window.addEventListener("keydown", e => {
+  if(document.activeElement && (document.activeElement.tagName === "INPUT")) return;
+  keys[e.key] = true;
+});
+window.addEventListener("keyup", e => keys[e.key] = false);
+
+function loop(){
+  const speed = 6;
+  if(keys["ArrowUp"] || keys["w"]) camZ = Math.min(camZ + speed, maxZ);
+  if(keys["ArrowDown"] || keys["s"]) camZ = Math.max(camZ - speed, 0);
+  if(keys["ArrowLeft"] || keys["a"]) camX = Math.max(camX - speed, -80);
+  if(keys["ArrowRight"] || keys["d"]) camX = Math.min(camX + speed, 80);
+  render();
+  requestAnimationFrame(loop);
+}
+loop();
+
+function holdButton(id, fn){
+  const el = document.getElementById(id);
+  let interval;
+  const start = () => { fn(); interval = setInterval(fn, 30); };
+  const stop = () => clearInterval(interval);
+  el.addEventListener("mousedown", start);
+  el.addEventListener("mouseup", stop);
+  el.addEventListener("mouseleave", stop);
+  el.addEventListener("touchstart", e => { e.preventDefault(); start(); });
+  el.addEventListener("touchend", stop);
+}
+holdButton("btnForward", () => camZ = Math.min(camZ + 8, maxZ));
+holdButton("btnBack", () => camZ = Math.max(camZ - 8, 0));
+holdButton("btnLeft", () => camX = Math.max(camX - 8, -80));
+holdButton("btnRight", () => camX = Math.min(camX + 8, 80));
+
+function openLightbox(entry, img){
+  document.getElementById("lightboxImg").src = img.image_url;
+  const name = entry.artist.display_name || entry.artist.artist_name;
+  document.getElementById("lightboxTitle").textContent = name;
+  document.getElementById("lightboxMeta").textContent = `Frame #${entry.number} · ID ${entry.artist.artist_id}`;
+  document.getElementById("lightboxVisit").href = `artist_profile.html?id=${encodeURIComponent(entry.artist.artist_id)}`;
+  document.getElementById("lightbox").style.display = "flex";
+}
+function closeLightbox(){
+  document.getElementById("lightbox").style.display = "none";
+}
+
+let jumpAnim = null;
+function animateCamZTo(targetZ, idx){
+  if(jumpAnim) cancelAnimationFrame(jumpAnim);
+  const startZ = camZ;
+  const dist = targetZ - startZ;
+  const duration = 700;
+  const t0 = performance.now();
+  function step(t){
+    const p = Math.min(1, (t - t0) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    camZ = startZ + dist * eased;
+    render();
+    if(p < 1){
+      jumpAnim = requestAnimationFrame(step);
+    }else{
+      flashFrame(idx);
+    }
+  }
+  jumpAnim = requestAnimationFrame(step);
+}
+function flashFrame(idx){
+  const entry = artistEntries[idx];
+  if(!entry || !entry._frameEl) return;
+  entry._frameEl.classList.add("target-glow");
+  setTimeout(() => entry._frameEl.classList.remove("target-glow"), 1400);
+}
+function jumpToNumber(){
+  const val = parseInt(document.getElementById("jumpNumber").value, 10);
+  const status = document.getElementById("jumpStatus");
+  if(!val || !byNumber.hasOwnProperty(val)){
+    status.textContent = "No frame with that number.";
+    return;
+  }
+  const idx = byNumber[val];
+  status.textContent = `Walking to Frame #${val}...`;
+  animateCamZTo(idx * SPACING, idx);
+}
+function jumpToId(){
+  const raw = document.getElementById("jumpId").value.trim().toLowerCase();
+  const status = document.getElementById("jumpStatus");
+  if(!raw || !byId.hasOwnProperty(raw)){
+    status.textContent = "No artist with that ID.";
+    return;
+  }
+  const idx = byId[raw];
+  status.textContent = `Walking to ${artistEntries[idx].artist.artist_id}...`;
+  animateCamZTo(idx * SPACING, idx);
+}
+document.getElementById("jumpNumber").addEventListener("keydown", e => { if(e.key === "Enter") jumpToNumber(); });
+document.getElementById("jumpId").addEventListener("keydown", e => { if(e.key === "Enter") jumpToId(); });
+
+loadArtGallery();
+</script>
+
+</body>
+</html>

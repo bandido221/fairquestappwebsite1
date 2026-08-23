@@ -349,7 +349,10 @@ function render(){
               <div class="menu-wrap">
                 <button class="menu-btn" onclick="toggleMenu('${img.id}', event)">⋮</button>
                 <div class="menu-dropdown" id="menu-${img.id}">
-                  <button class="menu-item" onclick="setAsThumbnail('${img.id}')">⭐ Set as Album Thumbnail</button>
+                  <button class="menu-item" onclick="toggleStarShow('${img.id}', ${img.star_show})">
+                    ${img.star_show ? '☆ Remove from Art Gallery' : '⭐ Show in Art Gallery'}
+                  </button>
+                  <button class="menu-item" onclick="setAsThumbnail('${img.id}')">🖼️ Set as Album Thumbnail</button>
                   <button class="menu-item danger" onclick="deleteImage('${img.id}')">🗑️ Delete</button>
                 </div>
               </div>
@@ -427,6 +430,39 @@ async function toggleImageVisibility(imageId, currentlyPublic){
   await supabaseClient
     .from('ar_gallery_image')
     .update({ is_public: !currentlyPublic })
+    .eq('id', imageId);
+  await loadImages();
+  render();
+}
+
+async function getStarredCountForArtist(){
+  const { data: myBooks } = await supabaseClient
+    .from('ar_gallery')
+    .select('id')
+    .eq('artist_id', currentArtist.id);
+  const bookIds = (myBooks || []).map(b => b.id);
+  if(!bookIds.length) return 0;
+
+  const { count } = await supabaseClient
+    .from('ar_gallery_image')
+    .select('id', { count: 'exact', head: true })
+    .in('gallery_id', bookIds)
+    .eq('star_show', true);
+  return count || 0;
+}
+
+async function toggleStarShow(imageId, currentlyStarred){
+  if(!currentlyStarred){
+    const starredCount = await getStarredCountForArtist();
+    if(starredCount >= 2){
+      alert('You can only feature up to 2 images in the Art Gallery. Un-star one first.');
+      return;
+    }
+  }
+
+  await supabaseClient
+    .from('ar_gallery_image')
+    .update({ star_show: !currentlyStarred })
     .eq('id', imageId);
   await loadImages();
   render();

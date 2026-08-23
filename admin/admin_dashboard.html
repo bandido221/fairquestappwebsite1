@@ -380,6 +380,11 @@
           <div class="stat-val" id="messageCount">…</div>
           <div class="stat-label">Messages</div>
         </a>
+        <a class="stat-box" href="approve_artists.html" id="statArtists">
+          <span class="stat-icon">🎨</span>
+          <div class="stat-val" id="artistCount">…</div>
+          <div class="stat-label">Artist Applications</div>
+        </a>
       </div>
     </div>
 
@@ -721,6 +726,14 @@ fileInput.addEventListener('change', () => {
   const { data: msgCount } = await supabaseClient.rpc('get_unread_contact_message_count');
   document.getElementById('messageCount').innerText = msgCount ?? 0;
   if ((msgCount ?? 0) > 0) document.getElementById('statMessages').classList.add('has-pending');
+
+  // Artist applications
+  const { count: artistPendingCount } = await supabaseClient
+    .from('ar_artist_applications')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'pending');
+  document.getElementById('artistCount').innerText = artistPendingCount ?? 0;
+  if ((artistPendingCount ?? 0) > 0) document.getElementById('statArtists').classList.add('has-pending');
 if ((data.vendor_count ?? 0) > 0) document.getElementById('statVendor').classList.add('has-pending');
   if ((data.performer_count ?? 0) > 0) document.getElementById('statPerformer').classList.add('has-pending');
   if ((data.update_application_count ?? 0) > 0) document.getElementById('statUpdates').classList.add('has-pending');

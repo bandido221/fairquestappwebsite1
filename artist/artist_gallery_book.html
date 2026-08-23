@@ -195,12 +195,39 @@ body{
   position:absolute; inset:0; pointer-events:none;
   background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.75) 100%); z-index:40;
 }
-.hw-controls{ position:fixed; bottom:20px; left:0; right:0; display:flex; justify-content:center; gap:10px; z-index:50; }
-.hw-controls button{
-  width:56px; height:56px; border-radius:50%; border:1px solid #b89252;
-  background:rgba(20,20,20,0.85); color:#e6c98a !important; font-size:1.3rem; cursor:pointer;
+.hw-menu-btn{
+  position:absolute; top:6px; right:6px; z-index:20;
+  border:none; background:rgba(0,0,0,0.55); color:#fff; width:26px; height:26px;
+  border-radius:50%; cursor:pointer; font-size:1rem; line-height:1;
 }
-.hw-controls button:active{ background:#b89252; color:#000 !important; }
+.hw-menu-btn:hover{ background:rgba(0,0,0,0.8); }
+.hw-menu-dropdown{
+  position:fixed; background:#fffdf7; border:1px solid rgba(0,0,0,0.15); border-radius:8px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.3); min-width:180px; overflow:hidden;
+  display:none; z-index:2600;
+}
+.hw-menu-dropdown.open{ display:block; }
+
+.hw-joystick-base{
+  position:fixed;
+  bottom:28px; left:50%;
+  transform:translateX(-50%);
+  width:140px; height:140px;
+  border-radius:50%;
+  background:rgba(20,20,20,0.55);
+  border:2px solid rgba(184,146,82,0.6);
+  z-index:60;
+  touch-action:none;
+}
+.hw-joystick-knob{
+  position:absolute; top:50%; left:50%;
+  width:60px; height:60px;
+  border-radius:50%;
+  background:rgba(184,146,82,0.9);
+  border:2px solid #e6c98a;
+  transform:translate(-50%,-50%);
+  box-shadow:0 2px 10px rgba(0,0,0,0.5);
+}
 </style>
 </head>
 
@@ -242,12 +269,10 @@ body{
     <div class="hw-corridor" id="hwCorridor"></div>
     <div class="hw-vignette"></div>
   </div>
-  <div class="hw-controls">
-    <button id="hwBtnLeft">◀</button>
-    <button id="hwBtnForward">▲</button>
-    <button id="hwBtnBack">▼</button>
-    <button id="hwBtnRight">▶</button>
+  <div class="hw-joystick-base" id="hwJoystickBase">
+    <div class="hw-joystick-knob" id="hwJoystickKnob"></div>
   </div>
+  <div class="hw-menu-dropdown" id="hwMenuDropdown"></div>
 </div>
 
 <script>
@@ -426,13 +451,25 @@ async function handleImageUpload(event){
   setTimeout(() => { const s = document.getElementById('uploadStatus'); if(s) s.textContent = ''; }, 2000);
 }
 
+async function refreshAfterImageChange(){
+  await loadImages();
+  render();
+  if(hwActive){
+    if(images.length){
+      buildHallwayScene();
+      hwRender();
+    }else{
+      closeHallway();
+    }
+  }
+}
+
 async function toggleImageVisibility(imageId, currentlyPublic){
   await supabaseClient
     .from('ar_gallery_image')
     .update({ is_public: !currentlyPublic })
     .eq('id', imageId);
-  await loadImages();
-  render();
+  await refreshAfterImageChange();
 }
 
 async function getStarredCountForArtist(){
@@ -464,8 +501,7 @@ async function toggleStarShow(imageId, currentlyStarred){
     .from('ar_gallery_image')
     .update({ star_show: !currentlyStarred })
     .eq('id', imageId);
-  await loadImages();
-  render();
+  await refreshAfterImageChange();
 }
 
 function toggleMenu(imageId, event){
@@ -485,15 +521,13 @@ async function setAsThumbnail(imageId){
     .from('ar_gallery_image')
     .update({ sort_order: minOrder - 1 })
     .eq('id', imageId);
-  await loadImages();
-  render();
+  await refreshAfterImageChange();
 }
 
 async function deleteImage(imageId){
   if(!confirm('Delete this image? This cannot be undone.')) return;
   await supabaseClient.from('ar_gallery_image').delete().eq('id', imageId);
-  await loadImages();
-  render();
+  await refreshAfterImageChange();
 }
 
 function openLightbox(url){
@@ -540,6 +574,14 @@ function buildHallwayScene(){
     slot.onclick = (e) => { e.stopPropagation(); openLightbox(img.image_url); };
     frame.appendChild(slot);
 
+    if(isOwner){
+      const menuBtn = document.createElement('button');
+      menuBtn.className = 'hw-menu-btn';
+      menuBtn.textContent = '⋮';
+      menuBtn.onclick = (e) => hwOpenImageMenu(img, e);
+      frame.appendChild(menuBtn);
+    }
+
     const label = document.createElement('div');
     label.className = 'hw-label';
     label.textContent = `#${i + 1}` + (img.caption ? ` · ${img.caption}` : '');
@@ -585,6 +627,12 @@ function hwLoop(){
   if(hwKeys['ArrowDown'] || hwKeys['s']) hwCamZ = Math.max(hwCamZ - speed, 0);
   if(hwKeys['ArrowLeft'] || hwKeys['a']) hwCamX = Math.max(hwCamX - speed, -80);
   if(hwKeys['ArrowRight'] || hwKeys['d']) hwCamX = Math.min(hwCamX + speed, 80);
+
+  if(hwJoyActive){
+    hwCamZ = Math.min(Math.max(hwCamZ + (-hwJoyDY) * speed, 0), hwMaxZ);
+    hwCamX = Math.min(Math.max(hwCamX + hwJoyDX * speed, -80), 80);
+  }
+
   hwRender();
   requestAnimationFrame(hwLoop);
 }
@@ -598,22 +646,78 @@ function hwKeyupHandler(e){ hwKeys[e.key] = false; }
 window.addEventListener('keydown', hwKeydownHandler);
 window.addEventListener('keyup', hwKeyupHandler);
 
-function hwHoldButton(id, fn){
-  const el = document.getElementById(id);
-  if(!el) return;
-  let interval;
-  const start = () => { fn(); interval = setInterval(fn, 30); };
-  const stop = () => clearInterval(interval);
-  el.addEventListener('mousedown', start);
-  el.addEventListener('mouseup', stop);
-  el.addEventListener('mouseleave', stop);
-  el.addEventListener('touchstart', e => { e.preventDefault(); start(); });
-  el.addEventListener('touchend', stop);
+let hwJoyActive = false;
+let hwJoyDX = 0;
+let hwJoyDY = 0;
+const HW_JOY_RADIUS = 55;
+
+function hwUpdateJoystick(clientX, clientY){
+  const base = document.getElementById('hwJoystickBase');
+  const knob = document.getElementById('hwJoystickKnob');
+  const rect = base.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  let dx = clientX - cx;
+  let dy = clientY - cy;
+  const dist = Math.min(Math.hypot(dx, dy), HW_JOY_RADIUS);
+  const angle = Math.atan2(dy, dx);
+  const clampedX = Math.cos(angle) * dist;
+  const clampedY = Math.sin(angle) * dist;
+
+  knob.style.transform = `translate(calc(-50% + ${clampedX}px), calc(-50% + ${clampedY}px))`;
+  hwJoyDX = clampedX / HW_JOY_RADIUS;
+  hwJoyDY = clampedY / HW_JOY_RADIUS;
 }
-hwHoldButton('hwBtnForward', () => hwCamZ = Math.min(hwCamZ + 8, hwMaxZ));
-hwHoldButton('hwBtnBack', () => hwCamZ = Math.max(hwCamZ - 8, 0));
-hwHoldButton('hwBtnLeft', () => hwCamX = Math.max(hwCamX - 8, -80));
-hwHoldButton('hwBtnRight', () => hwCamX = Math.min(hwCamX + 8, 80));
+function hwResetJoystick(){
+  hwJoyActive = false;
+  hwJoyDX = 0;
+  hwJoyDY = 0;
+  const knob = document.getElementById('hwJoystickKnob');
+  if(knob) knob.style.transform = 'translate(-50%, -50%)';
+}
+const hwJoystickBase = document.getElementById('hwJoystickBase');
+hwJoystickBase.addEventListener('pointerdown', e => {
+  hwJoyActive = true;
+  hwJoystickBase.setPointerCapture(e.pointerId);
+  hwUpdateJoystick(e.clientX, e.clientY);
+});
+hwJoystickBase.addEventListener('pointermove', e => {
+  if(!hwJoyActive) return;
+  hwUpdateJoystick(e.clientX, e.clientY);
+});
+hwJoystickBase.addEventListener('pointerup', hwResetJoystick);
+hwJoystickBase.addEventListener('pointercancel', hwResetJoystick);
+
+function hwOpenImageMenu(img, event){
+  event.stopPropagation();
+  const rect = event.currentTarget.getBoundingClientRect();
+  const menu = document.getElementById('hwMenuDropdown');
+
+  menu.innerHTML = `
+    <button class="menu-item" onclick="hwCloseMenuThen(() => toggleImageVisibility('${img.id}', ${img.is_public}))">
+      ${img.is_public ? '🚫 Make Private' : '🌍 Make Public'}
+    </button>
+    <button class="menu-item" onclick="hwCloseMenuThen(() => toggleStarShow('${img.id}', ${img.star_show}))">
+      ${img.star_show ? '☆ Remove from Art Gallery' : '⭐ Show in Art Gallery'}
+    </button>
+    <button class="menu-item" onclick="hwCloseMenuThen(() => setAsThumbnail('${img.id}'))">🖼️ Set as Album Thumbnail</button>
+    <button class="menu-item danger" onclick="hwCloseMenuThen(() => deleteImage('${img.id}'))">🗑️ Delete</button>
+  `;
+
+  menu.style.left = Math.min(rect.left, window.innerWidth - 190) + 'px';
+  menu.style.top = (rect.bottom + 4) + 'px';
+  menu.classList.add('open');
+}
+function hwCloseMenu(){
+  const menu = document.getElementById('hwMenuDropdown');
+  if(menu) menu.classList.remove('open');
+}
+function hwCloseMenuThen(fn){
+  hwCloseMenu();
+  fn();
+}
+document.addEventListener('click', hwCloseMenu);
 
 let hwJumpAnim = null;
 function hwAnimateCamZTo(targetZ, idx){

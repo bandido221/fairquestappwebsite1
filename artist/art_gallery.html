@@ -195,6 +195,39 @@ body{
 }
 .controls button:active{ background:#b89252; color:#000; }
 
+.joystick-base{
+  display:none;
+  position:fixed;
+  bottom:28px; left:50%;
+  transform:translateX(-50%);
+  width:140px; height:140px;
+  border-radius:50%;
+  background:rgba(20,20,20,0.55);
+  border:2px solid rgba(184,146,82,0.6);
+  z-index:60;
+  touch-action:none;
+}
+.joystick-knob{
+  position:absolute; top:50%; left:50%;
+  width:60px; height:60px;
+  border-radius:50%;
+  background:rgba(184,146,82,0.9);
+  border:2px solid #e6c98a;
+  transform:translate(-50%,-50%);
+  box-shadow:0 2px 10px rgba(0,0,0,0.5);
+}
+.joystick-hint{
+  position:fixed;
+  bottom:178px; left:50%; transform:translateX(-50%);
+  font-size:0.7rem; color:#999; z-index:60; white-space:nowrap;
+}
+
+@media (max-width:768px){
+  .controls{ display:none; }
+  .joystick-base{ display:block; }
+  .joystick-hint{ display:block; }
+}
+
 .lightbox{
   position:fixed;
   top:0;left:0;width:100%;height:100%;
@@ -284,6 +317,11 @@ body{
   <button id="btnForward">▲</button>
   <button id="btnBack">▼</button>
   <button id="btnRight">▶</button>
+</div>
+
+<div class="joystick-hint" id="joystickHint">Drag to walk</div>
+<div class="joystick-base" id="joystickBase">
+  <div class="joystick-knob" id="joystickKnob"></div>
 </div>
 
 <div class="lightbox" id="lightbox">
@@ -447,12 +485,62 @@ window.addEventListener("keydown", e => {
 });
 window.addEventListener("keyup", e => keys[e.key] = false);
 
+let joyActive = false;
+let joyDX = 0;
+let joyDY = 0;
+const JOY_RADIUS = 55;
+
+function updateJoystick(clientX, clientY){
+  const base = document.getElementById("joystickBase");
+  const knob = document.getElementById("joystickKnob");
+  const rect = base.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  let dx = clientX - cx;
+  let dy = clientY - cy;
+  const dist = Math.min(Math.hypot(dx, dy), JOY_RADIUS);
+  const angle = Math.atan2(dy, dx);
+  const clampedX = Math.cos(angle) * dist;
+  const clampedY = Math.sin(angle) * dist;
+
+  knob.style.transform = `translate(calc(-50% + ${clampedX}px), calc(-50% + ${clampedY}px))`;
+  joyDX = clampedX / JOY_RADIUS;
+  joyDY = clampedY / JOY_RADIUS;
+}
+function resetJoystick(){
+  joyActive = false;
+  joyDX = 0;
+  joyDY = 0;
+  document.getElementById("joystickKnob").style.transform = `translate(-50%, -50%)`;
+}
+
+const joystickBase = document.getElementById("joystickBase");
+joystickBase.addEventListener("pointerdown", e => {
+  joyActive = true;
+  joystickBase.setPointerCapture(e.pointerId);
+  document.getElementById("joystickHint").style.display = "none";
+  updateJoystick(e.clientX, e.clientY);
+});
+joystickBase.addEventListener("pointermove", e => {
+  if(!joyActive) return;
+  updateJoystick(e.clientX, e.clientY);
+});
+joystickBase.addEventListener("pointerup", resetJoystick);
+joystickBase.addEventListener("pointercancel", resetJoystick);
+
 function loop(){
   const speed = 6;
   if(keys["ArrowUp"] || keys["w"]) camZ = Math.min(camZ + speed, maxZ);
   if(keys["ArrowDown"] || keys["s"]) camZ = Math.max(camZ - speed, 0);
   if(keys["ArrowLeft"] || keys["a"]) camX = Math.max(camX - speed, -80);
   if(keys["ArrowRight"] || keys["d"]) camX = Math.min(camX + speed, 80);
+
+  if(joyActive){
+    camZ = Math.min(Math.max(camZ + (-joyDY) * speed, 0), maxZ);
+    camX = Math.min(Math.max(camX + joyDX * speed, -80), 80);
+  }
+
   render();
   requestAnimationFrame(loop);
 }

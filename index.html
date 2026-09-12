@@ -416,14 +416,14 @@
     background: rgba(201,168,76,0.28);
   }
 
-  /* ── BETA NOTICE MODAL ── */
-#betaNoticeModal {
+  /* ── APP TESTING INVITE MODAL ── */
+#testInviteModal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.82);
   display: none; justify-content: center; align-items: center;
   z-index: 99999;
 }
-#betaNoticeModal .beta-box {
+#testInviteModal .beta-box {
   background: #1a1208;
   border: 1px solid rgba(201,168,76,0.45);
   border-radius: 14px;
@@ -433,41 +433,54 @@
   text-align: center;
   box-shadow: 0 8px 32px rgba(0,0,0,0.7);
 }
-#betaNoticeModal h3 {
+#testInviteModal h3 {
   font-family: 'Cinzel', serif;
   color: #f1df99;
   margin: 0 0 14px 0;
   font-size: 1.3rem;
 }
-#betaNoticeModal p {
+#testInviteModal p {
   color: #e0d0a0;
   font-size: 0.97rem;
   margin: 0 0 22px 0;
   line-height: 1.6;
 }
-#betaNoticeModal .page-tag {
-  display: inline-block;
-  background: rgba(201,168,76,0.15);
-  border: 1px solid rgba(201,168,76,0.35);
-  color: #f1df99;
-  font-family: 'Cinzel', serif;
-  font-size: 0.8rem;
-  padding: 3px 10px;
-  border-radius: 6px;
-  margin-bottom: 16px;
+#testInviteModal .test-actions {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 14px;
 }
-#betaNoticeModal button {
+#testInviteModal .test-btn-join,
+#testInviteModal .test-btn-message {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 0.95rem;
+  padding: 10px 22px;
+  border-radius: 9px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+#testInviteModal .test-btn-join {
   background: rgba(201,168,76,0.2);
   border: 1.5px solid rgba(201,168,76,0.6);
   color: #f1df99;
-  font-family: 'Cinzel', serif;
-  font-size: 1rem;
-  padding: 10px 28px;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: background 0.2s;
 }
-#betaNoticeModal button:hover { background: rgba(201,168,76,0.35); }
+#testInviteModal .test-btn-join:hover { background: rgba(201,168,76,0.35); }
+#testInviteModal .test-btn-message {
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.35);
+  color: #c9a84c;
+}
+#testInviteModal .test-btn-message:hover { background: rgba(201,168,76,0.15); }
+#testInviteModal button.test-close {
+  background: transparent;
+  border: none;
+  color: #a08a55;
+  font-family: 'Domine', serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
 
 /* ── FEEDBACK MODAL ── */
 #feedbackModal {
@@ -1506,18 +1519,20 @@ async function requireLoginAndRedirect(destination) {
     <button onclick="closeResetPrompt()">Close</button>
   </div>
 </div>
-<!-- ── BETA NOTICE MODAL ── -->
-<div id="betaNoticeModal">
+<!-- ── APP TESTING INVITE MODAL ── -->
+<div id="testInviteModal">
   <div class="beta-box">
-    <h3>🛠️ We're Still Building!</h3>
-    <div class="page-tag">📄 Page: Home</div>
+    <h3>🧪 Help Us Test the App!</h3>
     <p>
-      We're actively improving FairQuest and still testing many features.
-      If you notice something wrong on this page, use the
-      <strong>📣 Feedback</strong> button in the top menu to let us know —
-      we read every report and fix things fast. Thank you for your help! 🙏
+      Already have a FairQuest account? You're eligible to join our closed
+      testing group for the app — tap below to get started.<br><br>
+      Don't have an account yet? Send us a message and we'll get you set up.
     </p>
-    <button onclick="closeBetaNotice()">Got it, thanks!</button>
+    <div class="test-actions">
+      <a class="test-btn-join" href="https://play.google.com/apps/testing/com.fairquest.app" target="_blank" rel="noopener">Join Testing</a>
+      <a class="test-btn-message" href="contact.html">Send a Message</a>
+    </div>
+    <button class="test-close" onclick="closeTestInvite()">Maybe later</button>
   </div>
 </div>
 
@@ -1547,14 +1562,10 @@ async function requireLoginAndRedirect(destination) {
 const PAGE_ID   = 'home';
 const PAGE_NAME = 'Home';
 
-// ── BETA NOTICE (shows once per page) ───────────────────
-const betaKey = 'betaSeen_' + PAGE_ID;
-if (!localStorage.getItem(betaKey)) {
-  document.getElementById('betaNoticeModal').style.display = 'flex';
-}
-function closeBetaNotice() {
-  localStorage.setItem(betaKey, '1');
-  document.getElementById('betaNoticeModal').style.display = 'none';
+// ── APP TESTING INVITE (shows every time the page opens) ──
+document.getElementById('testInviteModal').style.display = 'flex';
+function closeTestInvite() {
+  document.getElementById('testInviteModal').style.display = 'none';
 }
 
 // ── FEEDBACK MODAL ───────────────────────────────────────

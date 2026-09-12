@@ -391,10 +391,7 @@
 
     function fmt(d) {
       if (!d) return '—';
-      const date = new Date(d);
-      const mm = String(date.getMonth() + 1).padStart(2, '0');
-      const dd = String(date.getDate()).padStart(2, '0');
-      const yyyy = date.getFullYear();
+      const [yyyy, mm, dd] = d.split('-');
       return `${mm}/${dd}/${yyyy}`;
     }
 

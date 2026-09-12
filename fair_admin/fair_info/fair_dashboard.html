@@ -256,6 +256,9 @@
         </div>
       </div>
 
+      <!-- 🗓️ Events single button -->
+      <button class="btn" id="btnFairEvents">🗓️ Events</button>
+
       <!-- 📒 Directory single button -->
       <button class="btn" id="btnVendorDirectory">📒 Directory</button>
 
@@ -479,6 +482,11 @@ if (fairId) {
       window.goPayReports = () => {
         if (!isGold) { showTierMessage('gold'); return; }
         window.location.href = `fair_reports_payments.html?fair_id=${fairId}`;
+      };
+
+      // Events single button
+      document.getElementById('btnFairEvents').onclick = () => {
+        window.location.href = `../fair_events.html?fair_id=${fairId}`;
       };
 
       // Directory single button

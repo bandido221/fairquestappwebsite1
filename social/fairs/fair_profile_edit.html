@@ -569,6 +569,7 @@
       if (error) { alert('Error updating publish status.'); return; }
       socialProfile.is_published = newVal;
       renderPublishBtn(newVal);
+      document.getElementById('pageSubtitle').textContent = `Edit Mode — ${newVal ? '🟢 Published' : '⚫ Unpublished'}`;
     }
 
     function renderPublishBtn(isPublished) {

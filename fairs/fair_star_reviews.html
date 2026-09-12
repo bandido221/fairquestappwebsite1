@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fair Reviews | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:        #c9a84c;
+      --gold-light:  #f1df99;
+      --gold-dark:   #8a6a1a;
+      --parchment:   rgba(241, 223, 153, 0.93);
+      --bg:          #0d0a04;
+      --card-radius: 16px;
+    }
+
+    body {
+      font-family: 'Domine', serif;
+      background: var(--bg);
+      color: var(--gold-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 0;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,130,40,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,10,0.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: rgba(13, 10, 4, 0.95);
+      border-bottom: 1px solid rgba(201,168,76,0.25);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 56px;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 17px; color: var(--gold-light); letter-spacing: 0.05em; }
+    .topnav-right { display: flex; align-items: center; gap: 8px; }
+    .nav-btn {
+      font-family: 'Domine', serif; font-size: 13px; padding: 7px 14px;
+      border-radius: 8px; border: 1px solid rgba(201,168,76,0.3);
+      background: transparent; color: var(--gold); cursor: pointer;
+      text-decoration: none; transition: background 0.2s, border-color 0.2s;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .nav-btn:hover { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.55); color: var(--gold-light); }
+
+    /* ── PAGE WRAPPER ── */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 740px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+      text-align: left;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 6vw, 34px);
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.04em;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .page-subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: var(--gold);
+      opacity: 0.85;
+      margin-bottom: 24px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: rgba(241, 223, 153, 0.93) !important;
+      border-radius: var(--card-radius);
+      padding: 22px 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 0 rgba(201,168,76,0.35), 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.3);
+      border: 1px solid rgba(201,168,76,0.4);
+    }
+    .card, .card * { color: #111 !important; }
+
+    .card h2 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(18px, 4vw, 24px);
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #111 !important;
+    }
+    .card .card-note {
+      font-size: 12px;
+      color: #555 !important;
+      font-style: italic;
+      margin-bottom: 14px;
+    }
+
+    /* summary row */
+    .summary-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .summary-stars { font-size: 22px; letter-spacing: 2px; color: var(--gold-dark) !important; }
+    .summary-text { font-size: 14px; color: #333 !important; }
+
+    /* star picker */
+    .star-picker { font-size: 28px; letter-spacing: 4px; cursor: pointer; user-select: none; }
+    .star-picker span { color: #999 !important; transition: color 0.1s; }
+    .star-picker span.on { color: var(--gold-dark) !important; }
+
+    .my-review-box {
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+    .my-review-box textarea {
+      width: 100%;
+      min-height: 80px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.18);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      padding: 10px;
+      resize: vertical;
+      margin-top: 10px;
+    }
+    .required-note { font-size: 12px; color: #a12828 !important; margin-top: 4px; display: none; }
+
+    .btn-action {
+      font-family: 'Domine', serif;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      margin-right: 8px;
+    }
+    .btn-action:hover { background: rgba(255,255,255,1); }
+    .btn-action.btn-danger { background: rgba(161,40,40,0.15); border-color: rgba(161,40,40,0.4); color: #7a1f1f !important; }
+
+    .review-item {
+      border-top: 1px solid rgba(0,0,0,0.12);
+      padding: 14px 0;
+    }
+    .review-item:first-child { border-top: none; }
+    .review-item-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .review-stars { color: var(--gold-dark) !important; font-size: 16px; letter-spacing: 1px; }
+    .review-meta { font-size: 12px; color: #666 !important; }
+    .review-text { font-size: 14px; line-height: 1.5; color: #222 !important; white-space: pre-wrap; }
+    .empty-note { font-size: 13px; color: #666 !important; font-style: italic; padding: 8px 0; }
+
+    .login-note {
+      font-size: 13px;
+      color: #555 !important;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+    }
+    .login-note a { color: #1a3a6b !important; text-decoration: underline; }
+
+    /* ── VP SECTION — visually distinct from the public reviews above ── */
+    .vp-card {
+      border-left: 6px solid #6a3b82 !important;
+      box-shadow: 0 2px 0 rgba(106,59,130,0.4), 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.3) !important;
+    }
+    .vp-header-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .vp-header-row h2 { margin-bottom: 0; }
+    .vp-pill {
+      display: inline-block;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #fff !important;
+      background: #6a3b82;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .vp-intro {
+      font-size: 13px;
+      color: #3b1f4a !important;
+      background: rgba(106,59,130,0.08);
+      border: 1px solid rgba(106,59,130,0.25);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      line-height: 1.65;
+    }
+    .vp-intro strong { color: #3b1f4a !important; }
+    .vp-card .summary-stars,
+    .vp-card .review-stars,
+    .vp-card .star-picker span.on { color: #6a3b82 !important; }
+    .vp-card .btn-action:not(.btn-danger) { border-color: rgba(106,59,130,0.4) !important; background: rgba(106,59,130,0.1) !important; }
+    .vp-card .btn-action:not(.btn-danger):hover { background: rgba(106,59,130,0.18) !important; }
+
+    .back-link { display: inline-block; margin-bottom: 16px; color: var(--gold); font-weight: bold; text-decoration: none; }
+    .back-link:hover { color: var(--gold-light); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #2a1a05;
+      color: #f1df99 !important;
+      border: 1px solid rgba(161,40,40,0.6);
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      max-width: 90vw;
+      text-align: center;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/index.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-right">
+      <button type="button" onclick="history.back()" class="nav-btn">⬅ Back</button>
+      <a href="/fairs/explore.html" class="nav-btn">🎪 Fairs</a>
+      <a href="/profile/index.html" class="nav-btn">👤 Profile</a>
+    </div>
+  </nav>
+
+  <div class="page-wrap">
+    <h1 id="fairNameTitle">Reviews</h1>
+    <div class="page-subtitle" id="fairSubtitle">Loading…</div>
+
+    <a class="back-link" href="#" id="backToFairLink">⬅ Back to Fair Details</a>
+
+    <!-- ── PUBLIC REVIEWS ── -->
+    <div class="card" id="publicReviewsCard">
+      <h2>⭐ Reviews</h2>
+      <div class="card-note">Anyone can read these. Posting one requires being logged in.</div>
+
+      <div class="summary-row">
+        <span class="summary-stars" id="pubSummaryStars">☆☆☆☆☆</span>
+        <span class="summary-text" id="pubSummaryText">Loading…</span>
+      </div>
+
+      <div id="loginNoteWrap"></div>
+
+      <div class="my-review-box" id="myReviewBox" style="display:none;">
+        <div id="myReviewLabel" style="font-weight:bold; font-size:13px;">Your rating</div>
+        <div class="star-picker" id="myStarPicker">
+          <span data-star="1">★</span><span data-star="2">★</span><span data-star="3">★</span><span data-star="4">★</span><span data-star="5">★</span>
+        </div>
+        <textarea id="myReviewText" placeholder="Write your review (optional unless you're leaving 1-2 stars)…"></textarea>
+        <div class="required-note" id="myReviewRequiredNote">A written review is required for a rating of 1 or 2 stars.</div>
+        <div id="myReviewMsg" style="font-size:13px; margin-top:6px;"></div>
+        <div>
+          <button class="btn-action" id="mySubmitBtn">Submit Review</button>
+          <button class="btn-action btn-danger" id="myDeleteBtn" style="display:none;">Delete My Review</button>
+        </div>
+      </div>
+
+      <div id="publicReviewsList"></div>
+    </div>
+
+    <!-- ── VP-ONLY REVIEWS ── -->
+    <div class="card vp-card" id="vpReviewsCard" style="display:none;">
+      <div class="vp-header-row">
+        <h2 style="margin-bottom:0;">🎭 VP Reviews</h2>
+        <span class="vp-pill">Vendors &amp; Performers Only</span>
+      </div>
+      <div class="vp-intro">
+        This section is a private space for fellow vendors and performers to share honest, constructive feedback about their own experience at this fair — things like communication, organization, and how VPs were treated on-site. The goal is simply to help other VPs know what to expect before they apply, not to call any fair out publicly. Every review here is completely anonymous, even to FairQuest.
+      </div>
+
+      <div class="summary-row">
+        <span class="summary-stars" id="vpSummaryStars">☆☆☆☆☆</span>
+        <span class="summary-text" id="vpSummaryText">Loading…</span>
+      </div>
+
+      <div class="my-review-box" id="myVpReviewBox">
+        <div style="font-weight:bold; font-size:13px;">Your VP rating</div>
+        <div class="star-picker" id="myVpStarPicker">
+          <span data-star="1">★</span><span data-star="2">★</span><span data-star="3">★</span><span data-star="4">★</span><span data-star="5">★</span>
+        </div>
+        <textarea id="myVpReviewText" placeholder="Write your review (optional unless you're leaving 1-2 stars)…"></textarea>
+        <div class="required-note" id="myVpReviewRequiredNote">A written review is required for a rating of 1 or 2 stars.</div>
+        <div id="myVpReviewMsg" style="font-size:13px; margin-top:6px;"></div>
+        <div>
+          <button class="btn-action" id="myVpSubmitBtn">Submit Review</button>
+          <button class="btn-action btn-danger" id="myVpDeleteBtn" style="display:none;">Delete My Review</button>
+        </div>
+      </div>
+
+      <div id="vpReviewsList"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="appToast"></div>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://awtbjuiqgtdydsqzimul.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
+    );
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const fairId = parseInt(urlParams.get('fair_id'), 10);
+const reviewType = (urlParams.get('type') || 'public').toLowerCase();
+
+let myPubRating = 0;
+    let myVpRating = 0;
+
+    function relativeTime(dateStr) {
+      const then = new Date(dateStr).getTime();
+      const diffSec = Math.floor((Date.now() - then) / 1000);
+      if (diffSec < 60) return 'just now';
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
+      const diffDay = Math.floor(diffHr / 24);
+      if (diffDay < 7) return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
+      const diffWeek = Math.floor(diffDay / 7);
+      if (diffWeek < 5) return `${diffWeek} week${diffWeek === 1 ? '' : 's'} ago`;
+      const diffMonth = Math.floor(diffDay / 30);
+      if (diffMonth < 12) return `${diffMonth} month${diffMonth === 1 ? '' : 's'} ago`;
+      const diffYear = Math.floor(diffDay / 365);
+      return `${diffYear} year${diffYear === 1 ? '' : 's'} ago`;
+    }
+
+    function starString(n) {
+      const filled = Math.round(n);
+      return '★'.repeat(Math.max(0, Math.min(5, filled))) + '☆'.repeat(5 - Math.max(0, Math.min(5, filled)));
+    }
+
+    function wireStarPicker(pickerId, getRating, setRating) {
+      const picker = document.getElementById(pickerId);
+      const spans = picker.querySelectorAll('span');
+      function render() {
+        const r = getRating();
+        spans.forEach(s => {
+          s.classList.toggle('on', Number(s.dataset.star) <= r);
+        });
+      }
+      spans.forEach(s => {
+        s.addEventListener('click', () => {
+          setRating(Number(s.dataset.star));
+          render();
+        });
+      });
+      render();
+      return render;
+    }
+
+    let renderMyStars, renderMyVpStars;
+    renderMyStars = wireStarPicker('myStarPicker', () => myPubRating, (v) => { myPubRating = v; checkRequiredNote(); });
+    renderMyVpStars = wireStarPicker('myVpStarPicker', () => myVpRating, (v) => { myVpRating = v; checkVpRequiredNote(); });
+
+    function checkRequiredNote() {
+      document.getElementById('myReviewRequiredNote').style.display = (myPubRating > 0 && myPubRating <= 2) ? 'block' : 'none';
+    }
+    function checkVpRequiredNote() {
+      document.getElementById('myVpReviewRequiredNote').style.display = (myVpRating > 0 && myVpRating <= 2) ? 'block' : 'none';
+    }
+
+    async function loadFairHeader() {
+      const { data, error } = await supabaseClient
+        .from('renaissance_fairs')
+        .select('id, name')
+        .eq('id', fairId)
+        .single();
+
+      if (error || !data) {
+        document.getElementById('fairSubtitle').textContent = 'Fair not found.';
+        return;
+      }
+      document.getElementById('fairSubtitle').textContent = data.name;
+      document.getElementById('backToFairLink').href = `/fairs/fair_detail.html?id=${fairId}`;
+    }
+
+    async function loadPublicSummary() {
+      const { data } = await supabaseClient.rpc('get_fair_review_summary', { p_fair_id: fairId });
+      const row = data && data[0] ? data[0] : { avg_rating: 0, review_count: 0 };
+      document.getElementById('pubSummaryStars').textContent = starString(row.review_count > 0 ? row.avg_rating : 0);
+      document.getElementById('pubSummaryText').textContent = row.review_count > 0
+        ? `${Number(row.avg_rating).toFixed(1)} average (${row.review_count} review${row.review_count === 1 ? '' : 's'})`
+        : 'No reviews yet';
+    }
+
+    async function loadPublicList() {
+      const { data, error } = await supabaseClient.rpc('get_fair_reviews', { p_fair_id: fairId });
+      const list = document.getElementById('publicReviewsList');
+      if (error || !data || !data.length) {
+        list.innerHTML = '<div class="empty-note">No reviews yet — be the first.</div>';
+        return;
+      }
+      list.innerHTML = data.map(r => `
+        <div class="review-item">
+          <div class="review-item-head">
+            <span class="review-stars">${starString(r.rating)}</span>
+            <span class="review-meta">${escapeHtml(r.username)} · ${relativeTime(r.created_at)}${r.is_edited ? ' · edited' : ''}</span>
+          </div>
+          ${r.review_text ? `<div class="review-text">${escapeHtml(r.review_text)}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    async function loadMyReview() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const box = document.getElementById('myReviewBox');
+      const loginWrap = document.getElementById('loginNoteWrap');
+
+      if (!session) {
+        box.style.display = 'none';
+        loginWrap.innerHTML = '<div class="login-note"><a href="/user_login.html">Log in</a> to write a review.</div>';
+        return;
+      }
+      loginWrap.innerHTML = '';
+      box.style.display = 'block';
+
+      const { data } = await supabaseClient.rpc('get_my_fair_review', { p_fair_id: fairId });
+      const mine = data && data[0] ? data[0] : null;
+
+      if (mine) {
+        myPubRating = mine.rating;
+        document.getElementById('myReviewText').value = mine.review_text || '';
+        document.getElementById('myReviewLabel').textContent = 'Your rating' + (mine.is_edited ? ' (edited)' : '');
+        document.getElementById('myDeleteBtn').style.display = 'inline-flex';
+        document.getElementById('mySubmitBtn').textContent = 'Update Review';
+      } else {
+        myPubRating = 0;
+        document.getElementById('myReviewText').value = '';
+        document.getElementById('myReviewLabel').textContent = 'Your rating';
+        document.getElementById('myDeleteBtn').style.display = 'none';
+        document.getElementById('mySubmitBtn').textContent = 'Submit Review';
+      }
+      renderMyStars();
+      checkRequiredNote();
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s == null ? '' : s;
+      return d.innerHTML;
+    }
+
+    function goBackToFair() {
+      const ref = document.referrer;
+      if (ref && (ref.includes('/fairs/fair_detail.html') || ref.includes('/fair_profile.html'))) {
+        window.location.href = ref;
+      } else {
+        window.location.href = document.getElementById('backToFairLink').href;
+      }
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('appToast');
+      clearTimeout(toastTimer);
+      t.textContent = msg;
+      t.classList.add('show');
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    document.getElementById('mySubmitBtn').addEventListener('click', async () => {
+      const msgEl = document.getElementById('myReviewMsg');
+      msgEl.style.color = '#555';
+      msgEl.textContent = '';
+
+      if (myPubRating < 1) { showToast('Pick a star rating before submitting.'); return; }
+      const text = document.getElementById('myReviewText').value.trim();
+      if (myPubRating <= 2 && !text) { msgEl.style.color = '#a12828'; msgEl.textContent = 'A written review is required for 1-2 stars.'; return; }
+
+      msgEl.textContent = 'Submitting…';
+      const { error } = await supabaseClient.rpc('upsert_fair_review', {
+        p_fair_id: fairId, p_rating: myPubRating, p_review_text: text || null
+      });
+      if (error) { msgEl.style.color = '#a12828'; msgEl.textContent = error.message || 'Something went wrong.'; return; }
+      msgEl.style.color = '#2e7d32';
+      msgEl.textContent = 'Saved!';
+      await loadMyReview();
+      await loadPublicSummary();
+      await loadPublicList();
+      setTimeout(goBackToFair, 700);
+    });
+
+    document.getElementById('myDeleteBtn').addEventListener('click', async () => {
+      if (!confirm('Delete your review?')) return;
+      await supabaseClient.rpc('delete_fair_review', { p_fair_id: fairId });
+      await loadMyReview();
+      await loadPublicSummary();
+      await loadPublicList();
+    });
+
+    // ── VP reviews ──
+    async function loadVpSummary() {
+      const { data } = await supabaseClient.rpc('get_vp_fair_review_summary', { p_fair_id: fairId });
+      const row = data && data[0] ? data[0] : { avg_rating: 0, review_count: 0 };
+      document.getElementById('vpSummaryStars').textContent = starString(row.review_count > 0 ? row.avg_rating : 0);
+      document.getElementById('vpSummaryText').textContent = row.review_count > 0
+        ? `${Number(row.avg_rating).toFixed(1)} average (${row.review_count} review${row.review_count === 1 ? '' : 's'})`
+        : 'No VP reviews yet';
+    }
+
+    async function loadVpList() {
+      const { data, error } = await supabaseClient.rpc('get_vp_fair_reviews', { p_fair_id: fairId });
+      const list = document.getElementById('vpReviewsList');
+      if (error || !data || !data.length) {
+        list.innerHTML = '<div class="empty-note">No VP reviews yet — be the first.</div>';
+        return;
+      }
+      list.innerHTML = data.map(r => `
+        <div class="review-item">
+          <div class="review-item-head">
+            <span class="review-stars">${starString(r.rating)}</span>
+            <span class="review-meta">Anonymous VP · ${relativeTime(r.created_at)}${r.is_edited ? ' · edited' : ''}</span>
+          </div>
+          ${r.review_text ? `<div class="review-text">${escapeHtml(r.review_text)}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    async function loadMyVpReview() {
+      const { data } = await supabaseClient.rpc('get_my_vp_fair_review', { p_fair_id: fairId });
+      const mine = data && data[0] ? data[0] : null;
+
+      if (mine) {
+        myVpRating = mine.rating;
+        document.getElementById('myVpReviewText').value = mine.review_text || '';
+        document.getElementById('myVpDeleteBtn').style.display = 'inline-flex';
+        document.getElementById('myVpSubmitBtn').textContent = 'Update Review';
+      } else {
+        myVpRating = 0;
+        document.getElementById('myVpReviewText').value = '';
+        document.getElementById('myVpDeleteBtn').style.display = 'none';
+        document.getElementById('myVpSubmitBtn').textContent = 'Submit Review';
+      }
+      renderMyVpStars();
+      checkVpRequiredNote();
+    }
+
+    document.getElementById('myVpSubmitBtn').addEventListener('click', async () => {
+      const msgEl = document.getElementById('myVpReviewMsg');
+      msgEl.style.color = '#555';
+      msgEl.textContent = '';
+
+      if (myVpRating < 1) { showToast('Pick a star rating before submitting.'); return; }
+      const text = document.getElementById('myVpReviewText').value.trim();
+      if (myVpRating <= 2 && !text) { msgEl.style.color = '#a12828'; msgEl.textContent = 'A written review is required for 1-2 stars.'; return; }
+
+      msgEl.textContent = 'Submitting…';
+      const { error } = await supabaseClient.rpc('upsert_vp_fair_review', {
+        p_fair_id: fairId, p_rating: myVpRating, p_review_text: text || null
+      });
+      if (error) { msgEl.style.color = '#a12828'; msgEl.textContent = error.message || 'Something went wrong.'; return; }
+      msgEl.style.color = '#2e7d32';
+      msgEl.textContent = 'Saved!';
+      await loadMyVpReview();
+      await loadVpSummary();
+      await loadVpList();
+      setTimeout(goBackToFair, 700);
+    });
+
+    document.getElementById('myVpDeleteBtn').addEventListener('click', async () => {
+      if (!confirm('Delete your VP review?')) return;
+      await supabaseClient.rpc('delete_vp_fair_review', { p_fair_id: fairId });
+      await loadMyVpReview();
+      await loadVpSummary();
+      await loadVpList();
+    });
+
+    async function init() {
+      if (!fairId) {
+        document.getElementById('fairSubtitle').textContent = 'Missing fair_id in the URL.';
+        return;
+      }
+      await loadFairHeader();
+
+      if (reviewType === 'vp') {
+        // VP-only view: the public reviews section is completely hidden, not just collapsed.
+        document.getElementById('publicReviewsCard').style.display = 'none';
+        document.getElementById('fairNameTitle').textContent = 'VP Reviews';
+
+        const vpCard = document.getElementById('vpReviewsCard');
+        vpCard.style.display = 'block';
+
+        const { data: isVp } = await supabaseClient.rpc('is_current_user_vp');
+        if (!isVp) {
+          vpCard.innerHTML = `
+            <div class="vp-header-row">
+              <h2 style="margin-bottom:0;">🎭 VP Reviews</h2>
+              <span class="vp-pill">Vendors &amp; Performers Only</span>
+            </div>
+            <div class="empty-note">This section is only available to approved vendors and performers.</div>`;
+          return;
+        }
+
+        await loadVpSummary();
+        await loadVpList();
+        await loadMyVpReview();
+      } else {
+        // Public view: the VP section is completely hidden, even for a viewer who is themselves a VP.
+        document.getElementById('vpReviewsCard').style.display = 'none';
+
+        await loadPublicSummary();
+        await loadPublicList();
+        await loadMyReview();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

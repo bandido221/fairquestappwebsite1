@@ -278,6 +278,39 @@
       margin-top: 8px;
       font-style: italic;
     }
+
+    /* ── REVIEW POP BUTTONS ── */
+    .review-pop-btn {
+      display: block;
+      text-decoration: none;
+      color: #111 !important;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(241,223,153,0.85));
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 12px;
+      padding: 12px 18px;
+      max-width: 300px;
+      box-shadow:
+        0 4px 0 rgba(0,0,0,0.25),
+        0 8px 16px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .review-pop-btn:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 6px 0 rgba(0,0,0,0.25),
+        0 12px 20px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+    .review-pop-btn:active {
+      transform: translateY(3px);
+      box-shadow:
+        0 1px 0 rgba(0,0,0,0.25),
+        0 3px 8px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
 /* ── BETA NOTICE MODAL ── */
 #betaNoticeModal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -462,6 +495,20 @@
 <p><strong>🕒 Hours:</strong> <span id="fairHours"></span></p>
 <p><strong>📅 Weekends:</strong></p>
 <ul id="weekendsList"></ul>
+<div id="eventsLinkWrap" style="display:flex; justify-content:flex-end; margin:-6px 0 10px;"></div>
+
+<div style="display:flex; justify-content:flex-start; margin:0 0 12px;">
+  <a href="#" id="publicReviewsCardLink" class="review-pop-btn">
+    <div style="font-family:'Cinzel',serif; font-weight:700; font-size:16px; margin-bottom:4px;">⭐ Reviews</div>
+    <div style="font-size:14px;"><span style="color:var(--gold-dark); letter-spacing:1px; font-size:16px;" id="pubSummaryStars">☆☆☆☆☆</span> <span id="pubSummaryText">Loading…</span></div>
+  </a>
+</div>
+<div style="display:none; justify-content:flex-start; margin:0 0 14px;" id="vpReviewsCardLink" onclick="window.location.href=this.dataset.href;">
+  <div class="review-pop-btn">
+    <div style="font-family:'Cinzel',serif; font-weight:700; font-size:16px; margin-bottom:4px;">🎭 VP Reviews</div>
+    <div style="font-size:14px;"><span style="color:var(--gold-dark); letter-spacing:1px; font-size:16px;" id="vpSummaryStars">☆☆☆☆☆</span> <span id="vpSummaryText">Loading…</span></div>
+  </div>
+</div>
 
 
 <div class="action-btns">
@@ -504,6 +551,21 @@
       <button class="btn-action" onclick="closeReportModal()" style="background:rgba(255,255,255,0.1); color:var(--gold-light) !important;">
         Cancel
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── REVIEW LOGIN MODAL ── -->
+<div id="reviewLoginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:500; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#1a1208; border:1px solid rgba(201,168,76,0.4); border-radius:16px; padding:28px; max-width:380px; width:100%; text-align:center; box-shadow:0 8px 36px rgba(0,0,0,0.6);">
+    <h3 style="font-family:'Cinzel',serif; color:var(--gold-light); margin-bottom:12px;">⭐ Log In to Review</h3>
+    <p style="font-size:13px; color:var(--gold); margin-bottom:20px; line-height:1.6;">
+      You need to be logged in to write a review. You can still browse existing reviews without logging in.
+    </p>
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <button class="btn-action" onclick="window.location.href='/user_login.html'" style="background:var(--gold); color:#111 !important; border-color:var(--gold-dark);">Log In</button>
+      <button class="btn-action" onclick="proceedToReviews()" style="background:rgba(255,255,255,0.1); color:var(--gold-light) !important;">View Reviews</button>
+      <button class="btn-action" onclick="closeReviewLoginModal()" style="background:transparent; border-color:rgba(201,168,76,0.3); color:var(--gold) !important;">Cancel</button>
     </div>
   </div>
 </div>
@@ -590,7 +652,7 @@ document.getElementById('fairHours').textContent =
 
     function formatDate(d) {
   const [year, month, day] = d.split('-');
-  return `${day}-${month}-${String(year).slice(-2)}`;
+  return `${month}-${day}-${String(year).slice(-2)}`;
 }
 
 const weekendFields = [
@@ -779,7 +841,7 @@ document.getElementById('fairWebsite').innerHTML = data.website
 
   function formatDate(d) {
     const [year, month, day] = d.split('-');
-    return `${day}-${month}-${String(year).slice(-2)}`;
+    return `${month}-${day}-${String(year).slice(-2)}`;
   }
 
   const weekendFields = [
@@ -801,11 +863,81 @@ document.getElementById('fairWebsite').innerHTML = data.website
   // NEW: gate Apply button
   await setupApplyButton(data);
   setupClaimButton(data);
+  loadEventsLink();
+  loadReviewsLink();
 };
+
+async function loadEventsLink() {
+  const wrap = document.getElementById('eventsLinkWrap');
+  if (!wrap) return;
+  const { data, error } = await supabaseClient.rpc('get_fair_schedule_events', { p_fair_id: parseInt(fairId, 10) });
+  if (!error && data && data.length) {
+    wrap.innerHTML = `<a href="/fair_admin/fair_events.html?fair_id=${fairId}" style="display:inline-block; background:#8a6a1a; color:#fff; padding:6px 14px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:13px;">🗓️ View Fair Events</a>`;
+  } else {
+    wrap.innerHTML = `<span style="font-size:12px; color:#555; font-style:italic;">This fair hasn't set up their events page yet.</span>`;
+  }
+}
+
+function starString(n) {
+  const filled = Math.max(0, Math.min(5, Math.round(n)));
+  return '★'.repeat(filled) + '☆'.repeat(5 - filled);
+}
+
+async function loadReviewsLink() {
+  const fid = parseInt(fairId, 10);
+  const pubReviewsHref = `/fairs/fair_star_reviews.html?fair_id=${fid}&type=public`;
+  const vpReviewsHref = `/fairs/fair_star_reviews.html?fair_id=${fid}&type=vp`;
+
+  const pubLink = document.getElementById('publicReviewsCardLink');
+  if (pubLink) {
+    pubLink.href = pubReviewsHref;
+    const { data: pub } = await supabaseClient.rpc('get_fair_review_summary', { p_fair_id: fid });
+    const pubRow = pub && pub[0] ? pub[0] : { avg_rating: 0, review_count: 0 };
+    document.getElementById('pubSummaryStars').textContent = starString(pubRow.review_count > 0 ? pubRow.avg_rating : 0);
+    document.getElementById('pubSummaryText').textContent = pubRow.review_count > 0
+      ? `${Number(pubRow.avg_rating).toFixed(1)} average (${pubRow.review_count} review${pubRow.review_count === 1 ? '' : 's'})`
+      : 'No reviews yet';
+  }
+
+  const { data: isVp } = await supabaseClient.rpc('is_current_user_vp');
+  if (isVp) {
+    const vpLink = document.getElementById('vpReviewsCardLink');
+    vpLink.dataset.href = vpReviewsHref;
+    vpLink.style.display = 'flex';
+    const { data: vp } = await supabaseClient.rpc('get_vp_fair_review_summary', { p_fair_id: fid });
+    const vpRow = vp && vp[0] ? vp[0] : { avg_rating: 0, review_count: 0 };
+    document.getElementById('vpSummaryStars').textContent = starString(vpRow.review_count > 0 ? vpRow.avg_rating : 0);
+    document.getElementById('vpSummaryText').textContent = vpRow.review_count > 0
+      ? `${Number(vpRow.avg_rating).toFixed(1)} average (${vpRow.review_count} review${vpRow.review_count === 1 ? '' : 's'})`
+      : 'No VP reviews yet';
+  }
+}
 
 loadFair();
 loadShowcase();
 setupFavoriteButton();
+
+let pendingReviewsHref = null;
+
+document.getElementById('publicReviewsCardLink').addEventListener('click', async function(e) {
+  e.preventDefault();
+  const href = this.href;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    window.location.href = href;
+  } else {
+    pendingReviewsHref = href;
+    document.getElementById('reviewLoginModal').style.display = 'flex';
+  }
+});
+
+function proceedToReviews() {
+  document.getElementById('reviewLoginModal').style.display = 'none';
+  if (pendingReviewsHref) window.location.href = pendingReviewsHref;
+}
+function closeReviewLoginModal() {
+  document.getElementById('reviewLoginModal').style.display = 'none';
+}
 
 async function setupFavoriteButton() {
   const btn = document.getElementById('favoriteBtn');

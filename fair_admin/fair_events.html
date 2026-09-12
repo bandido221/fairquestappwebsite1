@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fair Events | FairQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/fq_theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Domine', serif; background: #0a0a0a; color: #f0e6d2; margin: 0; padding: 0; }
+
+    .topnav {
+      background: #1a1208; border-bottom: 1px solid #3d2e0e;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .topnav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .topnav-logo img { width: 32px; height: 32px; border-radius: 6px; }
+    .topnav-logo span { font-family: 'Cinzel', serif; font-size: 16px; color: #f1df99; }
+    .topnav-links { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topnav-links a { color: #c8aa6e; text-decoration: none; font-size: 14px; padding: 6px 12px; border-radius: 6px; transition: background 0.15s; }
+    .topnav-links a:hover { background: rgba(241,223,153,0.12); color: #f1df99; }
+    .topnav-links .nav-logout { background: rgba(180,50,50,0.18); color: #f4a0a0; margin-left: 8px; border: 1px solid rgba(180,50,50,0.3); }
+    .topnav-links .nav-logout:hover { background: rgba(180,50,50,0.32); }
+
+    .page-body { padding: 16px 20px 60px; max-width: 900px; margin: 0 auto; }
+    .breadcrumb { font-size: 13px; color: #bb9457; margin-bottom: 6px; }
+    .breadcrumb a { color: #bb9457; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #f0e6d2; }
+    h1 { font-family: 'Cinzel', serif; font-size: 22px; color: #f1df99; margin: 8px 0 16px; }
+
+    .card {
+      background: rgba(241, 223, 153, 0.88); padding: 20px; border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4); margin-bottom: 20px; color: #3b1f1f; text-align: left;
+    }
+    .card h2 { font-family: 'Cinzel', serif; font-size: 16px; margin: 0 0 14px; color: #3b1f1f; }
+
+    .btn { background: #4CAF50; color: #fff; padding: 10px 16px; border: none; border-radius: 8px; font-size: 15px; font-family: 'Domine', serif; cursor: pointer; min-height: 44px; }
+    .btn:hover { background: #43a047; }
+    .btn-small { padding: 8px 12px; font-size: 13px; min-height: 40px; }
+    .btn-danger { background: rgba(180,30,30,0.85); }
+    .btn-danger:hover { background: rgba(180,30,30,1); }
+
+    .location-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 999px; padding: 6px 8px 6px 14px; margin: 4px 6px 4px 0; font-size: 13px;
+    }
+    .location-chip button {
+      background: rgba(180,30,30,0.15); border: none; border-radius: 50%;
+      width: 22px; height: 22px; color: #8b1a1a; font-weight: bold; cursor: pointer; line-height: 1;
+    }
+    .add-location-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .add-location-row input {
+      flex: 1; min-width: 160px; padding: 9px 12px; border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2); font-family: 'Domine', serif; font-size: 14px;
+    }
+
+    .day-tabs {
+      display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 16px;
+      -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+    }
+    .day-tab {
+      flex: 0 0 auto; background: rgba(241,223,153,0.15); border: 1px solid rgba(201,168,76,0.35);
+      color: #e9d9a0; padding: 10px 16px; border-radius: 999px; font-size: 13px; font-family: 'Domine', serif;
+      cursor: pointer; white-space: nowrap; min-height: 44px;
+    }
+    .day-tab.active { background: #f1df99; color: #3b1f1f; font-weight: bold; border-color: #f1df99; }
+
+    .event-row {
+      background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 10px; padding: 14px; margin-bottom: 12px;
+    }
+    .event-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px; margin-bottom: 10px;
+    }
+    .event-field label { display: block; font-size: 12px; font-weight: bold; color: #3b1f1f; margin-bottom: 4px; }
+    .event-field input, .event-field select, .event-field textarea {
+      width: 100%; padding: 9px 10px; border-radius: 7px; border: 1px solid rgba(0,0,0,0.2);
+      font-size: 14px; font-family: 'Domine', serif; background: rgba(255,255,255,0.9); color: #111;
+    }
+    .event-field textarea { resize: vertical; min-height: 44px; }
+.event-image-preview { width: 100%; aspect-ratio: 3 / 1; object-fit: cover; border-radius: 8px; display: block; margin-top: 8px; }
+.event-summary-image { width: 100%; aspect-ratio: 3 / 1; object-fit: cover; border-radius: 8px; margin: 8px 0; display: block; }
+  .event-row-footer { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.save-status { font-size: 13px; font-weight: bold; }
+
+.event-summary { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.event-summary-info { flex: 1; min-width: 160px; }
+.event-summary-title { font-size: 15px; font-weight: bold; color: #3b1f1f; }
+.event-summary-meta { font-size: 13px; color: #5c3a1e; margin-top: 2px; }
+.event-summary-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+
+    .empty-msg { text-align: center; padding: 20px 0; font-size: 14px; color: #5c3a1e; }
+    #addEventBtn { margin-bottom: 14px; }
+
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    #loadingOverlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; flex-direction: column; gap: 16px;
+    }
+    #loadingOverlay p { color: #f1df99; font-family: 'Cinzel', serif; font-size: 15px; }
+    .spinner { border: 5px solid rgba(255,255,255,0.15); border-top: 5px solid #bb9457; border-radius: 50%; width: 52px; height: 52px; animation: spin 0.9s linear infinite; }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a class="topnav-logo" href="/home.html">
+      <img src="/images/logo.png" alt="FairQuest" />
+      <span>FairQuest</span>
+    </a>
+    <div class="topnav-links">
+<a href="fair_admin.html">🏰 My Fairs</a>
+      <a href="#" id="navDashboard">📊 Dashboard</a>
+      <a href="#" id="navApplications">📋 Applications</a>
+      <a href="#" id="navUpdateFair">✏️ Update Fair</a>
+      <a href="#" class="nav-logout" id="navLogout">Log Out</a>
+    </div>
+  </nav>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Loading fair events…</p>
+  </div>
+
+  <div class="page-body">
+
+    <div class="breadcrumb">
+      <a href="../fair_admin.html">Admin Home</a> ›
+      <a href="#" id="breadDashboard">Dashboard</a> ›
+      <span>Fair Events</span>
+    </div>
+
+    <h1 id="pageTitle">Fair Events</h1>
+
+    <div class="card" id="locationsCard">
+      <h2>📍 Locations</h2>
+      <div id="locationChips"></div>
+      <div class="add-location-row">
+        <input type="text" id="newLocationName" placeholder="e.g. Main Stage, Joust List, Tavern" />
+        <button class="btn btn-small" id="addLocationBtn">+ Add Location</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🗓️ Schedule</h2>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+        <div class="day-tabs" id="dayTabs" style="margin-bottom:0; flex:1;"></div>
+        <button class="btn btn-small" id="addDateBtn" title="Add a date" style="flex:0 0 auto; white-space:nowrap; display:none;">📅 Add Date</button>
+        <input type="date" id="datePicker" style="position:absolute; opacity:0; width:0; height:0; pointer-events:none;" />
+      </div>
+      <button class="btn" id="addEventBtn" style="display:none;">+ Add Event</button>
+      <div id="eventsContainer"></div>
+      <div id="emptyMsg" class="empty-msg" style="display:none;">No dates yet — tap 📅+ to add one.</div>
+      <div id="noScheduleMsg" class="empty-msg" style="display:none;">This fair hasn't posted an event schedule yet — check back soon!</div>
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL  = 'https://awtbjuiqgtdydsqzimul.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    let currentFairId = null;
+    let allDates = [];
+    let activeDate = null;
+    let locations = [];
+    let eventsByDate = {};
+    let isEditor = false;
+
+    function getFairId() {
+      const n = Number(new URLSearchParams(window.location.search).get('fair_id'));
+      return Number.isFinite(n) ? n : null;
+    }
+    function showLoader() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    function formatDayLabel(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+
+    function buildAllDates(existingEventDates) {
+      return Array.from(new Set(existingEventDates)).sort();
+    }
+
+    function renderLocationChips() {
+      const wrap = document.getElementById('locationChips');
+      if (!locations.length) {
+        wrap.innerHTML = `<span style="font-size:13px; color:#5c3a1e;">No locations yet — add one below.</span>`;
+        return;
+      }
+      wrap.innerHTML = locations.map(l =>
+        `<span class="location-chip">${l.name}<button data-id="${l.id}" class="delLocBtn">×</button></span>`
+      ).join('');
+      wrap.querySelectorAll('.delLocBtn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Delete this location? Events using it will show "Unassigned".')) return;
+          const id = Number(btn.dataset.id);
+          const { error } = await supabaseClient.rpc('delete_fair_schedule_location', {
+            p_id: id, p_fair_id: currentFairId
+          });
+          if (error) { alert('Failed to delete: ' + error.message); return; }
+          await loadLocations();
+          await loadEvents();
+          renderActiveDay();
+        });
+      });
+    }
+
+    function locationOptionsHtml(selectedId) {
+      const opts = ['<option value="">— Unassigned —</option>']
+        .concat(locations.map(l =>
+          `<option value="${l.id}" ${String(l.id) === String(selectedId) ? 'selected' : ''}>${l.name}</option>`
+        ))
+        .concat(['<option value="__new__">+ New location...</option>']);
+      return opts.join('');
+    }
+
+    function formatTimeDisplay(t) {
+      if (!t) return '';
+      const [h, m] = t.split(':').map(Number);
+      const period = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 === 0 ? 12 : h % 12;
+      return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+    }
+
+    function locationNameById(id) {
+      if (!id) return 'Unassigned';
+      const loc = locations.find(l => String(l.id) === String(id));
+      return loc ? loc.name : 'Unassigned';
+    }
+
+    function buildEventRow(dateStr, ev) {
+      const div = document.createElement('div');
+      div.className = 'event-row';
+      const id = ev?.id ?? null;
+
+      async function onDelete() {
+        if (!confirm('Delete this event?')) return;
+        const { error } = await supabaseClient.rpc('delete_fair_schedule_event', {
+          p_id: id, p_fair_id: currentFairId
+        });
+        if (error) { alert('Failed to delete: ' + error.message); return; }
+        await loadEvents();
+        renderActiveDay();
+      }
+
+      function renderView() {
+        const timeStr = ev.end_time
+          ? `${formatTimeDisplay(ev.start_time)} - ${formatTimeDisplay(ev.end_time)}`
+          : formatTimeDisplay(ev.start_time);
+
+        div.innerHTML = `
+          <div class="event-summary-title">${ev.title}</div>
+          ${ev.image_url ? `<img class="event-summary-image" src="${ev.image_url}" alt="${ev.title}" />` : ''}
+          ${ev.description ? `<div class="event-summary-meta" style="margin-bottom:8px;">${ev.description}</div>` : ''}
+          <div class="event-summary">
+            <div class="event-summary-info">
+              <div class="event-summary-meta">${timeStr} · ${locationNameById(ev.location_id)}</div>
+            </div>
+            ${isEditor ? `
+            <div class="event-summary-actions">
+              <button class="btn btn-small btn-edit">✏️ Edit</button>
+              <button class="btn btn-small btn-danger btn-delete">🗑 Delete</button>
+            </div>` : ''}
+          </div>`;
+
+        if (isEditor) {
+          div.querySelector('.btn-edit').addEventListener('click', renderEdit);
+          div.querySelector('.btn-delete').addEventListener('click', onDelete);
+        }
+      }
+
+      function renderEdit() {
+        let currentImageUrl = ev?.image_url || null;
+
+        div.innerHTML = `
+          <div class="event-field" style="margin-bottom:10px;">
+            <label>Title</label>
+            <input type="text" class="inp-title" placeholder="e.g. Joust Tournament" value="${ev?.title || ''}" />
+          </div>
+          <div class="event-field" style="margin-bottom:10px;">
+            <label>Image (optional)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="file" class="inp-image" accept="image/*" />
+              <button type="button" class="btn btn-small btn-dark btn-image-info" style="flex:0 0 auto;">ℹ️ Image requirements</button>
+            </div>
+            <img class="event-image-preview" src="${currentImageUrl || ''}" style="${currentImageUrl ? '' : 'display:none;'}" />
+            <span class="image-status" style="font-size:12px;"></span>
+          </div>
+          <div class="event-field" style="margin-bottom:10px;">
+            <label>Description (optional)</label>
+            <textarea class="inp-desc" placeholder="Details guests will see">${ev?.description || ''}</textarea>
+          </div>
+          <div class="event-grid">
+            <div class="event-field">
+              <label>Start Time</label>
+              <input type="time" class="inp-start" value="${ev?.start_time?.slice(0,5) || ''}" />
+            </div>
+            <div class="event-field">
+              <label>End Time (optional)</label>
+              <input type="time" class="inp-end" value="${ev?.end_time?.slice(0,5) || ''}" />
+            </div>
+            <div class="event-field">
+              <label>Location</label>
+              <select class="inp-location">${locationOptionsHtml(ev?.location_id)}</select>
+            </div>
+          </div>
+          <div class="event-row-footer">
+            <button class="btn btn-small btn-save">💾 Save</button>
+            ${id ? '<button class="btn btn-small btn-dark btn-cancel">Cancel</button>' : ''}
+            <button class="btn btn-small btn-danger btn-delete" ${id ? '' : 'style="display:none;"'}>🗑 Delete</button>
+            <span class="save-status"></span>
+          </div>`;
+
+        const cloudName = "dft7xclvh";
+        const uploadPreset = "fair_upload";
+        const BANNER_MSG = 'Image must be a wide banner shape (about 3:1, e.g. 1200x400). Tall or square photos will be rejected.';
+
+        div.querySelector('.btn-image-info').addEventListener('click', () => {
+          alert(BANNER_MSG);
+        });
+
+        function getImageDimensions(file) {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+              const img = new Image();
+              img.src = event.target.result;
+              img.onload = () => resolve({ width: img.width, height: img.height });
+            };
+          });
+        }
+
+        function compressImage(file, quality) {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+              const img = new Image(); img.src = event.target.result;
+              img.onload = () => {
+                const canvas = document.createElement("canvas");
+                const maxWidth = 1080; const scaleSize = maxWidth / img.width;
+                canvas.width = maxWidth; canvas.height = img.height * scaleSize;
+                canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob((blob) => resolve(blob), "image/jpeg", quality);
+              };
+            };
+          });
+        }
+
+        div.querySelector('.inp-image').addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const statusEl = div.querySelector('.image-status');
+          statusEl.style.color = '#5c3a1e';
+          statusEl.textContent = 'Checking image…';
+
+          const { width, height } = await getImageDimensions(file);
+          const ratio = width / height;
+          const MIN_RATIO = 2.0;
+          const MAX_RATIO = 4.0;
+
+          if (ratio < MIN_RATIO || ratio > MAX_RATIO) {
+            statusEl.style.color = '#8b1a1a';
+            statusEl.textContent = `❌ Not a banner shape (this image is ${width}x${height}). ${BANNER_MSG}`;
+            e.target.value = '';
+            return;
+          }
+
+          statusEl.textContent = 'Uploading…';
+          const compressed = await compressImage(file, 0.6);
+          const formData = new FormData();
+          formData.append('file', compressed);
+          formData.append('upload_preset', uploadPreset);
+
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            method: 'POST', body: formData
+          });
+          const data = await res.json();
+
+          if (!data.secure_url) {
+            statusEl.style.color = '#8b1a1a';
+            statusEl.textContent = '❌ Upload failed';
+            return;
+          }
+
+          currentImageUrl = data.secure_url;
+          const preview = div.querySelector('.event-image-preview');
+          preview.src = currentImageUrl;
+          preview.style.display = 'block';
+          statusEl.style.color = '#1a5c1e';
+          statusEl.textContent = '✅ Uploaded';
+        });
+
+        const locSelect = div.querySelector('.inp-location');
+        let lastLocValue = locSelect.value;
+
+        locSelect.addEventListener('change', async () => {
+          if (locSelect.value !== '__new__') { lastLocValue = locSelect.value; return; }
+
+          const name = prompt('New location name:');
+          if (!name || !name.trim()) { locSelect.value = lastLocValue; return; }
+
+          const { data, error } = await supabaseClient.rpc('upsert_fair_schedule_location', {
+            p_id: null, p_fair_id: currentFairId, p_name: name.trim(), p_sort_order: locations.length
+          });
+
+          if (error) {
+            alert('Failed to add location: ' + error.message);
+            locSelect.value = lastLocValue;
+            return;
+          }
+
+          await loadLocations();
+          locSelect.innerHTML = locationOptionsHtml(data.id);
+          lastLocValue = String(data.id);
+        });
+
+        div.querySelector('.btn-save').addEventListener('click', async () => {
+          const statusEl = div.querySelector('.save-status');
+          const startTime = div.querySelector('.inp-start').value;
+          const endTime   = div.querySelector('.inp-end').value || null;
+          const locId     = div.querySelector('.inp-location').value || null;
+          const title     = div.querySelector('.inp-title').value.trim();
+          const desc      = div.querySelector('.inp-desc').value.trim() || null;
+
+          if (!startTime || !title) {
+            statusEl.textContent = '❌ Start time and title required';
+            statusEl.style.color = '#8b1a1a';
+            return;
+          }
+
+          statusEl.textContent = 'Saving…';
+          statusEl.style.color = '#5c3a1e';
+
+          const { error } = await supabaseClient.rpc('upsert_fair_schedule_event', {
+            p_id: id,
+            p_fair_id: currentFairId,
+            p_location_id: locId ? Number(locId) : null,
+            p_event_date: dateStr,
+            p_start_time: startTime,
+            p_end_time: endTime,
+            p_title: title,
+            p_description: desc,
+            p_image_url: currentImageUrl
+          });
+
+          if (error) {
+            statusEl.textContent = '❌ Error saving';
+            statusEl.style.color = '#8b1a1a';
+            console.error(error);
+            return;
+          }
+
+          await loadEvents();
+          renderActiveDay();
+        });
+
+        const cancelBtn = div.querySelector('.btn-cancel');
+        if (cancelBtn) cancelBtn.addEventListener('click', renderView);
+
+        div.querySelector('.btn-delete').addEventListener('click', onDelete);
+      }
+
+      if (id) { renderView(); } else { renderEdit(); }
+
+      return div;
+    }
+
+    function renderDayTabs() {
+      const wrap = document.getElementById('dayTabs');
+      wrap.innerHTML = '';
+      allDates.forEach(d => {
+        const btn = document.createElement('button');
+        btn.className = 'day-tab' + (d === activeDate ? ' active' : '');
+        btn.textContent = formatDayLabel(d);
+        btn.addEventListener('click', () => {
+          activeDate = d;
+          renderDayTabs();
+          renderActiveDay();
+        });
+        wrap.appendChild(btn);
+      });
+    }
+
+    function renderActiveDay() {
+      const container = document.getElementById('eventsContainer');
+      const emptyMsg = document.getElementById('emptyMsg');
+      const addBtn = document.getElementById('addEventBtn');
+      container.innerHTML = '';
+
+      if (!activeDate) {
+        addBtn.style.display = 'none';
+        emptyMsg.textContent = isEditor ? 'No dates yet — tap 📅 Add Date to add one.' : 'No events on this day.';
+        emptyMsg.style.display = 'block';
+        return;
+      }
+
+      addBtn.style.display = isEditor ? 'inline-block' : 'none';
+
+      const events = (eventsByDate[activeDate] || []).slice()
+        .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
+
+      if (!events.length) {
+        emptyMsg.textContent = 'No events yet for this day.';
+        emptyMsg.style.display = 'block';
+      } else {
+        emptyMsg.style.display = 'none';
+        events.forEach(ev => container.appendChild(buildEventRow(activeDate, ev)));
+      }
+    }
+
+    async function loadLocations() {
+      const { data, error } = await supabaseClient.rpc('get_fair_schedule_locations', {
+        p_fair_id: currentFairId
+      });
+      if (error) { console.error(error); locations = []; return; }
+      locations = data || [];
+      renderLocationChips();
+    }
+
+    async function loadEvents() {
+      const { data, error } = await supabaseClient.rpc('get_fair_schedule_events', {
+        p_fair_id: currentFairId
+      });
+      if (error) { console.error(error); eventsByDate = {}; return; }
+      eventsByDate = {};
+      (data || []).forEach(ev => {
+        const key = ev.event_date;
+        if (!eventsByDate[key]) eventsByDate[key] = [];
+        eventsByDate[key].push(ev);
+      });
+    }
+
+    async function loadPage() {
+      showLoader();
+      currentFairId = getFairId();
+      if (!currentFairId) { hideLoader(); return; }
+
+      try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+
+        if (user) {
+          const { data: canEdit } = await supabaseClient.rpc('check_fair_permission', {
+            p_fair_id: currentFairId, p_permission: 'edit_fair_info'
+          });
+          isEditor = !!canEdit;
+        } else {
+          isEditor = false;
+        }
+
+        document.getElementById('locationsCard').style.display = isEditor ? 'block' : 'none';
+        document.getElementById('addDateBtn').style.display = isEditor ? 'inline-block' : 'none';
+
+        const { data: fair, error: fairError } = await supabaseClient
+          .from('renaissance_fairs')
+          .select('*')
+          .eq('id', currentFairId)
+          .single();
+        if (fairError || !fair) { hideLoader(); return; }
+
+        document.getElementById('pageTitle').textContent = `${fair.name || 'Fair'} — Events`;
+
+        if (isEditor) await loadLocations();
+        await loadEvents();
+
+        allDates = buildAllDates(Object.keys(eventsByDate));
+        activeDate = allDates[0] || null;
+
+        if (!isEditor && allDates.length === 0) {
+          document.getElementById('noScheduleMsg').style.display = 'block';
+          document.getElementById('dayTabs').style.display = 'none';
+        } else {
+          renderDayTabs();
+          renderActiveDay();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+      hideLoader();
+    }
+
+    document.getElementById('addLocationBtn').addEventListener('click', async () => {
+      const input = document.getElementById('newLocationName');
+      const name = input.value.trim();
+      if (!name) return;
+      const { error } = await supabaseClient.rpc('upsert_fair_schedule_location', {
+        p_id: null, p_fair_id: currentFairId, p_name: name, p_sort_order: locations.length
+      });
+      if (error) { alert('Failed to add: ' + error.message); return; }
+      input.value = '';
+      await loadLocations();
+      renderActiveDay();
+    });
+
+    document.getElementById('addEventBtn').addEventListener('click', () => {
+      if (!activeDate) return;
+      document.getElementById('emptyMsg').style.display = 'none';
+      document.getElementById('eventsContainer')
+        .appendChild(buildEventRow(activeDate, null));
+    });
+
+    document.getElementById('addDateBtn').addEventListener('click', () => {
+      const picker = document.getElementById('datePicker');
+      if (picker.showPicker) { picker.showPicker(); } else { picker.click(); }
+    });
+
+    document.getElementById('datePicker').addEventListener('change', (e) => {
+      const dateStr = e.target.value;
+      if (!dateStr) return;
+      if (!allDates.includes(dateStr)) {
+        allDates.push(dateStr);
+        allDates.sort();
+      }
+      activeDate = dateStr;
+      renderDayTabs();
+      renderActiveDay();
+      e.target.value = '';
+    });
+
+    async function init() {
+      const fairId = getFairId();
+
+      document.getElementById('navDashboard').href    = `fair_info/fair_dashboard.html?fair_id=${fairId}`;
+      document.getElementById('navApplications').href = `fair_info/fair_applications.html?fair_id=${fairId}`;
+      document.getElementById('navUpdateFair').href   = `fair_update.html?fair_id=${fairId}`;
+      document.getElementById('breadDashboard').href  = `fair_info/fair_dashboard.html?fair_id=${fairId}`;
+
+      document.getElementById('navLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseClient.auth.signOut();
+        window.location.href = '/index.html';
+      });
+
+      await loadPage();
+    }
+
+    init();
+  </script>
+</body>
+</html>

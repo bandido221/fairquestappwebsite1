@@ -110,6 +110,38 @@
     }
     .card-title::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.12); }
 
+    /* ── REVIEW POP BUTTONS ── */
+    .review-pop-btn {
+      display: block;
+      text-decoration: none;
+      color: #111 !important;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(241,223,153,0.85));
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 12px;
+      padding: 12px 18px;
+      max-width: 300px;
+      box-shadow:
+        0 4px 0 rgba(0,0,0,0.25),
+        0 8px 16px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .review-pop-btn:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 6px 0 rgba(0,0,0,0.25),
+        0 12px 20px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+    .review-pop-btn:active {
+      transform: translateY(3px);
+      box-shadow:
+        0 1px 0 rgba(0,0,0,0.25),
+        0 3px 8px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
     /* FAIR HERO */
     .fair-hero-card {
       background: var(--parchment);
@@ -360,6 +392,21 @@
     </div>
   </div>
 
+  <!-- ── REVIEW LOGIN MODAL ── -->
+  <div id="reviewLoginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:500; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#1a1208; border:1px solid rgba(201,168,76,0.4); border-radius:16px; padding:28px; max-width:380px; width:100%; text-align:center; box-shadow:0 8px 36px rgba(0,0,0,0.6);">
+      <h3 style="font-family:'Cinzel',serif; color:var(--gold-light); margin-bottom:12px;">⭐ Log In to Review</h3>
+      <p style="font-size:13px; color:var(--gold); margin-bottom:20px; line-height:1.6;">
+        You need to be logged in to write a review. You can still browse existing reviews without logging in.
+      </p>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button onclick="window.location.href='/user_login.html'" style="font-family:'Domine',serif; font-size:13px; font-weight:700; padding:8px 16px; border-radius:8px; border:1.5px solid rgba(0,0,0,0.2); background:var(--gold); color:#111; cursor:pointer;">Log In</button>
+        <button onclick="proceedToReviews()" style="font-family:'Domine',serif; font-size:13px; font-weight:700; padding:8px 16px; border-radius:8px; border:1.5px solid rgba(201,168,76,0.4); background:rgba(255,255,255,0.1); color:var(--gold-light); cursor:pointer;">View Reviews</button>
+        <button onclick="closeReviewLoginModal()" style="font-family:'Domine',serif; font-size:13px; font-weight:700; padding:8px 16px; border-radius:8px; border:1px solid rgba(201,168,76,0.3); background:transparent; color:var(--gold); cursor:pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const sb = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
@@ -467,8 +514,7 @@
             </div>
           </div>
         </div>
-        ${(sp.show_address && sp.address) || (sp.show_hours && sp.hours) || sp.description ? `
-          <div class="hero-about-section">
+        <div class="hero-about-section">
             <div class="about-grid">
               ${sp.show_address && sp.address ? `
                 <div class="info-item">
@@ -486,8 +532,10 @@
                 <div class="info-label">📜 Description</div>
                 <div class="info-val">${sp.description}</div>
               </div>` : ''}
-          </div>` : ''}`;
+            <div id="reviewButtonsWrap"></div>
+          </div>`;
       page.appendChild(heroCard);
+      loadReviewButtons(document.getElementById('reviewButtonsWrap'));
 
       // CONTACT CARD
       const contactFields = [];
@@ -523,6 +571,7 @@
           dateCard.className = 'card';
           dateCard.innerHTML = `<div class="card-title">📅 Weekends</div><div class="weekend-grid">${wRows.join('')}</div>`;
           page.appendChild(dateCard);
+          loadEventsButtonForWeekendCard(dateCard);
         }
       }
 
@@ -549,6 +598,19 @@
       page.appendChild(footer);
     }
 
+    async function loadEventsButtonForWeekendCard(dateCard) {
+      const { data, error } = await sb.rpc('get_fair_schedule_events', { p_fair_id: fairId });
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex; justify-content:flex-end; margin-top:12px;';
+
+      if (!error && data && data.length) {
+        wrap.innerHTML = `<a href="/fair_admin/fair_events.html?fair_id=${fairId}" class="fav-btn-small">🗓️ View Events</a>`;
+      } else {
+        wrap.innerHTML = `<span style="font-size:12px; color:#5c3a1e; font-style:italic;">This fair hasn't set up their events page yet.</span>`;
+      }
+      dateCard.appendChild(wrap);
+    }
+
     async function toggleFavorite() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { location.href = '/user_login.html'; return; }
@@ -566,6 +628,78 @@
         }
       } catch(e) { console.error(e); }
     }
+function starString(n) {
+  const filled = Math.max(0, Math.min(5, Math.round(n)));
+  return '★'.repeat(filled) + '☆'.repeat(5 - filled);
+}
+
+let pendingReviewsHref = null;
+
+async function loadReviewButtons(container) {
+  if (!container) return;
+  const pubReviewsHref = `/fairs/fair_star_reviews.html?fair_id=${fairId}&type=public`;
+  const vpReviewsHref = `/fairs/fair_star_reviews.html?fair_id=${fairId}&type=vp`;
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex; flex-direction:row; flex-wrap:wrap; align-items:flex-start; gap:10px; margin-top:14px;';
+
+  const pubBtn = document.createElement('a');
+  pubBtn.href = pubReviewsHref;
+  pubBtn.className = 'review-pop-btn';
+  pubBtn.innerHTML = `
+    <div style="font-family:'Cinzel',serif; font-weight:700; font-size:16px; margin-bottom:4px;">⭐ Reviews</div>
+    <div style="font-size:14px;"><span style="color:var(--gold-dark); letter-spacing:1px; font-size:16px;" class="pubSummaryStars">☆☆☆☆☆</span> <span class="pubSummaryText">Loading…</span></div>`;
+  pubBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      window.location.href = pubReviewsHref;
+    } else {
+      pendingReviewsHref = pubReviewsHref;
+      document.getElementById('reviewLoginModal').style.display = 'flex';
+    }
+  });
+  wrap.appendChild(pubBtn);
+
+  const vpBtn = document.createElement('div');
+  vpBtn.className = 'review-pop-btn';
+  vpBtn.style.display = 'none';
+  vpBtn.style.cursor = 'pointer';
+  vpBtn.innerHTML = `
+    <div style="font-family:'Cinzel',serif; font-weight:700; font-size:16px; margin-bottom:4px;">🎭 VP Reviews</div>
+    <div style="font-size:14px;"><span style="color:var(--gold-dark); letter-spacing:1px; font-size:16px;" class="vpSummaryStars">☆☆☆☆☆</span> <span class="vpSummaryText">Loading…</span></div>`;
+  vpBtn.addEventListener('click', () => { window.location.href = vpReviewsHref; });
+  wrap.appendChild(vpBtn);
+
+  container.appendChild(wrap);
+
+  const { data: pub } = await sb.rpc('get_fair_review_summary', { p_fair_id: fairId });
+  const pubRow = pub && pub[0] ? pub[0] : { avg_rating: 0, review_count: 0 };
+  pubBtn.querySelector('.pubSummaryStars').textContent = starString(pubRow.review_count > 0 ? pubRow.avg_rating : 0);
+  pubBtn.querySelector('.pubSummaryText').textContent = pubRow.review_count > 0
+    ? `${Number(pubRow.avg_rating).toFixed(1)} average (${pubRow.review_count} review${pubRow.review_count === 1 ? '' : 's'})`
+    : 'No reviews yet';
+
+  const { data: isVp } = await sb.rpc('is_current_user_vp');
+  if (isVp) {
+    vpBtn.style.display = 'block';
+    const { data: vp } = await sb.rpc('get_vp_fair_review_summary', { p_fair_id: fairId });
+    const vpRow = vp && vp[0] ? vp[0] : { avg_rating: 0, review_count: 0 };
+    vpBtn.querySelector('.vpSummaryStars').textContent = starString(vpRow.review_count > 0 ? vpRow.avg_rating : 0);
+    vpBtn.querySelector('.vpSummaryText').textContent = vpRow.review_count > 0
+      ? `${Number(vpRow.avg_rating).toFixed(1)} average (${vpRow.review_count} review${vpRow.review_count === 1 ? '' : 's'})`
+      : 'No VP reviews yet';
+  }
+}
+
+function proceedToReviews() {
+  document.getElementById('reviewLoginModal').style.display = 'none';
+  if (pendingReviewsHref) window.location.href = pendingReviewsHref;
+}
+function closeReviewLoginModal() {
+  document.getElementById('reviewLoginModal').style.display = 'none';
+}
+
 async function loadFairPosts() {
       const { data, error } = await sb.rpc('get_fair_posts', { p_fair_id: fairId, p_limit: 10, p_offset: 0 });
       const list = document.getElementById('postsList');

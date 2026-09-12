@@ -397,6 +397,15 @@ document.getElementById('currentFairImage').innerHTML = fairData.image_url
     }
 
     function redirectToReview() {
+      // Validate: address is required
+      const addressVal = document.getElementById('newFairAddress').value.trim()
+        || document.getElementById('currentFairAddress').textContent.trim();
+      if (!addressVal || addressVal === 'N/A') {
+        alert('Please enter your fair\'s address before continuing.');
+        document.getElementById('newFairAddress').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
       // Sync all contact fields before validating
       contacts.forEach(c => syncContact(c._uid));
 

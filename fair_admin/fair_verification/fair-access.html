@@ -325,6 +325,9 @@
       <label>Fair Name *</label>
       <input type="text" id="fairName" required placeholder="Fair name" autocomplete="off" />
 
+      <label>Address *</label>
+      <input type="text" id="fairAddress" required placeholder="Street address" />
+
       <label>City *</label>
       <input type="text" id="fairCity" required placeholder="City" />
 
@@ -713,12 +716,14 @@ async function submitFairInfo() {
   }
 
   const fairNameVal = document.getElementById("fairName").value.trim();
+  const fairAddressVal = document.getElementById("fairAddress").value.trim();
   const fairCityVal = document.getElementById("fairCity").value.trim();
   const fairStateVal = document.getElementById("fairState").value.trim();
   const contactNameVal = document.getElementById("contactName").value.trim();
   const fairRoleVal = document.getElementById("fairRole").value;
 
   if (!fairNameVal)    { showMsg(fairMsg, "Please enter your fair's name.", "error"); return; }
+  if (!fairAddressVal) { showMsg(fairMsg, "Please enter your fair's address.", "error"); return; }
   if (!fairCityVal)    { showMsg(fairMsg, "Please enter your fair's city.", "error"); return; }
   if (!fairStateVal)   { showMsg(fairMsg, "Please enter your fair's state.", "error"); return; }
   if (!contactNameVal) { showMsg(fairMsg, "Please enter your full name.", "error"); return; }
@@ -746,6 +751,7 @@ async function submitFairInfo() {
   const { error } = await supa.rpc("submit_fair_verification_request", {
     p_user_id:                 user.id,
     p_fair_name:               fairNameVal,
+    p_fair_address:            fairAddressVal,
     p_fair_city:               fairCityVal,
     p_fair_state:              fairStateVal,
     p_fair_website:            document.getElementById("fairWebsite").value.trim(),

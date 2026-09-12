@@ -91,11 +91,8 @@ const updatedFairData = JSON.parse(sessionStorage.getItem('updatedFairData'));
         weekendsHTML += `<p><strong>Weekends:</strong></p><ul>`;
         updatedFairData.weekends.forEach(w => {
           function formatDate(d) {
-            const date = new Date(d);
-            const mm = String(date.getMonth()+1).padStart(2,'0');
-            const dd = String(date.getDate()).padStart(2,'0');
-            const yy = String(date.getFullYear()).slice(-2);
-            return `${mm}-${dd}-${yy}`;
+            const [yyyy, mm, dd] = d.split('-');
+            return `${mm}-${dd}-${yyyy.slice(-2)}`;
           }
           weekendsHTML += `<li><strong>Week ${w.week}:</strong> ${formatDate(w.start)} → ${formatDate(w.end)}</li>`;
         });
@@ -164,6 +161,7 @@ const updatedFairData = JSON.parse(sessionStorage.getItem('updatedFairData'));
       if (draft.newFairState)   updateData.state   = draft.newFairState;
       if (draft.newFairZip)     updateData.zip     = draft.newFairZip;
       if (draft.newFairWebsite) updateData.website = draft.newFairWebsite;
+      if (draft.newFairDescription) updateData.description = draft.newFairDescription;
       if (updatedFairData.hours?.trim()) updateData.hours = updatedFairData.hours.trim();
 
       if (updatedFairData.weekends?.length) {
@@ -183,6 +181,7 @@ const updatedFairData = JSON.parse(sessionStorage.getItem('updatedFairData'));
         p_city: updateData.city ?? null, p_state: updateData.state ?? null,
         p_zip: updateData.zip ?? null, p_website: updateData.website ?? null,
         p_hours: updateData.hours ?? null,
+        p_description: updateData.description ?? null,
         p_start_date: updateData.start_date ?? null, p_end_date: updateData.end_date ?? null,
         p_week2_start_date: updateData.week2_start_date ?? null, p_week2_end_date: updateData.week2_end_date ?? null,
         p_week3_start_date: updateData.week3_start_date ?? null, p_week3_end_date: updateData.week3_end_date ?? null,

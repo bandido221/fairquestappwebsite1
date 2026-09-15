@@ -402,7 +402,7 @@
     async function loadSubmissionFiles(submissionId) {
       const { data, error } = await supabaseClient
         .from('fair_man_app_submission_file')
-        .select('id, submission_id, file_role, storage_bucket, storage_path, original_name, mime_type, size_bytes, created_at')
+        .select('id, submission_id, form_field_id, file_role, storage_bucket, storage_path, original_name, mime_type, size_bytes, created_at')
         .eq('submission_id', submissionId)
         .order('created_at', { ascending: false });
 
@@ -417,7 +417,10 @@
 
   // File field
   if (t === 'file') {
-    if (typeof val === 'object' && val.name) return `📎 ${val.name}`;
+    if (Array.isArray(val) && val.length) {
+      return val.length === 1 ? `📎 ${val[0].name}` : `📎 ${val.length} files — see Files below`;
+    }
+    if (typeof val === 'object' && val && val.name) return `📎 ${val.name}`;
     return 'N/A';
   }
 
@@ -508,7 +511,7 @@
   if (shown === 0) empty.style.display = 'block';
 }
 
-    async function renderFiles(files) {
+    async function renderFiles(files, fields) {
       const wrap = document.getElementById('filesWrap');
       const empty = document.getElementById('filesEmpty');
 
@@ -517,12 +520,46 @@
         return;
       }
 
+      const fieldById = new Map((Array.isArray(fields) ? fields : []).map(f => [f.id, f]));
+
       for (const f of files) {
         const row = document.createElement('div');
         row.className = 'file-row';
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '12px';
+
+        const isImage = (f.mime_type || '').startsWith('image/');
+
+        if (isImage) {
+          const thumb = document.createElement('img');
+          thumb.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.2);flex-shrink:0;background:#eee;';
+          row.appendChild(thumb);
+
+          supabaseClient.storage
+            .from(f.storage_bucket)
+            .createSignedUrl(f.storage_path, 3600)
+            .then(({ data, error }) => {
+              if (!error && data?.signedUrl) thumb.src = data.signedUrl;
+            })
+            .catch(() => {});
+
+          thumb.onclick = async () => {
+            try {
+              const { data, error } = await supabaseClient
+                .storage
+                .from(f.storage_bucket)
+                .createSignedUrl(f.storage_path, 60);
+              if (!error && data?.signedUrl) window.open(data.signedUrl, '_blank', 'noopener');
+            } catch (_) {}
+          };
+          thumb.style.cursor = 'pointer';
+        }
 
         const meta = document.createElement('div');
         meta.className = 'file-meta';
+
+        const owningField = f.form_field_id ? fieldById.get(f.form_field_id) : null;
 
         const name = document.createElement('div');
         name.className = 'file-name';
@@ -531,8 +568,9 @@
 
         const sub = document.createElement('div');
         sub.className = 'file-sub';
-        sub.textContent =
-          `Role: ${safeText(f.file_role)} • Type: ${safeText(f.mime_type)} • Size: ${safeText(f.size_bytes)} bytes • ${formatDate(f.created_at)}`;
+        sub.textContent = owningField
+          ? `Question: ${safeText(owningField.label || owningField.field_key)} • Type: ${safeText(f.mime_type)} • Size: ${safeText(f.size_bytes)} bytes • ${formatDate(f.created_at)}`
+          : `Role: ${safeText(f.file_role)} • Type: ${safeText(f.mime_type)} • Size: ${safeText(f.size_bytes)} bytes • ${formatDate(f.created_at)}`;
         meta.appendChild(sub);
 
         row.appendChild(meta);
@@ -654,7 +692,7 @@ document.getElementById('formTitle').textContent = safeText(submission.fair_man_
       } catch (_) {}
 
       renderAnswers(fields, values, fairRow);
-      await renderFiles(files);
+      await renderFiles(files, fields);
 
       hideLoader();
     }

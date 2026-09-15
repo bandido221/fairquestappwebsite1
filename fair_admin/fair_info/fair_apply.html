@@ -622,8 +622,9 @@ async function loadFormRow(formId) {
         return true;
       }
 
-      // Required file: must have a name (local persisted marker is ok)
+      // Required file: must have at least one file selected
       if (t === 'file') {
+        if (Array.isArray(val)) return val.length === 0;
         return !(val && typeof val === 'object' && val.name);
       }
 
@@ -880,101 +881,144 @@ function compressImage(file, maxPx = 800, quality = 0.75) {
 
           control = grid;
 } else if (t === 'file') {
-  const fileRow = el('div', { style: 'display:flex; gap:10px; align-items:center; flex-wrap:wrap;' });
+  const maxFiles = Math.max(1, Math.min(20, Number(cfg && cfg.max_files) || 1));
+  const fileWrap = el('div', { style: 'display:flex; flex-direction:column; gap:10px;' });
+  const slotsRow = el('div', { style: 'display:flex; gap:10px; flex-wrap:wrap;' });
+  const addRow = el('div', { style: 'display:flex; gap:10px; align-items:center; flex-wrap:wrap;' });
   const inp = el('input', { type: 'file' });
+  if (maxFiles > 1) inp.multiple = true;
   const meta = el('div', { className: 'hint', style: 'margin-top:0; color:#3b1f1f;' });
-  const btnClear = el('button', { className: 'btn btn-dark', style: 'padding:8px 12px; font-size:14px;', text: 'Clear' });
-  const imgPreview = el('img', { style: 'display:none; max-width:80px; max-height:80px; border-radius:8px; border:1px solid rgba(0,0,0,0.2); object-fit:cover;' });
-  const limitHint = el('div', { style: 'font-size:12px;color:rgba(59,31,31,0.6);font-style:italic;margin-top:4px;width:100%;', text: 'Images are automatically compressed. Non-image files (PDF, etc.) max 2MB.' });
-          const fileKey = `${fileKeyBase}:file:${f.id}`;
+  const limitHint = el('div', {
+    style: 'font-size:12px;color:rgba(59,31,31,0.6);font-style:italic;margin-top:4px;width:100%;',
+    text: maxFiles > 1
+      ? `Up to ${maxFiles} files. Images are automatically compressed. Non-image files (PDF, etc.) max 2MB each.`
+      : 'Images are automatically compressed. Non-image files (PDF, etc.) max 2MB.'
+  });
 
-          // Load persisted file (IndexedDB)
-          try {
-            const saved = await idbGetFile(fileKey);
-            if (saved && saved.meta && saved.meta.name) {
-              meta.textContent = `Selected: ${saved.meta.name}`;
-              // Keep a tiny marker in draft values so review knows "file selected"
-              if (!existing || !existing.name) {
-                onChange(f, { name: saved.meta.name, size: saved.meta.size, type: saved.meta.type, persisted: true });
-              }
-            } else {
-              meta.textContent = 'Select a file (upload comes later).';
-            }
-          } catch (e) {
-            console.error(e);
-            meta.textContent = 'Select a file (upload comes later).';
-          }
+  const fileKeyField = `${fileKeyBase}:file:${f.id}`;
+  const slotKey = (idx) => `${fileKeyField}:${idx}`;
+  let slots = []; // [{name, size, type, blob, previewUrl?}], index-aligned, no gaps
 
-         inp.addEventListener('change', async () => {
-  const f0 = inp.files && inp.files[0] ? inp.files[0] : null;
-  if (!f0) {
-    meta.textContent = 'No file selected.';
-    imgPreview.style.display = 'none';
-    onChange(f, null);
-    await idbDeleteFile(fileKey).catch(() => {});
-    return;
+  function emitChange() {
+    const arr = slots.map(s => ({ name: s.name, size: s.size, type: s.type, persisted: true }));
+    onChange(f, arr.length ? arr : null);
   }
 
-  const isImage = f0.type.startsWith('image/');
-  const maxNonImageBytes = 2 * 1024 * 1024; // 2MB
+  function renderSlots() {
+    slotsRow.innerHTML = '';
+    slots.forEach((s, idx) => {
+      const card = el('div', {
+        style: 'display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px; border:1px solid rgba(0,0,0,0.15); border-radius:8px; background:rgba(255,255,255,0.7); width:84px;'
+      });
+      if (s.type && s.type.startsWith('image/') && s.previewUrl) {
+        const img = el('img', { style: 'width:64px; height:64px; object-fit:cover; border-radius:6px;' });
+        img.src = s.previewUrl;
+        card.appendChild(img);
+      } else {
+        card.appendChild(el('div', {
+          style: 'font-size:11px; max-width:72px; word-break:break-all; text-align:center;',
+          text: s.name
+        }));
+      }
+      const rm = el('button', { className: 'btn btn-dark', style: 'padding:2px 8px; font-size:12px;', text: 'Remove' });
+      rm.type = 'button';
+      rm.addEventListener('click', () => removeSlot(idx));
+      card.appendChild(rm);
+      slotsRow.appendChild(card);
+    });
 
-  if (!isImage && f0.size > maxNonImageBytes) {
-    meta.textContent = `❌ File too large. Max 2MB for non-image files.`;
-    inp.value = '';
-    return;
+    meta.textContent = slots.length
+      ? `${slots.length} of ${maxFiles} selected`
+      : (maxFiles > 1 ? `0 of ${maxFiles} selected` : 'No file selected.');
+    inp.disabled = slots.length >= maxFiles;
+    addRow.style.display = slots.length >= maxFiles ? 'none' : 'flex';
   }
 
-  meta.textContent = isImage ? 'Compressing image…' : `Saving: ${f0.name}…`;
-
-  try {
-    let blob = f0;
-    let finalName = f0.name;
-    let finalType = f0.type;
-
-    if (isImage) {
-      blob = await compressImage(f0);
-      finalName = f0.name.replace(/\.[^/.]+$/, '') + '.webp';
-      finalType = 'image/webp';
-      const kb = Math.round(blob.size / 1024);
-      meta.textContent = `Compressed to ${kb}KB — saving…`;
+  async function removeSlot(idx) {
+    for (let i = 0; i < slots.length; i++) await idbDeleteFile(slotKey(i)).catch(() => {});
+    slots.splice(idx, 1);
+    for (let i = 0; i < slots.length; i++) {
+      await idbPutFile(slotKey(i), slots[i].blob, { name: slots[i].name, size: slots[i].size, type: slots[i].type });
     }
+    renderSlots();
+    emitChange();
+  }
 
-    await idbPutFile(fileKey, blob, { name: finalName, size: blob.size, type: finalType });
-    meta.textContent = `Selected: ${finalName}${isImage ? ` (${Math.round(blob.size/1024)}KB)` : ''}`;
-    onChange(f, { name: finalName, size: blob.size, type: finalType, persisted: true });
-
-    if (isImage) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        imgPreview.src = e.target.result;
-        imgPreview.style.display = 'block';
-      };
-      reader.readAsDataURL(blob);
-    } else {
-      imgPreview.style.display = 'none';
+  // Load persisted slots from IndexedDB
+  try {
+    for (let i = 0; i < maxFiles; i++) {
+      const saved = await idbGetFile(slotKey(i));
+      if (saved && saved.meta && saved.meta.name) {
+        const entry = { name: saved.meta.name, size: saved.meta.size, type: saved.meta.type, blob: saved.blob };
+        if (entry.type && entry.type.startsWith('image/') && saved.blob) {
+          entry.previewUrl = URL.createObjectURL(saved.blob);
+        }
+        slots.push(entry);
+      }
+    }
+    if (slots.length && !Array.isArray(existing)) {
+      emitChange();
     }
   } catch (e) {
     console.error(e);
-    meta.textContent = 'Could not save file locally.';
-    onChange(f, { name: f0.name, size: f0.size, type: f0.type, persisted: false });
   }
-});
 
-          btnClear.addEventListener('click', async () => {
-  inp.value = '';
-  await idbDeleteFile(fileKey).catch(() => {});
-  meta.textContent = 'No file selected.';
-  imgPreview.style.display = 'none';
-  imgPreview.src = '';
-  onChange(f, null);
-});
+  renderSlots();
 
-        fileRow.appendChild(inp);
-fileRow.appendChild(btnClear);
-fileRow.appendChild(meta);
-fileRow.appendChild(imgPreview);
-fileRow.appendChild(limitHint);
-control = fileRow;
+  inp.addEventListener('change', async () => {
+    const picked = inp.files ? Array.from(inp.files) : [];
+    inp.value = '';
+    if (!picked.length) return;
+
+    const remaining = maxFiles - slots.length;
+    if (remaining <= 0) return;
+
+    const toAdd = picked.slice(0, remaining);
+    const skipped = picked.length - toAdd.length;
+    const maxNonImageBytes = 2 * 1024 * 1024; // 2MB
+
+    for (const f0 of toAdd) {
+      const isImage = f0.type.startsWith('image/');
+
+      if (!isImage && f0.size > maxNonImageBytes) {
+        meta.textContent = `❌ "${f0.name}" too large. Max 2MB for non-image files.`;
+        continue;
+      }
+
+      try {
+        let blob = f0;
+        let finalName = f0.name;
+        let finalType = f0.type;
+
+        if (isImage) {
+          blob = await compressImage(f0);
+          finalName = f0.name.replace(/\.[^/.]+$/, '') + '.webp';
+          finalType = 'image/webp';
+        }
+
+        const idx = slots.length;
+        await idbPutFile(slotKey(idx), blob, { name: finalName, size: blob.size, type: finalType });
+        const entry = { name: finalName, size: blob.size, type: finalType, blob };
+        if (isImage) entry.previewUrl = URL.createObjectURL(blob);
+        slots.push(entry);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    renderSlots();
+    if (skipped > 0) {
+      meta.textContent = `Only ${remaining} slot(s) were left — added ${toAdd.length}, skipped ${skipped}.`;
+    }
+    emitChange();
+  });
+
+  addRow.appendChild(inp);
+  addRow.appendChild(meta);
+  fileWrap.appendChild(slotsRow);
+  fileWrap.appendChild(addRow);
+  fileWrap.appendChild(limitHint);
+  control = fileWrap;
         } else {
           control = el('input', { type: 'text', placeholder: f.placeholder || '' });
           control.value = (typeof existing === 'string') ? existing : (existing?.text || '');
@@ -1162,6 +1206,7 @@ initContractScroll();
            document.getElementById('activeFormInfo').textContent =
             `${active.fair_man_app_form.title} (v${active.fair_man_app_form.version})`;
 
+          const prevFormId = currentFormId;
           currentFormId = active.fair_man_app_form.id;
           currentDraftKey = draftKey(fairId, String(selected.id), currentFormId);
 
@@ -1171,16 +1216,20 @@ initContractScroll();
     ? String(formRow.contract_text)
     : 'No contract text found for this application form.';
 
-// Reset contract gate on each profile switch
-chkAcceptContract.checked = false;
-chkAcceptContract.disabled = true;
-document.getElementById('contractInitials').value = '';
-document.getElementById('contractInitials').disabled = true;
-document.getElementById('agreeRow').style.opacity = '0.55';
-document.getElementById('scrollIndicator').style.opacity = '1';
-document.getElementById('contractWarningBox').style.display = 'none';
-setApplicationLocked(true);
-initContractScroll();
+// Only reset the contract gate when the contract/form actually changed
+// (e.g. switching from a Vendor VP to a Performer VP). Switching between
+// VPs that share the same active form keeps initials/checkbox as-is.
+if (prevFormId !== currentFormId) {
+  chkAcceptContract.checked = false;
+  chkAcceptContract.disabled = true;
+  document.getElementById('contractInitials').value = '';
+  document.getElementById('contractInitials').disabled = true;
+  document.getElementById('agreeRow').style.opacity = '0.55';
+  document.getElementById('scrollIndicator').style.opacity = '1';
+  document.getElementById('contractWarningBox').style.display = 'none';
+  setApplicationLocked(true);
+  initContractScroll();
+}
 
           // ✅ If they already submitted (not pending), block applying again
           hideApplyMsgBox();

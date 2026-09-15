@@ -419,6 +419,12 @@
   <div class="hint" style="margin-top:6px;">Only used for Dropdown type. Put one option per line.</div>
 </div>
 
+<div class="label" id="fileMaxLabel" style="display:none;">Max images/files:</div>
+<div id="fileMaxWrap" style="display:none;">
+  <input id="fMaxFiles" type="number" min="1" max="20" value="1" />
+  <div class="hint" style="margin-top:6px;">How many files applicants can upload for this question. Leave at 1 for a single file.</div>
+</div>
+
 
     </div>
 
@@ -877,6 +883,12 @@ function buildInlineEditor(field) {
       <div class="ie-opt-wrap" style="display:none;">
         <textarea class="ie-options-lines" placeholder="One option per line">${escapeHtml(options.join('\n'))}</textarea>
       </div>
+
+      <div class="label ie-filemax-label" style="display:none;">Max images/files:</div>
+      <div class="ie-filemax-wrap" style="display:none;">
+        <input type="number" class="ie-max-files" min="1" max="20" value="${Number((field.config && field.config.max_files) || 1)}" />
+        <div class="hint" style="margin-top:6px;">How many files applicants can upload for this question. Leave at 1 for a single file.</div>
+      </div>
     </div>
 
     <div class="inline-editor-actions">
@@ -889,6 +901,8 @@ function buildInlineEditor(field) {
   const requiredEl = box.querySelector('.ie-required');
   const optLabel = box.querySelector('.ie-opt-label');
   const optWrap = box.querySelector('.ie-opt-wrap');
+  const fileMaxLabel = box.querySelector('.ie-filemax-label');
+  const fileMaxWrap = box.querySelector('.ie-filemax-wrap');
 
   typeEl.value = (field.field_type || 'text').toLowerCase();
   requiredEl.checked = !!field.is_required;
@@ -898,6 +912,10 @@ function buildInlineEditor(field) {
     const showOpts = (t === 'select');
     optLabel.style.display = showOpts ? '' : 'none';
     optWrap.style.display = showOpts ? '' : 'none';
+
+    const showFileMax = (t === 'file');
+    fileMaxLabel.style.display = showFileMax ? '' : 'none';
+    fileMaxWrap.style.display = showFileMax ? '' : 'none';
 
     if (t === 'address') {
       requiredEl.checked = true;
@@ -999,6 +1017,13 @@ btnEdit.onclick = () => {
         return;
       }
       config = { options: opts };
+    } else if (fieldType === 'file') {
+      const maxFiles = Number(editor.querySelector('.ie-max-files').value || '1');
+      if (!Number.isFinite(maxFiles) || maxFiles < 1) {
+        setMsg('Max images/files must be 1 or more.');
+        return;
+      }
+      config = (maxFiles > 1) ? { max_files: Math.min(20, Math.floor(maxFiles)) } : null;
     } else {
       config = null;
     }
@@ -1125,6 +1150,14 @@ function updateSelectOptionsVisibility() {
   document.getElementById('optWrap').style.display = showOpts ? '' : 'none';
   if (!showOpts) {
     document.getElementById('fOptionsLines').value = '';
+  }
+
+  // max files only for file upload
+  const showFileMax = (t === 'file');
+  document.getElementById('fileMaxLabel').style.display = showFileMax ? '' : 'none';
+  document.getElementById('fileMaxWrap').style.display = showFileMax ? '' : 'none';
+  if (!showFileMax) {
+    document.getElementById('fMaxFiles').value = '1';
   }
 
   // Address: force required ON + lock checkbox
@@ -1400,6 +1433,13 @@ document.getElementById('btnAddField').onclick = async () => {
       return;
     }
     config = { options: opts };
+  } else if (fieldType === 'file') {
+    const maxFiles = Number(document.getElementById('fMaxFiles').value || '1');
+    if (!Number.isFinite(maxFiles) || maxFiles < 1) {
+      setMsg('Max images/files must be 1 or more.');
+      return;
+    }
+    if (maxFiles > 1) config = { max_files: Math.min(20, Math.floor(maxFiles)) };
   }
 
   showLoader();
@@ -1426,6 +1466,7 @@ document.getElementById('btnAddField').onclick = async () => {
     document.getElementById('fHelp').value = '';
     document.getElementById('fPlaceholder').value = '';
     document.getElementById('fOptionsLines').value = '';
+    document.getElementById('fMaxFiles').value = '1';
     updateSelectOptionsVisibility();
 
     setMsg('Added.');

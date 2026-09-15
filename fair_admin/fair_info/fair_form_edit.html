@@ -1123,10 +1123,20 @@ function slugify(s) {
     .slice(0, 48);
 }
 
+function normalizeOptionPricing(line) {
+  // Already has a $ amount somewhere — leave it alone.
+  if (/\$\s*[\d,]+(?:\.\d{1,2})?/.test(line)) return line;
+  // "20x20 - 300" or "20x20: 300" → auto-add the $ so price parsing downstream
+  // (payment tracking) never misses it because someone forgot to type "$".
+  const m = line.match(/^(.*[-–:]\s*)(\d[\d,]*(?:\.\d{1,2})?)\s*$/);
+  if (m) return `${m[1]}$${m[2]}`;
+  return line;
+}
+
 function buildOptionsFromLines(raw) {
   const lines = (raw || '')
     .split('\n')
-    .map(x => x.trim())
+    .map(x => normalizeOptionPricing(x.trim()))
     .filter(Boolean);
 
   // de-dupe while keeping order

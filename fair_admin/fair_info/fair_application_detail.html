@@ -227,6 +227,7 @@
   <button class="btn btn-dark" id="btnPrintable">Printable Version</button>
   <button class="btn btn-approve" id="btnApprove">✅ Approve</button>
   <button class="btn btn-decline" id="btnDecline">❌ Decline</button>
+  <button class="btn btn-decline" id="btnDelete">🗑 Delete</button>
 </div>
 <div class="hint" id="actionMsg" style="margin-top:8px;"></div>
 
@@ -253,6 +254,14 @@
     <h2 class="section-title">Files</h2>
     <div id="filesWrap"></div>
     <div id="filesEmpty" class="empty" style="display:none;">No files uploaded for this submission.</div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">💰 Payment Tracking</h2>
+    <div id="paymentWeeklyWrap"></div>
+    <div id="paymentTotalsWrap" style="margin-top:12px;"></div>
+    <div id="paymentHistoryWrap" style="margin-top:16px;"></div>
+    <div id="paymentFormWrap" style="margin-top:16px;"></div>
   </div>
 
   <script>
@@ -608,6 +617,186 @@
       }
     }
 
+    function formatMMDDYY(dateStr) {
+      if (!dateStr) return 'N/A';
+      const d = new Date(dateStr + 'T12:00:00');
+      if (isNaN(d.getTime())) return 'N/A';
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const yy = String(d.getFullYear()).slice(-2);
+      return `${mm}-${dd}-${yy}`;
+    }
+
+    function formatMoney(n) {
+      return '$' + (Number(n) || 0).toFixed(2);
+    }
+
+    function fieldConfig(f) {
+      try { return typeof f.config === 'string' ? JSON.parse(f.config || '{}') : (f.config || {}); }
+      catch (_) { return {}; }
+    }
+
+    function fieldValueAsString(val) {
+      if (typeof val === 'string') return val;
+      if (Array.isArray(val)) return val.filter(v => typeof v === 'string').join(' ');
+      return '';
+    }
+
+    function extractWeekendsFromAnswers(fields, valuesMap) {
+      let best = [];
+      for (const f of fields) {
+        if (String(f.field_type || '').toLowerCase() !== 'select') continue;
+        const cfg = fieldConfig(f);
+        const labelLooksLikeWeekends = /weekend/i.test(String(f.label || ''));
+        if (cfg.source !== 'fair_weekends' && !labelLooksLikeWeekends) continue;
+        const val = valuesMap.get(f.id);
+        if (Array.isArray(val) && val.length > best.length) best = val;
+      }
+      return best;
+    }
+
+    function extractPricePerWeekFromAnswers(fields, valuesMap) {
+      for (const f of fields) {
+        const str = fieldValueAsString(valuesMap.get(f.id));
+        const m = str.match(/\$\s*([0-9,]+(?:\.[0-9]{2})?)/);
+        if (m) return parseFloat(m[1].replace(/,/g, ''));
+      }
+      return null;
+    }
+
+    function weekendDateLabel(weekendKey, fairRow) {
+      const num = parseInt(String(weekendKey).replace('weekend_', ''), 10);
+      if (!fairRow || !num) return `Weekend ${num || ''}`;
+      const startKey = num === 1 ? 'start_date' : `week${num}_start_date`;
+      const endKey = num === 1 ? 'end_date' : `week${num}_end_date`;
+      const s = fairRow[startKey];
+      const e = fairRow[endKey];
+      if (s && e) {
+        const fmt = d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return `Weekend ${num}: ${fmt(s)} — ${fmt(e)}`;
+      }
+      return `Weekend ${num}`;
+    }
+
+    async function loadPayments(submissionId) {
+      const { data, error } = await supabaseClient
+        .from('fair_man_app_payments')
+        .select('id, amount, description, notes, payment_date, recorded_at')
+        .eq('submission_id', submissionId)
+        .order('recorded_at', { ascending: true });
+      if (error) { console.error(error); return []; }
+      return Array.isArray(data) ? data : [];
+    }
+
+    async function renderPaymentSection(fairId, submissionId, vpaId, fields, values, fairRow) {
+      const weeklyWrap = document.getElementById('paymentWeeklyWrap');
+      const totalsWrap = document.getElementById('paymentTotalsWrap');
+      const historyWrap = document.getElementById('paymentHistoryWrap');
+      const formWrap = document.getElementById('paymentFormWrap');
+
+      const valuesMap = new Map((values || []).map(v => [v.field_id, v.value]));
+      const weekendKeys = extractWeekendsFromAnswers(fields || [], valuesMap);
+      const pricePerWeek = extractPricePerWeekFromAnswers(fields || [], valuesMap);
+
+      const payments = await loadPayments(submissionId);
+
+      const totalOwed = pricePerWeek != null ? pricePerWeek * weekendKeys.length : 0;
+      const totalPaid = payments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+      const remaining = Math.max(0, totalOwed - totalPaid);
+
+      weeklyWrap.innerHTML = weekendKeys.length
+        ? weekendKeys.map(wk => `
+            <div class="field">
+              <div class="k">${weekendDateLabel(wk, fairRow)}</div>
+              <div class="v">${pricePerWeek != null ? formatMoney(pricePerWeek) : 'Price not found in application answers'}</div>
+            </div>`).join('')
+        : `<div class="empty">No weekend selection found in this application's answers.</div>`;
+
+      totalsWrap.innerHTML = `
+        <div class="field" style="display:flex;gap:24px;flex-wrap:wrap;">
+          <div><div class="k">Total Owed</div><div class="v">${formatMoney(totalOwed)}</div></div>
+          <div><div class="k">Total Paid</div><div class="v">${formatMoney(totalPaid)}</div></div>
+          <div><div class="k">Remaining</div><div class="v" style="color:${remaining > 0 ? '#8b1a1a' : '#1a5c1e'};font-weight:bold;">${formatMoney(remaining)}</div></div>
+        </div>`;
+
+      historyWrap.innerHTML = payments.length
+        ? `<h3 style="font-family:'Cinzel',serif;font-size:15px;margin:0 0 8px;">Payment History</h3>` +
+          payments.map(p => `
+            <div class="field">
+              <div class="k">${formatMoney(p.amount)} — ${p.description || 'No description'}</div>
+              <div class="v">
+                Payment Date: ${formatMMDDYY(p.payment_date)}<br>
+                Recorded: ${formatDate(p.recorded_at)}<br>
+                ${p.notes ? `Notes: ${p.notes}` : ''}
+              </div>
+            </div>`).join('')
+        : '';
+
+      if (remaining <= 0 && totalOwed > 0) {
+        formWrap.innerHTML = `<div class="empty" style="color:#1a5c1e;font-weight:bold;">✅ Payment complete.</div>`;
+        return;
+      }
+
+      formWrap.innerHTML = `
+        <h3 style="font-family:'Cinzel',serif;font-size:15px;margin:0 0 8px;">Record a Payment</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label class="label">Amount Paid</label><br>
+            <input type="number" id="payAmount" step="0.01" min="0" placeholder="0.00" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(0,0,0,0.2);box-sizing:border-box;" />
+          </div>
+          <div>
+            <label class="label">Payment Date</label><br>
+            <input type="date" id="payDate" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(0,0,0,0.2);box-sizing:border-box;" />
+          </div>
+          <div style="grid-column:1/-1;">
+            <label class="label">Description (how they paid — cash, Venmo, check, etc.)</label><br>
+            <input type="text" id="payDescription" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(0,0,0,0.2);box-sizing:border-box;" />
+          </div>
+          <div style="grid-column:1/-1;">
+            <label class="label">Notes</label><br>
+            <textarea id="payNotes" rows="2" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(0,0,0,0.2);box-sizing:border-box;"></textarea>
+          </div>
+        </div>
+        <button class="btn" style="margin-top:10px;" id="btnSavePayment">💾 Save Payment</button>
+        <div id="paymentMsg" style="margin-top:6px;"></div>
+      `;
+
+      document.getElementById('btnSavePayment').onclick = () => savePayment(fairId, submissionId, vpaId, fields, values, fairRow);
+    }
+
+    async function savePayment(fairId, submissionId, vpaId, fields, values, fairRow) {
+      const amountInput = document.getElementById('payAmount');
+      const dateInput = document.getElementById('payDate');
+      const descInput = document.getElementById('payDescription');
+      const notesInput = document.getElementById('payNotes');
+      const msg = document.getElementById('paymentMsg');
+
+      const amount = parseFloat(amountInput.value);
+      if (!amount || amount <= 0) { msg.textContent = 'Enter a valid amount.'; return; }
+      if (!dateInput.value) { msg.textContent = 'Select a payment date.'; return; }
+
+      const { data: { user } } = await supabaseClient.auth.getUser();
+
+      const { error } = await supabaseClient.from('fair_man_app_payments').insert({
+        submission_id: submissionId,
+        fair_id: fairId,
+        vpa_id: vpaId,
+        amount: amount,
+        description: descInput.value.trim() || null,
+        notes: notesInput.value.trim() || null,
+        payment_date: dateInput.value,
+        recorded_by: user?.id || null
+      });
+
+      if (error) {
+        msg.textContent = 'Could not save payment.';
+        console.error(error);
+        return;
+      }
+
+      await renderPaymentSection(fairId, submissionId, vpaId, fields, values, fairRow);
+    }
+
     async function loadPage() {
       showLoader();
       clearUI();
@@ -694,6 +883,12 @@ document.getElementById('formTitle').textContent = safeText(submission.fair_man_
       renderAnswers(fields, values, fairRow);
       await renderFiles(files, fields);
 
+      try {
+        await renderPaymentSection(fairId, submission.id, submission.vendor_performer_application_id, fields, values, fairRow);
+      } catch (e) {
+        console.error('Could not load payment section', e);
+      }
+
       hideLoader();
     }
 
@@ -754,6 +949,25 @@ document.getElementById('btnDecline').onclick = async () => {
     document.getElementById('actionMsg').textContent = 'Failed to decline. Check console.';
     console.error(e);
   } finally {
+    hideLoader();
+  }
+};
+
+document.getElementById('btnDelete').onclick = async () => {
+  if (!confirm('Delete this application? It will be removed from the fair\'s applications list.')) return;
+  showLoader();
+  try {
+    const { submissionId } = getParams();
+    const { error } = await supabaseClient
+      .from('fair_man_app_submission')
+      .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+      .eq('id', submissionId);
+    if (error) throw error;
+    const { fairId } = getParams();
+    window.location.href = `fair_applications.html?fair_id=${encodeURIComponent(String(fairId))}`;
+  } catch (e) {
+    document.getElementById('actionMsg').textContent = 'Failed to delete. Check console.';
+    console.error(e);
     hideLoader();
   }
 };

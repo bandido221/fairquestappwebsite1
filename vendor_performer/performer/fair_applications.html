@@ -222,6 +222,7 @@ const vpaId = params.get('vpa_id');
 let fairSearchTimer = null;
 const SEARCH_FORM_TYPE = 'performer';
 const ACTIVE_APPS_LABEL = 'performer';
+let showArchived = false;
 
 async function searchFairsByName(searchText) {
   const resultsEl = document.getElementById('searchResults');
@@ -313,19 +314,58 @@ function wireFairSearch() {
   });
 }
 
+async function deleteApplication(submissionId) {
+  if (!confirm('Delete this application? This cannot be undone from your side.')) return;
+
+  const { error } = await supabaseClient
+    .from('fair_man_app_submission')
+    .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+    .eq('id', submissionId);
+
+  if (error) {
+    alert('Could not delete this application. Please try again.');
+    console.error(error);
+    return;
+  }
+  load();
+}
+
+async function toggleArchive(submissionId, archive) {
+  const { error } = await supabaseClient
+    .from('fair_man_app_submission')
+    .update({
+      is_archived: archive,
+      archived_at: archive ? new Date().toISOString() : null
+    })
+    .eq('id', submissionId);
+
+  if (error) {
+    alert(`Could not ${archive ? 'archive' : 'unarchive'} this application. Please try again.`);
+    console.error(error);
+    return;
+  }
+  load();
+}
+
 async function load() {
 
-  const { data, error } = await supabaseClient
+  let query = supabaseClient
     .from('fair_man_app_submission')
     .select(`
       id,
       fair_id,
       status,
       submitted_at,
+      is_archived,
       renaissance_fairs(name)
     `)
     .eq('vendor_performer_application_id', vpaId)
+    .eq('is_deleted', false)
     .order('submitted_at', { ascending:false });
+
+  if (!showArchived) query = query.eq('is_archived', false);
+
+  const { data, error } = await query;
 
   if(error){
     document.getElementById('list').innerHTML='Error loading.';
@@ -333,7 +373,9 @@ async function load() {
   }
 
   if(!data.length){
-    document.getElementById('list').innerHTML='No fair applications yet.';
+    document.getElementById('list').innerHTML = showArchived
+      ? 'No archived applications.'
+      : 'No fair applications yet.';
     return;
   }
 
@@ -346,9 +388,11 @@ async function load() {
       row.status==='in_review' ? '⏳ In Review' :
       row.status;
 
+    const canDelete = row.status === 'pending' || row.status === 'in_review';
+
     html+=`
       <div class="card">
-        <strong>${row.renaissance_fairs?.name ?? 'Fair'}</strong><br>
+        <strong>${row.renaissance_fairs?.name ?? 'Fair'}</strong>${row.is_archived ? ' <span style="opacity:0.6;font-size:14px;">(Archived)</span>' : ''}<br>
         Status: ${statusIcon}<br>
         Submitted: ${new Date(row.submitted_at).toLocaleDateString()}
         ${row.status==='in_review' ? `
@@ -356,6 +400,10 @@ async function load() {
             onclick="location.href='/vendor_performer/performer/fair_update_review_page.html?fair_id=${encodeURIComponent(String(row.fair_id))}&submission_id=${encodeURIComponent(String(row.id))}'">
             Edit Application
           </button>` : ''}
+        <button class="edit" style="background:#5c5c5c;" onclick="toggleArchive('${row.id}', ${row.is_archived ? 'false' : 'true'})">
+          ${row.is_archived ? 'Unarchive' : 'Archive'}
+        </button>
+        ${canDelete ? `<button class="edit" style="background:#a33;" onclick="deleteApplication('${row.id}')">Delete</button>` : ''}
       </div>
     `;
   });
@@ -365,6 +413,19 @@ async function load() {
 
 loadActiveFairCount();
 wireFairSearch();
+
+const archiveToggleHtml = `
+  <label style="display:flex; align-items:center; gap:8px; margin:10px 0; font-size:15px; cursor:pointer;">
+    <input type="checkbox" id="showArchivedToggle" />
+    Show archived applications
+  </label>
+`;
+document.getElementById('list').insertAdjacentHTML('beforebegin', archiveToggleHtml);
+document.getElementById('showArchivedToggle').addEventListener('change', (e) => {
+  showArchived = e.target.checked;
+  load();
+});
+
 load();
 </script>
 </body>

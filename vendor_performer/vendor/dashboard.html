@@ -853,6 +853,24 @@ async function buildFairApplicationsSection(vpaId, userId) {
 
   if (!submissions || !submissions.length) return '';
 
+  const approvedFairIds = submissions.filter(s => s.status === 'approved').map(s => s.fair_id);
+  let paidByFairId = new Map();
+  if (approvedFairIds.length) {
+    const { data: weekendRows } = await sb
+      .from('vp_fair_info_weekend')
+      .select('fair_id, is_paid')
+      .eq('vpa_id', vpaId)
+      .in('fair_id', approvedFairIds);
+    if (weekendRows) {
+      const byFair = new Map();
+      weekendRows.forEach(r => {
+        if (!byFair.has(r.fair_id)) byFair.set(r.fair_id, []);
+        byFair.get(r.fair_id).push(!!r.is_paid);
+      });
+      byFair.forEach((flags, fairId) => paidByFairId.set(fairId, flags.length > 0 && flags.every(p => p)));
+    }
+  }
+
   const rows = submissions.map(sub => {
     const fair = sub.renaissance_fairs;
     const cityState = [fair?.city, fair?.state].filter(Boolean).join(', ');
@@ -864,6 +882,13 @@ async function buildFairApplicationsSection(vpaId, userId) {
       rejected:  `<span class="badge badge-declined">Declined</span>`,
       closed:    `<span class="badge badge-declined">Closed</span>`,
     }[sub.status] || `<span class="badge badge-pending">${sub.status}</span>`;
+
+    let paidBadge = '';
+    if (sub.status === 'approved' && paidByFairId.has(sub.fair_id)) {
+      paidBadge = paidByFairId.get(sub.fair_id)
+        ? `<span class="badge" style="background:rgba(76,175,80,0.85);color:#fff;">✅ Paid</span>`
+        : `<span class="badge" style="background:rgba(0,0,0,0.15);color:#3b1f1f;">Not Paid</span>`;
+    }
 
     const actionBtn = sub.status === 'approved'
       ? `<button class="start-app" style="min-width:0;padding:10px 14px;font-size:14px;"
@@ -880,7 +905,7 @@ async function buildFairApplicationsSection(vpaId, userId) {
           <div>
             <div class="fair-card-name">${fair?.name || 'Fair'}</div>
             <div class="fair-card-date">${cityState}</div>
-            <div style="margin-top:6px;">${statusBadge}</div>
+            <div style="margin-top:6px;">${statusBadge} ${paidBadge}</div>
           </div>
           ${actionBtn}
         </div>

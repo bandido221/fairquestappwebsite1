@@ -696,7 +696,39 @@ let fairControlsPricing = false;
               <div class="t-value">${formatMoney(totalUnpaid)}</div>
             </div>
           </div>
+          <div id="payNowWrap" style="margin-top:14px;"></div>
         </div>
+      `;
+    }
+
+    async function loadAndRenderPayNowButton(vpaId, fairName) {
+      const wrap = document.getElementById('payNowWrap');
+      if (!wrap) return;
+
+      const { data: weekendRow } = await sb
+        .from('vp_fair_info_weekend')
+        .select('fair_id')
+        .eq('vpa_id', vpaId)
+        .eq('fair_name_snapshot', fairName)
+        .limit(1)
+        .maybeSingle();
+
+      if (!weekendRow || !weekendRow.fair_id) return;
+
+      const { data: settings } = await sb
+        .from('fair_man_app_fair_settings')
+        .select('payment_link')
+        .eq('fair_id', weekendRow.fair_id)
+        .maybeSingle();
+
+      if (!settings || !settings.payment_link) return;
+
+      wrap.innerHTML = `
+        <a href="${escapeHtml(settings.payment_link)}" target="_blank" rel="noopener"
+           style="display:inline-block;background:#4CAF50;color:#fff;text-decoration:none;
+                  padding:12px 20px;border-radius:10px;font-weight:bold;">
+          💰 Pay Now
+        </a>
       `;
     }
 
@@ -743,6 +775,7 @@ let fairControlsPricing = false;
   renderPage(currentFairRows);
 
   if (vpaId && fairName) await initVault(vpaId, fairName, currentSeasonYear);
+  if (vpaId && fairName) loadAndRenderPayNowButton(vpaId, fairName);
 }
 
     async function togglePaid(rowId, currentlyPaid) {

@@ -253,6 +253,45 @@
       transition: background 0.15s;
     }
     .btn-review:hover { background: #3a2c12; }
+    .btn-delete {
+      background: #8b1a1a;
+      color: #fff;
+      border: none;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Domine', serif;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+      margin-left: 8px;
+    }
+    .btn-delete:hover { background: #6e1414; }
+
+    .paid-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .paid-badge.paid { background: rgba(76,175,80,0.85); color: #fff; }
+    .paid-badge.unpaid { background: rgba(0,0,0,0.15); color: #3b1f1f; }
+
+    .payment-link-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+    .payment-link-row input {
+      flex: 1;
+      min-width: 200px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.2);
+      font-size: 14px;
+      font-family: 'Domine', serif;
+      background: rgba(255,255,255,0.85);
+      color: #111;
+    }
 
     .empty-msg {
       text-align: center;
@@ -347,6 +386,11 @@
         </select>
       </div>
       <p style="font-size:13px; color:#5c3a1e; margin:0;">Click <strong>Review Application</strong> on any row to open, approve, or decline it.</p>
+
+      <div class="payment-link-row">
+        <input type="text" id="paymentLinkInput" placeholder="💳 Your payment link (Venmo, PayPal, Square, website, etc.)" />
+        <button class="btn btn-dark" id="btnSavePaymentLink">Save Payment Link</button>
+      </div>
     </div>
 
     <!-- VENDORS -->
@@ -379,6 +423,8 @@
 
     // All loaded rows — for client-side filtering
     let allVendors = [], allFood = [], allPerformers = [];
+    let vpaIdBySubmissionId = new Map();
+    let paidStatusByVpaId = new Map();
 
     function getFairIdFromUrl() {
       const params = new URLSearchParams(window.location.search);
@@ -432,6 +478,14 @@
       row.dataset.email = (item.applicant_email || '').toLowerCase();
       row.dataset.status = String(item.status || '').toLowerCase();
 
+      const isApproved = String(item.status || '').toLowerCase() === 'approved';
+      let paidBadge = '';
+      if (isApproved) {
+        const paidState = paidStatusByVpaId.get(vpaIdBySubmissionId.get(item.submission_id));
+        if (paidState === true) paidBadge = `<div class="paid-badge paid">✅ Paid</div>`;
+        else if (paidState === false) paidBadge = `<div class="paid-badge unpaid">Not Paid</div>`;
+      }
+
       row.innerHTML = `
         <div class="avatar ${avatarClass}">${initials(displayName)}</div>
         <div class="app-meta">
@@ -442,11 +496,36 @@
           </div>
         </div>
         <div class="app-actions">
+          ${paidBadge}
           <button class="btn-review" onclick="window.location.href='fair_application_detail.html?fair_id=${fairId}&submission_id=${item.submission_id}'">
             Review Application →
           </button>
+          <button class="btn-delete" onclick="deleteApplication('${item.submission_id}', '${String(item.status || '').toLowerCase()}')">
+            🗑 Delete
+          </button>
         </div>`;
       return row;
+    }
+
+    async function deleteApplication(submissionId, status) {
+      if (status === 'approved') {
+        alert('This application is Approved. Change its status to Declined before deleting it.');
+        return;
+      }
+      if (!confirm('Delete this application? It will be removed from your applications list.')) return;
+      showLoader();
+      const { error } = await supabaseClient
+        .from('fair_man_app_submission')
+        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+        .eq('id', submissionId);
+
+      if (error) {
+        hideLoader();
+        alert('Could not delete this application. Please try again.');
+        console.error(error);
+        return;
+      }
+      await loadPage();
     }
 
     function renderSection(listId, emptyId, countId, rows, fairId, type) {
@@ -492,6 +571,67 @@
       return Array.isArray(data) ? data : [];
     }
 
+    async function loadPaymentStatus(fairId, submissionIds) {
+      vpaIdBySubmissionId = new Map();
+      paidStatusByVpaId = new Map();
+      if (!submissionIds.length) return;
+
+      const { data: subRows } = await supabaseClient
+        .from('fair_man_app_submission')
+        .select('id, vendor_performer_application_id')
+        .in('id', submissionIds);
+
+      if (!subRows) return;
+      const vpaIds = [];
+      subRows.forEach(r => {
+        if (r.vendor_performer_application_id) {
+          vpaIdBySubmissionId.set(r.id, r.vendor_performer_application_id);
+          vpaIds.push(r.vendor_performer_application_id);
+        }
+      });
+      if (!vpaIds.length) return;
+
+      const { data: weekendRows } = await supabaseClient
+        .from('vp_fair_info_weekend')
+        .select('vpa_id, is_paid')
+        .eq('fair_id', fairId)
+        .in('vpa_id', vpaIds);
+
+      if (!weekendRows) return;
+      const byVpa = new Map();
+      weekendRows.forEach(r => {
+        if (!byVpa.has(r.vpa_id)) byVpa.set(r.vpa_id, []);
+        byVpa.get(r.vpa_id).push(!!r.is_paid);
+      });
+      byVpa.forEach((paidFlags, vpaId) => {
+        paidStatusByVpaId.set(vpaId, paidFlags.length > 0 && paidFlags.every(p => p));
+      });
+    }
+
+    async function loadPaymentLink(fairId) {
+      const input = document.getElementById('paymentLinkInput');
+      const { data } = await supabaseClient
+        .from('fair_man_app_fair_settings')
+        .select('payment_link')
+        .eq('fair_id', fairId)
+        .maybeSingle();
+      if (data && data.payment_link) input.value = data.payment_link;
+    }
+
+    async function savePaymentLink(fairId) {
+      const input = document.getElementById('paymentLinkInput');
+      const link = input.value.trim();
+      const { error } = await supabaseClient
+        .from('fair_man_app_fair_settings')
+        .upsert({ fair_id: fairId, payment_link: link, updated_at: new Date().toISOString() }, { onConflict: 'fair_id' });
+      if (error) {
+        alert('Could not save payment link.');
+        console.error(error);
+        return;
+      }
+      alert('✅ Payment link saved.');
+    }
+
     async function load() {
       const fairId = getFairIdFromUrl();
 
@@ -511,6 +651,8 @@
         window.location.href = `fair_application_setup.html?fair_id=${fairId}`;
       };
       document.getElementById('btnRefresh').onclick = () => loadPage();
+      document.getElementById('btnSavePaymentLink').onclick = () => { if (fairId) savePaymentLink(fairId); };
+      if (fairId) loadPaymentLink(fairId);
 
       document.getElementById('navLogout').addEventListener('click', async (e) => {
         e.preventDefault();
@@ -566,6 +708,12 @@
         if (r.form_type === 'performer') allPerformers.push(r);
         else if (r.form_type === 'food_vendor') allFood.push(r);
         else allVendors.push(r);
+      }
+
+      try {
+        await loadPaymentStatus(fairId, rows.map(r => r.submission_id));
+      } catch (e) {
+        console.error('Could not load payment status', e);
       }
 
       applyFilters(fairId);

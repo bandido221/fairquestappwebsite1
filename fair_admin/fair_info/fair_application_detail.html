@@ -643,6 +643,10 @@
     }
 
     function extractWeekendsFromAnswers(fields, valuesMap) {
+      // Prefer the field explicitly flagged as the weekend picker, but fall back
+      // to a label match (same rule fair_apply.html uses to build this field),
+      // and if more than one field qualifies, take whichever has the most
+      // selected weekends — avoids grabbing an unrelated single-value field.
       let best = [];
       for (const f of fields) {
         if (String(f.field_type || '').toLowerCase() !== 'select') continue;
@@ -712,18 +716,25 @@
             </div>`).join('')
         : `<div class="empty">No weekend selection found in this application's answers.</div>`;
 
-      totalsWrap.innerHTML = `
+      const isPaidOff = totalOwed > 0 && remaining <= 0;
+      const statusBanner = isPaidOff
+        ? `<div style="background:rgba(76,175,80,0.85);color:#fff;font-weight:bold;padding:10px 14px;border-radius:10px;margin:10px 0;">✅ Fully Paid</div>`
+        : (totalOwed > 0
+          ? `<div style="background:rgba(200,50,50,0.85);color:#fff;font-weight:bold;padding:10px 14px;border-radius:10px;margin:10px 0;">⏳ Not Fully Paid — ${formatMoney(remaining)} remaining</div>`
+          : '');
+
+      totalsWrap.innerHTML = statusBanner + `
         <div class="field" style="display:flex;gap:24px;flex-wrap:wrap;">
           <div><div class="k">Total Owed</div><div class="v">${formatMoney(totalOwed)}</div></div>
-          <div><div class="k">Total Paid</div><div class="v">${formatMoney(totalPaid)}</div></div>
-          <div><div class="k">Remaining</div><div class="v" style="color:${remaining > 0 ? '#8b1a1a' : '#1a5c1e'};font-weight:bold;">${formatMoney(remaining)}</div></div>
+          <div><div class="k" style="color:#1a5c1e;">Total Paid</div><div class="v" style="color:#1a5c1e;font-weight:bold;">${formatMoney(totalPaid)}</div></div>
+          <div><div class="k" style="color:${remaining > 0 ? '#8b1a1a' : '#1a5c1e'};">Remaining</div><div class="v" style="color:${remaining > 0 ? '#8b1a1a' : '#1a5c1e'};font-weight:bold;">${formatMoney(remaining)}</div></div>
         </div>`;
 
       historyWrap.innerHTML = payments.length
         ? `<h3 style="font-family:'Cinzel',serif;font-size:15px;margin:0 0 8px;">Payment History</h3>` +
           payments.map(p => `
-            <div class="field">
-              <div class="k">${formatMoney(p.amount)} — ${p.description || 'No description'}</div>
+            <div class="field" style="border-left:4px solid #4CAF50;">
+              <div class="k" style="color:#1a5c1e;">${formatMoney(p.amount)} — ${p.description || 'No description'}</div>
               <div class="v">
                 Payment Date: ${formatMMDDYY(p.payment_date)}<br>
                 Recorded: ${formatDate(p.recorded_at)}<br>
@@ -733,7 +744,7 @@
         : '';
 
       if (remaining <= 0 && totalOwed > 0) {
-        formWrap.innerHTML = `<div class="empty" style="color:#1a5c1e;font-weight:bold;">✅ Payment complete.</div>`;
+        formWrap.innerHTML = '';
         return;
       }
 

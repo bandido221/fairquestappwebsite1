@@ -245,6 +245,41 @@
     .back-link { display: inline-block; margin-bottom: 16px; color: var(--gold); font-weight: bold; text-decoration: none; }
     .back-link:hover { color: var(--gold-light); }
 
+    /* ── FAIR RESPONSE (under a public review) ── */
+    .fair-response, .fair-response-form {
+      margin-top: 10px;
+      margin-left: 16px;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.06);
+      border-left: 3px solid var(--gold-dark);
+      border-radius: 0 8px 8px 0;
+    }
+    .fair-response-empty { margin-top: 8px; margin-left: 16px; }
+    .fair-response-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .fair-response-label { font-size: 13px; font-weight: 700; color: #6a4a10 !important; }
+    .fair-response-meta { font-size: 11px; color: #666 !important; }
+    .fair-response-text { font-size: 14px; line-height: 1.5; color: #222 !important; white-space: pre-wrap; }
+    .fair-response-textarea {
+      width: 100%;
+      min-height: 70px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.18);
+      background: rgba(255,255,255,0.85);
+      color: #111 !important;
+      font-family: 'Domine', serif;
+      font-size: 14px;
+      padding: 10px;
+      resize: vertical;
+      margin-top: 4px;
+    }
+
     /* ── TOAST ── */
     .toast {
       position: fixed;
@@ -270,6 +305,41 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    /* ── REVIEW WARNING MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-box {
+      background: var(--parchment);
+      color: #111 !important;
+      border-radius: 14px;
+      padding: 24px 22px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      border: 1px solid rgba(201,168,76,0.5);
+    }
+    .modal-box h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 19px;
+      margin-bottom: 10px;
+      color: #111 !important;
+    }
+    .modal-box p {
+      font-size: 14px;
+      line-height: 1.55;
+      color: #222 !important;
+      margin-bottom: 18px;
+    }
+    .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -356,6 +426,17 @@
 
   <div class="toast" id="appToast"></div>
 
+  <div class="modal-overlay" id="reviewWarningModal" style="display:none;">
+    <div class="modal-box">
+      <h3>Before You Submit</h3>
+      <p>Please keep this honest and respectful — no profanity, harassment, or abusive language. Reviews and responses that get reported for this can result in losing access to your account.</p>
+      <div class="modal-actions">
+        <button class="btn-action" id="reviewWarningOkBtn">I Understand, Submit</button>
+        <button class="btn-action btn-danger" id="reviewWarningCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
@@ -368,6 +449,9 @@ const reviewType = (urlParams.get('type') || 'public').toLowerCase();
 
 let myPubRating = 0;
     let myVpRating = 0;
+    let fairName = '';
+    let isFairOwnerAdmin = false;
+    let publicReviewsCache = [];
 
     function relativeTime(dateStr) {
       const then = new Date(dateStr).getTime();
@@ -433,6 +517,7 @@ let myPubRating = 0;
         document.getElementById('fairSubtitle').textContent = 'Fair not found.';
         return;
       }
+      fairName = data.name;
       document.getElementById('fairSubtitle').textContent = data.name;
       document.getElementById('backToFairLink').href = `/fairs/fair_detail.html?id=${fairId}`;
     }
@@ -446,13 +531,56 @@ let myPubRating = 0;
         : 'No reviews yet';
     }
 
+    function fairResponseBlockHtml(r) {
+      if (r.response_text) {
+        return `
+          <div class="fair-response" data-review-id="${r.id}">
+            <div class="fair-response-head">
+              <span class="fair-response-label">💬 Response from ${escapeHtml(fairName)}</span>
+              <span class="fair-response-meta">${relativeTime(r.response_updated_at)}${r.response_is_edited ? ' · edited' : ''}</span>
+            </div>
+            <div class="fair-response-text">${escapeHtml(r.response_text)}</div>
+            ${isFairOwnerAdmin ? `
+              <button class="btn-action fair-respond-btn" data-review-id="${r.id}">Edit Response</button>
+              <button class="btn-action btn-danger fair-response-delete-btn" data-review-id="${r.id}">Delete Response</button>
+            ` : ''}
+          </div>`;
+      }
+      if (isFairOwnerAdmin) {
+        return `
+          <div class="fair-response-empty" data-review-id="${r.id}">
+            <button class="btn-action fair-respond-btn" data-review-id="${r.id}">Respond as ${escapeHtml(fairName)}</button>
+          </div>`;
+      }
+      return '';
+    }
+
+    function openFairResponseForm(reviewId) {
+      const r = publicReviewsCache.find(x => String(x.id) === String(reviewId));
+      const existingText = r && r.response_text ? r.response_text : '';
+      const target = document.querySelector(`.fair-response[data-review-id="${reviewId}"], .fair-response-empty[data-review-id="${reviewId}"]`);
+      if (!target) return;
+      target.outerHTML = `
+        <div class="fair-response-form" data-review-id="${reviewId}">
+          <div class="fair-response-label" style="margin-bottom:6px;">💬 Respond as ${escapeHtml(fairName)}</div>
+          <textarea class="fair-response-textarea">${escapeHtml(existingText)}</textarea>
+          <div class="fair-response-form-msg" style="font-size:12px; margin-top:4px;"></div>
+          <div>
+            <button class="btn-action fair-response-form-submit" data-review-id="${reviewId}">Save Response</button>
+            <button class="btn-action fair-response-form-cancel">Cancel</button>
+          </div>
+        </div>`;
+    }
+
     async function loadPublicList() {
       const { data, error } = await supabaseClient.rpc('get_fair_reviews', { p_fair_id: fairId });
       const list = document.getElementById('publicReviewsList');
       if (error || !data || !data.length) {
         list.innerHTML = '<div class="empty-note">No reviews yet — be the first.</div>';
+        publicReviewsCache = [];
         return;
       }
+      publicReviewsCache = data;
       list.innerHTML = data.map(r => `
         <div class="review-item">
           <div class="review-item-head">
@@ -460,9 +588,43 @@ let myPubRating = 0;
             <span class="review-meta">${escapeHtml(r.username)} · ${relativeTime(r.created_at)}${r.is_edited ? ' · edited' : ''}</span>
           </div>
           ${r.review_text ? `<div class="review-text">${escapeHtml(r.review_text)}</div>` : ''}
+          ${fairResponseBlockHtml(r)}
         </div>
       `).join('');
     }
+
+    document.getElementById('publicReviewsList').addEventListener('click', async (e) => {
+      const respondBtn = e.target.closest('.fair-respond-btn');
+      const deleteBtn = e.target.closest('.fair-response-delete-btn');
+      const submitBtn = e.target.closest('.fair-response-form-submit');
+      const cancelBtn = e.target.closest('.fair-response-form-cancel');
+
+      if (respondBtn) {
+        openFairResponseForm(respondBtn.dataset.reviewId);
+      } else if (deleteBtn) {
+        if (!confirm('Delete this response?')) return;
+        await supabaseClient.rpc('delete_fair_review_response', { p_review_id: Number(deleteBtn.dataset.reviewId) });
+        await loadPublicList();
+      } else if (submitBtn) {
+        const reviewId = submitBtn.dataset.reviewId;
+        const form = submitBtn.closest('.fair-response-form');
+        const text = form.querySelector('.fair-response-textarea').value.trim();
+        const msgEl = form.querySelector('.fair-response-form-msg');
+        if (!text) { msgEl.style.color = '#a12828'; msgEl.textContent = 'Response text is required.'; return; }
+
+        openReviewWarningModal(async () => {
+          msgEl.style.color = '#555';
+          msgEl.textContent = 'Saving…';
+          const { error } = await supabaseClient.rpc('upsert_fair_review_response', {
+            p_review_id: Number(reviewId), p_response_text: text
+          });
+          if (error) { msgEl.style.color = '#a12828'; msgEl.textContent = error.message || 'Something went wrong.'; return; }
+          await loadPublicList();
+        });
+      } else if (cancelBtn) {
+        await loadPublicList();
+      }
+    });
 
     async function loadMyReview() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -521,6 +683,23 @@ let myPubRating = 0;
       toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
     }
 
+    let pendingSubmitFn = null;
+    function openReviewWarningModal(submitFn) {
+      pendingSubmitFn = submitFn;
+      document.getElementById('reviewWarningModal').style.display = 'flex';
+    }
+    function closeReviewWarningModal() {
+      pendingSubmitFn = null;
+      document.getElementById('reviewWarningModal').style.display = 'none';
+    }
+    document.getElementById('reviewWarningCancelBtn').addEventListener('click', closeReviewWarningModal);
+    document.getElementById('reviewWarningOkBtn').addEventListener('click', async () => {
+      const fn = pendingSubmitFn;
+      document.getElementById('reviewWarningModal').style.display = 'none';
+      pendingSubmitFn = null;
+      if (fn) await fn();
+    });
+
     document.getElementById('mySubmitBtn').addEventListener('click', async () => {
       const msgEl = document.getElementById('myReviewMsg');
       msgEl.style.color = '#555';
@@ -530,17 +709,19 @@ let myPubRating = 0;
       const text = document.getElementById('myReviewText').value.trim();
       if (myPubRating <= 2 && !text) { msgEl.style.color = '#a12828'; msgEl.textContent = 'A written review is required for 1-2 stars.'; return; }
 
-      msgEl.textContent = 'Submitting…';
-      const { error } = await supabaseClient.rpc('upsert_fair_review', {
-        p_fair_id: fairId, p_rating: myPubRating, p_review_text: text || null
+      openReviewWarningModal(async () => {
+        msgEl.textContent = 'Submitting…';
+        const { error } = await supabaseClient.rpc('upsert_fair_review', {
+          p_fair_id: fairId, p_rating: myPubRating, p_review_text: text || null
+        });
+        if (error) { msgEl.style.color = '#a12828'; msgEl.textContent = error.message || 'Something went wrong.'; return; }
+        msgEl.style.color = '#2e7d32';
+        msgEl.textContent = 'Saved!';
+        await loadMyReview();
+        await loadPublicSummary();
+        await loadPublicList();
+        setTimeout(goBackToFair, 700);
       });
-      if (error) { msgEl.style.color = '#a12828'; msgEl.textContent = error.message || 'Something went wrong.'; return; }
-      msgEl.style.color = '#2e7d32';
-      msgEl.textContent = 'Saved!';
-      await loadMyReview();
-      await loadPublicSummary();
-      await loadPublicList();
-      setTimeout(goBackToFair, 700);
     });
 
     document.getElementById('myDeleteBtn').addEventListener('click', async () => {
@@ -607,17 +788,19 @@ let myPubRating = 0;
       const text = document.getElementById('myVpReviewText').value.trim();
       if (myVpRating <= 2 && !text) { msgEl.style.color = '#a12828'; msgEl.textContent = 'A written review is required for 1-2 stars.'; return; }
 
-      msgEl.textContent = 'Submitting…';
-      const { error } = await supabaseClient.rpc('upsert_vp_fair_review', {
-        p_fair_id: fairId, p_rating: myVpRating, p_review_text: text || null
+      openReviewWarningModal(async () => {
+        msgEl.textContent = 'Submitting…';
+        const { error } = await supabaseClient.rpc('upsert_vp_fair_review', {
+          p_fair_id: fairId, p_rating: myVpRating, p_review_text: text || null
+        });
+        if (error) { msgEl.style.color = '#a12828'; msgEl.textContent = error.message || 'Something went wrong.'; return; }
+        msgEl.style.color = '#2e7d32';
+        msgEl.textContent = 'Saved!';
+        await loadMyVpReview();
+        await loadVpSummary();
+        await loadVpList();
+        setTimeout(goBackToFair, 700);
       });
-      if (error) { msgEl.style.color = '#a12828'; msgEl.textContent = error.message || 'Something went wrong.'; return; }
-      msgEl.style.color = '#2e7d32';
-      msgEl.textContent = 'Saved!';
-      await loadMyVpReview();
-      await loadVpSummary();
-      await loadVpList();
-      setTimeout(goBackToFair, 700);
     });
 
     document.getElementById('myVpDeleteBtn').addEventListener('click', async () => {
@@ -660,6 +843,9 @@ let myPubRating = 0;
       } else {
         // Public view: the VP section is completely hidden, even for a viewer who is themselves a VP.
         document.getElementById('vpReviewsCard').style.display = 'none';
+
+        const { data: ownerCheck } = await supabaseClient.rpc('is_fair_owner_admin', { p_fair_id: fairId });
+        isFairOwnerAdmin = !!ownerCheck;
 
         await loadPublicSummary();
         await loadPublicList();

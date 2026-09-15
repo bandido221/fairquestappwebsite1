@@ -101,6 +101,31 @@
 
     .empty-msg { text-align: center; padding: 20px 0; font-size: 14px; color: #5c3a1e; }
 
+    /* Space types & per-space-type pricing */
+    .space-types-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    .space-types-table th, .space-types-table td {
+      padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,0.12); text-align: left; font-size: 13px;
+    }
+    .space-types-table th { font-family: 'Cinzel', serif; font-size: 12px; color: #3b1f1f; }
+    .space-types-table input[type="number"] {
+      width: 90px; padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.2);
+      font-family: 'Domine', serif; font-size: 13px; background: rgba(255,255,255,0.9); color: #111;
+    }
+    .space-type-name { font-weight: bold; color: #3b1f1f; }
+    .btn-small {
+      background: #4CAF50; color: #fff; border: none; border-radius: 6px;
+      padding: 6px 12px; font-size: 12px; font-family: 'Domine', serif; cursor: pointer;
+    }
+    .btn-small:hover { background: #43a047; }
+    .btn-small-danger { background: #a33; }
+    .btn-small-danger:hover { background: #822; }
+    .add-space-type-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .add-space-type-row input[type="text"] {
+      flex: 1; min-width: 160px; padding: 8px 10px; border-radius: 7px;
+      border: 1px solid rgba(0,0,0,0.2); font-family: 'Domine', serif; font-size: 14px;
+      background: rgba(255,255,255,0.9); color: #111;
+    }
+
     @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
     #loadingOverlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.88);
@@ -161,6 +186,22 @@
       </div>
     </div>
 
+    <div class="card">
+      <h2>🏕️ Space Types & Pricing</h2>
+      <div class="hint-box">
+        Define the kinds of space you offer — 10x10, 20x20, Cart, Walk-in Vendor, Food Truck, etc. — then set a price for each one, per weekend. These show up wherever vendors pick a space size when applying.
+      </div>
+      <div id="spaceTypesTableWrap"></div>
+      <div id="spaceTypesEmptyMsg" class="empty-msg" style="display:none;">
+        No space types yet. Add one below to get started.
+      </div>
+      <div class="add-space-type-row">
+        <input type="text" id="newSpaceTypeName" placeholder="e.g. 10x10, Cart, Walk-in Vendor…" />
+        <button class="btn btn-dark" id="btnAddSpaceType">+ Add Space Type</button>
+      </div>
+      <div id="spaceTypeStatus" style="font-size:13px; font-weight:bold; margin-top:8px;"></div>
+    </div>
+
   </div>
 
   <script>
@@ -177,8 +218,9 @@
 
     function formatDate(d) {
       if (!d) return '—';
-      const date = new Date(d);
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const [yyyy, mm, dd] = d.split('-');
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return `${months[parseInt(mm,10)-1]} ${parseInt(dd,10)}, ${yyyy}`;
     }
 
     function buildWeekendRow(fairId, weekNum, startDate, endDate, existing) {
@@ -312,11 +354,123 @@
           });
         }
 
+        await loadSpaceTypesSection(fairId, weeks);
+
       } catch (e) {
         console.error(e);
       }
 
       hideLoader();
+    }
+
+    let cachedWeeks = [];
+    let cachedFairId = null;
+
+    async function loadSpaceTypesSection(fairId, weeks) {
+      cachedWeeks = weeks;
+      cachedFairId = fairId;
+
+      const wrap = document.getElementById('spaceTypesTableWrap');
+      const emptyMsg = document.getElementById('spaceTypesEmptyMsg');
+
+      const { data: pricingRows, error } = await supabaseClient
+        .rpc('get_fair_space_type_pricing', { p_fair_id: fairId });
+
+      if (error) {
+        wrap.innerHTML = '';
+        emptyMsg.textContent = 'Space type pricing isn\'t set up on this fair yet.';
+        emptyMsg.style.display = 'block';
+        return;
+      }
+
+      // Group rows by space type
+      const typesMap = {};
+      (pricingRows || []).forEach(r => {
+        if (!typesMap[r.space_type_id]) {
+          typesMap[r.space_type_id] = { id: r.space_type_id, name: r.space_type_name, sort_order: r.sort_order, prices: {} };
+        }
+        if (r.week_number != null) {
+          typesMap[r.space_type_id].prices[r.week_number] = r.price;
+        }
+      });
+      const types = Object.values(typesMap).sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name));
+
+      if (!types.length) {
+        wrap.innerHTML = '';
+        emptyMsg.style.display = 'block';
+        return;
+      }
+      emptyMsg.style.display = 'none';
+
+      const table = document.createElement('table');
+      table.className = 'space-types-table';
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Space Type</th>
+            ${weeks.map(w => `<th>Weekend ${w.num}</th>`).join('')}
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${types.map(t => `
+            <tr data-type-id="${t.id}">
+              <td class="space-type-name">${t.name}</td>
+              ${weeks.map(w => `
+                <td>
+                  <input type="number" min="0" step="0.01" class="inp-space-price" data-week="${w.num}"
+                    value="${t.prices[w.num] ?? '0.00'}" />
+                </td>`).join('')}
+              <td>
+                <button class="btn-small" data-action="save">💾 Save</button>
+                <button class="btn-small btn-small-danger" data-action="delete">🗑</button>
+              </td>
+            </tr>`).join('')}
+        </tbody>`;
+
+      table.querySelectorAll('tr[data-type-id]').forEach(row => {
+        const typeId = row.dataset.typeId;
+
+        row.querySelector('[data-action="save"]').addEventListener('click', async () => {
+          const statusEl = document.getElementById('spaceTypeStatus');
+          statusEl.textContent = 'Saving…';
+          statusEl.style.color = '#5c3a1e';
+
+          const inputs = row.querySelectorAll('.inp-space-price');
+          for (const inp of inputs) {
+            const week = Number(inp.dataset.week);
+            const price = parseFloat(inp.value) || 0;
+            const { error } = await supabaseClient.rpc('upsert_fair_space_type_price', {
+              p_fair_id: fairId,
+              p_space_type_id: Number(typeId),
+              p_week_number: week,
+              p_price: price
+            });
+            if (error) { console.error(error); }
+          }
+          statusEl.textContent = '✅ Saved!';
+          statusEl.style.color = '#1a5c1e';
+          setTimeout(() => { statusEl.textContent = ''; }, 2500);
+        });
+
+        row.querySelector('[data-action="delete"]').addEventListener('click', async () => {
+          const statusEl = document.getElementById('spaceTypeStatus');
+          const { error } = await supabaseClient.rpc('delete_fair_space_type', {
+            p_fair_id: fairId,
+            p_id: Number(typeId)
+          });
+          if (error) {
+            statusEl.textContent = '❌ Error deleting';
+            statusEl.style.color = '#8b1a1a';
+            console.error(error);
+            return;
+          }
+          await loadSpaceTypesSection(fairId, weeks);
+        });
+      });
+
+      wrap.innerHTML = '';
+      wrap.appendChild(table);
     }
 
     async function init() {
@@ -330,6 +484,35 @@
 
       document.getElementById('btnBack').onclick    = () => { window.location.href = `fair_vendor_list.html?fair_id=${fairId}`; };
       document.getElementById('btnRefresh').onclick = () => loadPage();
+
+      document.getElementById('btnAddSpaceType').addEventListener('click', async () => {
+        const input = document.getElementById('newSpaceTypeName');
+        const name = input.value.trim();
+        const statusEl = document.getElementById('spaceTypeStatus');
+        if (!name) { statusEl.textContent = 'Enter a name first.'; statusEl.style.color = '#8b1a1a'; return; }
+
+        statusEl.textContent = 'Adding…';
+        statusEl.style.color = '#5c3a1e';
+
+        const { error } = await supabaseClient.rpc('upsert_fair_space_type', {
+          p_fair_id: fairId,
+          p_name: name,
+          p_sort_order: 0
+        });
+
+        if (error) {
+          statusEl.textContent = '❌ ' + (error.message.includes('duplicate') ? 'That space type already exists.' : 'Error adding space type');
+          statusEl.style.color = '#8b1a1a';
+          console.error(error);
+          return;
+        }
+
+        input.value = '';
+        statusEl.textContent = '✅ Added!';
+        statusEl.style.color = '#1a5c1e';
+        setTimeout(() => { statusEl.textContent = ''; }, 2000);
+        await loadSpaceTypesSection(cachedFairId, cachedWeeks);
+      });
 
       document.getElementById('navLogout').addEventListener('click', async (e) => {
         e.preventDefault();

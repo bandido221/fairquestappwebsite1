@@ -392,6 +392,21 @@
     </div>
   </div>
 
+  <!-- ── APPLY GATE MODAL ── -->
+  <div id="applyGateModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:500; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#1a1208; border:1px solid rgba(201,168,76,0.4); border-radius:16px; padding:28px; max-width:420px; width:100%; text-align:center; box-shadow:0 8px 36px rgba(0,0,0,0.6);">
+      <h3 style="font-family:'Cinzel',serif; color:var(--gold-light); margin-bottom:12px;">📄 Apply to This Fair</h3>
+      <p style="font-size:13px; color:var(--gold); margin-bottom:20px; line-height:1.6;">
+        To apply, you need an approved Vendor or Performer profile on FairQuest. Get started below:
+      </p>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button onclick="window.location.href='/vendor_performer/vendor/application.html'" style="font-family:'Domine',serif; font-size:13px; font-weight:700; padding:10px 16px; border-radius:8px; border:1.5px solid rgba(0,0,0,0.2); background:var(--gold); color:#111; cursor:pointer;">🧺 Apply as a Vendor</button>
+        <button onclick="window.location.href='/vendor_performer/performer/application.html'" style="font-family:'Domine',serif; font-size:13px; font-weight:700; padding:10px 16px; border-radius:8px; border:1.5px solid rgba(201,168,76,0.4); background:rgba(255,255,255,0.1); color:var(--gold-light); cursor:pointer;">🎭 Apply as a Performer</button>
+        <button onclick="closeApplyGateModal()" style="font-family:'Domine',serif; font-size:13px; font-weight:700; padding:8px 16px; border-radius:8px; border:1px solid rgba(201,168,76,0.3); background:transparent; color:var(--gold); cursor:pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── REVIEW LOGIN MODAL ── -->
   <div id="reviewLoginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:500; align-items:center; justify-content:center; padding:20px;">
     <div style="background:#1a1208; border:1px solid rgba(201,168,76,0.4); border-radius:16px; padding:28px; max-width:380px; width:100%; text-align:center; box-shadow:0 8px 36px rgba(0,0,0,0.6);">
@@ -507,7 +522,7 @@
                 <div class="fair-name-title">${sp.display_name || '—'}</div>
                 <div class="fair-location">${[sp.city, sp.state].filter(Boolean).join(', ')}</div>
               </div>
-              <button class="fav-btn-small" id="favBtn" onclick="toggleFavorite()">❤️ Save</button>
+              <button class="fav-btn-small" id="favBtn" onclick="toggleFavorite()">🤍 Add Favorite</button>
             </div>
             <div class="fair-badges">
               ${fair?.verified ? `<span class="verified-pill">✅ Verified</span>` : ''}
@@ -536,6 +551,14 @@
           </div>`;
       page.appendChild(heroCard);
       loadReviewButtons(document.getElementById('reviewButtonsWrap'));
+
+      // APPLY CARD — visible to everyone; gates to an approved Vendor/Performer profile on click
+      const applyCard = document.createElement('div');
+      applyCard.className = 'card';
+      applyCard.id = 'applyCardWrap';
+      applyCard.style.display = 'none';
+      page.appendChild(applyCard);
+      setupApplyCard(applyCard, isGold, fairId);
 
       // CONTACT CARD
       const contactFields = [];
@@ -620,11 +643,11 @@
         if (isFav) {
           await sb.rpc('app_remove_favorite', { p_entity_type: 'fair', p_entity_id: fairId.toString() });
           btn.classList.remove('active');
-          btn.innerHTML = '❤️ Save';
+          btn.innerHTML = '🤍 Add Favorite';
         } else {
           await sb.rpc('app_add_favorite', { p_entity_type: 'fair', p_entity_id: fairId.toString() });
           btn.classList.add('active');
-          btn.innerHTML = '💔 Saved';
+          btn.innerHTML = '❤️ Favorited';
         }
       } catch(e) { console.error(e); }
     }
@@ -698,6 +721,41 @@ function proceedToReviews() {
 }
 function closeReviewLoginModal() {
   document.getElementById('reviewLoginModal').style.display = 'none';
+}
+
+// ── APPLY BUTTON (public — gates to an approved Vendor/Performer profile) ──
+async function setupApplyCard(container, isGold, fairId) {
+  if (!isGold) return; // only Gold fairs have applications set up
+  container.style.display = 'block';
+  container.innerHTML = `
+    <div class="card-title">📄 Apply</div>
+    <a href="#" id="applyToFairBtn" class="apply-btn">📄 Apply To This Fair</a>`;
+
+  document.getElementById('applyToFairBtn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) { openApplyGateModal(); return; }
+
+    const { data: vpaRows } = await sb
+      .from('vendor_performer_applications')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('approval_status', 'approved')
+      .limit(1);
+
+    if (vpaRows && vpaRows.length) {
+      window.location.href = `/fair_admin/fair_info/fair_apply.html?fair_id=${fairId}`;
+    } else {
+      openApplyGateModal();
+    }
+  });
+}
+
+function openApplyGateModal() {
+  document.getElementById('applyGateModal').style.display = 'flex';
+}
+function closeApplyGateModal() {
+  document.getElementById('applyGateModal').style.display = 'none';
 }
 
 async function loadFairPosts() {

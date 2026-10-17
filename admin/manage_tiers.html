@@ -271,6 +271,7 @@
     .tier-basic   { background: rgba(150,150,150,0.2);  color: #aaa; border: 1px solid rgba(150,150,150,0.3); }
     .tier-silver  { background: rgba(180,200,220,0.2);  color: #8ab0d0; border: 1px solid rgba(180,200,220,0.35); }
     .tier-gold    { background: rgba(240,180,20,0.2);   color: #d4a830; border: 1px solid rgba(240,180,20,0.4); }
+    .tier-testing { background: rgba(120,190,140,0.2);  color: #7fc497; border: 1px solid rgba(120,190,140,0.4); }
     .tier-unknown { background: rgba(150,150,150,0.1);  color: #666; border: 1px solid rgba(150,150,150,0.2); }
 
     /* ── Tier Selector in row ── */
@@ -507,6 +508,7 @@
     <div class="stats-row" id="fairStats">
       <div class="stat-chip"><strong id="fsTotal">—</strong><span>Total Fairs</span></div>
       <div class="stat-chip"><strong id="fsBasic">—</strong><span>Basic</span></div>
+      <div class="stat-chip"><strong id="fsTesting">—</strong><span>Testing</span></div>
       <div class="stat-chip"><strong id="fsSilver">—</strong><span>Silver</span></div>
       <div class="stat-chip"><strong id="fsGold">—</strong><span>Gold</span></div>
     </div>
@@ -520,6 +522,7 @@
       <select class="filter-select" id="fairTierFilter" onchange="loadFairs()">
         <option value="">All Tiers</option>
         <option value="basic">Basic</option>
+        <option value="testing">Testing</option>
         <option value="silver">Silver</option>
         <option value="gold">Gold</option>
       </select>
@@ -688,6 +691,7 @@
     // Stats
     document.getElementById('fsTotal').textContent  = rows.length;
  document.getElementById('fsBasic').textContent  = rows.filter(r => !r.fair_tier).length;
+document.getElementById('fsTesting').textContent = rows.filter(r => r.fair_tier === 'testing').length;
 document.getElementById('fsSilver').textContent = rows.filter(r => r.fair_tier === 'silver').length;
 document.getElementById('fsGold').textContent   = rows.filter(r => r.fair_tier === 'gold').length;
 
@@ -708,6 +712,7 @@ document.getElementById('fsGold').textContent   = rows.filter(r => r.fair_tier =
         <td>
           <select class="tier-select" id="fts-${r.id}">
             <option value="basic"  ${!r.fair_tier ? 'selected':''}>Basic</option>
+            <option value="testing" ${r.fair_tier==='testing' ? 'selected':''}>Testing</option>
             <option value="silver" ${r.fair_tier==='silver' ? 'selected':''}>Silver</option>
             <option value="gold"   ${r.fair_tier==='gold'   ? 'selected':''}>Gold</option>
           </select>

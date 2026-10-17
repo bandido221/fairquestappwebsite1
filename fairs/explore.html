@@ -762,6 +762,7 @@ const states = [
   const shuffled = [...allFairs].sort(() => Math.random() - 0.5);
   const featured = shuffled.slice(0, 5);
   featured.forEach(fair => resultsContainer.appendChild(renderFairCard(fair)));
+  FQCardReviews.fill(resultsContainer);
 }
 function fairHref(fair) {
       return publishedProfileIds.has(String(fair.id))
@@ -816,6 +817,7 @@ div.innerHTML = `
         <p><strong>📅 Weekends:</strong></p>
         ${weekends.map(date => `<p>${date}</p>`).join('')}
       ` : '<p><strong>📅 Weekends:</strong> None listed</p>'}
+      <div class="fq-card-review" data-fair-id="${fair.id}"></div>
       <button class="btn-fav ${isFav ? 'is-favorite' : ''}" data-fair-id="${fair.id}">
         ${isFav ? '💔 Remove from Favorites' : '❤️ Save to Favorites'}
       </button>
@@ -854,6 +856,7 @@ function formatDateMMDDYY(dateStr){
     return;
   }
   matches.forEach(fair => resultsContainer.appendChild(renderFairCard(fair)));
+  FQCardReviews.fill(resultsContainer);
 });
 
     async function toggleFavorite(btn, fairId) {
@@ -1070,5 +1073,6 @@ document.getElementById('feedbackModal').addEventListener('click', function(e) {
   if (e.target === this) closeFeedbackModal();
 });
 </script>
+<script src="/fairs/fair_card_reviews.js"></script>
 </body>
 </html>

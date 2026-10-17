@@ -558,7 +558,7 @@
       applyCard.id = 'applyCardWrap';
       applyCard.style.display = 'none';
       page.appendChild(applyCard);
-      setupApplyCard(applyCard, isGold, fairId);
+      setupApplyCard(applyCard, isGold || tier === 'testing', fairId);
 
       // CONTACT CARD
       const contactFields = [];
@@ -725,7 +725,11 @@ function closeReviewLoginModal() {
 
 // ── APPLY BUTTON (public — gates to an approved Vendor/Performer profile) ──
 async function setupApplyCard(container, isGold, fairId) {
-  if (!isGold) return; // only Gold fairs have applications set up
+  if (!isGold) return; // only Gold / Testing fairs have applications set up
+  // Testing tier: hide Apply when the fair is full
+  const { data: usage } = await sb
+    .rpc('fair_man_app_get_usage', { p_fair_id: parseInt(fairId, 10) });
+  if (usage?.[0]?.is_full) return;
   container.style.display = 'block';
   container.innerHTML = `
     <div class="card-title">📄 Apply</div>

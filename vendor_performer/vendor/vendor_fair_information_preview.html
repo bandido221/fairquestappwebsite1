@@ -718,11 +718,11 @@ let fairControlsPricing = false;
       return weekendRow ? weekendRow.fair_id : null;
     }
 
-    async function loadAndRenderPayNowButton(vpaId, fairName) {
+    async function renderPayNowButton(fairId, isPaidOff) {
       const wrap = document.getElementById('payNowWrap');
       if (!wrap) return;
 
-      const fairId = await getFairIdForVpa(vpaId, fairName);
+      if (isPaidOff) { wrap.innerHTML = ''; return; }
       if (!fairId) return;
 
       const { data: settings } = await sb
@@ -731,7 +731,7 @@ let fairControlsPricing = false;
         .eq('fair_id', fairId)
         .maybeSingle();
 
-      if (!settings || !settings.payment_link) return;
+      if (!settings || !settings.payment_link) { wrap.innerHTML = ''; return; }
 
       wrap.innerHTML = `
         <a href="${escapeHtml(settings.payment_link)}" target="_blank" rel="noopener"
@@ -821,7 +821,10 @@ let fairControlsPricing = false;
         .limit(1)
         .maybeSingle();
 
-      if (!submission) return;
+      if (!submission) {
+        await renderPayNowButton(fairId, false);
+        return;
+      }
 
       const [{ data: fields }, { data: values }, { data: fairRow }, { data: payments }] = await Promise.all([
         sb.from('fair_man_app_form_field').select('id, label, field_type, config').eq('form_id', submission.form_id).eq('is_active', true),
@@ -838,7 +841,10 @@ let fairControlsPricing = false;
       const remaining = Math.max(0, totalOwed - totalPaid);
       const isPaidOff = totalOwed > 0 && remaining <= 0;
 
-      if (totalOwed <= 0 && !(payments || []).length) return; // nothing to show yet
+      if (totalOwed <= 0 && !(payments || []).length) {
+        await renderPayNowButton(fairId, false);
+        return; // nothing to show yet
+      }
 
       card.style.display = '';
 
@@ -876,6 +882,7 @@ let fairControlsPricing = false;
         : '';
 
       inner.innerHTML = statusBanner + weeklyHtml + totalsHtml + historyHtml;
+      await renderPayNowButton(fairId, isPaidOff);
     }
 
    async function loadPage() {
@@ -921,7 +928,6 @@ let fairControlsPricing = false;
   renderPage(currentFairRows);
 
   if (vpaId && fairName) await initVault(vpaId, fairName, currentSeasonYear);
-  if (vpaId && fairName) loadAndRenderPayNowButton(vpaId, fairName);
   if (vpaId && fairName) loadAndRenderPaymentTracking(vpaId, fairName);
 }
 

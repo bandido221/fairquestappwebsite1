@@ -723,7 +723,15 @@ weekendFields.forEach(([startKey, endKey]) => {
   applyHint.style.display = 'none';
 
   // only Gold fairs show apply entry point
-  if ((fairRow.fair_tier || '').toLowerCase() !== 'gold') return;
+  const fairTierLower = (fairRow.fair_tier || '').toLowerCase();
+  if (fairTierLower !== 'gold' && fairTierLower !== 'testing') return;
+
+  // Testing tier: hide Apply when the fair is full
+  if (fairTierLower === 'testing') {
+    const { data: usage } = await supabaseClient
+      .rpc('fair_man_app_get_usage', { p_fair_id: fairRow.id });
+    if (usage?.[0]?.is_full) return;
+  }
 
   // must be logged in
   const { data: { user }, error: userErr } = await supabaseClient.auth.getUser();

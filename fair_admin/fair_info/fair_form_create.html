@@ -353,7 +353,14 @@
           window.location.href = `fair_form_edit.html?fair_id=${fairId}&form_id=${formId}`;
         } catch (e) {
           console.error(e);
-          setMsg('Could not create the form. Please try again.', 'error');
+          const m = (e && e.message) ? e.message : '';
+          if (m.includes('fair_form_type_limit_reached')) {
+            setMsg('Your fair already has an application form for this category. Delete it first to create a new one.', 'error');
+          } else if (m.includes('fair_form_limit_reached')) {
+            setMsg('Your fair has reached its limit of application forms. Delete an old one first to create a new one.', 'error');
+          } else {
+            setMsg('Could not create the form. Please try again.', 'error');
+          }
           hideLoader();
         }
       };

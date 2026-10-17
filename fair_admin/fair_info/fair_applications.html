@@ -238,6 +238,9 @@
     .status-declined   { background: rgba(200,50,50,0.18);   color: #8b1a1a; border: 1px solid rgba(200,50,50,0.3); }
     .status-pending    { background: rgba(0,0,0,0.08);       color: #3b1f1f; border: 1px solid rgba(0,0,0,0.15); }
     .status-default    { background: rgba(0,0,0,0.08);       color: #3b1f1f; }
+    .status-archived   { background: rgba(0,0,0,0.35);       color: #f0e6d2; border: 1px solid rgba(0,0,0,0.5); }
+
+    .app-row.is-archived { opacity: 0.65; }
 
     .app-actions { flex-shrink: 0; }
     .btn-review {
@@ -267,6 +270,20 @@
       margin-left: 8px;
     }
     .btn-delete:hover { background: #6e1414; }
+    .btn-archive {
+      background: #5c4a1e;
+      color: #f1df99;
+      border: none;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Domine', serif;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+      margin-left: 8px;
+    }
+    .btn-archive:hover { background: #46390f; }
 
     .paid-badge {
       display: inline-block;
@@ -384,6 +401,10 @@
           <option value="approved">Approved</option>
           <option value="rejected">Declined</option>
         </select>
+        <label style="display:flex; align-items:center; gap:6px; font-size:14px; color:#3b1f1f; white-space:nowrap;">
+          <input type="checkbox" id="showArchived" style="width:16px; height:16px; cursor:pointer;" />
+          📦 Archived Only
+        </label>
       </div>
       <p style="font-size:13px; color:#5c3a1e; margin:0;">Click <strong>Review Application</strong> on any row to open, approve, or decline it.</p>
 
@@ -486,12 +507,20 @@
         else if (paidState === false) paidBadge = `<div class="paid-badge unpaid">Not Paid</div>`;
       }
 
+      const isArchived = item.is_archived === true;
+      if (isArchived) row.classList.add('is-archived');
+      const archivedPill = isArchived ? `<span class="status-pill status-archived">📦 Archived</span>` : '';
+      const archiveBtn = isArchived
+        ? `<button class="btn-archive" onclick="unarchiveApplication('${item.submission_id}')">↩️ Unarchive</button>`
+        : `<button class="btn-archive" onclick="archiveApplication('${item.submission_id}')">📦 Archive</button>`;
+
       row.innerHTML = `
         <div class="avatar ${avatarClass}">${initials(displayName)}</div>
         <div class="app-meta">
           <div class="app-name">${displayName}</div>
           <div class="app-sub">
             <span class="status-pill ${statusClass(item.status)}">${statusLabel(item.status)}</span>
+            ${archivedPill}
             <span>Submitted: ${formatDate(item.submitted_at)}</span>
           </div>
         </div>
@@ -500,6 +529,7 @@
           <button class="btn-review" onclick="window.location.href='fair_application_detail.html?fair_id=${fairId}&submission_id=${item.submission_id}'">
             Review Application →
           </button>
+          ${archiveBtn}
           <button class="btn-delete" onclick="deleteApplication('${item.submission_id}', '${String(item.status || '').toLowerCase()}')">
             🗑 Delete
           </button>
@@ -528,6 +558,38 @@
       await loadPage();
     }
 
+    async function archiveApplication(submissionId) {
+      showLoader();
+      const { error } = await supabaseClient
+        .from('fair_man_app_submission')
+        .update({ is_archived: true, archived_at: new Date().toISOString() })
+        .eq('id', submissionId);
+
+      if (error) {
+        hideLoader();
+        alert('Could not archive this application. Please try again.');
+        console.error(error);
+        return;
+      }
+      await loadPage();
+    }
+
+    async function unarchiveApplication(submissionId) {
+      showLoader();
+      const { error } = await supabaseClient
+        .from('fair_man_app_submission')
+        .update({ is_archived: false, archived_at: null })
+        .eq('id', submissionId);
+
+      if (error) {
+        hideLoader();
+        alert('Could not unarchive this application. Please try again.');
+        console.error(error);
+        return;
+      }
+      await loadPage();
+    }
+
     function renderSection(listId, emptyId, countId, rows, fairId, type) {
       const listEl = document.getElementById(listId);
       const emptyEl = document.getElementById(emptyId);
@@ -537,10 +599,12 @@
       const visible = rows.filter(item => {
         const search = document.getElementById('searchInput').value.toLowerCase();
         const statusF = document.getElementById('statusFilter').value.toLowerCase();
+        const showArchived = document.getElementById('showArchived').checked;
         const name = (item.applicant_name || item.applicant_email || '').toLowerCase();
         const matchSearch = !search || name.includes(search) || (item.applicant_email || '').toLowerCase().includes(search);
         const matchStatus = !statusF || String(item.status || '').toLowerCase().includes(statusF);
-        return matchSearch && matchStatus;
+        const matchArchived = showArchived ? item.is_archived === true : item.is_archived !== true;
+        return matchSearch && matchStatus && matchArchived;
       });
 
       countEl.textContent = visible.length;
@@ -663,6 +727,7 @@
       // Search & filter — live
       document.getElementById('searchInput').addEventListener('input', () => applyFilters(fairId));
       document.getElementById('statusFilter').addEventListener('change', () => applyFilters(fairId));
+      document.getElementById('showArchived').addEventListener('change', () => applyFilters(fairId));
 
       await loadPage();
     }

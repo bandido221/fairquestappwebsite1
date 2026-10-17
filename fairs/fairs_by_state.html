@@ -485,12 +485,14 @@ container.innerHTML += `
         <p><strong>📅 Weekends:</strong></p>
         ${weekends.map(date => `<p>${date}</p>`).join('')}
       ` : '<p><strong>📅 Weekends:</strong> None listed</p>'}
+      <div class="fq-card-review" data-fair-id="${fair.id}"></div>
     </div>
   </div>
 `;
 
 
       });
+      FQCardReviews.fill(container);
     }
 
     fetchFairsByState();
@@ -622,5 +624,6 @@ document.getElementById('feedbackModal').addEventListener('click', function(e) {
   if (e.target === this) closeFeedbackModal();
 });
 </script>
+<script src="/fairs/fair_card_reviews.js"></script>
 </body>
 </html>

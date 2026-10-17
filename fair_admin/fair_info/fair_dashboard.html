@@ -211,6 +211,18 @@
     "></div>
   </div>
 
+  <!-- Testing Tier Banner -->
+  <div class="card" id="testingBanner" style="display:none; border:2px solid #bb9457;">
+    <h2>🧪 Testing Tier</h2>
+    <p style="margin:0 0 10px; line-height:1.6;">
+      Your fair is on the <b>Testing</b> tier. You can try the application process
+      <b>free for up to 30 submitted applications</b> to see if it's right for your fair.
+    </p>
+    <p style="margin:0 0 10px; font-size:18px;"><b id="testingUsed">0</b> / 30 used</p>
+    <p style="margin:0 0 10px; font-size:13px; opacity:0.85;">Declined and deleted applications don't count.</p>
+    <p style="margin:0;">Need more? Email <a href="mailto:fairquestapp@gmail.com">fairquestapp@gmail.com</a></p>
+  </div>
+
   <!-- Fair Info Card -->
   <div class="card" id="fairCard">
     <a href="/index.html">
@@ -440,12 +452,22 @@ if (fairId) {
         return;
       }
 
-      const isGold   = fair.fair_tier === 'gold';
-      const isSilver = fair.fair_tier === 'silver' || isGold;
+      const isGold    = fair.fair_tier === 'gold';
+      const isSilver  = fair.fair_tier === 'silver' || isGold;
+      const isTesting = fair.fair_tier === 'testing';
+      const hasApps   = isGold || isTesting;
 
-      // Lock Applications nav link if not gold
+      // Testing tier banner
+      if (isTesting) {
+        document.getElementById('testingBanner').style.display = 'block';
+        const { data: usage } = await supabaseClient
+          .rpc('fair_man_app_get_usage', { p_fair_id: fairId });
+        document.getElementById('testingUsed').textContent = usage?.[0]?.used ?? 0;
+      }
+
+      // Lock Applications nav link if no application access
       const navApps = document.getElementById('navApplications');
-      if (!isGold) {
+      if (!hasApps) {
         navApps.onclick = (e) => { e.preventDefault(); showTierMessage('gold'); };
       } else {
         navApps.href = `fair_applications.html?fair_id=${fairId}`;
@@ -462,7 +484,7 @@ if (fairId) {
 
       // Applications dropdown actions
       window.goApplications = () => {
-        if (!isGold) { showTierMessage('gold'); return; }
+        if (!hasApps) { showTierMessage('gold'); return; }
         window.location.href = `fair_applications.html?fair_id=${fairId}`;
       };
       window.goAppReports = () => {
@@ -495,8 +517,8 @@ if (fairId) {
         window.location.href = `fair_vendor_list.html?fair_id=${fairId}`;
       };
 
-      // Add lock overlay to appsCard if not gold
-      if (!isGold) {
+      // Add lock overlay to appsCard if no application access
+      if (!hasApps) {
         const appsCard = document.getElementById('appsCard');
         appsCard.style.position = 'relative';
         appsCard.style.overflow = 'hidden';

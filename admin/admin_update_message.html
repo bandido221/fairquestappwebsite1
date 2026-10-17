@@ -240,7 +240,7 @@
     }
   </style>
 </head>
-<body>
+<body style="visibility:hidden">
 
   <nav class="topnav">
     <a class="topnav-logo" href="/index.html">
@@ -285,7 +285,7 @@
   </div>
 
   <script>
-    const supabase = window.supabase.createClient(
+    const supabaseClient = window.supabase.createClient(
       'https://awtbjuiqgtdydsqzimul.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dGJqdWlxZ3RkeWRzcXppbXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0OTY4MDgsImV4cCI6MjA1NzA3MjgwOH0.ES0B3O_M0dHaMHMutpkXvThMVMwIUxPqL1cvM1J2kUQ'
     );
@@ -293,7 +293,7 @@
     let editingId = null;
 
     async function loadUpdates() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
   .rpc('get_website_updates');
 
       const list = document.getElementById('updatesList');
@@ -340,7 +340,7 @@
   }
 
   if (editingId) {
- const { error } = await supabase.rpc('update_website_update', {
+ const { error } = await supabaseClient.rpc('update_website_update', {
   p_id: editingId,
   p_title: title,
   p_message: message
@@ -352,7 +352,7 @@
       alert('✅ Update saved.');
     }
   } else {
-  const { error } = await supabase.rpc('insert_website_update', {
+  const { error } = await supabaseClient.rpc('insert_website_update', {
   p_title: title,
   p_message: message
 });
@@ -380,7 +380,7 @@
       const confirmDelete = confirm('⚠️ Are you sure you want to delete this update?');
       if (!confirmDelete) return;
 
-    const { error } = await supabase.rpc('delete_website_update', {
+    const { error } = await supabaseClient.rpc('delete_website_update', {
   p_id: editingId
 });
 
@@ -398,8 +398,22 @@
       loadUpdates();
     }
 
-    // Load updates when page loads
-    loadUpdates();
+    // ── AUTH GATE ── must be admin to view this page
+    (async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = '/admin/index.html';
+        return;
+      }
+      const { data: isAdmin } = await supabaseClient
+        .rpc('is_admin_by_email', { p_email: session.user.email });
+      if (!isAdmin) {
+        window.location.href = '/admin/index.html';
+        return;
+      }
+      document.body.style.visibility = 'visible';
+      loadUpdates();
+    })();
   </script>
 
 </body>

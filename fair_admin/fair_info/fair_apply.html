@@ -1067,10 +1067,22 @@ function compressImage(file, maxPx = 800, quality = 0.75) {
 
       document.getElementById('fairTitle').textContent = `Apply — ${fairRow.name}`;
 
-      if (((fairRow.fair_tier || '') + '').toLowerCase() !== 'gold') {
+      const fairTierLower = ((fairRow.fair_tier || '') + '').toLowerCase();
+      if (fairTierLower !== 'gold' && fairTierLower !== 'testing') {
         document.getElementById('pageHint').textContent = 'Applications are not enabled for this fair.';
         hideLoader();
         return;
+      }
+
+      // Testing tier: stop here if the fair is full
+      if (fairTierLower === 'testing') {
+        const { data: usage } = await supabaseClient
+          .rpc('fair_man_app_get_usage', { p_fair_id: fairRow.id });
+        if (usage?.[0]?.is_full) {
+          document.getElementById('pageHint').textContent = "This fair isn't accepting new applications right now.";
+          hideLoader();
+          return;
+        }
       }
 
       let vpas = [];

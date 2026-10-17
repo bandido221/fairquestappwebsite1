@@ -594,7 +594,11 @@
         } catch (e) {
           console.error(e);
           const msg = (e && e.message) ? e.message : String(e);
-          setMsg(`Submit failed: ${msg}`);
+          if (msg.includes('fair_application_limit_reached')) {
+            setMsg("This fair isn't accepting new applications right now.");
+          } else {
+            setMsg(`Submit failed: ${msg}`);
+          }
         } finally {
           hideLoader();
         }

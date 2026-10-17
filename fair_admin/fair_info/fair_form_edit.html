@@ -1128,8 +1128,12 @@ function normalizeOptionPricing(line) {
   if (/\$\s*[\d,]+(?:\.\d{1,2})?/.test(line)) return line;
   // "20x20 - 300" or "20x20: 300" → auto-add the $ so price parsing downstream
   // (payment tracking) never misses it because someone forgot to type "$".
-  const m = line.match(/^(.*[-–:]\s*)(\d[\d,]*(?:\.\d{1,2})?)\s*$/);
-  if (m) return `${m[1]}$${m[2]}`;
+  // Only trigger on a clearly price-style separator: a dash/en-dash with a
+  // space on both sides ("20x20 - 300"), or a colon. A bare hyphen with no
+  // surrounding space (e.g. "Oct 3-4", a date range) is left alone so it
+  // isn't mistaken for a price.
+  const m = line.match(/^(.*?)(\s-\s|\s–\s|:\s*)(\d[\d,]*(?:\.\d{1,2})?)\s*$/);
+  if (m) return `${m[1]}${m[2]}$${m[3]}`;
   return line;
 }
 

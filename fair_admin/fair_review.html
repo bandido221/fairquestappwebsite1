@@ -74,6 +74,38 @@ function showMsg(text, type) {
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+// Turns a raw Postgres/Supabase error into a plain-English message so the
+// person sees *why* the update failed, not just that it did.
+function friendlyDbError(error) {
+  const msg = (error && error.message) || '';
+  const code = error && error.code;
+
+  // 22001 = "value too long for type character varying(N)"
+  if (code === '22001') {
+    const m = msg.match(/character varying\((\d+)\)/);
+    const limit = m ? m[1] : null;
+    if (limit === '2') {
+      return 'The State field must be a 2-letter abbreviation (example: IA, not Iowa).';
+    }
+    return limit
+      ? `One of the fields is too long — it can be at most ${limit} characters. Please shorten it and try again.`
+      : 'One of the fields you entered is too long. Please shorten it and try again.';
+  }
+
+  // 22003 = numeric value out of range
+  if (code === '22003') {
+    return 'One of the numbers entered is too large or invalid. Please check the field and try again.';
+  }
+
+  // 23505 = unique_violation
+  if (code === '23505') {
+    return 'That value is already in use elsewhere and can\'t be duplicated. Please use a different value.';
+  }
+
+  // Fallback: show the raw database message so it's never silently hidden.
+  return msg ? `Database said: ${msg}` : 'An unknown error occurred while saving.';
+}
+
 const updatedFairData = JSON.parse(sessionStorage.getItem('updatedFairData'));
     const TYPE_LABELS = {
       general:'General / Main', vendor:'Vendor Coordinator', performer:'Performer Coordinator',
@@ -195,7 +227,11 @@ const updatedFairData = JSON.parse(sessionStorage.getItem('updatedFairData'));
         p_image_url: updateData.image_url ?? null
       });
 
-      if (fairError) { console.error("Error updating fair:", fairError); showMsg("❌ Fair update failed. Please try again.", "error"); return; }
+      if (fairError) {
+        console.error("Error updating fair:", fairError);
+        showMsg("❌ Fair update failed — " + friendlyDbError(fairError), "error");
+        return;
+      }
 
       // Delete removed contacts
       const deletedIds = updatedFairData.deletedContactIds || [];

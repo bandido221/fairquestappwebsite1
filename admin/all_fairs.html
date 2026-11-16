@@ -540,6 +540,7 @@
 
     <!-- TOOLBAR -->
     <div class="toolbar">
+      <button class="btn" style="padding:9px 14px;" onclick="openAdd()">➕ Add Fair</button>
       <input class="search-input" type="text" id="searchInput" placeholder="🔍 Search by name, city, state..." oninput="renderTable()" />
       <select class="filter-select" id="filterTier" onchange="renderTable()">
         <option value="">All Tiers</option>
@@ -586,6 +587,7 @@
 
     let allFairs = [];
     let editingFair = null;
+    let addMode = false;
 
     function showToast(msg) {
       const t = document.getElementById('toast');
@@ -612,6 +614,7 @@
       // State dropdown
       const states = [...new Set(allFairs.map(f => (f.state || '').toUpperCase()))].sort();
       const stateSelect = document.getElementById('filterState');
+      stateSelect.length = 1;
       states.forEach(s => {
         const o = document.createElement('option');
         o.value = s;
@@ -693,6 +696,8 @@
       const f = allFairs.find(x => x.id === id);
       if (!f) return;
       editingFair = f;
+      addMode = false;
+      document.getElementById('viewDetailLink').style.display = '';
 
       document.getElementById('modalTitle').textContent = `✏️ Edit — ${f.name}`;
       document.getElementById('editName').value        = f.name || '';
@@ -716,12 +721,75 @@
       document.getElementById('editModal').classList.add('show');
     }
 
+    function openAdd() {
+      editingFair = null;
+      addMode = true;
+      document.getElementById('modalTitle').textContent = '➕ Add New Fair';
+      ['editName','editAddress','editCity','editState','editZip','editPhone','editWebsite',
+       'editContactName','editContactEmail','editDescription','editHours','editImageUrl']
+        .forEach(id => document.getElementById(id).value = '');
+      document.getElementById('editTier').value = '';
+      document.getElementById('editVerified').value = 'true';
+      document.getElementById('viewDetailLink').style.display = 'none';
+      document.getElementById('modalStatus').textContent = '';
+      document.getElementById('editModal').classList.add('show');
+    }
+
+    async function createFair() {
+      const st = document.getElementById('modalStatus');
+      const v = id => document.getElementById(id).value.trim();
+      const name = v('editName'), city = v('editCity'), state = v('editState').toUpperCase();
+
+      if (!name || !city || !state) {
+        st.textContent = '❌ Name, city and state are required.';
+        st.className = 'err';
+        return;
+      }
+      if (allFairs.some(f => (f.name || '').toLowerCase() === name.toLowerCase() && (f.state || '').toUpperCase() === state)) {
+        if (!confirm('This fair already exists. Add anyway?')) return;
+      }
+
+      st.textContent = 'Creating…';
+      st.className = '';
+
+      const { data: newId, error } = await supabaseClient.rpc('create_renaissance_fair', {
+        p_name: name, p_city: city, p_state: state, p_website: v('editWebsite') || null
+      });
+      if (error || !newId) {
+        st.textContent = '❌ ' + (error ? error.message : 'No id returned');
+        st.className = 'err';
+        return;
+      }
+
+      const { error: e2 } = await supabaseClient.rpc('admin_update_fair', {
+        p_id: newId, p_name: name, p_address: v('editAddress'), p_city: city, p_state: state,
+        p_zip: v('editZip'), p_website: v('editWebsite'), p_phone_number: v('editPhone'),
+        p_contact_name: v('editContactName'), p_contact_email: v('editContactEmail'),
+        p_description: v('editDescription'), p_hours: v('editHours'),
+        p_fair_tier: document.getElementById('editTier').value,
+        p_verified: document.getElementById('editVerified').value === 'true',
+        p_image_url: v('editImageUrl')
+      });
+      if (e2) {
+        st.textContent = '⚠️ Fair created, but details failed. Find it in the list and edit it.';
+        st.className = 'err';
+        await loadFairs();
+        return;
+      }
+
+      showToast('✅ Fair added!');
+      closeModal();
+      await loadFairs();
+    }
+
     function closeModal() {
       document.getElementById('editModal').classList.remove('show');
       editingFair = null;
+      addMode = false;
     }
 
     async function saveFair() {
+      if (addMode) return createFair();
       if (!editingFair) return;
       const statusEl = document.getElementById('modalStatus');
       statusEl.textContent = 'Saving…';

@@ -1562,8 +1562,8 @@ async function requireLoginAndRedirect(destination) {
 const PAGE_ID   = 'home';
 const PAGE_NAME = 'Home';
 
-// ── APP TESTING INVITE (shows every time the page opens) ──
-document.getElementById('testInviteModal').style.display = 'flex';
+// ── APP TESTING INVITE (turned off — remove the // below to turn it back on) ──
+// document.getElementById('testInviteModal').style.display = 'flex';
 function closeTestInvite() {
   document.getElementById('testInviteModal').style.display = 'none';
 }
